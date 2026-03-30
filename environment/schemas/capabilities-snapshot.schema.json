@@ -52,7 +52,7 @@
         },
         "advanced": {
           "type": "object",
-          "additionalProperties": false,
+          "additionalProperties": { "type": "boolean" },
           "required": [
             "governanceProfileAtCreation",
             "claimSearch"
@@ -81,12 +81,6 @@
             "type": "string"
           }
         }
-      }
-    },
-    "degradedModes": {
-      "type": "array",
-      "items": {
-        "type": "string"
       }
     },
     "updatedAt": {
