@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/capabilities-snapshot.schema.json",
+  "title": "VRE Capabilities Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kernel",
+    "install",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.capabilities.v1"
+    },
+    "kernel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dbAvailable",
+        "projections",
+        "advanced"
+      ],
+      "properties": {
+        "dbAvailable": {
+          "type": "boolean"
+        },
+        "projections": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "overview",
+            "claimHeads",
+            "unresolvedClaims",
+            "citationChecks"
+          ],
+          "properties": {
+            "overview": {
+              "type": "boolean"
+            },
+            "claimHeads": {
+              "type": "boolean"
+            },
+            "unresolvedClaims": {
+              "type": "boolean"
+            },
+            "citationChecks": {
+              "type": "boolean"
+            }
+          }
+        },
+        "advanced": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "governanceProfileAtCreation",
+            "claimSearch"
+          ],
+          "properties": {
+            "governanceProfileAtCreation": {
+              "type": "boolean"
+            },
+            "claimSearch": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bundles"
+      ],
+      "properties": {
+        "bundles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "degradedModes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

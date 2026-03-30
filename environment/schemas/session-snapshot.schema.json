@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/session-snapshot.schema.json",
+  "title": "VRE Session Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "activeFlow",
+    "currentStage",
+    "nextActions",
+    "blockers",
+    "kernel",
+    "capabilities",
+    "budget",
+    "signals",
+    "lastCommand",
+    "lastAttemptId",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.session.v1"
+    },
+    "activeFlow": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "literature",
+        "experiment",
+        "results",
+        "writing"
+      ]
+    },
+    "currentStage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "nextActions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "kernel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dbAvailable",
+        "degradedReason"
+      ],
+      "properties": {
+        "dbAvailable": {
+          "type": "boolean"
+        },
+        "degradedReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claimHeads",
+        "citationChecks",
+        "governanceProfileAtCreation",
+        "claimSearch"
+      ],
+      "properties": {
+        "claimHeads": {
+          "type": "boolean"
+        },
+        "citationChecks": {
+          "type": "boolean"
+        },
+        "governanceProfileAtCreation": {
+          "type": "boolean"
+        },
+        "claimSearch": {
+          "type": "boolean"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "toolCalls",
+        "estimatedCostUsd",
+        "countingMode"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "advisory",
+            "hard_stop",
+            "unknown"
+          ]
+        },
+        "toolCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimatedCostUsd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "countingMode": {
+          "type": "string",
+          "enum": [
+            "provider_native",
+            "provider",
+            "char_fallback",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "staleMemory",
+        "unresolvedClaims",
+        "blockedExperiments",
+        "exportAlerts"
+      ],
+      "properties": {
+        "staleMemory": {
+          "type": "boolean"
+        },
+        "unresolvedClaims": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockedExperiments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exportAlerts": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "lastCommand": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastAttemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "updatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

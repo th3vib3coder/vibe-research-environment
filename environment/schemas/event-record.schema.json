@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/event-record.schema.json",
+  "title": "VRE Event Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "recordedAt"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "attempt_opened",
+        "attempt_updated",
+        "session_snapshot_published",
+        "degraded_mode_entered",
+        "budget_stop_triggered",
+        "operator_override",
+        "export_started",
+        "export_finished"
+      ]
+    },
+    "attemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "scope": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "targetId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ]
+    },
+    "message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "details": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

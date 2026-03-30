@@ -1,0 +1,17 @@
+{
+  "bundleId": "flow-literature",
+  "phase": 1,
+  "dependsOn": [
+    "governance-core",
+    "control-plane"
+  ],
+  "capabilitiesProvided": [
+    "literatureFlow"
+  ],
+  "ownedPaths": [
+    "environment/flows/literature.js",
+    "environment/schemas/literature-flow-state.schema.json",
+    "environment/templates/literature-flow-state.v1.json"
+  ],
+  "bootstrapPaths": []
+}

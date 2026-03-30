@@ -1,0 +1,12 @@
+{
+  "attemptId": null,
+  "scope": null,
+  "targetId": null,
+  "status": "preparing",
+  "startedAt": null,
+  "lastHeartbeatAt": null,
+  "endedAt": null,
+  "retryCount": 0,
+  "errorCode": null,
+  "summary": null
+}

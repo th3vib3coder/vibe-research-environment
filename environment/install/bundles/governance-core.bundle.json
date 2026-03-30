@@ -1,0 +1,24 @@
+{
+  "bundleId": "governance-core",
+  "phase": 1,
+  "dependsOn": [],
+  "capabilitiesProvided": [
+    "validators",
+    "budgetGuardrails",
+    "sessionMetrics",
+    "operatorValidation",
+    "profileSafetyArtifacts"
+  ],
+  "ownedPaths": [
+    "environment/lib/token-counter.js",
+    "environment/lib/session-metrics.js",
+    "environment/schemas/costs-record.schema.json",
+    "environment/schemas/schema-validation-record.schema.json",
+    "environment/evals/"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/metrics/",
+    ".vibe-science-environment/operator-validation/",
+    ".vibe-science-environment/governance/schema-validation/"
+  ]
+}

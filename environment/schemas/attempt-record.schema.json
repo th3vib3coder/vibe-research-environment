@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/attempt-record.schema.json",
+  "title": "VRE Attempt Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attemptId",
+    "scope",
+    "targetId",
+    "status",
+    "startedAt",
+    "lastHeartbeatAt",
+    "endedAt",
+    "retryCount",
+    "errorCode",
+    "summary"
+  ],
+  "properties": {
+    "attemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "scope": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "targetId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "preparing",
+        "running",
+        "succeeded",
+        "failed",
+        "blocked",
+        "timeout",
+        "unresponsive",
+        "abandoned"
+      ]
+    },
+    "startedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "lastHeartbeatAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "retryCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errorCode": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

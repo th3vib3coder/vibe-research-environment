@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "vibe-env.session.v1",
+  "activeFlow": null,
+  "currentStage": null,
+  "nextActions": [],
+  "blockers": [],
+  "kernel": {
+    "dbAvailable": false,
+    "degradedReason": null
+  },
+  "capabilities": {
+    "claimHeads": false,
+    "citationChecks": false,
+    "governanceProfileAtCreation": false,
+    "claimSearch": false
+  },
+  "budget": {
+    "state": "ok",
+    "toolCalls": 0,
+    "estimatedCostUsd": 0,
+    "countingMode": "unknown"
+  },
+  "signals": {
+    "staleMemory": false,
+    "unresolvedClaims": 0,
+    "blockedExperiments": 0,
+    "exportAlerts": 0
+  },
+  "lastCommand": null,
+  "lastAttemptId": null,
+  "updatedAt": null
+}

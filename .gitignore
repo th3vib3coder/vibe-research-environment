@@ -1,0 +1,18 @@
+# Runtime workspace state
+.vibe-science-environment/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+nul
+
+# Test and coverage output
+coverage/
+
+# Local env
+.env
+.env.*

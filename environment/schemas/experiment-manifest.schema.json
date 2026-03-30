@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/experiment-manifest.schema.json",
+  "title": "VRE Experiment Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "experimentId",
+    "title",
+    "objective",
+    "status",
+    "createdAt",
+    "completedAt",
+    "executionPolicy",
+    "latestAttemptId",
+    "parameters",
+    "codeRef",
+    "inputArtifacts",
+    "outputArtifacts",
+    "relatedClaims",
+    "blockers",
+    "notes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe.experiment.manifest.v1"
+    },
+    "experimentId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^EXP-[0-9]{3}$"
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "objective": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "active",
+        "completed",
+        "failed",
+        "blocked",
+        "obsolete"
+      ]
+    },
+    "createdAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "completedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "executionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeoutSeconds",
+        "unresponsiveSeconds",
+        "maxAttempts"
+      ],
+      "properties": {
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unresponsiveSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "latestAttemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "codeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entrypoint",
+        "gitCommit"
+      ],
+      "properties": {
+        "entrypoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gitCommit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "inputArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "relatedClaims": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^C-[0-9]{3}$"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

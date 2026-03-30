@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/experiment-flow-state.schema.json",
+  "title": "VRE Experiment Flow State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiments",
+    "updatedAt"
+  ],
+  "properties": {
+    "experiments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^EXP-[0-9]{3}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "active",
+              "completed",
+              "failed",
+              "blocked",
+              "obsolete"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "latestAttemptId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^ATT-.+$"
+          },
+          "relatedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^C-[0-9]{3}$"
+            }
+          },
+          "outputArtifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "updatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

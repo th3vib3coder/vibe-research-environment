@@ -1,0 +1,39 @@
+{
+  "bundleId": "control-plane",
+  "phase": 1,
+  "dependsOn": [
+    "governance-core"
+  ],
+  "capabilitiesProvided": [
+    "sessionSnapshot",
+    "attemptLedger",
+    "telemetry",
+    "decisionLog",
+    "capabilitySnapshot",
+    "queryHelpers",
+    "sharedMiddleware"
+  ],
+  "ownedPaths": [
+    "environment/control/session-snapshot.js",
+    "environment/control/attempts.js",
+    "environment/control/decisions.js",
+    "environment/control/events.js",
+    "environment/control/capabilities.js",
+    "environment/control/middleware.js",
+    "environment/control/query.js",
+    "environment/lib/flow-state.js",
+    "environment/schemas/session-snapshot.schema.json",
+    "environment/schemas/capabilities-snapshot.schema.json",
+    "environment/schemas/attempt-record.schema.json",
+    "environment/schemas/event-record.schema.json",
+    "environment/schemas/decision-record.schema.json",
+    "environment/schemas/flow-index.schema.json",
+    "environment/templates/session-snapshot.v1.json",
+    "environment/templates/attempt-record.v1.json",
+    "environment/templates/flow-index.v1.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/flows/",
+    ".vibe-science-environment/control/"
+  ]
+}

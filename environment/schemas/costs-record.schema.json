@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/costs-record.schema.json",
+  "title": "VRE Costs Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordedAt",
+    "toolCalls",
+    "claimsProduced",
+    "claimsKilled",
+    "r2Reviews",
+    "estimatedCostUsd",
+    "countingMode"
+  ],
+  "properties": {
+    "sessionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastAttemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "toolCalls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "claimsProduced": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "claimsKilled": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "r2Reviews": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "estimatedCostUsd": {
+      "type": "number",
+      "minimum": 0
+    },
+    "countingMode": {
+      "type": "string",
+      "enum": [
+        "provider_native",
+        "char_fallback"
+      ]
+    },
+    "budgetState": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "advisory",
+        "hard_stop",
+        "unknown"
+      ]
+    }
+  }
+}

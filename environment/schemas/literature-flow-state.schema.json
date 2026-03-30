@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/literature-flow-state.schema.json",
+  "title": "VRE Literature Flow State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "papers",
+    "gaps",
+    "updatedAt"
+  ],
+  "properties": {
+    "papers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "doi",
+          "title",
+          "authors",
+          "year",
+          "relevance",
+          "linkedClaims",
+          "methodologyConflicts",
+          "registeredAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^LIT-[0-9]{3}$"
+          },
+          "doi": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "year": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "relevance": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "linkedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^C-[0-9]{3}$"
+            }
+          },
+          "methodologyConflicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "message"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "claimId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^C-[0-9]{3}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "updatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "vibe.experiment.manifest.v1",
+  "experimentId": null,
+  "title": null,
+  "objective": null,
+  "status": "planned",
+  "createdAt": null,
+  "completedAt": null,
+  "executionPolicy": {
+    "timeoutSeconds": 3600,
+    "unresponsiveSeconds": 300,
+    "maxAttempts": 2
+  },
+  "latestAttemptId": null,
+  "parameters": {},
+  "codeRef": {
+    "entrypoint": null,
+    "gitCommit": null
+  },
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "relatedClaims": [],
+  "blockers": [],
+  "notes": ""
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/decision-record.schema.json",
+  "title": "VRE Decision Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decisionId",
+    "flow",
+    "kind",
+    "reason",
+    "recordedAt"
+  ],
+  "properties": {
+    "decisionId": {
+      "type": "string"
+    },
+    "flow": {
+      "type": "string",
+      "enum": [
+        "control",
+        "literature",
+        "experiment",
+        "results",
+        "writing"
+      ]
+    },
+    "targetId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "attemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "details": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

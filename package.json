@@ -1,0 +1,14 @@
+{
+  "name": "vibe-research-environment",
+  "version": "0.1.0",
+  "description": "Outer-project research shell for the Vibe Science kernel.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,22 @@
+{
+  "bundleId": "flow-experiment",
+  "phase": 1,
+  "dependsOn": [
+    "governance-core",
+    "control-plane"
+  ],
+  "capabilitiesProvided": [
+    "experimentFlow"
+  ],
+  "ownedPaths": [
+    "environment/flows/experiment.js",
+    "environment/lib/manifest.js",
+    "environment/schemas/experiment-flow-state.schema.json",
+    "environment/schemas/experiment-manifest.schema.json",
+    "environment/templates/experiment-flow-state.v1.json",
+    "environment/templates/experiment-manifest.v1.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/experiments/manifests/"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/schema-validation-record.schema.json",
+  "title": "VRE Schema Validation Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claimId",
+    "validatedAt",
+    "validatorVersion",
+    "ok"
+  ],
+  "properties": {
+    "claimId": {
+      "type": "string",
+      "pattern": "^C-[0-9]{3}$"
+    },
+    "validatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validatorVersion": {
+      "type": "string"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "compatibilityMode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "degraded_compatibility"
+      ]
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

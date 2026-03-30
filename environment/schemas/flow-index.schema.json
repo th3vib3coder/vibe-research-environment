@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/flow-index.schema.json",
+  "title": "VRE Flow Index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "activeFlow",
+    "currentStage",
+    "nextActions",
+    "blockers",
+    "lastCommand",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe.flow.index.v1"
+    },
+    "activeFlow": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "literature",
+        "experiment",
+        "results",
+        "writing"
+      ]
+    },
+    "currentStage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "nextActions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lastCommand": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "updatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

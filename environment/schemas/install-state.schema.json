@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/install-state.schema.json",
+  "title": "VRE Install State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "installedAt",
+    "bundles",
+    "bundleManifestVersion",
+    "operations",
+    "source"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.install.v1"
+    },
+    "installedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "bundles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bundleManifestVersion": {
+      "type": "string"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "source",
+          "destination",
+          "bundleId",
+          "ownership",
+          "mode",
+          "sourceHash",
+          "installedHash",
+          "backupRef"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "bundleId": {
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string",
+            "enum": [
+              "managed"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "copied",
+              "generated",
+              "merged"
+            ]
+          },
+          "sourceHash": {
+            "type": "string"
+          },
+          "installedHash": {
+            "type": "string"
+          },
+          "backupRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "commit"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
