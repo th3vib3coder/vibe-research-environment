@@ -1,0 +1,34 @@
+{
+  "benchmarkId": "phase1-core",
+  "version": "1.0.0",
+  "phase": 1,
+  "description": "Phase 1 operator-trust benchmark for the control plane and the first two flows.",
+  "taskIds": [
+    "flow-status-resume",
+    "flow-literature-register",
+    "flow-experiment-register",
+    "degraded-kernel-mode"
+  ],
+  "metricIds": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "repeatPolicy": {
+    "defaultRepeats": 1,
+    "preserveAllRepeats": true,
+    "overwriteExistingRepeats": false
+  },
+  "passCriteria": {
+    "requiredTaskIds": [
+      "flow-status-resume",
+      "flow-literature-register",
+      "flow-experiment-register",
+      "degraded-kernel-mode"
+    ],
+    "forbidKernelWriteViolations": true,
+    "maxResumeLatencySeconds": 120
+  }
+}

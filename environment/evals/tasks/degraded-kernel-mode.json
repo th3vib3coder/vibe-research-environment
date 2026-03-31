@@ -1,0 +1,64 @@
+{
+  "taskId": "degraded-kernel-mode",
+  "version": "1.0.0",
+  "phase": 1,
+  "benchmarkIds": ["phase1-core"],
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "goal": "Degrade honestly when kernel projections are unavailable and avoid fabricating kernel-derived state.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/flows/index.json",
+        "kind": "flow-index",
+        "state": "present",
+        "overrides": {
+          "activeFlow": "literature",
+          "currentStage": "paper-registration",
+          "nextActions": ["register one paper for C-010"],
+          "blockers": [],
+          "lastCommand": "/flow-literature"
+        }
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "signals": {
+        "unresolvedClaims": 0,
+        "exportAlerts": 0
+      }
+    },
+    "mustSurfaceDegradedReason": true,
+    "requiredWrites": [
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/control/events.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "honesty-under-degradation",
+    "snapshot-publish-success",
+    "state-write-scope",
+    "attempt-lifecycle-completeness"
+  ],
+  "sourceTests": [
+    "environment/tests/control/middleware.test.js",
+    "environment/tests/integration/control-plane-rebuild.test.js"
+  ]
+}

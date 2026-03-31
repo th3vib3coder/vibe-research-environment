@@ -1,0 +1,64 @@
+{
+  "taskId": "flow-literature-register",
+  "version": "1.0.0",
+  "phase": 1,
+  "benchmarkIds": ["phase1-core"],
+  "command": {
+    "name": "/flow-literature",
+    "scope": "flow-literature",
+    "args": ["--register"]
+  },
+  "goal": "Register a paper through the literature flow without writing kernel truth.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/flows/literature.json",
+        "kind": "literature-flow-state",
+        "state": "missing"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    },
+    "commandInput": {
+      "title": "Integration test paper",
+      "doi": "10.5000/integration",
+      "authors": ["Author A"],
+      "year": 2026,
+      "relevance": "supports claim C-010",
+      "linkedClaims": [],
+      "methodologyConflicts": []
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "flowStateAssertions": {
+      "paperCount": 1,
+      "latestPaper": {
+        "doi": "10.5000/integration"
+      }
+    },
+    "indexAssertions": {
+      "activeFlow": "literature"
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/flows/literature.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "sourceTests": [
+    "environment/tests/integration/literature-register.test.js",
+    "environment/tests/flows/literature.test.js"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "taskId": "flow-status-resume",
+  "version": "1.0.0",
+  "phase": 1,
+  "benchmarkIds": ["phase1-core"],
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "goal": "Resume operator context from flow-local state through the canonical session snapshot.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/flows/index.json",
+        "kind": "flow-index",
+        "state": "present",
+        "overrides": {
+          "activeFlow": "experiment",
+          "currentStage": "experiment-running",
+          "nextActions": ["review outputs for EXP-001"],
+          "blockers": [],
+          "lastCommand": "/flow-experiment"
+        }
+      },
+      {
+        "path": ".vibe-science-environment/control/session.json",
+        "kind": "session-snapshot",
+        "state": "missing"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": true,
+      "projections": {
+        "unresolvedClaims": [{ "claimId": "C-001" }]
+      }
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "maxElapsedSeconds": 120,
+    "snapshotAssertions": {
+      "activeFlow": "experiment",
+      "currentStage": "experiment-running",
+      "lastCommand": "/flow-status",
+      "signals": {
+        "unresolvedClaims": 1
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "resume-latency",
+    "snapshot-publish-success",
+    "state-write-scope",
+    "attempt-lifecycle-completeness"
+  ],
+  "sourceTests": [
+    "environment/tests/integration/control-plane-rebuild.test.js",
+    "environment/tests/control/middleware.test.js"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "taskId": "flow-experiment-register",
+  "version": "1.0.0",
+  "phase": 1,
+  "benchmarkIds": ["phase1-core"],
+  "command": {
+    "name": "/flow-experiment",
+    "scope": "flow-experiment",
+    "args": ["--register"]
+  },
+  "goal": "Create a manifest through the experiment flow and keep attempt lifecycle owned by middleware.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/experiments/manifests/",
+        "kind": "manifest-directory",
+        "state": "empty"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    },
+    "commandInput": {
+      "experimentId": "EXP-001",
+      "title": "Integration lifecycle experiment",
+      "objective": "Verify manifest lifecycle through middleware",
+      "executionPolicy": {
+        "timeoutSeconds": 3600,
+        "unresponsiveSeconds": 300,
+        "maxAttempts": 2
+      },
+      "parameters": {
+        "seed": 17
+      },
+      "codeRef": {
+        "entrypoint": "scripts/run.py",
+        "gitCommit": "abc1234"
+      },
+      "inputArtifacts": [],
+      "outputArtifacts": [],
+      "relatedClaims": ["C-001"],
+      "blockers": [],
+      "notes": ""
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "manifestAssertions": {
+      "experimentId": "EXP-001",
+      "status": "planned",
+      "latestAttemptId": "$attemptId"
+    },
+    "indexAssertions": {
+      "activeFlow": "experiment"
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/experiments/manifests/EXP-001.json",
+      ".vibe-science-environment/flows/experiment.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/control/attempts.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "attempt-lifecycle-completeness",
+    "state-write-scope",
+    "snapshot-publish-success"
+  ],
+  "sourceTests": [
+    "environment/tests/integration/experiment-manifest-lifecycle.test.js",
+    "environment/tests/flows/experiment.test.js"
+  ]
+}
