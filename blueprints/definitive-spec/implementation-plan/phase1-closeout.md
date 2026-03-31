@@ -20,12 +20,18 @@ What is closed with files on disk:
 - measured baseline context artifact
 
 What is **not** fully closed at ecosystem level:
-- one kernel prerequisite from [13-delivery-roadmap.md](../13-delivery-roadmap.md) is still not fully observed in the current sibling kernel snapshot:
-  - append-only `governance_events` storage
+- the kernel prerequisite checklist is no longer blocked by a hard gap, but it is
+  still not fully green in the current sibling-kernel state:
+  - governance profiles remain only partially observable
+  - config protection is present but not all protected surfaces are equally explicit
+  - claim event sequence enforcement is still partly inferred rather than surfaced as a dedicated validator
+
+What was closed after the initial VRE Phase 1 freeze:
+- append-only `governance_events` storage now exists in the current sibling kernel snapshot, including schema, migration, DB helper, and hook emitters
 
 So the honest reading is:
 - **VRE implementation:** ready
-- **cross-repo Phase 1 sign-off:** conditional on kernel governance prerequisite follow-up
+- **cross-repo Phase 1 sign-off:** still conditional, but no longer because of a hard `governance_events` gap
 
 ---
 
@@ -71,9 +77,9 @@ So the honest reading is:
 | 14 | Saved operator-validation artifact (resume ≤2 min) | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
 | 15 | Phase 1 scenarios in eval harness with saved runs | PASS | 4 repeat directories under [benchmarks/](../../../.vibe-science-environment/operator-validation/benchmarks/) |
 | 16 | Baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
-| 17 | Kernel governance prerequisites verified | PARTIAL | checklist below — `governance_events` gap |
+| 17 | Kernel governance prerequisites verified | PARTIAL | checklist below — no hard gaps remain, but 3 kernel prerequisites are still partial |
 
-**Result: 16 PASS, 1 PARTIAL.** The PARTIAL is a kernel-side dependency, not a VRE implementation gap.
+**Result: 16 PASS, 1 PARTIAL.** The PARTIAL is still kernel-side, but it is now driven by partial observability rather than a missing `governance_events` substrate.
 
 ---
 
@@ -129,13 +135,14 @@ This checklist distinguishes:
 |--------------|--------|----------|-------|
 | governance profiles | PARTIAL | [profiles.test.js](../../../environment/tests/compatibility/profiles.test.js), [CLAUDE.md](../../../../vibe-science/CLAUDE.md), [session-start.js](../../../../vibe-science/plugin/scripts/session-start.js) | repo-side compatibility contract exists, but explicit runtime profile gating via `minimal/standard/strict` is not cleanly observable in the current sibling kernel code |
 | kernel config protection | PARTIAL | [config-protection.test.js](../../../environment/tests/compatibility/config-protection.test.js), [.claude/settings.json](../../../../vibe-science/.claude/settings.json), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js) | live kernel clearly protects schema paths and confounder-sensitive writes, but the full protected-file set from the spec is not all directly observed in current settings |
-| append-only governance event storage | GAP | [08-governance-engine.md](../08-governance-engine.md), [schema.sql](../../../../vibe-science/plugin/db/schema.sql), [migrations.js](../../../../vibe-science/plugin/lib/migrations.js) | `governance_events` table contract is in spec, but it is not present in the current sibling kernel schema/migrations snapshot |
+| append-only governance event storage | PASS | [08-governance-engine.md](../08-governance-engine.md), [schema.sql](../../../../vibe-science/plugin/db/schema.sql), [migrations.js](../../../../vibe-science/plugin/lib/migrations.js), [db.js](../../../../vibe-science/plugin/lib/db.js), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js), [post-tool-use.js](../../../../vibe-science/plugin/scripts/post-tool-use.js), [stop.js](../../../../vibe-science/plugin/scripts/stop.js), [governance-events.test.mjs](../../../../vibe-science/tests/governance-events.test.mjs), [governance-hooks.test.mjs](../../../../vibe-science/tests/governance-hooks.test.mjs) | local sibling kernel now has append-only storage, migration coverage, storage-level immutability, and hook-level emitters / secondary guarantee |
 | claim event sequence enforcement | PARTIAL | [state-machine.test.js](../../../environment/tests/compatibility/state-machine.test.js), [claim-ingestion.js](../../../../vibe-science/plugin/lib/claim-ingestion.js), [stop.js](../../../../vibe-science/plugin/scripts/stop.js), [structured-block-parser.js](../../../../vibe-science/plugin/lib/structured-block-parser.js) | event types and unresolved-claim stop enforcement are present, but a dedicated transition validator is not directly obvious in the sibling kernel snapshot |
 
 Checklist conclusion:
 - VRE has verified the compatibility surface honestly
-- the kernel prerequisite check is **not fully green**
-- the concrete blocking gap is `governance_events`
+- the kernel prerequisite check is **still not fully green**
+- there are now **0 hard gaps** and **3 partial prerequisites**
+- the remaining uncertainty sits in profile gating visibility, full config-protection coverage, and claim-sequence explicitness
 
 ---
 
@@ -181,8 +188,8 @@ What we can defend now:
 - the implementation is backed by saved benchmark evidence, operator-validation evidence, measured context evidence, validators, and tests
 
 What we should **not** overclaim:
-- we should not call the wider system fully Phase-1-closed until the sibling kernel lands or proves the missing `governance_events` prerequisite
+- we should not call the wider system fully Phase-1-closed until the sibling kernel partials are either hardened or explicitly accepted as the Phase 1 sign-off boundary
 
 Recommended next action:
-- open the kernel follow-up for governance audit trail parity
-- then freeze this closeout as the Phase 1 implementation dossier
+- publish or upstream the local kernel governance-audit-trail follow-up
+- then decide whether to harden the 3 remaining partial prerequisites now or freeze them explicitly as accepted residuals
