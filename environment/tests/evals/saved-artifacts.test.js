@@ -21,9 +21,16 @@ async function readRepeatArtifact(taskId, repeatId, fileName) {
   );
 }
 
-async function assertExternalRepoRelativePathExists(repoRelativePath) {
-  await access(path.resolve(repoRoot, repoRelativePath));
+async function externalPathExists(repoRelativePath) {
+  try {
+    await access(path.resolve(repoRoot, repoRelativePath));
+    return true;
+  } catch {
+    return false;
+  }
 }
+
+const HAS_KERNEL_SIBLING = await externalPathExists('../vibe-science/CLAUDE.md');
 
 test('saved benchmark artifacts exist for every Phase 1 task and include the required files', async () => {
   for (const fileName of EXPECTED_TASK_FILES) {
@@ -117,11 +124,11 @@ test('saved context baseline artifact measures kernel-owned base and keeps one f
     'commands/flow-status.md'
   );
 
-  await assertExternalRepoRelativePathExists(artifact.sources.kernelOwned.claude.path);
-  await assertExternalRepoRelativePathExists(artifact.sources.kernelOwned.skill.path);
-  await assertExternalRepoRelativePathExists(
-    artifact.sources.kernelOwned.sessionStart.scriptPath
-  );
+  if (HAS_KERNEL_SIBLING) {
+    await access(path.resolve(repoRoot, artifact.sources.kernelOwned.claude.path));
+    await access(path.resolve(repoRoot, artifact.sources.kernelOwned.skill.path));
+    await access(path.resolve(repoRoot, artifact.sources.kernelOwned.sessionStart.scriptPath));
+  }
 
   assert.equal(artifact.sources.kernelOwned.sessionStart.hookEventName, 'SessionStart');
   assert.match(

@@ -27,6 +27,10 @@ function shouldCheckTarget(target) {
   );
 }
 
+function isOutsideRepo(resolvedRelative) {
+  return resolvedRelative.startsWith('..');
+}
+
 async function resolveTarget(file, target) {
   const strippedTarget = target.split('#')[0];
   const relativeCandidate = path
@@ -103,7 +107,7 @@ export default async function validateReferences() {
 
       const repoRelativeTarget = await resolveTarget(file, target);
 
-      if (repoRelativeTarget.includes('*')) {
+      if (repoRelativeTarget.includes('*') || isOutsideRepo(repoRelativeTarget)) {
         continue;
       }
 
