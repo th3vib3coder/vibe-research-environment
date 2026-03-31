@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -26,7 +26,7 @@ export const EXPECTED_METRIC_IDS = [
   'snapshot-publish-success'
 ];
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 export async function readRepoJson(repoRelativePath) {
   return JSON.parse(await readFile(path.join(repoRoot, repoRelativePath), 'utf8'));
@@ -50,4 +50,20 @@ export function assertSetEqual(actualValues, expectedValues, label) {
 
 export function commandDocPath(commandName) {
   return `commands/${commandName.replace(/^\//u, '')}.md`;
+}
+
+export async function listSavedBenchmarkRepeats(taskId) {
+  const taskRoot = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'operator-validation',
+    'benchmarks',
+    taskId
+  );
+
+  const entries = await readdir(taskRoot, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
 }

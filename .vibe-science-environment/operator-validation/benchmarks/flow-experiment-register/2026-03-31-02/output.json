@@ -1,0 +1,365 @@
+{
+  "taskId": "flow-experiment-register",
+  "benchmarkId": "phase1-core",
+  "command": {
+    "name": "/flow-experiment",
+    "scope": "flow-experiment",
+    "args": [
+      "--register"
+    ]
+  },
+  "result": {
+    "summary": "Registered manifest EXP-001.",
+    "warnings": [],
+    "manifest": {
+      "schemaVersion": "vibe.experiment.manifest.v1",
+      "experimentId": "EXP-001",
+      "title": "Integration lifecycle experiment",
+      "objective": "Verify manifest lifecycle through middleware",
+      "status": "planned",
+      "createdAt": "2026-03-31T10:24:38.498Z",
+      "completedAt": null,
+      "executionPolicy": {
+        "timeoutSeconds": 3600,
+        "unresponsiveSeconds": 300,
+        "maxAttempts": 2
+      },
+      "latestAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+      "parameters": {
+        "seed": 17
+      },
+      "codeRef": {
+        "entrypoint": "scripts/run.py",
+        "gitCommit": "abc1234"
+      },
+      "inputArtifacts": [],
+      "outputArtifacts": [],
+      "relatedClaims": [
+        "C-001"
+      ],
+      "blockers": [],
+      "notes": ""
+    },
+    "flowState": {
+      "experiments": [
+        {
+          "id": "EXP-001",
+          "title": "Integration lifecycle experiment",
+          "status": "planned",
+          "createdAt": "2026-03-31T10:24:38.498Z",
+          "latestAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+          "relatedClaims": [
+            "C-001"
+          ],
+          "outputArtifacts": [],
+          "blockers": []
+        }
+      ],
+      "updatedAt": "2026-03-31T10:24:38.501Z"
+    },
+    "flowIndex": {
+      "schemaVersion": "vibe.flow.index.v1",
+      "activeFlow": "experiment",
+      "currentStage": "experiment-planning",
+      "nextActions": [
+        "start EXP-001"
+      ],
+      "blockers": [],
+      "lastCommand": "/flow-experiment --register",
+      "updatedAt": "2026-03-31T10:24:38.501Z"
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+    "scope": "flow-experiment",
+    "targetId": "EXP-001",
+    "status": "succeeded",
+    "startedAt": "2026-03-31T10:24:38.479Z",
+    "lastHeartbeatAt": "2026-03-31T10:24:38.528Z",
+    "endedAt": "2026-03-31T10:24:38.528Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Registered manifest EXP-001."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "experiment",
+    "currentStage": "experiment-planning",
+    "nextActions": [
+      "start EXP-001"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/flow-experiment",
+    "lastAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+    "updatedAt": "2026-03-31T10:24:38.518Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": false,
+      "projections": {
+        "overview": false,
+        "claimHeads": false,
+        "unresolvedClaims": false,
+        "citationChecks": false
+      },
+      "advanced": {
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": []
+    },
+    "updatedAt": "2026-03-31T10:24:38.472Z"
+  },
+  "flowIndex": {
+    "schemaVersion": "vibe.flow.index.v1",
+    "activeFlow": "experiment",
+    "currentStage": "experiment-planning",
+    "nextActions": [
+      "start EXP-001"
+    ],
+    "blockers": [],
+    "lastCommand": "/flow-experiment --register",
+    "updatedAt": "2026-03-31T10:24:38.501Z"
+  },
+  "flowState": {
+    "experiments": [
+      {
+        "id": "EXP-001",
+        "title": "Integration lifecycle experiment",
+        "status": "planned",
+        "createdAt": "2026-03-31T10:24:38.498Z",
+        "latestAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+        "relatedClaims": [
+          "C-001"
+        ],
+        "outputArtifacts": [],
+        "blockers": []
+      }
+    ],
+    "updatedAt": "2026-03-31T10:24:38.501Z"
+  },
+  "manifest": {
+    "schemaVersion": "vibe.experiment.manifest.v1",
+    "experimentId": "EXP-001",
+    "title": "Integration lifecycle experiment",
+    "objective": "Verify manifest lifecycle through middleware",
+    "status": "planned",
+    "createdAt": "2026-03-31T10:24:38.498Z",
+    "completedAt": null,
+    "executionPolicy": {
+      "timeoutSeconds": 3600,
+      "unresponsiveSeconds": 300,
+      "maxAttempts": 2
+    },
+    "latestAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+    "parameters": {
+      "seed": 17
+    },
+    "codeRef": {
+      "entrypoint": "scripts/run.py",
+      "gitCommit": "abc1234"
+    },
+    "inputArtifacts": [],
+    "outputArtifacts": [],
+    "relatedClaims": [
+      "C-001"
+    ],
+    "blockers": [],
+    "notes": ""
+  },
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+      "scope": "flow-experiment",
+      "targetId": "EXP-001",
+      "status": "succeeded",
+      "startedAt": "2026-03-31T10:24:38.479Z",
+      "lastHeartbeatAt": "2026-03-31T10:24:38.528Z",
+      "endedAt": "2026-03-31T10:24:38.528Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Registered manifest EXP-001.",
+      "events": [
+        {
+          "eventId": "EVT-1774952678530-60f2d0",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+          "scope": "flow-experiment",
+          "targetId": "EXP-001",
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.530Z"
+        },
+        {
+          "eventId": "EVT-1774952678526-34a32c",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+          "scope": "flow-experiment",
+          "targetId": "EXP-001",
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.526Z"
+        },
+        {
+          "eventId": "EVT-1774952678496-be6e5f",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+          "scope": "flow-experiment",
+          "targetId": "EXP-001",
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.496Z"
+        },
+        {
+          "eventId": "EVT-1774952678487-2dc4b2",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+          "scope": "flow-experiment",
+          "targetId": "EXP-001",
+          "severity": "info",
+          "message": "Opened attempt for /flow-experiment",
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.487Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/experiments/manifests/EXP-001.json",
+    ".vibe-science-environment/flows/experiment.json",
+    ".vibe-science-environment/flows/index.json"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "manifest",
+      "passed": true,
+      "expected": {
+        "experimentId": "EXP-001",
+        "status": "planned",
+        "latestAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6"
+      },
+      "actual": {
+        "schemaVersion": "vibe.experiment.manifest.v1",
+        "experimentId": "EXP-001",
+        "title": "Integration lifecycle experiment",
+        "objective": "Verify manifest lifecycle through middleware",
+        "status": "planned",
+        "createdAt": "2026-03-31T10:24:38.498Z",
+        "completedAt": null,
+        "executionPolicy": {
+          "timeoutSeconds": 3600,
+          "unresponsiveSeconds": 300,
+          "maxAttempts": 2
+        },
+        "latestAttemptId": "ATT-2026-03-31-10-24-38-479-d20b66c6",
+        "parameters": {
+          "seed": 17
+        },
+        "codeRef": {
+          "entrypoint": "scripts/run.py",
+          "gitCommit": "abc1234"
+        },
+        "inputArtifacts": [],
+        "outputArtifacts": [],
+        "relatedClaims": [
+          "C-001"
+        ],
+        "blockers": [],
+        "notes": ""
+      }
+    },
+    {
+      "name": "flow-index",
+      "passed": true,
+      "expected": {
+        "activeFlow": "experiment"
+      },
+      "actual": {
+        "schemaVersion": "vibe.flow.index.v1",
+        "activeFlow": "experiment",
+        "currentStage": "experiment-planning",
+        "nextActions": [
+          "start EXP-001"
+        ],
+        "blockers": [],
+        "lastCommand": "/flow-experiment --register",
+        "updatedAt": "2026-03-31T10:24:38.501Z"
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/experiments/manifests/EXP-001.json",
+        ".vibe-science-environment/flows/experiment.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/control/attempts.jsonl"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/experiments/manifests/EXP-001.json",
+        ".vibe-science-environment/flows/experiment.json",
+        ".vibe-science-environment/flows/index.json"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/experiments/manifests/EXP-001.json",
+        ".vibe-science-environment/flows/experiment.json",
+        ".vibe-science-environment/flows/index.json"
+      ]
+    }
+  ]
+}

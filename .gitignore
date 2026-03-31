@@ -1,5 +1,9 @@
 # Runtime workspace state
-.vibe-science-environment/
+.vibe-science-environment/*
+!.vibe-science-environment/operator-validation/
+.vibe-science-environment/operator-validation/*
+!.vibe-science-environment/operator-validation/benchmarks/
+!.vibe-science-environment/operator-validation/benchmarks/**
 
 # Node
 node_modules/

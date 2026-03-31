@@ -1,0 +1,329 @@
+{
+  "taskId": "flow-literature-register",
+  "benchmarkId": "phase1-core",
+  "command": {
+    "name": "/flow-literature",
+    "scope": "flow-literature",
+    "args": [
+      "--register"
+    ]
+  },
+  "result": {
+    "summary": "Registered paper LIT-001.",
+    "warnings": [],
+    "paper": {
+      "id": "LIT-001",
+      "doi": "10.5000/integration",
+      "title": "Integration test paper",
+      "authors": [
+        "Author A"
+      ],
+      "year": 2026,
+      "relevance": "supports claim C-010",
+      "linkedClaims": [],
+      "methodologyConflicts": [],
+      "registeredAt": "2026-03-31T10:24:38.413Z"
+    },
+    "flowState": {
+      "papers": [
+        {
+          "id": "LIT-001",
+          "doi": "10.5000/integration",
+          "title": "Integration test paper",
+          "authors": [
+            "Author A"
+          ],
+          "year": 2026,
+          "relevance": "supports claim C-010",
+          "linkedClaims": [],
+          "methodologyConflicts": [],
+          "registeredAt": "2026-03-31T10:24:38.413Z"
+        }
+      ],
+      "gaps": [
+        {
+          "kind": "unlinked-paper",
+          "message": "LIT-001 is not linked to any claim.",
+          "claimId": null
+        }
+      ],
+      "updatedAt": "2026-03-31T10:24:38.413Z"
+    },
+    "flowIndex": {
+      "schemaVersion": "vibe.flow.index.v1",
+      "activeFlow": "literature",
+      "currentStage": "literature-gap-analysis",
+      "nextActions": [
+        "link LIT-001 to a relevant claim"
+      ],
+      "blockers": [
+        "LIT-001 is not linked to any claim."
+      ],
+      "lastCommand": "/flow-literature --register",
+      "updatedAt": "2026-03-31T10:24:38.413Z"
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+    "scope": "flow-literature",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-03-31T10:24:38.373Z",
+    "lastHeartbeatAt": "2026-03-31T10:24:38.430Z",
+    "endedAt": "2026-03-31T10:24:38.430Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Registered paper LIT-001."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "literature",
+    "currentStage": "literature-gap-analysis",
+    "nextActions": [
+      "link LIT-001 to a relevant claim"
+    ],
+    "blockers": [
+      "LIT-001 is not linked to any claim."
+    ],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/flow-literature",
+    "lastAttemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+    "updatedAt": "2026-03-31T10:24:38.418Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": false,
+      "projections": {
+        "overview": false,
+        "claimHeads": false,
+        "unresolvedClaims": false,
+        "citationChecks": false
+      },
+      "advanced": {
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": []
+    },
+    "updatedAt": "2026-03-31T10:24:38.365Z"
+  },
+  "flowIndex": {
+    "schemaVersion": "vibe.flow.index.v1",
+    "activeFlow": "literature",
+    "currentStage": "literature-gap-analysis",
+    "nextActions": [
+      "link LIT-001 to a relevant claim"
+    ],
+    "blockers": [
+      "LIT-001 is not linked to any claim."
+    ],
+    "lastCommand": "/flow-literature --register",
+    "updatedAt": "2026-03-31T10:24:38.413Z"
+  },
+  "flowState": {
+    "papers": [
+      {
+        "id": "LIT-001",
+        "doi": "10.5000/integration",
+        "title": "Integration test paper",
+        "authors": [
+          "Author A"
+        ],
+        "year": 2026,
+        "relevance": "supports claim C-010",
+        "linkedClaims": [],
+        "methodologyConflicts": [],
+        "registeredAt": "2026-03-31T10:24:38.413Z"
+      }
+    ],
+    "gaps": [
+      {
+        "kind": "unlinked-paper",
+        "message": "LIT-001 is not linked to any claim.",
+        "claimId": null
+      }
+    ],
+    "updatedAt": "2026-03-31T10:24:38.413Z"
+  },
+  "manifest": null,
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+      "scope": "flow-literature",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-03-31T10:24:38.373Z",
+      "lastHeartbeatAt": "2026-03-31T10:24:38.430Z",
+      "endedAt": "2026-03-31T10:24:38.430Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Registered paper LIT-001.",
+      "events": [
+        {
+          "eventId": "EVT-1774952678431-43ca2c",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+          "scope": "flow-literature",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.431Z"
+        },
+        {
+          "eventId": "EVT-1774952678427-33c846",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+          "scope": "flow-literature",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.427Z"
+        },
+        {
+          "eventId": "EVT-1774952678393-ddd85d",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+          "scope": "flow-literature",
+          "targetId": null,
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.393Z"
+        },
+        {
+          "eventId": "EVT-1774952678381-7a4733",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-03-31-10-24-38-373-d9afbaaf",
+          "scope": "flow-literature",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /flow-literature",
+          "details": null,
+          "recordedAt": "2026-03-31T10:24:38.381Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/flows/literature.json"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "flow-state",
+      "passed": true,
+      "expected": {
+        "paperCount": 1,
+        "latestPaper": {
+          "doi": "10.5000/integration"
+        }
+      },
+      "actual": {
+        "paperCount": 1,
+        "latestPaper": {
+          "id": "LIT-001",
+          "doi": "10.5000/integration",
+          "title": "Integration test paper",
+          "authors": [
+            "Author A"
+          ],
+          "year": 2026,
+          "relevance": "supports claim C-010",
+          "linkedClaims": [],
+          "methodologyConflicts": [],
+          "registeredAt": "2026-03-31T10:24:38.413Z"
+        }
+      }
+    },
+    {
+      "name": "flow-index",
+      "passed": true,
+      "expected": {
+        "activeFlow": "literature"
+      },
+      "actual": {
+        "schemaVersion": "vibe.flow.index.v1",
+        "activeFlow": "literature",
+        "currentStage": "literature-gap-analysis",
+        "nextActions": [
+          "link LIT-001 to a relevant claim"
+        ],
+        "blockers": [
+          "LIT-001 is not linked to any claim."
+        ],
+        "lastCommand": "/flow-literature --register",
+        "updatedAt": "2026-03-31T10:24:38.413Z"
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/flows/literature.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/control/session.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/flows/literature.json"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/flows/literature.json"
+      ]
+    }
+  ]
+}
