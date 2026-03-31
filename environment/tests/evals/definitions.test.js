@@ -1,93 +1,102 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+import {
+  EXPECTED_METRIC_FILES,
+  EXPECTED_METRIC_IDS,
+  EXPECTED_TASK_FILES,
+  assertRepoPathExists,
+  assertSetEqual,
+  commandDocPath,
+  importRepoModule,
+  readRepoJson
+} from './_helpers.js';
 
-const TASK_FILES = [
-  'flow-status-resume.json',
-  'flow-literature-register.json',
-  'flow-experiment-register.json',
-  'degraded-kernel-mode.json'
-];
-
-const METRIC_FILES = [
-  'resume-latency.js',
-  'honesty-under-degradation.js',
-  'state-write-scope.js',
-  'attempt-lifecycle-completeness.js',
-  'snapshot-publish-success.js'
-];
-
-async function readJson(repoRelativePath) {
-  return JSON.parse(await readFile(path.join(repoRoot, repoRelativePath), 'utf8'));
-}
-
-async function importMetric(metricFile) {
-  const metricPath = path.join(repoRoot, 'environment', 'evals', 'metrics', metricFile);
-  return import(pathToFileURL(metricPath).href);
-}
-
-test('phase 1 benchmark references the concrete task and metric definitions', async () => {
-  const benchmark = await readJson('environment/evals/benchmarks/phase1-core.benchmark.json');
-  const tasks = await Promise.all(
-    TASK_FILES.map((file) => readJson(`environment/evals/tasks/${file}`))
+test('phase 1 eval benchmark references only the intended tasks and metrics', async () => {
+  const benchmark = await readRepoJson(
+    'environment/evals/benchmarks/phase1-core.benchmark.json'
   );
-  const metrics = await Promise.all(METRIC_FILES.map((file) => importMetric(file)));
-
-  const taskIds = new Set(tasks.map((task) => task.taskId));
-  const metricIds = new Set(metrics.map((metric) => metric.metricId));
+  const tasks = await Promise.all(
+    EXPECTED_TASK_FILES.map((file) => readRepoJson(`environment/evals/tasks/${file}`))
+  );
+  const metrics = await Promise.all(
+    EXPECTED_METRIC_FILES.map((file) =>
+      importRepoModule(`environment/evals/metrics/${file}`)
+    )
+  );
 
   assert.equal(benchmark.phase, 1);
-  assert.deepEqual(new Set(benchmark.taskIds), taskIds);
-  assert.deepEqual(new Set(benchmark.metricIds), metricIds);
+  assert.equal(benchmark.benchmarkId, 'phase1-core');
 
-  for (const task of tasks) {
+  assertSetEqual(
+    new Set(benchmark.taskIds),
+    new Set(tasks.map((task) => task.taskId)),
+    'Benchmark task set drifted from the task definitions.'
+  );
+  assertSetEqual(
+    new Set(benchmark.metricIds),
+    new Set(metrics.map((metric) => metric.metricId)),
+    'Benchmark metric set drifted from the metric modules.'
+  );
+});
+
+test('phase 1 task definitions stay wired to real commands, source tests, and safe write scopes', async () => {
+  for (const file of EXPECTED_TASK_FILES) {
+    const task = await readRepoJson(`environment/evals/tasks/${file}`);
+
     assert.equal(task.phase, 1);
     assert.deepEqual(task.benchmarkIds, ['phase1-core']);
+    assert.equal(task.taskId, file.replace('.json', ''));
     assert.equal(typeof task.command?.name, 'string');
     assert.ok(Array.isArray(task.metrics) && task.metrics.length > 0);
+    assert.ok(Array.isArray(task.sourceTests) && task.sourceTests.length > 0);
+    assert.ok(Array.isArray(task.expected?.requiredWrites));
+    assert.ok(Array.isArray(task.expected?.forbiddenPathPrefixes));
 
-    for (const metricId of task.metrics) {
-      assert.ok(metricIds.has(metricId), `unknown metric ${metricId} referenced by ${task.taskId}`);
+    await assertRepoPathExists(commandDocPath(task.command.name));
+
+    for (const sourceTest of task.sourceTests) {
+      await assertRepoPathExists(sourceTest);
+    }
+
+    for (const requiredWrite of task.expected.requiredWrites) {
+      const violatesForbiddenPrefix = task.expected.forbiddenPathPrefixes.some(
+        (prefix) => requiredWrite.startsWith(prefix)
+      );
+      assert.equal(
+        violatesForbiddenPrefix,
+        false,
+        `Task ${task.taskId} expects forbidden write path ${requiredWrite}`
+      );
     }
   }
 });
 
-test('metric modules export a stable API and compute sane scores', async () => {
-  const [
-    resumeLatency,
-    honestyUnderDegradation,
-    stateWriteScope,
-    attemptLifecycleCompleteness,
-    snapshotPublishSuccess
-  ] = await Promise.all(METRIC_FILES.map((file) => importMetric(file)));
+test('phase 1 metric modules export stable APIs and score representative scenarios', async () => {
+  const modules = await Promise.all(
+    EXPECTED_METRIC_FILES.map((file) =>
+      importRepoModule(`environment/evals/metrics/${file}`)
+    )
+  );
 
-  for (const metric of [
-    resumeLatency,
-    honestyUnderDegradation,
-    stateWriteScope,
-    attemptLifecycleCompleteness,
-    snapshotPublishSuccess
-  ]) {
-    assert.equal(typeof metric.metricId, 'string');
-    assert.equal(typeof metric.description, 'string');
-    assert.equal(typeof metric.evaluate, 'function');
+  assertSetEqual(
+    new Set(modules.map((module) => module.metricId)),
+    new Set(EXPECTED_METRIC_IDS),
+    'Metric ids drifted from the Phase 1 contract.'
+  );
+
+  for (const module of modules) {
+    assert.equal(typeof module.description, 'string');
+    assert.equal(typeof module.evaluate, 'function');
   }
 
-  assert.equal(
-    resumeLatency.evaluate({ elapsedSeconds: 90 }).passed,
-    true
-  );
-  assert.equal(
-    resumeLatency.evaluate({ elapsedSeconds: 140 }).passed,
-    false
-  );
+  const byId = Object.fromEntries(modules.map((module) => [module.metricId, module]));
+
+  assert.equal(byId['resume-latency'].evaluate({ elapsedSeconds: 90 }).passed, true);
+  assert.equal(byId['resume-latency'].evaluate({ elapsedSeconds: 140 }).passed, false);
 
   assert.equal(
-    honestyUnderDegradation.evaluate({
+    byId['honesty-under-degradation'].evaluate({
       degraded: true,
       snapshot: {
         kernel: { dbAvailable: false, degradedReason: 'bridge unavailable' },
@@ -101,72 +110,42 @@ test('metric modules export a stable API and compute sane scores', async () => {
     }).passed,
     true
   );
-  assert.equal(
-    honestyUnderDegradation.evaluate({
-      degraded: true,
-      snapshot: {
-        kernel: { dbAvailable: false, degradedReason: '' },
-        signals: { unresolvedClaims: 2 }
-      },
-      output: {
-        summary: 'all good',
-        warnings: []
-      },
-      fabricatedSignalKeys: ['unresolvedClaims']
-    }).passed,
-    false
-  );
 
   assert.equal(
-    stateWriteScope.evaluate({
+    byId['state-write-scope'].evaluate({
       actualWrites: [
         '.vibe-science-environment/control/session.json',
         '.vibe-science-environment/flows/index.json'
       ],
-      allowedPrefixes: ['.vibe-science-environment/control/', '.vibe-science-environment/flows/'],
+      allowedPrefixes: [
+        '.vibe-science-environment/control/',
+        '.vibe-science-environment/flows/'
+      ],
       forbiddenPrefixes: ['.vibe-science/']
     }).passed,
     true
   );
-  assert.equal(
-    stateWriteScope.evaluate({
-      actualWrites: ['CLAIM-LEDGER.md'],
-      allowedPrefixes: ['.vibe-science-environment/control/'],
-      forbiddenPrefixes: ['CLAIM-LEDGER.md']
-    }).passed,
-    false
-  );
 
   assert.equal(
-    attemptLifecycleCompleteness.evaluate({
+    byId['attempt-lifecycle-completeness'].evaluate({
       attemptRecords: [
         { status: 'preparing', startedAt: '2026-03-31T10:00:00Z' },
-        { status: 'succeeded', startedAt: '2026-03-31T10:00:00Z', endedAt: '2026-03-31T10:01:00Z' }
+        {
+          status: 'succeeded',
+          startedAt: '2026-03-31T10:00:00Z',
+          endedAt: '2026-03-31T10:01:00Z'
+        }
       ]
     }).passed,
     true
   );
-  assert.equal(
-    attemptLifecycleCompleteness.evaluate({
-      attemptRecords: [{ status: 'preparing', startedAt: '2026-03-31T10:00:00Z' }]
-    }).passed,
-    false
-  );
 
   assert.equal(
-    snapshotPublishSuccess.evaluate({
+    byId['snapshot-publish-success'].evaluate({
       snapshotExists: true,
       schemaValid: true,
       publishError: null
     }).passed,
     true
-  );
-  assert.equal(
-    snapshotPublishSuccess.evaluate({
-      snapshotExists: false,
-      schemaValid: false,
-      publishError: 'publish failed'
-    }).passed,
-    false
   );
 });

@@ -17,6 +17,7 @@ export default async function validateNoPersonalPaths() {
       (file.startsWith('commands/') && file.endsWith('.md')) ||
       (file.startsWith('blueprints/definitive-spec/') && file.endsWith('.md')) ||
       (file.startsWith('environment/control/') && file.endsWith('.js')) ||
+      (file.startsWith('environment/evals/') && (file.endsWith('.js') || file.endsWith('.json'))) ||
       (file.startsWith('environment/flows/') && file.endsWith('.js')) ||
       (file.startsWith('environment/lib/') && file.endsWith('.js')) ||
       (file.startsWith('environment/schemas/') && file.endsWith('.json')) ||

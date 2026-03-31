@@ -108,6 +108,11 @@ export default async function validateRuntimeContracts() {
       assert(metricIdSet.has(metricId), `Eval benchmark ${benchmarkFile} references unknown metric ${metricId}`);
     }
   }
+
+  assert(
+    await pathExists('environment/tests/evals/definitions.test.js'),
+    'Missing eval harness test: environment/tests/evals/definitions.test.js'
+  );
 }
 
 if (isDirectRun(import.meta)) {
