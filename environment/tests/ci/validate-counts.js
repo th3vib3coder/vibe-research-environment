@@ -1,0 +1,36 @@
+import { assert, collectFiles, isDirectRun } from './_helpers.js';
+
+const expectedCounts = {
+  bundleManifests: 4,
+  schemas: 12,
+  templates: 6,
+  controlTests: 7,
+  flowTests: 2,
+  libTests: 4,
+  integrationTests: 4,
+  schemaTests: 12,
+  ciValidators: 9
+};
+
+export default async function validateCounts() {
+  const actualCounts = {
+    bundleManifests: (await collectFiles('environment/install/bundles', { include: (file) => file.endsWith('.bundle.json') })).length,
+    schemas: (await collectFiles('environment/schemas', { include: (file) => file.endsWith('.schema.json') })).length,
+    templates: (await collectFiles('environment/templates', { include: (file) => file.endsWith('.json') })).length,
+    controlTests: (await collectFiles('environment/tests/control', { include: (file) => file.endsWith('.test.js') })).length,
+    flowTests: (await collectFiles('environment/tests/flows', { include: (file) => file.endsWith('.test.js') })).length,
+    libTests: (await collectFiles('environment/tests/lib', { include: (file) => file.endsWith('.test.js') })).length,
+    integrationTests: (await collectFiles('environment/tests/integration', { include: (file) => file.endsWith('.test.js') && !file.endsWith('_fixture.js') })).length,
+    schemaTests: (await collectFiles('environment/tests/schemas', { include: (file) => file.endsWith('.test.js') })).length,
+    ciValidators: (await collectFiles('environment/tests/ci', { include: (file) => file.endsWith('.js') && !file.endsWith('_helpers.js') && !file.endsWith('run-all.js') })).length
+  };
+
+  for (const [key, expected] of Object.entries(expectedCounts)) {
+    assert(actualCounts[key] === expected, `Count mismatch for ${key}: expected ${expected}, got ${actualCounts[key]}`);
+  }
+}
+
+if (isDirectRun(import.meta)) {
+  const { runValidator } = await import('./_helpers.js');
+  await runValidator('validate-counts', validateCounts);
+}
