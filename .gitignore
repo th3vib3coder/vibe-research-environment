@@ -2,6 +2,8 @@
 .vibe-science-environment/*
 !.vibe-science-environment/operator-validation/
 .vibe-science-environment/operator-validation/*
+!.vibe-science-environment/operator-validation/artifacts/
+!.vibe-science-environment/operator-validation/artifacts/**
 !.vibe-science-environment/operator-validation/benchmarks/
 !.vibe-science-environment/operator-validation/benchmarks/**
 

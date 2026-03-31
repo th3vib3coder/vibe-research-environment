@@ -4,6 +4,7 @@ import { access } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
+  assertRepoPathExists,
   EXPECTED_TASK_FILES,
   repoRoot,
   listSavedBenchmarkRepeats,
@@ -71,4 +72,26 @@ test('saved flow-status-resume artifact demonstrates resume within the Phase 1 l
       summary.metrics.resumeLatencySeconds <= 120,
     'Resume artifact exceeded the Phase 1 latency budget.'
   );
+});
+
+test('saved operator-validation artifact points to a passing flow-status resume repeat', async () => {
+  const artifact = await readRepoJson(
+    '.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json'
+  );
+
+  assert.equal(artifact.artifactId, 'phase1-resume-validation');
+  assert.equal(artifact.phase, 1);
+  assert.equal(artifact.passed, true);
+  assert.equal(artifact.command.name, '/flow-status');
+  assert.ok(
+    typeof artifact.elapsedSeconds === 'number' && artifact.elapsedSeconds <= 120,
+    'Operator validation artifact does not prove resume within the Phase 1 budget.'
+  );
+  assert.match(artifact.validationClaim, /\/flow-status/u);
+
+  await assertRepoPathExists(artifact.sourceRepeat.inputPath);
+  await assertRepoPathExists(artifact.sourceRepeat.outputPath);
+  await assertRepoPathExists(artifact.sourceRepeat.metricsPath);
+  await assertRepoPathExists(artifact.sourceRepeat.summaryPath);
+  await assertRepoPathExists(artifact.sourceRepeat.transcriptPath);
 });

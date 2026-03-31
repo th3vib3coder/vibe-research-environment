@@ -1,0 +1,145 @@
+{
+  "artifactId": "phase1-resume-validation",
+  "phase": 1,
+  "createdAt": "2026-03-31T11:17:05.437Z",
+  "passed": true,
+  "scenarioName": "flow-status-resume",
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "validationClaim": "Researcher can resume active context in <=2 minutes using /flow-status.",
+  "elapsedSeconds": 0.06,
+  "sourceRepeat": {
+    "taskId": "flow-status-resume",
+    "repeatId": "2026-03-31-02",
+    "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/input.json",
+    "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/output.json",
+    "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/metrics.json",
+    "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/summary.json",
+    "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/transcript.md"
+  },
+  "startingState": [
+    {
+      "path": ".vibe-science-environment/flows/index.json",
+      "kind": "flow-index",
+      "state": "present",
+      "overrides": {
+        "activeFlow": "experiment",
+        "currentStage": "experiment-running",
+        "nextActions": [
+          "review outputs for EXP-001"
+        ],
+        "blockers": [],
+        "lastCommand": "/flow-experiment"
+      }
+    },
+    {
+      "path": ".vibe-science-environment/control/session.json",
+      "kind": "session-snapshot",
+      "state": "missing"
+    }
+  ],
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "maxElapsedSeconds": 120,
+    "snapshotAssertions": {
+      "activeFlow": "experiment",
+      "currentStage": "experiment-running",
+      "lastCommand": "/flow-status",
+      "signals": {
+        "unresolvedClaims": 1
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Resumed experiment at experiment-running.",
+      "warnings": [],
+      "flowIndex": {
+        "schemaVersion": "vibe.flow.index.v1",
+        "activeFlow": "experiment",
+        "currentStage": "experiment-running",
+        "nextActions": [
+          "review outputs for EXP-001"
+        ],
+        "blockers": [],
+        "lastCommand": "/flow-experiment",
+        "updatedAt": null
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "experiment",
+      "currentStage": "experiment-running",
+      "nextActions": [
+        "review outputs for EXP-001"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": true,
+        "degradedReason": null
+      },
+      "capabilities": {
+        "claimHeads": true,
+        "citationChecks": true,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 1,
+        "blockedExperiments": 0,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/flow-status",
+      "lastAttemptId": "ATT-2026-03-31-10-24-38-273-f0114d3e",
+      "updatedAt": "2026-03-31T10:24:38.303Z"
+    },
+    "flowIndex": {
+      "schemaVersion": "vibe.flow.index.v1",
+      "activeFlow": "experiment",
+      "currentStage": "experiment-running",
+      "nextActions": [
+        "review outputs for EXP-001"
+      ],
+      "blockers": [],
+      "lastCommand": "/flow-experiment",
+      "updatedAt": null
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ]
+  },
+  "evidence": {
+    "benchmarkId": "phase1-core",
+    "checksPassed": 4,
+    "checksTotal": 4,
+    "metrics": {
+      "resumeLatencySeconds": 0.06,
+      "degradedHonestyScore": null,
+      "stateWriteScopeViolations": 0,
+      "attemptLifecycleCompleteness": 1,
+      "snapshotPublishSuccess": 1
+    }
+  }
+}
