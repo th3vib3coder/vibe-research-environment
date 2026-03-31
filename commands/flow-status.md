@@ -1,0 +1,60 @@
+---
+description: Show VRE status through the control plane and canonical session snapshot
+allowed-tools: Read, Bash
+model: sonnet
+---
+
+# /flow-status
+
+This command is a thin entrypoint over the VRE control plane.
+
+## Required modules
+
+- `environment/control/middleware.js`
+- `environment/control/query.js`
+
+## Kernel bridge rule
+
+Check whether `plugin/scripts/core-reader-cli.js` exists.
+
+- If it exists, you MAY build a small CLI-backed reader adapter for the projections you need.
+- If it is missing, or any CLI call exits non-zero, degrade honestly by using:
+
+```js
+{ dbAvailable: false, error: 'core-reader CLI unavailable' }
+```
+
+Do not reconstruct unresolved claims or citation truth from markdown.
+
+## Execution protocol
+
+1. Use `process.cwd()` as `projectPath` unless the operator explicitly gives another project root.
+2. Import `runWithMiddleware(...)` from `environment/control/middleware.js`.
+3. Import `getOperatorStatus(...)` from `environment/control/query.js`.
+4. Run the command through middleware with `commandName: '/flow-status'`.
+5. Inside `commandFn`, read the operator-facing surface through `getOperatorStatus(projectPath)`.
+6. Render the canonical session snapshot returned by middleware or query helpers.
+
+## Rendering
+
+Report:
+
+- active flow
+- current stage
+- next actions
+- blockers
+- kernel availability / degraded reason
+- budget state
+- unresolved claims
+- blocked experiments
+- export alerts
+- last command
+- last attempt id
+
+If the snapshot is missing, say so clearly and report that the control plane will rebuild it on the next successful run.
+
+## Rules
+
+- Do not manually edit `session.json`, `attempts.jsonl`, `events.jsonl`, or `decisions.jsonl`.
+- Do not invent kernel facts when the bridge is unavailable.
+- `/flow-status` is operationally read-focused, but it still goes through middleware so the lifecycle remains queryable.
