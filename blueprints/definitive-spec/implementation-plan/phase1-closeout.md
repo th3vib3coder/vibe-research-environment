@@ -51,14 +51,29 @@ So the honest reading is:
 
 ---
 
-## Phase 1 Exit Gate Outcome
+## Phase 1 Exit Gate Outcome (all 17 gates from Doc 13)
 
-| Gate | Result | Evidence |
-|------|--------|----------|
-| saved operator-validation artifact exists | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
-| all Phase 1 scenarios have at least one saved repeat | PASS | four repeat directories under [benchmarks](../../../.vibe-science-environment/operator-validation/benchmarks/) |
-| baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
-| kernel governance prerequisites verified against compatibility checklist | PARTIAL | checklist below |
+| # | Gate | Result | Evidence |
+|---|------|--------|----------|
+| 1 | core-reader.js has 8 tested projection functions | PASS | kernel-side: `plugin/lib/core-reader.js`, `tests/core-reader.test.mjs` (pre-existing) |
+| 2 | CLI bridge returns stable JSON envelope | PASS | kernel-side: `plugin/scripts/core-reader-cli.js` (pre-existing) |
+| 3 | Flow state lives outside kernel in `.vibe-science-environment/` | PASS | [flow-state.js](../../../environment/lib/flow-state.js), [flow-state.test.js](../../../environment/tests/lib/flow-state.test.js) |
+| 4 | Canonical operator snapshot in `control/session.json` | PASS | [session-snapshot.js](../../../environment/control/session-snapshot.js), [session-snapshot.test.js](../../../environment/tests/control/session-snapshot.test.js) |
+| 5 | Every `/flow-*` opens and closes an attempt | PASS | [middleware.js](../../../environment/control/middleware.js), [middleware.test.js](../../../environment/tests/control/middleware.test.js) |
+| 6 | Capability snapshot defaults unknown features to `false` | PASS | [capabilities.js](../../../environment/control/capabilities.js), [capabilities.test.js](../../../environment/tests/control/capabilities.test.js) |
+| 7 | Shared middleware chain handles lifecycle | PASS | [middleware.js](../../../environment/control/middleware.js) — 7-step chain |
+| 8 | `/flow-status` resumes and produces summary | PASS | [flow-status.md](../../../commands/flow-status.md), [control-plane-rebuild.test.js](../../../environment/tests/integration/control-plane-rebuild.test.js) |
+| 9 | `/flow-literature` registers paper and links to claim | PASS | [literature.js](../../../environment/flows/literature.js), [literature-register.test.js](../../../environment/tests/integration/literature-register.test.js) |
+| 10 | `/flow-experiment` creates manifest and tracks outputs | PASS | [experiment.js](../../../environment/flows/experiment.js), [experiment-manifest-lifecycle.test.js](../../../environment/tests/integration/experiment-manifest-lifecycle.test.js) |
+| 11 | `/flow-experiment` lists existing manifests | PASS | [experiment.test.js](../../../environment/tests/flows/experiment.test.js) |
+| 12 | At least one flow demonstrates two-substrate rule | PASS | literature + experiment use workspace files + optional CLI bridge projections |
+| 13 | Flow state, control records, manifests validate against schemas | PASS | [validate-runtime-contracts.js](../../../environment/tests/ci/validate-runtime-contracts.js), 12 schema tests in [tests/schemas/](../../../environment/tests/schemas/) |
+| 14 | Saved operator-validation artifact (resume ≤2 min) | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
+| 15 | Phase 1 scenarios in eval harness with saved runs | PASS | 4 repeat directories under [benchmarks/](../../../.vibe-science-environment/operator-validation/benchmarks/) |
+| 16 | Baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
+| 17 | Kernel governance prerequisites verified | PARTIAL | checklist below — `governance_events` gap |
+
+**Result: 16 PASS, 1 PARTIAL.** The PARTIAL is a kernel-side dependency, not a VRE implementation gap.
 
 ---
 
