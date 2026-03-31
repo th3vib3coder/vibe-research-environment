@@ -19,19 +19,59 @@ The kernel remains authoritative for:
 - session integrity
 - governance enforcement owned by Vibe Science
 
-## Current Status
+## Phase 1 Status
 
-This repository is being bootstrapped from the finalized Phase 1 specification.
+VRE Phase 1 is implemented in this repository and backed by saved evidence on
+disk.
 
-Active work:
-- Wave 0 foundation
-- dedicated repo split from the incubation monorepo
-- strict Phase 1 execution only
+Current closeout status:
+- `16/17` Phase 1 exit gates are `PASS`
+- `1/17` is `PARTIAL`
+- the only remaining partial gate is a **kernel-side** prerequisite:
+  `governance_events` append-only audit storage is not yet observed in the
+  current sibling `vibe-science` snapshot
+
+Closeout dossier:
+- [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
 
 ## Spec Entry Points
 
-- `blueprints/definitive-spec/00-INDEX.md`
-- `blueprints/definitive-spec/IMPLEMENTATION-PLAN.md`
+- [Definitive Spec Index](blueprints/definitive-spec/00-INDEX.md)
+- [Implementation Plan](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
+- [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
+
+## Quickstart
+
+Requirements:
+- Node `18+`
+- sibling checkout of `vibe-science` during incubation, because some eval and
+  compatibility artifacts read kernel-owned files from `../vibe-science`
+
+Install:
+
+```bash
+npm install
+```
+
+Main repo checks:
+
+```bash
+npm run validate
+npm test
+npm run check
+```
+
+Wave 5 evidence scripts:
+
+```bash
+npm run eval:save-phase1
+npm run eval:save-operator-validation
+npm run eval:measure-context-baseline
+```
+
+Saved Phase 1 evidence lives under:
+- `.vibe-science-environment/operator-validation/benchmarks/`
+- `.vibe-science-environment/operator-validation/artifacts/`
 
 ## Runtime Rule
 
@@ -44,3 +84,18 @@ All code owned by this repository lives under:
 - `environment/`
 - `commands/`
 - `blueprints/`
+
+## Repo Contract
+
+This repo owns:
+- control-plane state and query surfaces
+- flow-local state and experiment manifests
+- middleware, validators, tests, and eval harnesses
+- operator-facing command shims
+
+This repo does **not** own:
+- claim truth
+- citation truth
+- gate truth
+- kernel lifecycle truth
+- kernel governance decisions

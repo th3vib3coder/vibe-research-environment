@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check": "npm run validate && npm test",
     "test": "node --test",
     "validate": "node environment/tests/ci/run-all.js",
     "eval:save-phase1": "node environment/evals/save-phase1-artifacts.js",
