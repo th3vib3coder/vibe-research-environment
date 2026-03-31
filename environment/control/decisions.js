@@ -1,28 +1,27 @@
-/**
- * Append-only decision log — decisions.jsonl
- * Records workflow decisions that must not live only in chat.
- */
-
-import path from 'node:path';
 import {
-  controlDir, ensureControlDir, appendJsonl, readJsonl,
-  loadValidator, assertValid, now
+  appendJsonl,
+  assertValid,
+  controlDir,
+  loadValidator,
+  now,
+  readJsonl,
+  resolveInside
 } from './_io.js';
 
-const SCHEMA = 'decision-record.schema.json';
-const FILE   = 'decisions.jsonl';
+const SCHEMA_FILE = 'decision-record.schema.json';
+const DECISIONS_FILE = 'decisions.jsonl';
 
-let decisionSeq = 0;
+function decisionsPath(projectPath) {
+  return resolveInside(controlDir(projectPath), DECISIONS_FILE);
+}
 
-function filePath(projectPath) {
-  return path.join(controlDir(projectPath), FILE);
+function generateDecisionId() {
+  return `DEC-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 }
 
 export async function appendDecision(projectPath, decision) {
-  await ensureControlDir(projectPath);
-
   const record = {
-    decisionId: decision.decisionId ?? `DEC-${Date.now()}-${++decisionSeq}`,
+    decisionId: decision.decisionId ?? generateDecisionId(),
     flow: decision.flow,
     targetId: decision.targetId ?? null,
     attemptId: decision.attemptId ?? null,
@@ -32,28 +31,28 @@ export async function appendDecision(projectPath, decision) {
     recordedAt: decision.recordedAt ?? now()
   };
 
-  const validate = await loadValidator(projectPath, SCHEMA);
+  const validate = await loadValidator(projectPath, SCHEMA_FILE);
   assertValid(validate, record, 'decision record');
-  await appendJsonl(filePath(projectPath), record);
+  await appendJsonl(projectPath, DECISIONS_FILE, record);
   return record;
 }
 
 export async function listDecisions(projectPath, filters = {}) {
-  const all = await readJsonl(filePath(projectPath));
-  let result = all;
+  let result = await readJsonl(decisionsPath(projectPath));
 
   if (filters.flow) {
-    result = result.filter(d => d.flow === filters.flow);
+    result = result.filter((decision) => decision.flow === filters.flow);
   }
   if (filters.targetId) {
-    result = result.filter(d => d.targetId === filters.targetId);
+    result = result.filter((decision) => decision.targetId === filters.targetId);
   }
   if (filters.attemptId) {
-    result = result.filter(d => d.attemptId === filters.attemptId);
+    result = result.filter((decision) => decision.attemptId === filters.attemptId);
   }
 
-  // Default sort: newest first
-  result.sort((a, b) => (b.recordedAt ?? '').localeCompare(a.recordedAt ?? ''));
+  result.sort((left, right) =>
+    (right.recordedAt ?? '').localeCompare(left.recordedAt ?? '')
+  );
 
   const offset = filters.offset ?? 0;
   const limit = filters.limit ?? 100;

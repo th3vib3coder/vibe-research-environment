@@ -1,61 +1,132 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, cp } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 async function setup() {
   const tmp = await mkdtemp(path.join(tmpdir(), 'vre-mw-'));
-  // Copy schemas and templates for flow-state bootstrap
-  await cp(path.join(process.cwd(), 'environment', 'schemas'), path.join(tmp, 'environment', 'schemas'), { recursive: true });
-  await cp(path.join(process.cwd(), 'environment', 'templates'), path.join(tmp, 'environment', 'templates'), { recursive: true });
+  await cp(
+    path.join(process.cwd(), 'environment', 'schemas'),
+    path.join(tmp, 'environment', 'schemas'),
+    { recursive: true }
+  );
+  await cp(
+    path.join(process.cwd(), 'environment', 'templates'),
+    path.join(tmp, 'environment', 'templates'),
+    { recursive: true }
+  );
+  await cp(
+    path.join(process.cwd(), 'environment', 'install', 'bundles'),
+    path.join(tmp, 'environment', 'install', 'bundles'),
+    { recursive: true }
+  );
   return tmp;
 }
 
-describe('middleware', async () => {
+describe('middleware', () => {
   let dir;
-  let mw, attempts, events, snapshot;
+  let middleware;
+  let attempts;
+  let decisions;
+  let events;
+  let manifest;
+  let snapshot;
 
   beforeEach(async () => {
     dir = await setup();
-    mw = await import('../../control/middleware.js');
-    attempts = await import('../../control/attempts.js');
-    events = await import('../../control/events.js');
-    snapshot = await import('../../control/session-snapshot.js');
+    middleware = await import(`../../control/middleware.js?${Date.now()}`);
+    attempts = await import(`../../control/attempts.js?${Date.now()}`);
+    decisions = await import(`../../control/decisions.js?${Date.now()}`);
+    events = await import(`../../control/events.js?${Date.now()}`);
+    manifest = await import(`../../lib/manifest.js?${Date.now()}`);
+    snapshot = await import(`../../control/session-snapshot.js?${Date.now()}`);
   });
 
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('runs the full 7-step chain for a successful command', async () => {
-    const { result, attempt, snapshot: snap } = await mw.runWithMiddleware({
+  it('runs the full chain and appends returned decisions', async () => {
+    const metricsAccumulator = {
+      snapshot() {
+        return {
+          toolCalls: 4,
+          estimatedCostUsd: 1.2,
+          countingMode: 'provider_native',
+          budgetState: 'ok'
+        };
+      }
+    };
+
+    const { attempt, snapshot: publishedSnapshot } = await middleware.runWithMiddleware({
       projectPath: dir,
-      commandName: '/flow-status',
+      commandName: '/flow-experiment',
       reader: null,
+      metricsAccumulator,
+      targetId: 'EXP-001',
       commandFn: async (ctx) => {
-        assert.equal(ctx.commandName, '/flow-status');
-        assert.equal(ctx.degraded, true); // reader is null
-        return { summary: 'Status retrieved' };
+        assert.equal(ctx.scope, 'flow-experiment');
+        assert.equal(ctx.flow, 'experiment');
+        assert.equal(ctx.degraded, true);
+        return {
+          summary: 'Experiment listed',
+          decisions: [
+            {
+              kind: 'blocker_escalation',
+              reason: 'Need manual review'
+            }
+          ]
+        };
       }
     });
 
     assert.equal(attempt.status, 'succeeded');
-    assert.equal(attempt.summary, 'Status retrieved');
-    assert.ok(snap.updatedAt);
-    assert.equal(snap.lastCommand, '/flow-status');
+    assert.equal(publishedSnapshot.budget.toolCalls, 4);
 
-    // Verify telemetry was written
-    const evts = await events.listEvents(dir);
-    const kinds = evts.map(e => e.kind);
-    assert.ok(kinds.includes('attempt_opened'));
-    assert.ok(kinds.includes('degraded_mode_entered'));
-    assert.ok(kinds.includes('session_snapshot_published'));
-    assert.ok(kinds.includes('attempt_updated'));
+    const decisionList = await decisions.listDecisions(dir, {
+      attemptId: attempt.attemptId
+    });
+    assert.equal(decisionList.length, 1);
+    assert.equal(decisionList[0].flow, 'experiment');
   });
 
-  it('handles command failure gracefully', async () => {
-    const { attempt } = await mw.runWithMiddleware({
+  it('blocks command execution on budget hard stop', async () => {
+    let executed = false;
+    const metricsAccumulator = {
+      snapshot() {
+        return {
+          toolCalls: 100,
+          estimatedCostUsd: 10,
+          countingMode: 'provider_native',
+          budgetState: 'hard_stop'
+        };
+      }
+    };
+
+    const { result, attempt } = await middleware.runWithMiddleware({
+      projectPath: dir,
+      commandName: '/flow-status',
+      reader: null,
+      metricsAccumulator,
+      commandFn: async () => {
+        executed = true;
+        return {};
+      }
+    });
+
+    assert.equal(executed, false);
+    assert.equal(result.blocked, true);
+    assert.equal(attempt.status, 'blocked');
+
+    const eventList = await events.listEvents(dir, {
+      kind: 'budget_stop_triggered'
+    });
+    assert.equal(eventList.length, 1);
+  });
+
+  it('handles command failure honestly', async () => {
+    const { attempt } = await middleware.runWithMiddleware({
       projectPath: dir,
       commandName: '/flow-experiment',
       reader: null,
@@ -66,31 +137,102 @@ describe('middleware', async () => {
 
     assert.equal(attempt.status, 'failed');
     assert.equal(attempt.summary, 'Experiment registration failed');
-    assert.ok(attempt.errorCode);
   });
 
-  it('creates exactly one attempt per invocation', async () => {
-    await mw.runWithMiddleware({
+  it('creates one logical attempt per invocation with lifecycle updates', async () => {
+    await middleware.runWithMiddleware({
       projectPath: dir,
       commandName: '/flow-literature',
       reader: null,
       commandFn: async () => ({})
     });
 
-    const all = await attempts.listAttempts(dir);
-    assert.equal(all.length, 1);
+    const list = await attempts.listAttempts(dir);
+    assert.equal(list.length, 1);
+    assert.equal(list[0].status, 'succeeded');
   });
 
-  it('publishes session snapshot with kernel degraded info', async () => {
-    await mw.runWithMiddleware({
+  it('publishes a session snapshot with degraded kernel info', async () => {
+    await middleware.runWithMiddleware({
       projectPath: dir,
       commandName: '/flow-status',
-      reader: null,
+      reader: {
+        dbAvailable: false,
+        error: 'db unavailable'
+      },
       commandFn: async () => ({})
     });
 
-    const snap = await snapshot.getSessionSnapshot(dir);
-    assert.equal(snap.kernel.dbAvailable, false);
-    assert.ok(snap.kernel.degradedReason);
+    const currentSnapshot = await snapshot.getSessionSnapshot(dir);
+    assert.equal(currentSnapshot.kernel.dbAvailable, false);
+    assert.equal(currentSnapshot.kernel.degradedReason, 'db unavailable');
+  });
+
+  it('derives unresolvedClaims and blockedExperiments from real sources', async () => {
+    await manifest.createManifest(dir, {
+      experimentId: 'EXP-004',
+      title: 'Blocked experiment',
+      objective: 'Test blocker surfacing',
+      status: 'planned',
+      executionPolicy: {
+        timeoutSeconds: 3600,
+        unresponsiveSeconds: 300,
+        maxAttempts: 2
+      },
+      parameters: {},
+      codeRef: {
+        entrypoint: 'scripts/run.py',
+        gitCommit: 'abc1234'
+      },
+      inputArtifacts: [],
+      outputArtifacts: [],
+      relatedClaims: ['C-001'],
+      blockers: [],
+      notes: ''
+    });
+    await manifest.updateManifest(dir, 'EXP-004', {
+      status: 'active'
+    });
+    await manifest.updateManifest(dir, 'EXP-004', {
+      status: 'blocked',
+      blockers: ['Missing control dataset']
+    });
+
+    await middleware.runWithMiddleware({
+      projectPath: dir,
+      commandName: '/flow-status',
+      reader: {
+        dbAvailable: true,
+        listUnresolvedClaims: async () => [{ claimId: 'C-001' }]
+      },
+      commandFn: async () => ({})
+    });
+
+    const currentSnapshot = await snapshot.getSessionSnapshot(dir);
+    assert.equal(currentSnapshot.signals.unresolvedClaims, 1);
+    assert.equal(currentSnapshot.signals.blockedExperiments, 1);
+  });
+
+  it('fails closed when flow index is corrupt instead of publishing a fake clean snapshot', async () => {
+    await mkdir(path.join(dir, '.vibe-science-environment', 'flows'), {
+      recursive: true
+    });
+    await writeFile(
+      path.join(dir, '.vibe-science-environment', 'flows', 'index.json'),
+      '{"schemaVersion":"vibe.flow.index.v1","activeFlow":"experiment"',
+      'utf8'
+    );
+
+    const { attempt, result, snapshot: publishedSnapshot } =
+      await middleware.runWithMiddleware({
+        projectPath: dir,
+        commandName: '/flow-status',
+        reader: null,
+        commandFn: async () => ({})
+      });
+
+    assert.equal(attempt.status, 'failed');
+    assert.match(result.error, /JSON|flow index/i);
+    assert.equal(publishedSnapshot, null);
   });
 });

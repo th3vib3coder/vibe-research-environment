@@ -14,6 +14,7 @@
     "sharedMiddleware"
   ],
   "ownedPaths": [
+    "environment/control/_io.js",
     "environment/control/session-snapshot.js",
     "environment/control/attempts.js",
     "environment/control/decisions.js",

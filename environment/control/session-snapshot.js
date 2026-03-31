@@ -1,50 +1,65 @@
-/**
- * Canonical session snapshot — session.json
- * The ONLY authoritative outer-project answer to "Where am I?"
- * This is NOT kernel session state — it's a derived operator view.
- */
-
-import path from 'node:path';
 import {
-  controlDir, ensureControlDir, readJson, atomicWriteJson,
-  loadValidator, assertValid, now
+  atomicWriteJson,
+  assertValid,
+  controlDir,
+  loadValidator,
+  now,
+  readJson,
+  resolveInside
 } from './_io.js';
 
-const SCHEMA = 'session-snapshot.schema.json';
-const FILE   = 'session.json';
+const SCHEMA_FILE = 'session-snapshot.schema.json';
+const SESSION_FILE = 'session.json';
 
-function filePath(projectPath) {
-  return path.join(controlDir(projectPath), FILE);
+function sessionPath(projectPath) {
+  return resolveInside(controlDir(projectPath), SESSION_FILE);
+}
+
+function deriveSnapshotCapabilities(input = {}) {
+  if (input.kernel && input.install) {
+    return {
+      claimHeads: Boolean(input.kernel?.projections?.claimHeads),
+      citationChecks: Boolean(input.kernel?.projections?.citationChecks),
+      governanceProfileAtCreation: Boolean(
+        input.kernel?.advanced?.governanceProfileAtCreation
+      ),
+      claimSearch: Boolean(input.kernel?.advanced?.claimSearch)
+    };
+  }
+
+  return {
+    claimHeads: Boolean(input.claimHeads),
+    citationChecks: Boolean(input.citationChecks),
+    governanceProfileAtCreation: Boolean(input.governanceProfileAtCreation),
+    claimSearch: Boolean(input.claimSearch)
+  };
 }
 
 export async function getSessionSnapshot(projectPath) {
   try {
-    return await readJson(filePath(projectPath));
-  } catch (err) {
-    if (err.code === 'ENOENT') return null;
-    throw err;
+    return await readJson(sessionPath(projectPath));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+
+    throw error;
   }
 }
 
 export async function publishSessionSnapshot(projectPath, snapshot) {
-  await ensureControlDir(projectPath);
-
-  const validate = await loadValidator(projectPath, SCHEMA);
+  const validate = await loadValidator(projectPath, SCHEMA_FILE);
   assertValid(validate, snapshot, 'session snapshot');
-  await atomicWriteJson(filePath(projectPath), snapshot);
+  await atomicWriteJson(sessionPath(projectPath), snapshot);
   return snapshot;
 }
 
 export async function rebuildSessionSnapshot(projectPath, inputs = {}) {
-  const {
-    flowState = {},
-    capabilities = {},
-    budget = {},
-    signals = {},
-    kernel = {},
-    lastCommand = null,
-    lastAttemptId = null
-  } = inputs;
+  const flowState = inputs.flowState ?? {};
+  const capabilities = deriveSnapshotCapabilities(inputs.capabilities);
+  const budget = inputs.budget ?? {};
+  const signals = inputs.signals ?? {};
+  const kernel = inputs.kernel ?? {};
 
   const snapshot = {
     schemaVersion: 'vibe-env.session.v1',
@@ -53,15 +68,10 @@ export async function rebuildSessionSnapshot(projectPath, inputs = {}) {
     nextActions: flowState.nextActions ?? [],
     blockers: flowState.blockers ?? [],
     kernel: {
-      dbAvailable: kernel.dbAvailable ?? false,
+      dbAvailable: Boolean(kernel.dbAvailable),
       degradedReason: kernel.degradedReason ?? null
     },
-    capabilities: {
-      claimHeads: capabilities.claimHeads ?? false,
-      citationChecks: capabilities.citationChecks ?? false,
-      governanceProfileAtCreation: capabilities.governanceProfileAtCreation ?? false,
-      claimSearch: capabilities.claimSearch ?? false
-    },
+    capabilities,
     budget: {
       state: budget.state ?? 'unknown',
       toolCalls: budget.toolCalls ?? 0,
@@ -69,15 +79,19 @@ export async function rebuildSessionSnapshot(projectPath, inputs = {}) {
       countingMode: budget.countingMode ?? 'unknown'
     },
     signals: {
-      staleMemory: signals.staleMemory ?? false,
+      staleMemory: Boolean(signals.staleMemory),
       unresolvedClaims: signals.unresolvedClaims ?? 0,
       blockedExperiments: signals.blockedExperiments ?? 0,
       exportAlerts: signals.exportAlerts ?? 0
     },
-    lastCommand,
-    lastAttemptId,
+    lastCommand: inputs.lastCommand ?? null,
+    lastAttemptId: inputs.lastAttemptId ?? null,
     updatedAt: now()
   };
 
   return publishSessionSnapshot(projectPath, snapshot);
 }
+
+export const INTERNALS = {
+  deriveSnapshotCapabilities
+};

@@ -1,38 +1,79 @@
-/**
- * Attempt ledger — append-only lifecycle tracking in attempts.jsonl.
- * Each update appends a NEW record (event-sourced, not in-place mutation).
- */
+import { randomUUID } from 'node:crypto';
 
-import path from 'node:path';
 import {
-  controlDir, ensureControlDir, appendJsonl, readJsonl,
-  loadValidator, assertValid, now
+  appendJsonl,
+  assertValid,
+  controlDir,
+  loadValidator,
+  now,
+  readJsonl,
+  resolveInside
 } from './_io.js';
 
-const SCHEMA = 'attempt-record.schema.json';
-const FILE   = 'attempts.jsonl';
+const SCHEMA_FILE = 'attempt-record.schema.json';
+const ATTEMPTS_FILE = 'attempts.jsonl';
+const TERMINAL_STATUSES = new Set([
+  'succeeded',
+  'failed',
+  'blocked',
+  'timeout',
+  'unresponsive',
+  'abandoned'
+]);
 
-const TERMINAL = new Set(['succeeded', 'failed', 'blocked', 'timeout', 'unresponsive', 'abandoned']);
+const ALLOWED_TRANSITIONS = new Map([
+  ['preparing', new Set(['preparing', 'running', ...TERMINAL_STATUSES])],
+  ['running', new Set(['running', ...TERMINAL_STATUSES])],
+  ['succeeded', new Set()],
+  ['failed', new Set()],
+  ['blocked', new Set()],
+  ['timeout', new Set()],
+  ['unresponsive', new Set()],
+  ['abandoned', new Set()]
+]);
 
-let attemptSeq = 0;
+function attemptsPath(projectPath) {
+  return resolveInside(controlDir(projectPath), ATTEMPTS_FILE);
+}
 
-function filePath(projectPath) {
-  return path.join(controlDir(projectPath), FILE);
+function normalizeScope(value) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return null;
+  }
+
+  return value.replace(/^\//u, '');
 }
 
 function generateAttemptId() {
-  const d = new Date();
-  const date = d.toISOString().slice(0, 10);
-  return `ATT-${date}-${String(++attemptSeq).padStart(3, '0')}`;
+  const stamp = now()
+    .replace(/[:.]/gu, '-')
+    .replace('T', '-')
+    .replace('Z', '');
+  return `ATT-${stamp}-${randomUUID().slice(0, 8)}`;
+}
+
+function assertTransition(previousStatus, nextStatus) {
+  const allowed = ALLOWED_TRANSITIONS.get(previousStatus);
+  if (!allowed || !allowed.has(nextStatus)) {
+    throw new Error(
+      `Invalid attempt transition: ${previousStatus} -> ${nextStatus}`
+    );
+  }
+}
+
+function latestAttempts(records) {
+  const latestById = new Map();
+  for (const record of records) {
+    latestById.set(record.attemptId, record);
+  }
+  return [...latestById.values()];
 }
 
 export async function openAttempt(projectPath, input = {}) {
-  await ensureControlDir(projectPath);
-
   const timestamp = now();
   const record = {
     attemptId: input.attemptId ?? generateAttemptId(),
-    scope: input.scope ?? null,
+    scope: normalizeScope(input.scope ?? input.flow),
     targetId: input.targetId ?? null,
     status: 'preparing',
     startedAt: timestamp,
@@ -43,65 +84,61 @@ export async function openAttempt(projectPath, input = {}) {
     summary: null
   };
 
-  const validate = await loadValidator(projectPath, SCHEMA);
+  const validate = await loadValidator(projectPath, SCHEMA_FILE);
   assertValid(validate, record, 'attempt record');
-  await appendJsonl(filePath(projectPath), record);
+  await appendJsonl(projectPath, ATTEMPTS_FILE, record);
   return record;
 }
 
 export async function updateAttempt(projectPath, attemptId, patch = {}) {
-  const all = await readJsonl(filePath(projectPath));
+  const records = await readJsonl(attemptsPath(projectPath));
+  const previous = [...records].reverse().find((record) => record.attemptId === attemptId);
 
-  // Find latest record for this attempt
-  const previous = [...all].reverse().find(r => r.attemptId === attemptId);
   if (!previous) {
     throw new Error(`Attempt not found: ${attemptId}`);
   }
 
-  // Terminal attempts cannot be reopened
-  if (TERMINAL.has(previous.status) && !TERMINAL.has(patch.status)) {
-    throw new Error(`Attempt ${attemptId} is terminal (${previous.status}), cannot reopen`);
-  }
+  const nextStatus = patch.status ?? previous.status;
+  assertTransition(previous.status, nextStatus);
 
-  const timestamp = now();
+  const heartbeatAt = now();
   const record = {
     ...previous,
     ...patch,
     attemptId,
-    lastHeartbeatAt: timestamp,
-    endedAt: TERMINAL.has(patch.status ?? previous.status)
-      ? (patch.endedAt ?? timestamp)
-      : previous.endedAt
+    scope: patch.scope === undefined ? previous.scope : normalizeScope(patch.scope),
+    lastHeartbeatAt: heartbeatAt,
+    endedAt: TERMINAL_STATUSES.has(nextStatus)
+      ? patch.endedAt ?? previous.endedAt ?? heartbeatAt
+      : null
   };
 
-  const validate = await loadValidator(projectPath, SCHEMA);
+  const validate = await loadValidator(projectPath, SCHEMA_FILE);
   assertValid(validate, record, 'attempt record');
-  await appendJsonl(filePath(projectPath), record);
+  await appendJsonl(projectPath, ATTEMPTS_FILE, record);
   return record;
 }
 
 export async function listAttempts(projectPath, filters = {}) {
-  const all = await readJsonl(filePath(projectPath));
-
-  // Build latest-state map (last record per attemptId wins)
-  const latest = new Map();
-  for (const record of all) {
-    latest.set(record.attemptId, record);
-  }
-  let result = [...latest.values()];
+  const records = await readJsonl(attemptsPath(projectPath));
+  const flowFilter = normalizeScope(filters.flow ?? filters.scope);
+  let result = latestAttempts(records);
 
   if (filters.status) {
-    result = result.filter(r => r.status === filters.status);
+    result = result.filter((record) => record.status === filters.status);
   }
-  if (filters.scope) {
-    result = result.filter(r => r.scope === filters.scope);
+  if (flowFilter) {
+    result = result.filter((record) => record.scope === flowFilter);
   }
   if (filters.targetId) {
-    result = result.filter(r => r.targetId === filters.targetId);
+    result = result.filter((record) => record.targetId === filters.targetId);
   }
 
-  // Default sort: newest first
-  result.sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''));
+  result.sort((left, right) =>
+    (right.lastHeartbeatAt ?? right.startedAt ?? '').localeCompare(
+      left.lastHeartbeatAt ?? left.startedAt ?? ''
+    )
+  );
 
   const offset = filters.offset ?? 0;
   const limit = filters.limit ?? 100;

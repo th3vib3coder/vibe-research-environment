@@ -1,28 +1,27 @@
-/**
- * Append-only telemetry events — events.jsonl
- * Observational only, never truth-creating.
- */
-
-import path from 'node:path';
 import {
-  controlDir, ensureControlDir, appendJsonl, readJsonl,
-  loadValidator, assertValid, now
+  appendJsonl,
+  assertValid,
+  controlDir,
+  loadValidator,
+  now,
+  readJsonl,
+  resolveInside
 } from './_io.js';
 
-const SCHEMA = 'event-record.schema.json';
-const FILE   = 'events.jsonl';
+const SCHEMA_FILE = 'event-record.schema.json';
+const EVENTS_FILE = 'events.jsonl';
 
-function filePath(projectPath) {
-  return path.join(controlDir(projectPath), FILE);
+function eventsPath(projectPath) {
+  return resolveInside(controlDir(projectPath), EVENTS_FILE);
 }
 
-let eventSeq = 0;
+function generateEventId() {
+  return `EVT-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+}
 
 export async function appendEvent(projectPath, event) {
-  await ensureControlDir(projectPath);
-
   const record = {
-    eventId: event.eventId ?? `EVT-${Date.now()}-${++eventSeq}`,
+    eventId: event.eventId ?? generateEventId(),
     kind: event.kind,
     attemptId: event.attemptId ?? null,
     scope: event.scope ?? null,
@@ -33,28 +32,28 @@ export async function appendEvent(projectPath, event) {
     recordedAt: event.recordedAt ?? now()
   };
 
-  const validate = await loadValidator(projectPath, SCHEMA);
+  const validate = await loadValidator(projectPath, SCHEMA_FILE);
   assertValid(validate, record, 'event record');
-  await appendJsonl(filePath(projectPath), record);
+  await appendJsonl(projectPath, EVENTS_FILE, record);
   return record;
 }
 
 export async function listEvents(projectPath, filters = {}) {
-  const all = await readJsonl(filePath(projectPath));
-  let result = all;
+  let result = await readJsonl(eventsPath(projectPath));
 
   if (filters.kind) {
-    result = result.filter(e => e.kind === filters.kind);
+    result = result.filter((event) => event.kind === filters.kind);
   }
   if (filters.attemptId) {
-    result = result.filter(e => e.attemptId === filters.attemptId);
+    result = result.filter((event) => event.attemptId === filters.attemptId);
   }
   if (filters.since) {
-    result = result.filter(e => e.recordedAt >= filters.since);
+    result = result.filter((event) => event.recordedAt >= filters.since);
   }
 
-  // Default sort: newest first
-  result.sort((a, b) => (b.recordedAt ?? '').localeCompare(a.recordedAt ?? ''));
+  result.sort((left, right) =>
+    (right.recordedAt ?? '').localeCompare(left.recordedAt ?? '')
+  );
 
   const offset = filters.offset ?? 0;
   const limit = filters.limit ?? 100;

@@ -1,27 +1,154 @@
-/**
- * Shared middleware chain — every /flow-* command runs through this.
- * Owns: attempt lifecycle, telemetry, capability refresh, snapshot publish.
- * Flow helpers own domain logic only; they do not open or close attempts.
- */
-
 import { refreshCapabilitiesSnapshot, getCapabilitiesSnapshot } from './capabilities.js';
 import { openAttempt, updateAttempt } from './attempts.js';
+import { appendDecision } from './decisions.js';
 import { appendEvent } from './events.js';
+import { readJsonl } from './_io.js';
 import { rebuildSessionSnapshot } from './session-snapshot.js';
 import { readFlowIndex } from '../lib/flow-state.js';
+import { listManifests } from '../lib/manifest.js';
+import path from 'node:path';
 
-/**
- * Execute a command through the 7-step middleware chain.
- *
- * @param {Object} opts
- * @param {string} opts.projectPath  — project root
- * @param {string} opts.commandName  — e.g. '/flow-status'
- * @param {Object} opts.reader       — core-reader instance (or null/undefined)
- * @param {Function} opts.commandFn  — async (ctx) => result
- * @returns {Object} { result, attempt, snapshot }
- */
-export async function runWithMiddleware({ projectPath, commandName, reader, commandFn }) {
-  // Step 1: Refresh capability snapshot
+const FINAL_ATTEMPT_STATUSES = new Set([
+  'succeeded',
+  'failed',
+  'blocked',
+  'timeout',
+  'unresponsive',
+  'abandoned'
+]);
+
+function normalizeScope(commandName, explicitScope) {
+  const source = explicitScope ?? commandName;
+  if (typeof source !== 'string' || source.trim() === '') {
+    return 'control';
+  }
+
+  return source.replace(/^\//u, '');
+}
+
+function normalizeFlowName(scope) {
+  if (scope === 'flow-status') {
+    return 'control';
+  }
+
+  if (scope.startsWith('flow-')) {
+    return scope.slice(5);
+  }
+
+  return 'control';
+}
+
+function buildBudgetSnapshot(metricsAccumulator, explicitBudget = {}) {
+  const metrics = metricsAccumulator?.snapshot?.() ?? {};
+  const state = explicitBudget.state ?? metrics.budgetState ?? metrics.state ?? 'unknown';
+
+  return {
+    state,
+    toolCalls: explicitBudget.toolCalls ?? metrics.toolCalls ?? 0,
+    estimatedCostUsd: explicitBudget.estimatedCostUsd ?? metrics.estimatedCostUsd ?? 0,
+    countingMode: explicitBudget.countingMode ?? metrics.countingMode ?? 'unknown'
+  };
+}
+
+function normalizeCommandResult(result) {
+  return {
+    events: Array.isArray(result?.events) ? result.events : [],
+    decisions: Array.isArray(result?.decisions) ? result.decisions : [],
+    signals: result?.signals ?? {},
+    summary: result?.summary ?? null,
+    errorCode: result?.errorCode ?? null,
+    attemptStatus: result?.attemptStatus ?? 'succeeded',
+    payload: result ?? {}
+  };
+}
+
+function normalizeKernelState(capabilities, reader) {
+  const dbAvailable = Boolean(capabilities.kernel?.dbAvailable);
+  return {
+    dbAvailable,
+    degradedReason: dbAvailable ? null : reader?.error ?? 'kernel DB unavailable'
+  };
+}
+
+async function safeReadFlowState(projectPath) {
+  try {
+    return await readFlowIndex(projectPath);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return {};
+    }
+
+    throw error;
+  }
+}
+
+async function appendResultEvents(projectPath, attempt, scope, targetId, events) {
+  for (const event of events) {
+    await appendEvent(projectPath, {
+      ...event,
+      attemptId: event.attemptId ?? attempt.attemptId,
+      scope: event.scope ?? scope,
+      targetId: event.targetId ?? targetId ?? null
+    });
+    await updateAttempt(projectPath, attempt.attemptId, {
+      status: 'running'
+    });
+  }
+}
+
+async function appendResultDecisions(projectPath, attempt, flow, targetId, decisions) {
+  for (const decision of decisions) {
+    await appendDecision(projectPath, {
+      ...decision,
+      flow: decision.flow ?? flow,
+      attemptId: decision.attemptId ?? attempt.attemptId,
+      targetId: decision.targetId ?? targetId ?? null
+    });
+  }
+}
+
+async function deriveSignals(projectPath, reader, explicitSignals = {}) {
+  const unresolvedClaims =
+    explicitSignals.unresolvedClaims ??
+    (reader?.dbAvailable && typeof reader.listUnresolvedClaims === 'function'
+      ? (await reader.listUnresolvedClaims())?.length ?? 0
+      : 0);
+
+  const blockedExperiments =
+    explicitSignals.blockedExperiments ??
+    (await listManifests(projectPath, { status: 'blocked' })).length;
+
+  const exportAlertsPath = path.join(
+    projectPath,
+    '.vibe-science-environment',
+    'writing',
+    'exports',
+    'export-alerts.jsonl'
+  );
+  const exportAlerts =
+    explicitSignals.exportAlerts ?? (await readJsonl(exportAlertsPath)).length;
+
+  return {
+    staleMemory: explicitSignals.staleMemory ?? false,
+    unresolvedClaims,
+    blockedExperiments,
+    exportAlerts
+  };
+}
+
+export async function runWithMiddleware({
+  projectPath,
+  commandName,
+  reader,
+  commandFn,
+  metricsAccumulator = null,
+  budget = {},
+  scope = null,
+  targetId = null
+}) {
+  const normalizedScope = normalizeScope(commandName, scope);
+  const flow = normalizeFlowName(normalizedScope);
+
   let capabilities;
   try {
     capabilities = await refreshCapabilitiesSnapshot(projectPath, reader);
@@ -29,98 +156,206 @@ export async function runWithMiddleware({ projectPath, commandName, reader, comm
     capabilities = await getCapabilitiesSnapshot(projectPath);
   }
 
-  const degraded = !capabilities.kernel.dbAvailable;
-
-  // Step 2: Open attempt
   const attempt = await openAttempt(projectPath, {
-    scope: commandName,
-    targetId: null
+    scope: normalizedScope,
+    targetId
   });
 
   await appendEvent(projectPath, {
     kind: 'attempt_opened',
     attemptId: attempt.attemptId,
-    scope: commandName,
+    scope: normalizedScope,
+    targetId,
     severity: 'info',
     message: `Opened attempt for ${commandName}`
   });
 
-  // Step 3: Enforce degraded-mode policy (advisory, not blocking in V1)
-  if (degraded) {
+  const runningAttempt = await updateAttempt(projectPath, attempt.attemptId, {
+    status: 'running'
+  });
+
+  const kernel = normalizeKernelState(capabilities, reader);
+  if (!kernel.dbAvailable) {
     await appendEvent(projectPath, {
       kind: 'degraded_mode_entered',
-      attemptId: attempt.attemptId,
-      scope: commandName,
+      attemptId: runningAttempt.attemptId,
+      scope: normalizedScope,
+      targetId,
       severity: 'warning',
-      message: `Kernel DB unavailable — running in degraded mode`
+      message: kernel.degradedReason
     });
   }
 
-  // Step 4: Execute command-specific logic
-  let result;
-  let finalStatus = 'succeeded';
-  let errorCode = null;
-  let summary = null;
+  const budgetBefore = buildBudgetSnapshot(metricsAccumulator, budget);
+  if (budgetBefore.state === 'hard_stop') {
+    const reason = 'Budget exceeded. R2 review required.';
 
-  const ctx = {
-    projectPath,
-    commandName,
-    reader,
-    capabilities,
-    attempt,
-    degraded
-  };
-
-  try {
-    result = await commandFn(ctx);
-    summary = result?.summary ?? null;
-  } catch (err) {
-    finalStatus = 'failed';
-    errorCode = err.code ?? err.name ?? 'COMMAND_ERROR';
-    summary = err.message;
-    result = { error: err.message };
-  }
-
-  // Step 5: Append telemetry events from command result
-  const commandEvents = result?.events ?? [];
-  for (const evt of commandEvents) {
     await appendEvent(projectPath, {
-      ...evt,
-      attemptId: attempt.attemptId
+      kind: 'budget_stop_triggered',
+      attemptId: runningAttempt.attemptId,
+      scope: normalizedScope,
+      targetId,
+      severity: 'warning',
+      message: reason
     });
+    await appendDecision(projectPath, {
+      flow,
+      targetId,
+      attemptId: runningAttempt.attemptId,
+      kind: 'budget_hard_stop',
+      reason
+    });
+
+    let snapshot = null;
+    let closedAttempt;
+
+    try {
+      const flowState = await safeReadFlowState(projectPath);
+      const signals = await deriveSignals(projectPath, reader, {});
+      snapshot = await rebuildSessionSnapshot(projectPath, {
+        flowState,
+        capabilities,
+        budget: budgetBefore,
+        signals,
+        kernel,
+        lastCommand: commandName,
+        lastAttemptId: runningAttempt.attemptId
+      });
+
+      await appendEvent(projectPath, {
+        kind: 'session_snapshot_published',
+        attemptId: runningAttempt.attemptId,
+        scope: normalizedScope,
+        targetId,
+        severity: 'info'
+      });
+
+      closedAttempt = await updateAttempt(projectPath, runningAttempt.attemptId, {
+        status: 'blocked',
+        errorCode: 'BUDGET_HARD_STOP',
+        summary: reason
+      });
+    } catch (error) {
+      closedAttempt = await updateAttempt(projectPath, runningAttempt.attemptId, {
+        status: 'failed',
+        errorCode: 'SESSION_SNAPSHOT_FAILED',
+        summary: error.message
+      });
+      return {
+        result: {
+          error: error.message
+        },
+        attempt: closedAttempt,
+        snapshot: null
+      };
+    }
+
+    await appendEvent(projectPath, {
+      kind: 'attempt_updated',
+      attemptId: runningAttempt.attemptId,
+      scope: normalizedScope,
+      targetId,
+      severity: 'warning',
+      message: 'Attempt closed: blocked'
+    });
+
+    return {
+      result: {
+        blocked: true,
+        reason
+      },
+      attempt: closedAttempt,
+      snapshot
+    };
   }
 
-  const commandDecisions = result?.decisions ?? [];
-  // Decisions are handled by the command itself via decisions.js
-
-  // Step 6: Publish session snapshot
-  let flowState = {};
+  let normalizedResult;
   try {
-    flowState = await readFlowIndex(projectPath);
-  } catch { /* bootstrap may not have run yet */ }
+    normalizedResult = normalizeCommandResult(
+      await commandFn({
+        projectPath,
+        commandName,
+        scope: normalizedScope,
+        flow,
+        reader,
+        capabilities,
+        attempt: runningAttempt,
+        degraded: !kernel.dbAvailable,
+        budget: budgetBefore
+      })
+    );
+  } catch (error) {
+    normalizedResult = {
+      events: [],
+      decisions: [],
+      signals: {},
+      summary: error.message,
+      errorCode: error.code ?? error.name ?? 'COMMAND_ERROR',
+      attemptStatus: 'failed',
+      payload: {
+        error: error.message
+      }
+    };
+  }
 
-  const snapshot = await rebuildSessionSnapshot(projectPath, {
-    flowState,
-    capabilities: capabilities.kernel?.projections ?? {},
-    budget: { state: 'ok', toolCalls: 0, estimatedCostUsd: 0, countingMode: 'unknown' },
-    signals: { staleMemory: false, unresolvedClaims: 0, blockedExperiments: 0, exportAlerts: 0 },
-    kernel: {
-      dbAvailable: capabilities.kernel?.dbAvailable ?? false,
-      degradedReason: capabilities.kernel?.dbAvailable ? null : 'kernel DB unavailable'
-    },
-    lastCommand: commandName,
-    lastAttemptId: attempt.attemptId
-  });
+  await appendResultEvents(
+    projectPath,
+    runningAttempt,
+    normalizedScope,
+    targetId,
+    normalizedResult.events
+  );
+  await appendResultDecisions(
+    projectPath,
+    runningAttempt,
+    flow,
+    targetId,
+    normalizedResult.decisions
+  );
 
-  await appendEvent(projectPath, {
-    kind: 'session_snapshot_published',
-    attemptId: attempt.attemptId,
-    scope: commandName,
-    severity: 'info'
-  });
+  const budgetAfter = buildBudgetSnapshot(metricsAccumulator, budget);
+  let snapshot = null;
+  let finalStatus = FINAL_ATTEMPT_STATUSES.has(normalizedResult.attemptStatus)
+    ? normalizedResult.attemptStatus
+    : 'succeeded';
+  let errorCode = normalizedResult.errorCode;
+  let summary = normalizedResult.summary;
+  let resultPayload = normalizedResult.payload;
 
-  // Step 7: Close attempt
-  const closedAttempt = await updateAttempt(projectPath, attempt.attemptId, {
+  try {
+    const flowState = await safeReadFlowState(projectPath);
+    const signals = await deriveSignals(
+      projectPath,
+      reader,
+      normalizedResult.signals
+    );
+    snapshot = await rebuildSessionSnapshot(projectPath, {
+      flowState,
+      capabilities,
+      budget: budgetAfter,
+      signals,
+      kernel,
+      lastCommand: commandName,
+      lastAttemptId: runningAttempt.attemptId
+    });
+
+    await appendEvent(projectPath, {
+      kind: 'session_snapshot_published',
+      attemptId: runningAttempt.attemptId,
+      scope: normalizedScope,
+      targetId,
+      severity: 'info'
+    });
+  } catch (error) {
+    finalStatus = 'failed';
+    errorCode = 'SESSION_SNAPSHOT_FAILED';
+    summary = error.message;
+    resultPayload = {
+      error: error.message
+    };
+  }
+
+  const closedAttempt = await updateAttempt(projectPath, runningAttempt.attemptId, {
     status: finalStatus,
     errorCode,
     summary
@@ -128,11 +363,16 @@ export async function runWithMiddleware({ projectPath, commandName, reader, comm
 
   await appendEvent(projectPath, {
     kind: 'attempt_updated',
-    attemptId: attempt.attemptId,
-    scope: commandName,
-    severity: finalStatus === 'failed' ? 'error' : 'info',
+    attemptId: runningAttempt.attemptId,
+    scope: normalizedScope,
+    targetId,
+    severity: finalStatus === 'failed' ? 'error' : finalStatus === 'blocked' ? 'warning' : 'info',
     message: `Attempt closed: ${finalStatus}`
   });
 
-  return { result, attempt: closedAttempt, snapshot };
+  return {
+    result: resultPayload,
+    attempt: closedAttempt,
+    snapshot
+  };
 }
