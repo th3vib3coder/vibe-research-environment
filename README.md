@@ -27,9 +27,9 @@ disk.
 Current closeout status:
 - `16/17` Phase 1 exit gates are `PASS`
 - `1/17` is `PARTIAL`
-- the only remaining partial gate is a **kernel-side** prerequisite:
-  `governance_events` append-only audit storage is not yet observed in the
-  current sibling `vibe-science` snapshot
+- the only remaining partial gate is a **documented kernel/VRE residual**:
+  governance-profile model alignment (`vibe-science` exposes `strict/default`,
+  while VRE still models `minimal/standard/strict`)
 
 Closeout dossier:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
