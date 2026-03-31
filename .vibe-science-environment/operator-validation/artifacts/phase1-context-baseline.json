@@ -1,0 +1,78 @@
+{
+  "artifactId": "phase1-context-baseline",
+  "phase": 1,
+  "createdAt": "2026-03-31T11:59:41.019Z",
+  "passed": true,
+  "measurementMethod": {
+    "kernelOwnedFiles": "Measured from raw file contents.",
+    "sessionStart": "Measured from live SessionStart hook output (additionalContext).",
+    "flowCommand": "Measured from the command markdown entrypoint for /flow-status.",
+    "tokenCounter": "Measured with the repo token-counter helper; provider-native if configured, otherwise char_fallback."
+  },
+  "validationClaim": "Baseline operator invocation stays within the Phase 1 incremental context budget.",
+  "scenario": {
+    "commandName": "/flow-status",
+    "commandDocPath": "commands/flow-status.md",
+    "excludedSurfaces": [
+      {
+        "surface": "cliBridgeResponses",
+        "reason": "Variable and invocation-dependent; excluded from the pre-invocation baseline measurement."
+      }
+    ]
+  },
+  "sources": {
+    "kernelOwned": {
+      "claude": {
+        "label": "kernel-claude",
+        "path": "../vibe-science/CLAUDE.md",
+        "chars": 8164,
+        "tokens": 2041,
+        "mode": "char_fallback"
+      },
+      "skill": {
+        "label": "kernel-skill",
+        "path": "../vibe-science/SKILL.md",
+        "chars": 75072,
+        "tokens": 18768,
+        "mode": "char_fallback"
+      },
+      "sessionStart": {
+        "label": "session-start-injection",
+        "scriptPath": "../vibe-science/plugin/scripts/session-start.js",
+        "hookEventName": "SessionStart",
+        "integrityStatus": "INTEGRITY_OK",
+        "warningCount": 0,
+        "systemMessagePresent": false,
+        "additionalContextChars": 278,
+        "additionalContextTokens": 70,
+        "mode": "char_fallback",
+        "additionalContextSha256": "a3278e465b22ab802158e8196d5ad5d0579eac38c862f2dc2250f4cedb5821f0"
+      }
+    },
+    "operatorIncremental": {
+      "flowCommand": {
+        "label": "flow-status-command",
+        "path": "commands/flow-status.md",
+        "chars": 1867,
+        "tokens": 467,
+        "mode": "char_fallback"
+      }
+    }
+  },
+  "totals": {
+    "kernelOwnedBaseTokens": 20879,
+    "incrementalFlowTokens": 467,
+    "baselineInvocationTokens": 21346,
+    "incrementalBudgetMax": 1500,
+    "withinBudget": true
+  },
+  "notes": [
+    "The incremental budget gate applies only to the flow-specific context added beyond the kernel-owned base.",
+    "CLI bridge responses are intentionally excluded because they are invocation-dependent and not part of the pre-invocation baseline."
+  ],
+  "referenceBudgets": {
+    "kernelOwnedBaseEstimate": "~800-1000 tokens combined (spec estimate, kernel-owned)",
+    "perFlowCommandEstimate": "~200-400 tokens",
+    "incrementalFlowBudgetMax": 1500
+  }
+}
