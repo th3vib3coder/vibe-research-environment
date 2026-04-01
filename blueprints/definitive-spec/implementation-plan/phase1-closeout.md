@@ -20,9 +20,9 @@ What is closed with files on disk:
 - measured baseline context artifact
 
 What is **not** fully closed at ecosystem level:
-- the kernel prerequisite checklist is no longer blocked by a hard gap, but it is
-  still not fully green in the current sibling-kernel state:
-  - governance profiles remain a documented model-alignment residual between VRE expectations and the current kernel implementation
+- nothing in the accepted Phase 1 cross-repo boundary remains blocked today
+- the richer `minimal/standard/strict` governance proposal survives only as
+  future design space; it is not a missing prerequisite for Phase 1 sign-off
 
 What was closed after the initial VRE Phase 1 freeze:
 - append-only `governance_events` storage now exists in the current sibling kernel snapshot, including schema, migration, DB helper, and hook emitters
@@ -31,7 +31,7 @@ What was closed after the initial VRE Phase 1 freeze:
 
 So the honest reading is:
 - **VRE implementation:** ready
-- **cross-repo Phase 1 sign-off:** still conditional, but now only on whether the kernel's documented binary strict/default model is accepted as sufficient for the governance-profile prerequisite
+- **cross-repo Phase 1 sign-off:** complete against the kernel's documented `default/strict` governance baseline
 
 ---
 
@@ -77,9 +77,9 @@ So the honest reading is:
 | 14 | Saved operator-validation artifact (resume ≤2 min) | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
 | 15 | Phase 1 scenarios in eval harness with saved runs | PASS | 4 repeat directories under [benchmarks/](../../../.vibe-science-environment/operator-validation/benchmarks/) |
 | 16 | Baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
-| 17 | Kernel governance prerequisites verified | PARTIAL | checklist below — only the governance-profile model-alignment residual remains |
+| 17 | Kernel governance prerequisites verified | PASS | checklist below — all Phase 1 kernel prerequisites now verify against the accepted `default/strict` baseline |
 
-**Result: 16 PASS, 1 PARTIAL.** The PARTIAL is now a documented kernel/VRE model-alignment residual, not a missing enforcement surface.
+**Result: 17 PASS, 0 PARTIAL.** Phase 1 sign-off is now green across both repos.
 
 ---
 
@@ -133,16 +133,16 @@ This checklist distinguishes:
 
 | Prerequisite | Status | Evidence | Notes |
 |--------------|--------|----------|-------|
-| governance profiles | PARTIAL | [profiles.test.js](../../../environment/tests/compatibility/profiles.test.js), [session-start.js](../../../../vibe-science/plugin/scripts/session-start.js), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js), [post-tool-use.js](../../../../vibe-science/plugin/scripts/post-tool-use.js), [stop.js](../../../../vibe-science/plugin/scripts/stop.js), [v7.0-IMPLEMENTATION-SPEC.md](../../../../vibe-science/blueprints/v7.0-IMPLEMENTATION-SPEC.md) | the kernel now clearly exposes a binary strict/default integrity model via `VIBE_SCIENCE_STRICT=1`; the residual is that VRE still models governance as `minimal/standard/strict`, so this is now a model-alignment question rather than a missing safeguard |
+| governance mode contract | PASS | [profiles.test.js](../../../environment/tests/compatibility/profiles.test.js), [session-start.js](../../../../vibe-science/plugin/scripts/session-start.js), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js), [post-tool-use.js](../../../../vibe-science/plugin/scripts/post-tool-use.js), [stop.js](../../../../vibe-science/plugin/scripts/stop.js), [v7.0-IMPLEMENTATION-SPEC.md](../../../../vibe-science/blueprints/v7.0-IMPLEMENTATION-SPEC.md) | Phase 1 now explicitly accepts the kernel's documented `default/strict` model via `VIBE_SCIENCE_STRICT=1` as the required governance baseline; the richer `minimal/standard/strict` proposal is future design work, not a current blocker |
 | kernel config protection | PASS | [config-protection.test.js](../../../environment/tests/compatibility/config-protection.test.js), [.claude/settings.json](../../../../vibe-science/.claude/settings.json), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js), [governance-hooks.test.mjs](../../../../vibe-science/tests/governance-hooks.test.mjs) | the protected config surface is now directly observable in settings and enforced at runtime for schemas, `fault-taxonomy.yaml`, and `judge-rubric.yaml` |
 | append-only governance event storage | PASS | [08-governance-engine.md](../08-governance-engine.md), [schema.sql](../../../../vibe-science/plugin/db/schema.sql), [migrations.js](../../../../vibe-science/plugin/lib/migrations.js), [db.js](../../../../vibe-science/plugin/lib/db.js), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js), [post-tool-use.js](../../../../vibe-science/plugin/scripts/post-tool-use.js), [stop.js](../../../../vibe-science/plugin/scripts/stop.js), [governance-events.test.mjs](../../../../vibe-science/tests/governance-events.test.mjs), [governance-hooks.test.mjs](../../../../vibe-science/tests/governance-hooks.test.mjs) | sibling kernel `main` now has append-only storage, migration coverage, storage-level immutability, and hook-level emitters / secondary guarantee |
 | claim event sequence enforcement | PASS | [state-machine.test.js](../../../environment/tests/compatibility/state-machine.test.js), [claim-ingestion.js](../../../../vibe-science/plugin/lib/claim-ingestion.js), [pre-tool-use.js](../../../../vibe-science/plugin/scripts/pre-tool-use.js), [stop.js](../../../../vibe-science/plugin/scripts/stop.js), [governance-hooks.test.mjs](../../../../vibe-science/tests/governance-hooks.test.mjs) | claim promotion is now blocked at pre-write time unless the latest recorded event is `R2_REVIEWED`, and unresolved-claim stop enforcement remains active |
 
 Checklist conclusion:
 - VRE has verified the compatibility surface honestly
-- the kernel prerequisite check is **still not fully green**
-- there are now **0 hard gaps**, **0 patchable partials**, and **1 documented residual**
-- the remaining residual sits in governance-profile model alignment: kernel `strict/default` vs VRE `minimal/standard/strict`
+- the kernel prerequisite check is **green for Phase 1**
+- there are now **0 hard gaps** and **0 patchable partials**
+- richer multi-profile governance remains a future design choice, not an unmet prerequisite
 
 ---
 
@@ -188,8 +188,8 @@ What we can defend now:
 - the implementation is backed by saved benchmark evidence, operator-validation evidence, measured context evidence, validators, and tests
 
 What we should **not** overclaim:
-- we should not call the wider system fully Phase-1-closed until the governance-profile residual is either explicitly accepted as the Phase 1 boundary or the VRE expectation is revised to match the kernel model
+- we should not claim the kernel already implements a richer multi-profile matrix; Phase 1 closes against the documented `default/strict` baseline only
 
 Recommended next action:
-- decide whether the kernel's documented binary strict/default model is sufficient for Phase 1
-- if yes, revise the VRE governance-profile expectation and mark the final residual as accepted
+- treat any richer `minimal/standard/strict` governance model as post-Phase-1 design work
+- keep future writing/export extensions aligned to the accepted `default/strict` baseline unless the kernel contract changes

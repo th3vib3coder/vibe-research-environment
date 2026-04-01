@@ -37,7 +37,7 @@ The outer project is installable through capability bundles, not monolithic "ins
 | `researcher` | governance-core + control-plane + flow-literature + flow-experiment |
 | `full` | All available bundles for current phase |
 
-**Important:** Install profiles (what's installed) are INDEPENDENT from governance profiles (how strictly hooks run). A researcher can install the `full` bundle set but run with `minimal` governance. See Doc 08 for governance profiles (`VBS_GOVERNANCE_PROFILE`). These two profile systems are orthogonal and do not affect each other.
+**Important:** Install profiles (what's installed) are INDEPENDENT from kernel governance mode (how strictly hooks fail when integrity degrades). A researcher can install the `full` bundle set and still run either the default kernel mode or `VIBE_SCIENCE_STRICT=1`. These two systems are orthogonal and do not affect each other.
 
 Ownership note:
 - the install lifecycle itself owns `.vibe-science-environment/.install-state.json` and `environment/schemas/install-state.schema.json`; these are mandatory repo infrastructure, not part of a removable capability bundle

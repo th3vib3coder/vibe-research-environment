@@ -37,7 +37,7 @@ The helper returns:
 V1 normative rule:
 1. **Lifecycle:** claim head status is exactly `PROMOTED`
 2. **Citations:** at least one tracked citation exists, and all are `VERIFIED`
-3. **Profile safety:** if `governance_profile_at_creation = minimal`, require explicit R2 evidence + fresh schema validation at export time
+3. **Mode safety:** if `governanceProfileAtCreation !== 'strict'`, require fresh schema validation at export time
 
 `listUnresolvedClaims()` may still be consumed for diagnostics/review debt
 surfacing, but it is NOT the sole normative export-safe predicate for claim-backed
@@ -55,7 +55,7 @@ explicitly:
    - source of truth: kernel-provided claim metadata once available
    - minimum compatibility requirement: a claim-head companion field or adjacent
      projection that tells the outer project whether the claim was created under
-     `minimal`, `standard`, or `strict`
+     kernel `default` mode or `strict` mode
 2. `hasFreshSchemaValidation`
    - source of truth: outer-project validation artifact written at export time
    - location: `.vibe-science-environment/governance/schema-validation/<claimId>.json`
@@ -73,8 +73,8 @@ Validation artifact shape:
 ```
 
 If the kernel does not yet expose `governanceProfileAtCreation`, the outer
-project may treat the claim as `standard` for compatibility, but it MUST record
-that the profile-safety extension was not fully available. That is a degraded
+project may treat the claim as `default` for compatibility, but it MUST record
+that the mode-safety extension was not fully available. That is a degraded
 mode, not silent equivalence.
 
 ```js
@@ -95,7 +95,7 @@ function exportEligibility(claimId, reader, options = {}) {
     reasons.push('unverified_citations');
   }
 
-  if (options.governanceProfileAtCreation === 'minimal' && !options.hasFreshSchemaValidation) {
+  if (options.governanceProfileAtCreation !== 'strict' && !options.hasFreshSchemaValidation) {
     reasons.push('needs_fresh_schema_validation');
   }
 
@@ -106,7 +106,7 @@ function exportEligibility(claimId, reader, options = {}) {
 }
 ```
 
-**Test with 7 cases:** eligible, created/unpromoted, killed, disputed, unverified citation, zero tracked citations, minimal-profile claim without fresh schema validation.
+**Test with 7 cases:** eligible, created/unpromoted, killed, disputed, unverified citation, zero tracked citations, default-mode claim without fresh schema validation.
 
 ---
 
@@ -207,7 +207,7 @@ Every claim export is tracked:
   "snapshotId": "WEXP-2026-03-30-001",
   "exportedAt": "2026-03-29T15:00:00Z",
   "exportedToFlow": "writing",
-  "governanceProfileAtExport": "standard"
+  "governanceProfileAtExport": "default"
 }
 ```
 

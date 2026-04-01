@@ -25,11 +25,10 @@ VRE Phase 1 is implemented in this repository and backed by saved evidence on
 disk.
 
 Current closeout status:
-- `16/17` Phase 1 exit gates are `PASS`
-- `1/17` is `PARTIAL`
-- the only remaining partial gate is a **documented kernel/VRE residual**:
-  governance-profile model alignment (`vibe-science` exposes `strict/default`,
-  while VRE still models `minimal/standard/strict`)
+- `17/17` Phase 1 exit gates are `PASS`
+- `0/17` are `PARTIAL`
+- Phase 1 sign-off accepts the kernel's documented `default/strict` governance
+  mode baseline as sufficient for the outer-project contract
 
 Closeout dossier:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)

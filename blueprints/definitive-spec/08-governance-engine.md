@@ -21,40 +21,45 @@ The following capabilities belong to the Vibe Science kernel. The Vibe Research 
 **Note on Laws:** LAW 1-12 (Immutable Laws) and the confounder harness (LAW 9) are defined in the kernel's `CLAUDE.md` constitution. This spec references them by number but does NOT redefine them. See the kernel's CLAUDE.md for authoritative definitions.
 
 Minimum requirement for the future separate repo:
-- compatible Vibe Science version exposing governance profiles
+- compatible Vibe Science version exposing the documented `default/strict` governance mode contract
 - append-only governance event storage
 - kernel-side config protection
 - kernel-side claim event sequence enforcement
 
 ---
 
-## Kernel Prerequisite: Governance Profiles
+## Kernel Prerequisite: Governance Mode Contract
 
-Hooks execute conditionally based on the active profile.
+Hooks execute under a binary integrity mode, not a three-level matrix.
 
-| Profile | When to use | What runs |
-|---------|-------------|-----------|
-| `minimal` | Quick exploration, literature scan | SessionStart, Stop, + NON-NEGOTIABLE hooks (see below) |
-| `standard` | Normal research session (DEFAULT) | All hooks, warnings on violations |
-| `strict` | Validation, publication prep, final review | All hooks + halt on any infrastructure failure |
+| Mode | When to use | What runs |
+|------|-------------|-----------|
+| `default` | Normal and exploratory research sessions | Full hook surface, with visible degradation warnings when infrastructure is missing |
+| `strict` | Validation, publication prep, final review | Same hook surface plus fail-loud behavior on critical integrity degradation |
 
-Set via: `VBS_GOVERNANCE_PROFILE=standard` (default)
+Set via:
+- `VIBE_SCIENCE_STRICT=1` enables strict mode
+- unset or `0` means default mode
 
-### Non-Negotiable Hooks (ALL profiles, including minimal)
+### Non-Negotiable Safeguards (BOTH modes)
 
-These CANNOT be disabled by any profile:
+These CANNOT be disabled by mode or suppression:
 - **PreToolUse confounder check** on CLAIM-LEDGER writes (LAW 9)
 - **Stop hook** unreviewed-claims blocking (LAW 4)
 - **Integrity degradation** tracking
 - **Schema file protection** (LAW 3)
 
-Only ADVISORY hooks are profile-gated: observer scans, pattern extraction, calibration hints, memory sync reminders.
+Phase 1 acceptance does **not** require a richer `minimal/standard/strict`
+matrix. The kernel's documented `default/strict` contract is sufficient for the
+outer-project boundary. Future richer profile systems remain design work, not a
+missing prerequisite.
 
 ### Surgical Suppression
 
 For noisy advisory hooks: `VBS_DISABLED_HOOKS=hook-a,hook-b`
 
-Never allows disabling non-negotiable hooks. If attempted, log governance event and ignore the suppression.
+Never allows disabling non-negotiable safeguards. If attempted, log governance
+event and ignore the suppression.
 
 ---
 
@@ -141,20 +146,20 @@ The following safeguards are owned by the Vibe Research Environment itself. They
 
 ---
 
-## Profile Transition Safety
+## Governance Mode Transition Safety
 
-When governance profile changes from lower to higher level:
+When governance mode changes from `default` to `strict` during a project:
 
 1. Log the transition as governance event (`profile_transition`)
 2. Do NOT retroactively validate old claims
-3. Claims created under a lower profile carry `governance_profile_at_creation` metadata
-4. Export-eligibility MUST check: claims created under `minimal` require explicit R2 review before export, regardless of current profile
-5. Claims created under `minimal` MUST also pass fresh schema validation at export time
+3. Claims created outside `strict` mode carry `governance_profile_at_creation` metadata
+4. Export-eligibility MUST require fresh schema validation at export time for claims created outside `strict` mode
 
 Minimum contract consequence:
-- the kernel must expose `governance_profile_at_creation` to the outer project
-  through claim metadata or a companion projection before the profile-safety
-  extension can be considered fully implemented
+- the kernel must expose whether a claim was created under `default` or
+  `strict` mode to the outer project through claim metadata or a companion
+  projection before the mode-safety extension can be considered fully
+  implemented
 - the outer project records fresh validation artifacts at
   `.vibe-science-environment/governance/schema-validation/<claimId>.json`
   using `environment/schemas/schema-validation-record.schema.json`

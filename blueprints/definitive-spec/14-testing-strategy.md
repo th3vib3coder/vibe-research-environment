@@ -165,15 +165,19 @@ test('valid sequence CREATED → R2_REVIEWED → PROMOTED passes', () => {
 ### Profile Compatibility
 
 ```js
-test('minimal profile still runs confounder check', () => {
+test('default mode still runs confounder check', () => {
   // Verify non-negotiable hook still blocks missing confounder_status
+});
+
+test('strict mode turns integrity degradation into fail-loud behavior', () => {
+  // Verify the same hook surface hardens when VIBE_SCIENCE_STRICT=1
 });
 ```
 
 Phase 3 adds:
 
 ```js
-test('minimal-created claim requires fresh schema validation before export', () => {
+test('default-mode claim requires fresh schema validation before export', () => {
   // Verify export helper refuses until validation artifact exists
 });
 ```
