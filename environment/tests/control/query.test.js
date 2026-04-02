@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -52,6 +52,7 @@ describe('query', () => {
     assert.equal(typeof query.publishSessionSnapshot, 'function');
     assert.equal(typeof query.getCapabilitiesSnapshot, 'function');
     assert.equal(typeof query.publishCapabilitiesSnapshot, 'function');
+    assert.equal(typeof query.getMemoryFreshness, 'function');
     assert.equal(typeof query.openAttempt, 'function');
     assert.equal(typeof query.updateAttempt, 'function');
     assert.equal(typeof query.appendEvent, 'function');
@@ -117,6 +118,72 @@ describe('query', () => {
     assert.equal(status.hasSession, true);
     assert.equal(status.session.kernel.degradedReason, 'offline');
     assert.deepEqual(status.capabilities.install.bundles, ['control-plane']);
+  });
+
+  it('exposes memory freshness and stale warning through operator status', async () => {
+    await session.publishSessionSnapshot(dir, {
+      schemaVersion: 'vibe-env.session.v1',
+      activeFlow: 'experiment',
+      currentStage: 'result-packaging',
+      nextActions: ['refresh memory mirrors'],
+      blockers: [],
+      kernel: { dbAvailable: true, degradedReason: null },
+      capabilities: {
+        claimHeads: true,
+        citationChecks: true,
+        governanceProfileAtCreation: false,
+        claimSearch: false
+      },
+      budget: {
+        state: 'ok',
+        toolCalls: 0,
+        estimatedCostUsd: 0,
+        countingMode: 'unknown'
+      },
+      signals: {
+        staleMemory: true,
+        unresolvedClaims: 0,
+        blockedExperiments: 0,
+        exportAlerts: 0
+      },
+      lastCommand: '/sync-memory',
+      lastAttemptId: 'ATT-2026-04-02-001',
+      updatedAt: new Date().toISOString()
+    });
+
+    const syncStatePath = path.join(
+      dir,
+      '.vibe-science-environment',
+      'memory',
+      'sync-state.json'
+    );
+    await mkdir(path.dirname(syncStatePath), { recursive: true });
+    await writeFile(
+      syncStatePath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 'vibe-env.memory-sync-state.v1',
+          lastSyncAt: '2026-04-01T08:00:00Z',
+          lastSuccessfulSyncAt: '2026-04-01T08:00:00Z',
+          status: 'ok',
+          kernelDbAvailable: true,
+          degradedReason: null,
+          mirrors: [],
+          warnings: []
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+
+    const status = await query.getOperatorStatus(dir);
+    assert.equal(status.session.signals.staleMemory, true);
+    assert.equal(status.session.lastCommand, '/sync-memory');
+    assert.equal(status.memory.hasSyncState, true);
+    assert.equal(status.memory.isStale, true);
+    assert.equal(status.memory.warning, 'STALE — run /sync-memory to refresh');
+    assert.equal(status.memory.lastSyncAt, '2026-04-01T08:00:00Z');
   });
 
   it('returns attempt history enriched with events and decisions', async () => {

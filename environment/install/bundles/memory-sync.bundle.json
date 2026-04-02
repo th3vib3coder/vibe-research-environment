@@ -10,7 +10,9 @@
     "mirrorFreshness"
   ],
   "ownedPaths": [
-    "environment/schemas/memory-sync-state.schema.json"
+    "environment/schemas/memory-sync-state.schema.json",
+    "environment/memory/sync.js",
+    "environment/memory/status.js"
   ],
   "bootstrapPaths": [
     ".vibe-science-environment/memory/",

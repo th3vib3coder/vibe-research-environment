@@ -33,7 +33,8 @@ Do not reconstruct unresolved claims or citation truth from markdown.
 3. Import `getOperatorStatus(...)` from `environment/control/query.js`.
 4. Run the command through middleware with `commandName: '/flow-status'`.
 5. Inside `commandFn`, read the operator-facing surface through `getOperatorStatus(projectPath)`.
-6. Render the canonical session snapshot returned by middleware or query helpers.
+6. Treat `control/session.json` as the canonical resume surface.
+7. Use `memory/sync-state.json` only for mirror freshness and stale warning messaging.
 
 ## Rendering
 
@@ -48,8 +49,17 @@ Report:
 - unresolved claims
 - blocked experiments
 - export alerts
+- memory freshness / last sync
 - last command
 - last attempt id
+
+If memory freshness says mirrors are stale, show exactly:
+
+```text
+STALE — run /sync-memory to refresh
+```
+
+If mirrors are stale, any resume text inside markdown mirrors is non-authoritative. The control-plane snapshot still wins for operator-facing resume.
 
 If the snapshot is missing, say so clearly and report that the control plane will rebuild it on the next successful run.
 
@@ -57,4 +67,5 @@ If the snapshot is missing, say so clearly and report that the control plane wil
 
 - Do not manually edit `session.json`, `attempts.jsonl`, `events.jsonl`, or `decisions.jsonl`.
 - Do not invent kernel facts when the bridge is unavailable.
+- Do not treat stale memory mirrors as canonical resume state.
 - `/flow-status` is operationally read-focused, but it still goes through middleware so the lifecycle remains queryable.

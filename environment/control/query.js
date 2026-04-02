@@ -9,6 +9,7 @@ import {
 import { openAttempt, updateAttempt, listAttempts } from './attempts.js';
 import { appendEvent, listEvents } from './events.js';
 import { appendDecision, listDecisions } from './decisions.js';
+import { getMemoryFreshness } from '../memory/status.js';
 
 export {
   appendDecision,
@@ -18,6 +19,7 @@ export {
   listAttempts,
   listDecisions,
   listEvents,
+  getMemoryFreshness,
   openAttempt,
   publishCapabilitiesSnapshot,
   publishSessionSnapshot,
@@ -25,14 +27,16 @@ export {
 };
 
 export async function getOperatorStatus(projectPath) {
-  const [session, capabilities] = await Promise.all([
+  const [session, capabilities, memory] = await Promise.all([
     getSessionSnapshot(projectPath),
-    getCapabilitiesSnapshot(projectPath)
+    getCapabilitiesSnapshot(projectPath),
+    getMemoryFreshness(projectPath)
   ]);
 
   return {
     session,
     capabilities,
+    memory,
     hasSession: session !== null
   };
 }

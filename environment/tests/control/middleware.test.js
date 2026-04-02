@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -27,6 +27,7 @@ async function setup() {
 describe('middleware', () => {
   let dir;
   let middleware;
+  let query;
   let attempts;
   let decisions;
   let events;
@@ -36,6 +37,7 @@ describe('middleware', () => {
   beforeEach(async () => {
     dir = await setup();
     middleware = await import(`../../control/middleware.js?${Date.now()}`);
+    query = await import(`../../control/query.js?${Date.now()}`);
     attempts = await import(`../../control/attempts.js?${Date.now()}`);
     decisions = await import(`../../control/decisions.js?${Date.now()}`);
     events = await import(`../../control/events.js?${Date.now()}`);
@@ -166,6 +168,50 @@ describe('middleware', () => {
     const currentSnapshot = await snapshot.getSessionSnapshot(dir);
     assert.equal(currentSnapshot.kernel.dbAvailable, false);
     assert.equal(currentSnapshot.kernel.degradedReason, 'db unavailable');
+  });
+
+  it('publishes staleMemory from a stale memory sync-state file', async () => {
+    const syncStatePath = path.join(
+      dir,
+      '.vibe-science-environment',
+      'memory',
+      'sync-state.json'
+    );
+    await mkdir(path.dirname(syncStatePath), { recursive: true });
+    await writeFile(
+      syncStatePath,
+      `${JSON.stringify({
+        schemaVersion: 'vibe-env.memory-sync-state.v1',
+        lastSyncAt: '2026-04-01T08:00:00Z',
+        lastSuccessfulSyncAt: '2026-04-01T08:00:00Z',
+        status: 'ok',
+        kernelDbAvailable: true,
+        degradedReason: null,
+        mirrors: [],
+        warnings: []
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    await middleware.runWithMiddleware({
+      projectPath: dir,
+      commandName: '/flow-status',
+      reader: {
+        dbAvailable: true,
+        listUnresolvedClaims: async () => []
+      },
+      commandFn: async () => ({
+        summary: 'status rebuilt'
+      })
+    });
+
+    const currentSnapshot = await snapshot.getSessionSnapshot(dir);
+    const status = await query.getOperatorStatus(dir);
+
+    assert.equal(currentSnapshot.signals.staleMemory, true);
+    assert.equal(status.session.signals.staleMemory, true);
+    assert.equal(status.memory.isStale, true);
+    assert.equal(status.memory.warning, 'STALE — run /sync-memory to refresh');
   });
 
   it('derives unresolvedClaims and blockedExperiments from real sources', async () => {

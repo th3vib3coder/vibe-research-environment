@@ -6,6 +6,7 @@ import { readJsonl } from './_io.js';
 import { rebuildSessionSnapshot } from './session-snapshot.js';
 import { readFlowIndex } from '../lib/flow-state.js';
 import { listManifests } from '../lib/manifest.js';
+import { getMemoryFreshness } from '../memory/status.js';
 import path from 'node:path';
 
 const FINAL_ATTEMPT_STATUSES = new Set([
@@ -108,6 +109,10 @@ async function appendResultDecisions(projectPath, attempt, flow, targetId, decis
 }
 
 async function deriveSignals(projectPath, reader, explicitSignals = {}) {
+  const memoryFreshness =
+    explicitSignals.staleMemory === undefined
+      ? await getMemoryFreshness(projectPath)
+      : null;
   const unresolvedClaims =
     explicitSignals.unresolvedClaims ??
     (reader?.dbAvailable && typeof reader.listUnresolvedClaims === 'function'
@@ -129,7 +134,7 @@ async function deriveSignals(projectPath, reader, explicitSignals = {}) {
     explicitSignals.exportAlerts ?? (await readJsonl(exportAlertsPath)).length;
 
   return {
-    staleMemory: explicitSignals.staleMemory ?? false,
+    staleMemory: explicitSignals.staleMemory ?? memoryFreshness?.isStale ?? false,
     unresolvedClaims,
     blockedExperiments,
     exportAlerts
