@@ -18,7 +18,8 @@
     "environment/templates/experiment-bundle-manifest.v1.json",
     "environment/lib/bundle-manifest.js",
     "environment/flows/results.js",
-    "environment/flows/results-render.js"
+    "environment/flows/results-render.js",
+    "environment/flows/session-digest.js"
   ],
   "bootstrapPaths": [
     ".vibe-science-environment/results/experiments/",

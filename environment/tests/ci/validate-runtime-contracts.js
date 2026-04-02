@@ -34,6 +34,7 @@ const activeSchemaFiles = [
   'schema-validation-record.schema.json',
   'experiment-manifest.schema.json',
   'experiment-bundle-manifest.schema.json',
+  'session-digest.schema.json',
   'costs-record.schema.json',
   'install-state.schema.json'
 ];
