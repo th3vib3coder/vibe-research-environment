@@ -139,6 +139,7 @@ Later Phase 3 waves extend it with:
 - `environment/lib/export-snapshot.js`
 - `environment/lib/export-records.js`
 - `environment/flows/writing.js`
+- `environment/flows/writing-render.js`
 - `commands/flow-writing.md`
 
 Its bootstrap surface also owns:

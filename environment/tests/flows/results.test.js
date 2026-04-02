@@ -145,3 +145,82 @@ test('packageExperimentResults fails honestly when the experiment is not complet
     await cleanupFixtureProject(projectRoot);
   }
 });
+
+test('packageExperimentResults surfaces shared export eligibility for claim-linked bundles', async () => {
+  const projectRoot = await createFixtureProject('vre-results-flow-export-policy-');
+
+  try {
+    await registerExperiment(projectRoot, buildExperiment({
+      experimentId: 'EXP-004',
+      relatedClaims: ['C-041'],
+      outputArtifacts: ['plots/volcano.png'],
+    }));
+    await updateExperiment(projectRoot, 'EXP-004', {
+      status: 'active',
+      latestAttemptId: 'ATT-2026-04-02-041',
+    });
+    await updateExperiment(projectRoot, 'EXP-004', {
+      status: 'completed',
+    });
+
+    await mkdir(path.join(projectRoot, 'plots'), { recursive: true });
+    await writeFile(path.join(projectRoot, 'plots', 'volcano.png'), 'png-data', 'utf8');
+
+    const packaged = await packageExperimentResults(projectRoot, 'EXP-004', {
+      now: '2026-04-02T12:50:00Z',
+      artifactMetadata: {
+        'plots/volcano.png': {
+          type: 'figure',
+          role: 'main-result',
+          purpose: 'Show the exported effect.',
+          caption: 'Volcano plot for EXP-004.',
+          interpretation: 'The effect remains visible, but export policy is still blocked.',
+        },
+      },
+      reader: {
+        async listClaimHeads() {
+          return [{
+            claimId: 'C-041',
+            currentStatus: 'PROMOTED',
+            confidence: 0.83,
+            governanceProfileAtCreation: 'strict',
+          }];
+        },
+        async listUnresolvedClaims() {
+          return [];
+        },
+        async listCitationChecks(options = {}) {
+          const citations = [{
+            claimId: 'C-041',
+            citationId: 'CIT-041',
+            verificationStatus: 'PENDING',
+          }];
+
+          return options.claimId == null
+            ? citations
+            : citations.filter((entry) => entry.claimId === options.claimId);
+        },
+      },
+    });
+
+    const analysisReport = await readFile(
+      path.join(
+        projectRoot,
+        '.vibe-science-environment',
+        'results',
+        'experiments',
+        'EXP-004',
+        'analysis-report.md',
+      ),
+      'utf8',
+    );
+
+    assert.equal(packaged.claimExportStatuses.length, 1);
+    assert.equal(packaged.claimExportStatuses[0].eligible, false);
+    assert.match(packaged.warnings.join('\n'), /not export-eligible yet/u);
+    assert.match(analysisReport, /Claim Export Readiness/u);
+    assert.match(analysisReport, /blocked \(unverified_citations\)/u);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});

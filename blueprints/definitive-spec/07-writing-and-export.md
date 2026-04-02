@@ -324,6 +324,7 @@ Replay rules:
 - reruns append a new alert only when the drift condition is first observed or meaningfully changes
 - `claim_killed`, `claim_disputed`, and `citation_invalidated` are warnings
 - `confidence_changed` is informational unless a later policy escalates it
+- `confidence_changed` replays only when `abs(currentConfidence - snapshotConfidence) >= 0.15`
 
 ---
 

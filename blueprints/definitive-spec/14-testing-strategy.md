@@ -86,6 +86,7 @@ Minimum modules:
 - `environment/lib/export-eligibility.js`
 - `environment/lib/export-snapshot.js`
 - `environment/lib/export-records.js`
+- `environment/flows/writing.js`
 
 ### Schema Tests
 
@@ -258,7 +259,8 @@ environment/tests/
 │   └── middleware.test.js
 ├── flows/
 │   ├── literature.test.js
-│   └── experiment.test.js
+│   ├── experiment.test.js
+│   └── writing.test.js
 ├── schemas/
 │   ├── session-snapshot.schema.test.js
 │   ├── capabilities-snapshot.schema.test.js
@@ -305,7 +307,6 @@ environment/tests/
 ```
 
 Later phases add:
-- `environment/tests/flows/writing.test.js` (Phase 3)
 - `environment/tests/integration/export-snapshot.test.js` (Phase 3)
 - `environment/tests/integration/writing-warning-replay.test.js` (Phase 3)
 

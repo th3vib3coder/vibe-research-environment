@@ -78,7 +78,8 @@ const activeFlowTestFiles = [
   'literature.test.js',
   'results.test.js',
   'results-discovery.test.js',
-  'session-digest.test.js'
+  'session-digest.test.js',
+  'writing.test.js'
 ];
 const activeInstallTestFiles = [
   'install.test.js',

@@ -16,6 +16,7 @@ export function buildBundleFiles(manifest, copiedArtifacts, options = {}) {
   const artifactLines = copiedArtifacts.length === 0
     ? ['- No experiment output artifacts were declared for this bundle.']
     : copiedArtifacts.map((entry) => `- \`${entry.bundleRelativePath}\` (${entry.type}, ${entry.role})`);
+  const claimExportLines = renderClaimExportLines(options.claimExportStatuses ?? []);
 
   return {
     'analysis-report.md': [
@@ -37,6 +38,14 @@ export function buildBundleFiles(manifest, copiedArtifacts, options = {}) {
       '',
       '## Environment',
       ...environment.map((line) => `- ${line}`),
+      '',
+      ...(claimExportLines.length > 0
+        ? [
+            '## Claim Export Readiness',
+            ...claimExportLines,
+            '',
+          ]
+        : []),
       '',
       '## Evidence Artifacts',
       ...artifactLines,
@@ -113,6 +122,16 @@ export function buildWarnings(manifest, copiedArtifacts, options = {}) {
     }
   }
 
+  for (const claimStatus of options.claimExportStatuses ?? []) {
+    if (claimStatus.eligible) {
+      continue;
+    }
+
+    warnings.push(
+      `Claim ${claimStatus.claimId} is not export-eligible yet: ${formatReasonList(claimStatus.reasons)}.`,
+    );
+  }
+
   return uniqueStrings(warnings);
 }
 
@@ -128,8 +147,23 @@ export function buildWarningActions(experimentId, warnings) {
   if (warnings.some((warning) => warning.includes('output artifacts'))) {
     actions.push(`attach experiment outputs for ${experimentId}`);
   }
+  if (warnings.some((warning) => warning.includes('not export-eligible yet'))) {
+    actions.push(`resolve export blockers for claim-linked results in ${experimentId}`);
+  }
 
   return actions;
+}
+
+function renderClaimExportLines(claimExportStatuses) {
+  if (!Array.isArray(claimExportStatuses) || claimExportStatuses.length === 0) {
+    return [];
+  }
+
+  return claimExportStatuses.map((status) => (
+    `- \`${status.claimId}\`: ${
+      status.eligible ? 'eligible for claim-backed writing' : `blocked (${formatReasonList(status.reasons)})`
+    }`
+  ));
 }
 
 function renderFigureCatalog(manifest, copiedArtifacts) {
@@ -174,6 +208,10 @@ function normalizeLine(value) {
 
 function formatList(values) {
   return Array.isArray(values) && values.length > 0 ? values.join(', ') : 'none';
+}
+
+function formatReasonList(values) {
+  return Array.isArray(values) && values.length > 0 ? values.join(', ') : 'no reason recorded';
 }
 
 function uniqueStrings(values) {

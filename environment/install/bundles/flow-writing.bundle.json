@@ -18,6 +18,8 @@
     "environment/lib/export-eligibility.js",
     "environment/lib/export-snapshot.js",
     "environment/lib/export-records.js",
+    "environment/flows/writing.js",
+    "environment/flows/writing-render.js",
     "environment/schemas/export-snapshot.schema.json",
     "environment/schemas/export-record.schema.json",
     "environment/schemas/export-alert-record.schema.json"
