@@ -50,6 +50,7 @@ Report:
 - blocked experiments
 - export alerts
 - memory freshness / last sync
+- recent packaged experiment bundles / latest digest pointers
 - last command
 - last attempt id
 
@@ -63,6 +64,9 @@ STALE — run /sync-memory to refresh
 ```
 
 If mirrors are stale, any resume text inside markdown mirrors is non-authoritative. The control-plane snapshot still wins for operator-facing resume.
+
+Result bundle locations and session digest pointers are outer-project findability aids only.
+They do not certify claims, citations, gate outcomes, or export eligibility.
 
 If the snapshot is missing, say so clearly and report that the control plane will rebuild it on the next successful run.
 

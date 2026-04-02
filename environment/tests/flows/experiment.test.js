@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdir, mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,7 @@ import {
   surfaceBlockers,
   updateExperiment
 } from '../../flows/experiment.js';
+import { packageExperimentResults } from '../../flows/results.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -250,6 +251,60 @@ test('surfaceBlockers returns explicit blocker reasons', async () => {
   const flowIndex = await readFlowIndex(projectRoot);
   assert.equal(flowIndex.lastCommand, '/flow-experiment --blockers');
   assert.equal(flowIndex.currentStage, 'experiment-blocked');
+});
+
+test('listExperiments surfaces packaged bundle paths without rewriting manifest-backed claims', async () => {
+  const projectRoot = await createFixtureProject();
+
+  await registerExperiment(projectRoot, baseExperiment({
+    outputArtifacts: ['plots/volcano.png']
+  }));
+  await updateExperiment(projectRoot, 'EXP-001', {
+    status: 'active',
+    latestAttemptId: 'ATT-2026-03-30-009'
+  });
+  await updateExperiment(projectRoot, 'EXP-001', {
+    status: 'completed'
+  });
+
+  await mkdir(path.join(projectRoot, 'plots'), { recursive: true });
+  await writeFile(path.join(projectRoot, 'plots', 'volcano.png'), 'png-data', 'utf8');
+
+  await packageExperimentResults(projectRoot, 'EXP-001', {
+    now: '2026-03-30T11:00:00Z',
+    datasetHash: 'sha256:bundle-exp-001',
+    artifactMetadata: {
+      'plots/volcano.png': {
+        type: 'figure',
+        role: 'main-result',
+        purpose: 'Show the packaged primary effect.',
+        caption: 'Volcano plot for EXP-001.',
+        interpretation: 'The primary signal remains stable after packaging.'
+      }
+    }
+  });
+
+  const listed = await listExperiments(projectRoot, { claimId: 'C-014' });
+
+  assert.equal(listed.experiments.length, 1);
+  assert.deepEqual(listed.experiments[0].relatedClaims, ['C-014']);
+  assert.deepEqual(listed.experiments[0].blockers, []);
+  assert.deepEqual(listed.experiments[0].resultBundle, {
+    hasBundle: true,
+    experimentId: 'EXP-001',
+    manifestPath: '.vibe-science-environment/experiments/manifests/EXP-001.json',
+    bundleDir: '.vibe-science-environment/results/experiments/EXP-001',
+    bundleManifestPath: '.vibe-science-environment/results/experiments/EXP-001/bundle-manifest.json',
+    bundledAt: '2026-03-30T11:00:00Z',
+    sourceAttemptId: 'ATT-2026-03-30-009',
+    relatedClaims: ['C-014'],
+    datasetHash: 'sha256:bundle-exp-001',
+    artifactCount: 4,
+    analysisReportPath: '.vibe-science-environment/results/experiments/EXP-001/analysis-report.md',
+    statsAppendixPath: '.vibe-science-environment/results/experiments/EXP-001/stats-appendix.md',
+    figureCatalogPath: '.vibe-science-environment/results/experiments/EXP-001/figure-catalog.md',
+    latestSessionDigest: null
+  });
 });
 
 test('helper operations keep the control-plane empty', async () => {

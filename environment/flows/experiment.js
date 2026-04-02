@@ -8,6 +8,7 @@ import {
   listManifests,
   updateManifest
 } from '../lib/manifest.js';
+import { discoverBundlesByExperiment } from './results-discovery.js';
 
 const FLOW_NAME = 'experiment';
 
@@ -199,9 +200,10 @@ export async function listExperiments(projectPath, filters = {}, options = {}) {
 
   const filtered = manifests.filter((manifest) => matchesFilters(manifest, filters));
   const limit = Number.isInteger(filters.limit) && filters.limit >= 0 ? filters.limit : null;
+  const visible = limit == null ? filtered : filtered.slice(0, limit);
 
   return {
-    experiments: (limit == null ? filtered : filtered.slice(0, limit)).map(summarizeManifest),
+    experiments: await buildViewSummaries(projectPath, visible),
     summary: synced.summary,
     index: synced.index
   };
@@ -226,16 +228,39 @@ export async function surfaceBlockers(projectPath, options = {}) {
 
       return manifest.blockers.length > 0;
     })
-    .map(summarizeManifest);
+    ;
 
   const limit = Number.isInteger(options.limit) && options.limit >= 0 ? options.limit : null;
+  const visible = limit == null ? blockers : blockers.slice(0, limit);
 
   return {
-    blockers: limit == null ? blockers : blockers.slice(0, limit),
+    blockers: await buildViewSummaries(projectPath, visible),
     blockerMessages: synced.blockers,
     summary: synced.summary,
     index: synced.index
   };
+}
+
+async function buildViewSummaries(projectPath, manifests) {
+  if (!Array.isArray(manifests) || manifests.length === 0) {
+    return [];
+  }
+
+  const { bundlesByExperiment } = await discoverBundlesByExperiment(
+    projectPath,
+    manifests.map((manifest) => manifest.experimentId)
+  );
+
+  return manifests.map((manifest) => {
+    const summary = summarizeManifest(manifest);
+    const resultBundle = bundlesByExperiment.get(manifest.experimentId) ?? null;
+    return resultBundle == null
+      ? summary
+      : {
+          ...summary,
+          resultBundle
+        };
+  });
 }
 
 function normalizeClaimIds(unresolvedClaims) {

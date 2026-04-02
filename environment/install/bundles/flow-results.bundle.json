@@ -17,6 +17,7 @@
     "environment/schemas/session-digest.schema.json",
     "environment/templates/experiment-bundle-manifest.v1.json",
     "environment/lib/bundle-manifest.js",
+    "environment/flows/results-discovery.js",
     "environment/flows/results.js",
     "environment/flows/results-render.js",
     "environment/flows/session-digest.js"

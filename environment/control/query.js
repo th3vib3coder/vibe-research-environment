@@ -11,6 +11,7 @@ import { appendEvent, listEvents } from './events.js';
 import { appendDecision, listDecisions } from './decisions.js';
 import { getMemoryFreshness } from '../memory/status.js';
 import { getMemoryMarks } from '../memory/marks.js';
+import { getResultsOverview } from '../flows/results-discovery.js';
 
 export {
   appendDecision,
@@ -29,11 +30,15 @@ export {
 };
 
 export async function getOperatorStatus(projectPath) {
-  const [session, capabilities, memory, marks] = await Promise.all([
+  const [session, capabilities, memory, marks, results] = await Promise.all([
     getSessionSnapshot(projectPath),
     getCapabilitiesSnapshot(projectPath),
     getMemoryFreshness(projectPath),
-    getMemoryMarks(projectPath)
+    getMemoryMarks(projectPath),
+    getResultsOverview(projectPath, {
+      bundleLimit: 5,
+      digestLimit: 5
+    })
   ]);
 
   return {
@@ -43,6 +48,7 @@ export async function getOperatorStatus(projectPath) {
       ...memory,
       marks
     },
+    results,
     hasSession: session !== null
   };
 }

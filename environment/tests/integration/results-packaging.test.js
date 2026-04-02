@@ -5,8 +5,10 @@ import path from 'node:path';
 
 import { createFixtureProject, cleanupFixtureProject } from './_fixture.js';
 import { runWithMiddleware } from '../../control/middleware.js';
+import { getOperatorStatus } from '../../control/query.js';
 import { registerExperiment, updateExperiment } from '../../flows/experiment.js';
 import { packageExperimentResults } from '../../flows/results.js';
+import { exportSessionDigest } from '../../flows/session-digest.js';
 
 function buildExperiment() {
   return {
@@ -104,6 +106,30 @@ test('results packaging can run through middleware and publish a results-focused
 
     assert.equal(bundleManifest.sourceAttemptId, 'ATT-2026-04-02-010');
     assert.ok(bundleManifest.artifacts.some((entry) => entry.path === 'figures/plots/heatmap.png'));
+
+    await exportSessionDigest(projectRoot, {
+      sourceSessionId: 'session-2026-04-02-001',
+      now: '2026-04-02T13:20:00Z',
+      experimentIds: ['EXP-003'],
+      attemptIds: ['ATT-2026-04-02-010']
+    });
+
+    const status = await getOperatorStatus(projectRoot);
+    assert.equal(status.results.totalBundles, 1);
+    assert.equal(status.results.totalSessionDigests, 1);
+    assert.equal(status.results.bundles[0].experimentId, 'EXP-003');
+    assert.equal(
+      status.results.bundles[0].bundleDir,
+      '.vibe-science-environment/results/experiments/EXP-003'
+    );
+    assert.equal(
+      status.results.bundles[0].latestSessionDigest?.digestId,
+      'DIGEST-session-2026-04-02-001'
+    );
+    assert.equal(
+      status.results.sessionDigests[0].markdownPath,
+      '.vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-001/session-digest.md'
+    );
   } finally {
     await cleanupFixtureProject(projectRoot);
   }

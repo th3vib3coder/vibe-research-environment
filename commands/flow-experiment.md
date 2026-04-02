@@ -64,10 +64,10 @@ For `--blockers`:
 
 ## Rendering
 
-- list: total experiments, per-experiment status, related claims, output artifacts
+- list: total experiments, per-experiment status, related claims, output artifacts, and packaged bundle location when present
 - register: experiment id, manifest path, status, follow-up actions
-- update: changed fields, new status, blocker summary if any
-- blockers: blocked experiments plus explicit blocker reasons and unresolved-claim/gate-check warnings
+- update: changed fields, new status, blocker summary if any, plus an existing bundle pointer if the experiment was already packaged
+- blockers: blocked experiments plus explicit blocker reasons and unresolved-claim/gate-check warnings without hiding any existing bundle pointer
 
 ## Rules
 
