@@ -47,6 +47,14 @@ The plan sets currently on disk are:
 - [implementation-plan/phase3-05-wave-4-tests-and-validators.md](./implementation-plan/phase3-05-wave-4-tests-and-validators.md)
 - [implementation-plan/phase3-06-wave-5-operator-evidence-and-closeout.md](./implementation-plan/phase3-06-wave-5-operator-evidence-and-closeout.md)
 
+### Companion Future Overlay Specs
+
+- [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
+
+This spec set is intentionally tracked here for planning continuity, but it is
+not part of the active Phase 1-3 execution path. It defines a future
+user-facing orchestration layer above VRE and below channel/UI surfaces.
+
 ---
 
 ## Current Phase State
@@ -54,6 +62,8 @@ The plan sets currently on disk are:
 - Phase 1 is closed at `17/17 PASS`: see [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3 is the active planning and execution slice: see [phase3-00-index.md](./implementation-plan/phase3-00-index.md)
+- Surface orchestrator is preserved as a companion future overlay spec:
+  see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
 
 ---
 
@@ -67,3 +77,5 @@ The plan sets currently on disk are:
 6. Phase 3 export policy lives once in the shared helper, never per-command.
 7. No outer-project code writes kernel truth.
 8. No phase closes with a conversation summary alone; every gate closes with files on disk.
+9. Companion future overlay specs may extend the system later, but they do not
+   bypass kernel or VRE contracts while inactive.
