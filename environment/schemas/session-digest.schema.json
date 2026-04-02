@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/session-digest.schema.json",
+  "title": "VRE Session Digest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "digestId",
+    "sourceSessionId",
+    "generatedAt",
+    "activeFlow",
+    "lastCommand",
+    "nextActions",
+    "blockers",
+    "experimentIds",
+    "decisionIds",
+    "attemptIds",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.session-digest.v1"
+    },
+    "digestId": {
+      "type": "string",
+      "pattern": "^DIGEST-.+$"
+    },
+    "sourceSessionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "activeFlow": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastCommand": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "nextActions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "experimentIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^EXP-[0-9]{3}$"
+      }
+    },
+    "decisionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "attemptIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^ATT-.+$"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

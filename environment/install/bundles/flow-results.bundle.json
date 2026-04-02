@@ -1,0 +1,24 @@
+{
+  "bundleId": "flow-results",
+  "phase": 2,
+  "dependsOn": [
+    "governance-core",
+    "control-plane",
+    "flow-experiment"
+  ],
+  "capabilitiesProvided": [
+    "resultsPackaging",
+    "experimentBundles",
+    "figureCatalog",
+    "sessionDigest"
+  ],
+  "ownedPaths": [
+    "environment/schemas/experiment-bundle-manifest.schema.json",
+    "environment/schemas/session-digest.schema.json",
+    "environment/templates/experiment-bundle-manifest.v1.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/results/experiments/",
+    ".vibe-science-environment/results/summaries/"
+  ]
+}

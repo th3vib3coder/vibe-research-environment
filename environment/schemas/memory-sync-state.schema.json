@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/memory-sync-state.schema.json",
+  "title": "VRE Memory Sync State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lastSyncAt",
+    "lastSuccessfulSyncAt",
+    "status",
+    "kernelDbAvailable",
+    "degradedReason",
+    "mirrors",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.memory-sync-state.v1"
+    },
+    "lastSyncAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "lastSuccessfulSyncAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "partial",
+        "failed"
+      ]
+    },
+    "kernelDbAvailable": {
+      "type": "boolean"
+    },
+    "degradedReason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mirrors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mirrorId",
+          "path",
+          "syncedAt",
+          "sourceKinds"
+        ],
+        "properties": {
+          "mirrorId": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^\\.vibe-science-environment/memory/.+$"
+          },
+          "syncedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "sourceKinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "kernel",
+                "control",
+                "experiments",
+                "literature",
+                "results",
+                "marks"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

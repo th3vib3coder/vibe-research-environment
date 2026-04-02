@@ -1,0 +1,23 @@
+{
+  "bundleId": "memory-sync",
+  "phase": 2,
+  "dependsOn": [
+    "control-plane"
+  ],
+  "capabilitiesProvided": [
+    "memorySync",
+    "memoryMirrors",
+    "mirrorFreshness"
+  ],
+  "ownedPaths": [
+    "environment/schemas/memory-sync-state.schema.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/memory/",
+    ".vibe-science-environment/memory/mirrors/",
+    ".vibe-science-environment/memory/index/",
+    ".vibe-science-environment/memory/notes/writing/",
+    ".vibe-science-environment/memory/notes/daily/",
+    ".vibe-science-environment/memory/notes/meetings/"
+  ]
+}

@@ -112,6 +112,23 @@ The `flow-experiment` bundle MUST also own:
 - `environment/templates/experiment-flow-state.v1.json`
 - `environment/templates/experiment-manifest.v1.json`
 
+The `memory-sync` bundle (Phase 2) starts by owning:
+- `environment/schemas/memory-sync-state.schema.json`
+
+Later Phase 2 waves extend it with:
+- `environment/memory/sync.js`
+- `commands/sync-memory.md`
+
+The `flow-results` bundle (Phase 2) starts by owning:
+- `environment/schemas/experiment-bundle-manifest.schema.json`
+- `environment/templates/experiment-bundle-manifest.v1.json`
+- `environment/schemas/session-digest.schema.json`
+
+Later Phase 2 waves extend it with:
+- `environment/lib/bundle-manifest.js`
+- `environment/flows/results.js`
+- `commands/flow-results.md`
+
 The `flow-writing` bundle (Phase 3, not part of the Phase 1 install surface)
 will own:
 - `environment/lib/export-eligibility.js`

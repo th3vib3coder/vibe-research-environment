@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/experiment-bundle-manifest.schema.json",
+  "title": "VRE Experiment Bundle Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "experimentId",
+    "bundledAt",
+    "sourceAttemptId",
+    "artifacts",
+    "relatedClaims",
+    "datasetHash"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.experiment-bundle.v1"
+    },
+    "experimentId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^EXP-[0-9]{3}$"
+    },
+    "bundledAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "sourceAttemptId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ATT-.+$"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "type",
+          "role",
+          "createdAt"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "report",
+              "figure",
+              "table",
+              "dataset",
+              "notebook",
+              "other"
+            ]
+          },
+          "role": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "size": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "relatedClaims": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^C-[0-9]{3}$"
+      }
+    },
+    "datasetHash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:.+$"
+    }
+  }
+}

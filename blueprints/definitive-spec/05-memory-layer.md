@@ -65,6 +65,7 @@ What happens:
 **Build surfaces:**
 - command shim: `commands/sync-memory.md`
 - implementation helper: `environment/memory/sync.js`
+- schema: `environment/schemas/memory-sync-state.schema.json`
 - state file: `.vibe-science-environment/memory/sync-state.json`
 
 ### Sync Timestamp Contract
