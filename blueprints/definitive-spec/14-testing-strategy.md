@@ -130,9 +130,12 @@ Minimum integration scenarios:
 7. memory sync mirrors control-plane decisions without becoming a second truth path
 8. session digest export writes under `results/summaries/` without inventing a canonical session id
 9. `/flow-writing` can assemble advisor and rebuttal packs through middleware without inventing claim truth
+10. `/flow-writing` can publish a snapshot-first handoff through middleware and respects the shared export-policy gate for default-mode claims
 
-Later phases add integration scenarios for:
-- export snapshot creation before claim-backed export (Phase 3)
+Active Phase 3 integration coverage also proves:
+- export snapshot creation before claim-backed export
+- post-export warning replay stays append-only
+- results and writing surfaces share one export-policy helper
 
 ---
 
@@ -186,6 +189,10 @@ Phase 3 adds:
 ```js
 test('default-mode claim requires fresh schema validation before export', () => {
   // Verify export helper refuses until validation artifact exists
+});
+
+test('strict-mode claim stays export-eligible without schema-validation drift', () => {
+  // Verify profile-safety compatibility keeps strict claims honest without inventing extra blockers
 });
 ```
 
@@ -284,7 +291,8 @@ environment/tests/
 ├── compatibility/
 │   ├── state-machine.test.js
 │   ├── profiles.test.js
-│   └── config-protection.test.js
+│   ├── config-protection.test.js
+│   └── export-profile-safety.test.js
 ├── install/
 │   ├── install.test.js
 │   ├── doctor.test.js
@@ -295,7 +303,9 @@ environment/tests/
 │   ├── flow-bootstrap.test.js
 │   ├── control-plane-rebuild.test.js
 │   ├── literature-register.test.js
-│   └── experiment-manifest-lifecycle.test.js
+│   ├── experiment-manifest-lifecycle.test.js
+│   ├── writing-handoff.test.js
+│   └── writing-packs.test.js
 └── ci/
     ├── validate-templates.js
     ├── validate-runtime-contracts.js
@@ -308,9 +318,9 @@ environment/tests/
     └── validate-no-personal-paths.js
 ```
 
-Later phases add:
-- `environment/tests/integration/export-snapshot.test.js` (Phase 3)
-- `environment/tests/integration/writing-warning-replay.test.js` (Phase 3)
+Phase 3 currently adds:
+- `environment/tests/integration/writing-handoff.test.js`
+- `environment/tests/integration/writing-packs.test.js`
 
 ---
 

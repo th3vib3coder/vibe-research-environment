@@ -89,6 +89,23 @@ const activeInstallTestFiles = [
   'uninstall.test.js',
   'upgrade.test.js'
 ];
+const activeCompatibilityTestFiles = [
+  'state-machine.test.js',
+  'profiles.test.js',
+  'config-protection.test.js',
+  'export-profile-safety.test.js'
+];
+const activeIntegrationTestFiles = [
+  'flow-bootstrap.test.js',
+  'control-plane-rebuild.test.js',
+  'literature-register.test.js',
+  'experiment-manifest-lifecycle.test.js',
+  'memory-sync.test.js',
+  'results-packaging.test.js',
+  'session-digest-export.test.js',
+  'writing-packs.test.js',
+  'writing-handoff.test.js'
+];
 
 async function importRepoModule(repoRelativePath) {
   const moduleUrl = pathToFileURL(path.join(repoRoot, repoRelativePath)).href;
@@ -175,6 +192,20 @@ export default async function validateRuntimeContracts() {
     assert(
       await pathExists(`environment/tests/install/${testFile}`),
       `Missing active install test: ${testFile}`
+    );
+  }
+
+  for (const testFile of activeCompatibilityTestFiles) {
+    assert(
+      await pathExists(`environment/tests/compatibility/${testFile}`),
+      `Missing active compatibility test: ${testFile}`
+    );
+  }
+
+  for (const testFile of activeIntegrationTestFiles) {
+    assert(
+      await pathExists(`environment/tests/integration/${testFile}`),
+      `Missing active integration test: ${testFile}`
     );
   }
 }
