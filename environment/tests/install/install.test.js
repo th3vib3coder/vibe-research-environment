@@ -15,11 +15,19 @@ test('fresh install on empty workspace bootstraps runtime state and install-stat
 
   try {
     await bootstrapCoreInstall(projectRoot);
-    await writeInstallStateFixture(projectRoot);
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-experiment',
+      'memory-sync',
+      'flow-results'
+    ]);
 
     const entries = await readdir(path.join(projectRoot, '.vibe-science-environment'));
     assert.ok(entries.includes('control'));
     assert.ok(entries.includes('flows'));
+    assert.ok(entries.includes('memory'));
+    assert.ok(entries.includes('results'));
     assert.ok(entries.includes('.install-state.json'));
   } finally {
     await cleanupInstallFixture(projectRoot);

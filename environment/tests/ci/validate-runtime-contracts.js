@@ -55,6 +55,20 @@ const activeEvalMetricFiles = [
 ];
 
 const activeEvalBenchmarkFiles = ['phase1-core.benchmark.json'];
+const activeFlowTestFiles = [
+  'experiment.test.js',
+  'literature.test.js',
+  'results.test.js',
+  'results-discovery.test.js',
+  'session-digest.test.js'
+];
+const activeInstallTestFiles = [
+  'install.test.js',
+  'doctor.test.js',
+  'repair.test.js',
+  'uninstall.test.js',
+  'upgrade.test.js'
+];
 
 async function importRepoModule(repoRelativePath) {
   const moduleUrl = pathToFileURL(path.join(repoRoot, repoRelativePath)).href;
@@ -118,6 +132,20 @@ export default async function validateRuntimeContracts() {
     await pathExists('environment/tests/evals/definitions.test.js'),
     'Missing eval harness test: environment/tests/evals/definitions.test.js'
   );
+
+  for (const testFile of activeFlowTestFiles) {
+    assert(
+      await pathExists(`environment/tests/flows/${testFile}`),
+      `Missing active flow test: ${testFile}`
+    );
+  }
+
+  for (const testFile of activeInstallTestFiles) {
+    assert(
+      await pathExists(`environment/tests/install/${testFile}`),
+      `Missing active install test: ${testFile}`
+    );
+  }
 }
 
 if (isDirectRun(import.meta)) {

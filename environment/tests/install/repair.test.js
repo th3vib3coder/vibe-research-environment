@@ -8,7 +8,8 @@ import {
   cleanupInstallFixture,
   createInstallFixture,
   doctorWorkspaceState,
-  repairWorkspaceState
+  repairWorkspaceState,
+  writeInstallStateFixture
 } from './_fixture.js';
 
 test('repair recreates missing generated control state via bootstrap semantics', async () => {
@@ -16,7 +17,21 @@ test('repair recreates missing generated control state via bootstrap semantics',
 
   try {
     await bootstrapCoreInstall(projectRoot);
-    await rm(path.join(projectRoot, '.vibe-science-environment', 'control', 'session.json'));
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-experiment',
+      'memory-sync',
+      'flow-results'
+    ]);
+    await rm(path.join(projectRoot, '.vibe-science-environment', 'memory', 'mirrors'), {
+      recursive: true,
+      force: true
+    });
+    await rm(path.join(projectRoot, '.vibe-science-environment', 'results', 'summaries'), {
+      recursive: true,
+      force: true
+    });
 
     let health = await doctorWorkspaceState(projectRoot);
     assert.equal(health.ok, false);

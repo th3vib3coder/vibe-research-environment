@@ -8,9 +8,10 @@ const expectedCounts = {
   evalMetrics: 5,
   evalBenchmarks: 1,
   controlTests: 7,
-  flowTests: 4,
+  flowTests: 5,
   libTests: 6,
   evalTests: 2,
+  installTests: 5,
   integrationTests: 7,
   schemaTests: 16,
   ciValidators: 9
@@ -28,6 +29,7 @@ export default async function validateCounts() {
     flowTests: (await collectFiles('environment/tests/flows', { include: (file) => file.endsWith('.test.js') })).length,
     libTests: (await collectFiles('environment/tests/lib', { include: (file) => file.endsWith('.test.js') })).length,
     evalTests: (await collectFiles('environment/tests/evals', { include: (file) => file.endsWith('.test.js') })).length,
+    installTests: (await collectFiles('environment/tests/install', { include: (file) => file.endsWith('.test.js') })).length,
     integrationTests: (await collectFiles('environment/tests/integration', { include: (file) => file.endsWith('.test.js') && !file.endsWith('_fixture.js') })).length,
     schemaTests: (await collectFiles('environment/tests/schemas', { include: (file) => file.endsWith('.test.js') })).length,
     ciValidators: (await collectFiles('environment/tests/ci', { include: (file) => file.endsWith('.js') && !file.endsWith('_helpers.js') && !file.endsWith('run-all.js') })).length

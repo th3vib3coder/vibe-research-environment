@@ -7,7 +7,8 @@ import {
   bootstrapCoreInstall,
   cleanupInstallFixture,
   createInstallFixture,
-  doctorWorkspaceState
+  doctorWorkspaceState,
+  writeInstallStateFixture
 } from './_fixture.js';
 
 test('doctor reports ok on healthy bootstrap and error on corrupted control state', async () => {
@@ -15,13 +16,26 @@ test('doctor reports ok on healthy bootstrap and error on corrupted control stat
 
   try {
     await bootstrapCoreInstall(projectRoot);
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-experiment',
+      'memory-sync',
+      'flow-results'
+    ]);
     const healthy = await doctorWorkspaceState(projectRoot);
     assert.equal(healthy.ok, true);
 
-    await rm(path.join(projectRoot, '.vibe-science-environment', 'control', 'session.json'));
+    await rm(path.join(projectRoot, '.vibe-science-environment', 'memory', 'mirrors'), {
+      recursive: true,
+      force: true
+    });
     const broken = await doctorWorkspaceState(projectRoot);
     assert.equal(broken.ok, false);
-    assert.equal(broken.checks.find((check) => check.check === 'session-snapshot')?.status, 'error');
+    assert.equal(
+      broken.checks.find((check) => check.check === 'bundle:memory-sync:.vibe-science-environment/memory/mirrors/')?.status,
+      'error'
+    );
   } finally {
     await cleanupInstallFixture(projectRoot);
   }

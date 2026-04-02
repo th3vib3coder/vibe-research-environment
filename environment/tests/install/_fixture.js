@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,6 +54,7 @@ export async function writeInstallStateFixture(projectRoot, bundles = ['governan
     }
   };
   await writeFile(installStatePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+  await applyInstalledBundleBootstrapPaths(projectRoot);
   return payload;
 }
 
@@ -77,6 +78,18 @@ export async function doctorWorkspaceState(projectRoot) {
     checks.push({ check: 'session-snapshot', status: 'error' });
   }
 
+  const installedBundles = await readInstalledBundleManifests(projectRoot);
+  for (const bundle of installedBundles) {
+    for (const bootstrapPath of bundle.bootstrapPaths ?? []) {
+      const targetPath = path.join(projectRoot, ...bootstrapPath.split('/').filter(Boolean));
+      const exists = await stat(targetPath).then(() => true).catch(() => false);
+      checks.push({
+        check: `bundle:${bundle.bundleId}:${bootstrapPath}`,
+        status: exists ? 'ok' : 'error'
+      });
+    }
+  }
+
   return {
     ok: checks.every((check) => check.status === 'ok'),
     checks
@@ -85,17 +98,29 @@ export async function doctorWorkspaceState(projectRoot) {
 
 export async function repairWorkspaceState(projectRoot) {
   await bootstrapCoreInstall(projectRoot);
+  await applyInstalledBundleBootstrapPaths(projectRoot);
 }
 
 export async function uninstallWorkspaceState(projectRoot) {
-  await rm(path.join(projectRoot, '.vibe-science-environment', 'control'), {
-    recursive: true,
-    force: true
-  });
-  await rm(path.join(projectRoot, '.vibe-science-environment', 'flows'), {
-    recursive: true,
-    force: true
-  });
+  const installedBundles = await readInstalledBundleManifests(projectRoot);
+  const bootstrapPaths = [...new Set(
+    installedBundles.flatMap((bundle) => bundle.bootstrapPaths ?? [])
+  )].sort((left, right) => right.length - left.length);
+
+  if (bootstrapPaths.length === 0) {
+    bootstrapPaths.push(
+      '.vibe-science-environment/control/',
+      '.vibe-science-environment/flows/'
+    );
+  }
+
+  for (const bootstrapPath of bootstrapPaths) {
+    await rm(path.join(projectRoot, ...bootstrapPath.split('/').filter(Boolean)), {
+      recursive: true,
+      force: true
+    });
+  }
+
   await unlink(path.join(projectRoot, '.vibe-science-environment', '.install-state.json')).catch(() => {});
 }
 
@@ -106,4 +131,40 @@ export async function upgradeInstallState(projectRoot, version) {
   current.source.version = version;
   await writeFile(installStatePath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
   return current;
+}
+
+async function applyInstalledBundleBootstrapPaths(projectRoot) {
+  const installedBundles = await readInstalledBundleManifests(projectRoot);
+
+  for (const bundle of installedBundles) {
+    for (const bootstrapPath of bundle.bootstrapPaths ?? []) {
+      await mkdir(path.join(projectRoot, ...bootstrapPath.split('/').filter(Boolean)), {
+        recursive: true
+      });
+    }
+  }
+}
+
+async function readInstalledBundleManifests(projectRoot) {
+  const installStatePath = path.join(projectRoot, '.vibe-science-environment', '.install-state.json');
+
+  let installState;
+  try {
+    installState = JSON.parse(await readFile(installStatePath, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+
+  const bundleIds = Array.isArray(installState.bundles) ? installState.bundles : [];
+  const manifests = [];
+
+  for (const bundleId of bundleIds) {
+    const manifestPath = path.join(projectRoot, 'environment', 'install', 'bundles', `${bundleId}.bundle.json`);
+    manifests.push(JSON.parse(await readFile(manifestPath, 'utf8')));
+  }
+
+  return manifests;
 }
