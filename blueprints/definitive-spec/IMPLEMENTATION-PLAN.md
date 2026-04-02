@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1 closed, Phase 2 closed, Phase 3 next
+**Status:** Phase 1 closed, Phase 2 closed, Phase 3 active
 
 ---
 
@@ -37,13 +37,23 @@ The plan sets currently on disk are:
 - [implementation-plan/phase2-06-wave-5-operator-evidence-and-closeout.md](./implementation-plan/phase2-06-wave-5-operator-evidence-and-closeout.md)
 - [implementation-plan/phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 
+### Phase 3 (active)
+
+- [implementation-plan/phase3-00-index.md](./implementation-plan/phase3-00-index.md)
+- [implementation-plan/phase3-01-wave-0-boundaries-and-contracts.md](./implementation-plan/phase3-01-wave-0-boundaries-and-contracts.md)
+- [implementation-plan/phase3-02-wave-1-export-policy-core.md](./implementation-plan/phase3-02-wave-1-export-policy-core.md)
+- [implementation-plan/phase3-03-wave-2-writing-runtime-core.md](./implementation-plan/phase3-03-wave-2-writing-runtime-core.md)
+- [implementation-plan/phase3-04-wave-3-shims-and-packs.md](./implementation-plan/phase3-04-wave-3-shims-and-packs.md)
+- [implementation-plan/phase3-05-wave-4-tests-and-validators.md](./implementation-plan/phase3-05-wave-4-tests-and-validators.md)
+- [implementation-plan/phase3-06-wave-5-operator-evidence-and-closeout.md](./implementation-plan/phase3-06-wave-5-operator-evidence-and-closeout.md)
+
 ---
 
 ## Current Phase State
 
 - Phase 1 is closed at `17/17 PASS`: see [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
-- Phase 3 is the next planning and execution slice
+- Phase 3 is the active planning and execution slice: see [phase3-00-index.md](./implementation-plan/phase3-00-index.md)
 
 ---
 
@@ -54,5 +64,6 @@ The plan sets currently on disk are:
 3. Flow helpers own domain logic only; they do not open or close attempts.
 4. Memory sync is command-driven mirror logic, never hook-driven truth logic.
 5. Phase 2 packaging is runtime artifact packaging; claim-backed export logic stays in Phase 3.
-6. No outer-project code writes kernel truth.
-7. No phase closes with a conversation summary alone; every gate closes with files on disk.
+6. Phase 3 export policy lives once in the shared helper, never per-command.
+7. No outer-project code writes kernel truth.
+8. No phase closes with a conversation summary alone; every gate closes with files on disk.
