@@ -1,0 +1,220 @@
+{
+  "taskId": "sync-memory-refresh",
+  "repeatId": "2026-04-02-02",
+  "benchmarkId": "phase2-memory-packaging",
+  "startedAt": "2026-04-02T12:51:41.708Z",
+  "endedAt": "2026-04-02T12:51:41.797Z",
+  "passed": true,
+  "command": {
+    "name": "/sync-memory",
+    "scope": "sync-memory",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-02-12-51-41-722-b7822044",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "activeFlow": "experiment",
+      "currentStage": "experiment-blocked",
+      "lastCommand": "/sync-memory",
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "signals": {
+        "staleMemory": false,
+        "blockedExperiments": 1,
+        "unresolvedClaims": 0,
+        "exportAlerts": 0
+      }
+    },
+    "resultAssertions": {
+      "payload": {
+        "status": "partial",
+        "state": {
+          "status": "partial",
+          "kernelDbAvailable": false,
+          "degradedReason": "bridge unavailable"
+        }
+      }
+    },
+    "fileAssertions": [
+      {
+        "path": ".vibe-science-environment/memory/sync-state.json",
+        "kind": "json-subset",
+        "value": {
+          "status": "partial",
+          "kernelDbAvailable": false,
+          "degradedReason": "bridge unavailable"
+        }
+      },
+      {
+        "path": ".vibe-science-environment/memory/mirrors/project-overview.md",
+        "kind": "text-includes",
+        "value": [
+          "# Project Overview",
+          "Mirror only.",
+          "[mark:follow_up]",
+          "[synced:"
+        ]
+      },
+      {
+        "path": ".vibe-science-environment/memory/mirrors/decision-log.md",
+        "kind": "text-includes",
+        "value": [
+          "# Decision Log",
+          "Mirror only. `.vibe-science-environment/control/decisions.jsonl` remains authoritative.",
+          "analysis_boundary"
+        ]
+      }
+    ],
+    "mustSurfaceDegradedReason": true,
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/memory/mirrors/project-overview.md",
+      ".vibe-science-environment/memory/mirrors/decision-log.md",
+      ".vibe-science-environment/memory/sync-state.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Synced memory mirrors at 2026-04-02T12:51:41.756Z with workspace-first degradation.",
+      "warnings": [
+        "bridge unavailable"
+      ],
+      "signals": {
+        "staleMemory": false
+      },
+      "payload": {
+        "syncedAt": "2026-04-02T12:51:41.756Z",
+        "status": "partial",
+        "warnings": [
+          "bridge unavailable"
+        ],
+        "mirrors": [
+          {
+            "mirrorId": "project-overview",
+            "path": ".vibe-science-environment/memory/mirrors/project-overview.md",
+            "syncedAt": "2026-04-02T12:51:41.756Z",
+            "sourceKinds": [
+              "control",
+              "experiments",
+              "marks"
+            ]
+          },
+          {
+            "mirrorId": "decision-log",
+            "path": ".vibe-science-environment/memory/mirrors/decision-log.md",
+            "syncedAt": "2026-04-02T12:51:41.756Z",
+            "sourceKinds": [
+              "control"
+            ]
+          }
+        ],
+        "state": {
+          "schemaVersion": "vibe-env.memory-sync-state.v1",
+          "lastSyncAt": "2026-04-02T12:51:41.756Z",
+          "lastSuccessfulSyncAt": null,
+          "status": "partial",
+          "kernelDbAvailable": false,
+          "degradedReason": "bridge unavailable",
+          "mirrors": [
+            {
+              "mirrorId": "project-overview",
+              "path": ".vibe-science-environment/memory/mirrors/project-overview.md",
+              "syncedAt": "2026-04-02T12:51:41.756Z",
+              "sourceKinds": [
+                "control",
+                "experiments",
+                "marks"
+              ]
+            },
+            {
+              "mirrorId": "decision-log",
+              "path": ".vibe-science-environment/memory/mirrors/decision-log.md",
+              "syncedAt": "2026-04-02T12:51:41.756Z",
+              "sourceKinds": [
+                "control"
+              ]
+            }
+          ],
+          "warnings": [
+            "bridge unavailable"
+          ]
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "experiment",
+      "currentStage": "experiment-blocked",
+      "nextActions": [
+        "resolve blockers for EXP-101"
+      ],
+      "blockers": [
+        "EXP-101: Awaiting refreshed mirrors before packaging."
+      ],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 1,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/sync-memory",
+      "lastAttemptId": "ATT-2026-04-02-12-51-41-722-b7822044",
+      "updatedAt": "2026-04-02T12:51:41.787Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/memory/mirrors/decision-log.md",
+      ".vibe-science-environment/memory/mirrors/project-overview.md",
+      ".vibe-science-environment/memory/sync-state.json"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": null,
+    "degradedHonestyScore": 1,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 9,
+  "checksTotal": 9,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/memory/mirrors/decision-log.md",
+    ".vibe-science-environment/memory/mirrors/project-overview.md",
+    ".vibe-science-environment/memory/sync-state.json"
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "artifactId": "phase2-operator-validation",
+  "phase": 2,
+  "createdAt": "2026-04-02T12:51:48.706Z",
+  "benchmarkId": "phase2-memory-packaging",
+  "passed": true,
+  "validationClaims": [
+    "Explicit /sync-memory refresh writes machine-owned mirrors plus freshness state without claiming truth ownership.",
+    "Stale mirrors are surfaced explicitly via /flow-status.",
+    "Typed result packaging records sourceAttemptId in bundle-manifest.json.",
+    "A previously packaged result bundle and linked session digest are discoverable from operator-facing status surfaces in under 1 minute."
+  ],
+  "decisions": {
+    "staleMirrorBehavior": "Mirrors older than 24 hours are flagged as stale in /flow-status until /sync-memory runs again.",
+    "sessionDigestContract": "Session digests are operational exports under results/summaries and do not become a second truth path."
+  },
+  "evidence": {
+    "syncMemory": {
+      "claim": "The explicit memory-sync command writes mirrors and sync-state honestly even when the kernel bridge is unavailable.",
+      "sourceRepeat": {
+        "taskId": "sync-memory-refresh",
+        "repeatId": "2026-04-02-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "staleWarning": {
+      "claim": "Stale mirrors are flagged explicitly from /flow-status.",
+      "sourceRepeat": {
+        "taskId": "flow-status-stale-memory",
+        "repeatId": "2026-04-02-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "packaging": {
+      "claim": "Typed result bundles persist sourceAttemptId and related claim linkage.",
+      "sourceRepeat": {
+        "taskId": "flow-results-package",
+        "repeatId": "2026-04-02-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "findability": {
+      "claim": "Packaged results and their linked session digests remain discoverable in operator-facing status within the Phase 2 latency budget.",
+      "sourceRepeat": {
+        "taskId": "flow-status-results-findability",
+        "repeatId": "2026-04-02-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.058,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    }
+  }
+}

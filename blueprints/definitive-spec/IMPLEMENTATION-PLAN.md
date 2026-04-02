@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1 closed, Phase 2 active
+**Status:** Phase 1 closed, Phase 2 closed, Phase 3 next
 
 ---
 
@@ -26,7 +26,7 @@ The plan sets currently on disk are:
 - [implementation-plan/06-wave-5-evals-and-closeout.md](./implementation-plan/06-wave-5-evals-and-closeout.md)
 - [implementation-plan/phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 
-### Phase 2 (active)
+### Phase 2 (completed)
 
 - [implementation-plan/phase2-00-index.md](./implementation-plan/phase2-00-index.md)
 - [implementation-plan/phase2-01-wave-0-boundaries-and-contracts.md](./implementation-plan/phase2-01-wave-0-boundaries-and-contracts.md)
@@ -35,14 +35,15 @@ The plan sets currently on disk are:
 - [implementation-plan/phase2-04-wave-3-packaging-runtime.md](./implementation-plan/phase2-04-wave-3-packaging-runtime.md)
 - [implementation-plan/phase2-05-wave-4-tests-and-validators.md](./implementation-plan/phase2-05-wave-4-tests-and-validators.md)
 - [implementation-plan/phase2-06-wave-5-operator-evidence-and-closeout.md](./implementation-plan/phase2-06-wave-5-operator-evidence-and-closeout.md)
+- [implementation-plan/phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 
 ---
 
 ## Current Phase State
 
-- Phase 1 is closed at `16/17 PASS, 1 PARTIAL` (kernel prerequisites): see [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
-- Phase 2 is the next active execution slice: see [phase2-00-index.md](./implementation-plan/phase2-00-index.md)
-- Phase 3 remains deferred until Phase 2 runtime surfaces are stable
+- Phase 1 is closed at `17/17 PASS`: see [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
+- Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
+- Phase 3 is the next planning and execution slice
 
 ---
 

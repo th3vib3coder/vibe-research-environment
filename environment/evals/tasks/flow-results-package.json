@@ -1,0 +1,166 @@
+{
+  "taskId": "flow-results-package",
+  "version": "1.0.0",
+  "phase": 2,
+  "benchmarkIds": ["phase2-memory-packaging"],
+  "command": {
+    "name": "/flow-results",
+    "scope": "flow-results",
+    "args": []
+  },
+  "goal": "Create a typed experiment result bundle through /flow-results and persist the sourceAttemptId in the bundle manifest.",
+  "setup": {
+    "workspaceFixtures": [],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    },
+    "seedExperiment": {
+      "manifest": {
+        "experimentId": "EXP-201",
+        "title": "Wave 5 packaging fixture",
+        "objective": "Package one completed experiment deterministically.",
+        "status": "planned",
+        "createdAt": "2026-04-02T18:10:00Z",
+        "executionPolicy": {
+          "timeoutSeconds": 3600,
+          "unresponsiveSeconds": 300,
+          "maxAttempts": 2
+        },
+        "latestAttemptId": null,
+        "parameters": {
+          "seed": 201
+        },
+        "codeRef": {
+          "entrypoint": "scripts/run_wave5_package.py",
+          "gitCommit": "pkg201"
+        },
+        "inputArtifacts": ["data/input-201.h5ad"],
+        "outputArtifacts": [
+          "plots/package-201.png",
+          "tables/package-201.csv"
+        ],
+        "relatedClaims": ["C-201"],
+        "blockers": [],
+        "notes": ""
+      },
+      "updates": [
+        {
+          "status": "active",
+          "latestAttemptId": "ATT-2026-04-02-201"
+        },
+        {
+          "status": "completed"
+        }
+      ]
+    },
+    "seedOutputArtifacts": [
+      {
+        "path": "plots/package-201.png",
+        "contents": "png-data-201"
+      },
+      {
+        "path": "tables/package-201.csv",
+        "contents": "gene,p\nA,0.01\n"
+      }
+    ],
+    "packageOptions": {
+      "now": "2026-04-02T18:20:00Z",
+      "datasetHash": "sha256:phase2-package-201",
+      "findings": [
+        "Primary effect remains stable after packaging."
+      ],
+      "statistics": [
+        "Mean delta = -0.42; Welch t-test p=0.003."
+      ],
+      "environment": [
+        "Python: 3.11.8",
+        "GPU: none"
+      ],
+      "comparisonQuestion": "Primary packaged analysis versus baseline.",
+      "artifactMetadata": {
+        "plots/package-201.png": {
+          "type": "figure",
+          "role": "main-result",
+          "purpose": "Show the main packaged figure.",
+          "caption": "Main figure for EXP-201.",
+          "interpretation": "Packaged outputs remain directly reviewable."
+        },
+        "tables/package-201.csv": {
+          "type": "table",
+          "role": "summary-stats"
+        }
+      }
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "activeFlow": "results",
+      "currentStage": "result-packaging",
+      "lastCommand": "/flow-results",
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      }
+    },
+    "resultAssertions": {
+      "payload": {
+        "experimentId": "EXP-201",
+        "bundleManifest": {
+          "sourceAttemptId": "ATT-2026-04-02-201"
+        }
+      }
+    },
+    "fileAssertions": [
+      {
+        "path": ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+        "kind": "json-subset",
+        "value": {
+          "experimentId": "EXP-201",
+          "sourceAttemptId": "ATT-2026-04-02-201",
+          "relatedClaims": ["C-201"]
+        }
+      },
+      {
+        "path": ".vibe-science-environment/results/experiments/EXP-201/analysis-report.md",
+        "kind": "text-includes",
+        "value": [
+          "Primary effect remains stable after packaging."
+        ]
+      },
+      {
+        "path": ".vibe-science-environment/results/experiments/EXP-201/figure-catalog.md",
+        "kind": "text-includes",
+        "value": [
+          "Main figure for EXP-201."
+        ]
+      }
+    ],
+    "mustSurfaceDegradedReason": true,
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+      ".vibe-science-environment/results/experiments/EXP-201/analysis-report.md",
+      ".vibe-science-environment/results/experiments/EXP-201/figure-catalog.md"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "honesty-under-degradation",
+    "snapshot-publish-success",
+    "state-write-scope",
+    "attempt-lifecycle-completeness"
+  ],
+  "sourceTests": [
+    "environment/tests/flows/results.test.js",
+    "environment/tests/integration/results-packaging.test.js"
+  ]
+}

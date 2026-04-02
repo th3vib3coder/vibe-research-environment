@@ -1,0 +1,241 @@
+{
+  "taskId": "flow-status-stale-memory",
+  "repeatId": "2026-04-02-02",
+  "benchmarkId": "phase2-memory-packaging",
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "result": {
+    "summary": "STALE — run /sync-memory to refresh",
+    "warnings": [
+      "STALE — run /sync-memory to refresh"
+    ],
+    "signals": {
+      "staleMemory": true
+    },
+    "payload": {
+      "memory": {
+        "hasSyncState": true,
+        "status": "ok",
+        "lastSyncAt": "2026-04-01T07:00:00Z",
+        "lastSuccessfulSyncAt": "2026-04-01T07:00:00Z",
+        "isStale": true,
+        "warning": "STALE — run /sync-memory to refresh",
+        "marks": {
+          "hasMarksFile": false,
+          "totalMarks": 0,
+          "warnings": [],
+          "byTargetType": {
+            "claim": 0,
+            "experiment": 0,
+            "paper": 0
+          },
+          "records": [],
+          "prioritizedTargets": []
+        }
+      }
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-02-12-51-41-888-b1a84c93",
+    "scope": "flow-status",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-02T12:51:41.888Z",
+    "lastHeartbeatAt": "2026-04-02T12:51:41.945Z",
+    "endedAt": "2026-04-02T12:51:41.945Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "STALE — run /sync-memory to refresh"
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "experiment",
+    "currentStage": "handoff-ready",
+    "nextActions": [
+      "refresh memory mirrors before review"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": true,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/flow-status",
+    "lastAttemptId": "ATT-2026-04-02-12-51-41-888-b1a84c93",
+    "updatedAt": "2026-04-02T12:51:41.931Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": false,
+      "projections": {
+        "overview": false,
+        "claimHeads": false,
+        "unresolvedClaims": false,
+        "citationChecks": false
+      },
+      "advanced": {
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": []
+    },
+    "updatedAt": "2026-04-02T12:51:41.878Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "session-snapshot",
+      "passed": true,
+      "expected": {
+        "lastCommand": "/flow-status",
+        "signals": {
+          "staleMemory": true
+        }
+      },
+      "actual": {
+        "schemaVersion": "vibe-env.session.v1",
+        "activeFlow": "experiment",
+        "currentStage": "handoff-ready",
+        "nextActions": [
+          "refresh memory mirrors before review"
+        ],
+        "blockers": [],
+        "kernel": {
+          "dbAvailable": false,
+          "degradedReason": "bridge unavailable"
+        },
+        "capabilities": {
+          "claimHeads": false,
+          "citationChecks": false,
+          "governanceProfileAtCreation": false,
+          "claimSearch": false
+        },
+        "budget": {
+          "state": "unknown",
+          "toolCalls": 0,
+          "estimatedCostUsd": 0,
+          "countingMode": "unknown"
+        },
+        "signals": {
+          "staleMemory": true,
+          "unresolvedClaims": 0,
+          "blockedExperiments": 0,
+          "exportAlerts": 0
+        },
+        "lastCommand": "/flow-status",
+        "lastAttemptId": "ATT-2026-04-02-12-51-41-888-b1a84c93",
+        "updatedAt": "2026-04-02T12:51:41.931Z"
+      }
+    },
+    {
+      "name": "command-result",
+      "passed": true,
+      "expected": {
+        "warnings": [
+          "STALE — run /sync-memory to refresh"
+        ],
+        "payload": {
+          "memory": {
+            "isStale": true,
+            "warning": "STALE — run /sync-memory to refresh"
+          }
+        }
+      },
+      "actual": {
+        "summary": "STALE — run /sync-memory to refresh",
+        "warnings": [
+          "STALE — run /sync-memory to refresh"
+        ],
+        "signals": {
+          "staleMemory": true
+        },
+        "payload": {
+          "memory": {
+            "hasSyncState": true,
+            "status": "ok",
+            "lastSyncAt": "2026-04-01T07:00:00Z",
+            "lastSuccessfulSyncAt": "2026-04-01T07:00:00Z",
+            "isStale": true,
+            "warning": "STALE — run /sync-memory to refresh",
+            "marks": {
+              "hasMarksFile": false,
+              "totalMarks": 0,
+              "warnings": [],
+              "byTargetType": {
+                "claim": 0,
+                "experiment": 0,
+                "paper": 0
+              },
+              "records": [],
+              "prioritizedTargets": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json"
+      ]
+    }
+  ]
+}

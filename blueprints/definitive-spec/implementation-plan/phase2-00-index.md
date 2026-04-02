@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01  
 **Scope:** Phase 2 exit gates from [13-delivery-roadmap.md](../13-delivery-roadmap.md)  
-**Status:** Active execution entrypoint after Phase 1 closeout
+**Status:** Closed with saved evidence and closeout dossier
 
 ---
 
@@ -11,9 +11,12 @@
 Phase 1 is closed with saved evidence and a green closeout dossier:
 - [phase1-closeout.md](./phase1-closeout.md)
 
-Phase 2 is the next product slice because it solves the next two user problems:
+Phase 2 was the next product slice because it solved the next two user problems:
 - Story 1: orientation across sessions via memory mirrors
 - Story 2: experiment result findability and packaging
+
+Closeout:
+- [phase2-closeout.md](./phase2-closeout.md)
 
 ---
 
@@ -98,9 +101,7 @@ Best split:
 
 ## Final Gate
 
-Phase 2 is not done when the code merely exists.
-
-Phase 2 is done only when:
+Phase 2 was done only when:
 - the Phase 2 roadmap gates are green with saved artifacts
 - stale mirrors are visible and honest
 - experiment bundles are typed and findable

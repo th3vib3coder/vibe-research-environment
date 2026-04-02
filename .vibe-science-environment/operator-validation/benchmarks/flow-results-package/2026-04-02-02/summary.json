@@ -1,0 +1,221 @@
+{
+  "taskId": "flow-results-package",
+  "repeatId": "2026-04-02-02",
+  "benchmarkId": "phase2-memory-packaging",
+  "startedAt": "2026-04-02T12:51:42.041Z",
+  "endedAt": "2026-04-02T12:51:42.104Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-results",
+    "scope": "flow-results",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-02-12-51-42-048-6524f15d",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "activeFlow": "results",
+      "currentStage": "result-packaging",
+      "lastCommand": "/flow-results",
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      }
+    },
+    "resultAssertions": {
+      "payload": {
+        "experimentId": "EXP-201",
+        "bundleManifest": {
+          "sourceAttemptId": "ATT-2026-04-02-201"
+        }
+      }
+    },
+    "fileAssertions": [
+      {
+        "path": ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+        "kind": "json-subset",
+        "value": {
+          "experimentId": "EXP-201",
+          "sourceAttemptId": "ATT-2026-04-02-201",
+          "relatedClaims": [
+            "C-201"
+          ]
+        }
+      },
+      {
+        "path": ".vibe-science-environment/results/experiments/EXP-201/analysis-report.md",
+        "kind": "text-includes",
+        "value": [
+          "Primary effect remains stable after packaging."
+        ]
+      },
+      {
+        "path": ".vibe-science-environment/results/experiments/EXP-201/figure-catalog.md",
+        "kind": "text-includes",
+        "value": [
+          "Main figure for EXP-201."
+        ]
+      }
+    ],
+    "mustSurfaceDegradedReason": true,
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+      ".vibe-science-environment/results/experiments/EXP-201/analysis-report.md",
+      ".vibe-science-environment/results/experiments/EXP-201/figure-catalog.md"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Packaged results for EXP-201 using workspace artifacts only.",
+      "warnings": [],
+      "payload": {
+        "experimentId": "EXP-201",
+        "bundleDir": ".vibe-science-environment/results/experiments/EXP-201",
+        "bundleManifestPath": ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+        "bundleManifest": {
+          "schemaVersion": "vibe-env.experiment-bundle.v1",
+          "experimentId": "EXP-201",
+          "bundledAt": "2026-04-02T18:20:00Z",
+          "sourceAttemptId": "ATT-2026-04-02-201",
+          "artifacts": [
+            {
+              "path": "analysis-report.md",
+              "type": "report",
+              "role": "analysis-report",
+              "createdAt": "2026-04-02T18:20:00Z",
+              "size": 531
+            },
+            {
+              "path": "stats-appendix.md",
+              "type": "report",
+              "role": "stats-appendix",
+              "createdAt": "2026-04-02T18:20:00Z",
+              "size": 325
+            },
+            {
+              "path": "figure-catalog.md",
+              "type": "report",
+              "role": "figure-catalog",
+              "createdAt": "2026-04-02T18:20:00Z",
+              "size": 243
+            },
+            {
+              "path": "figures/plots/package-201.png",
+              "type": "figure",
+              "role": "main-result",
+              "createdAt": "2026-04-02T12:51:42.037Z",
+              "size": 12
+            },
+            {
+              "path": "tables/package-201.csv",
+              "type": "table",
+              "role": "summary-stats",
+              "createdAt": "2026-04-02T12:51:42.037Z",
+              "size": 14
+            }
+          ],
+          "relatedClaims": [
+            "C-201"
+          ],
+          "datasetHash": "sha256:phase2-package-201"
+        },
+        "warnings": [],
+        "copiedArtifacts": [
+          {
+            "sourcePath": "plots/package-201.png",
+            "bundlePath": "figures/plots/package-201.png",
+            "type": "figure",
+            "role": "main-result"
+          },
+          {
+            "sourcePath": "tables/package-201.csv",
+            "bundlePath": "tables/package-201.csv",
+            "type": "table",
+            "role": "summary-stats"
+          }
+        ]
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "results",
+      "currentStage": "result-packaging",
+      "nextActions": [
+        "review packaged bundle for EXP-201",
+        "check evidence linkage for EXP-201"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/flow-results",
+      "lastAttemptId": "ATT-2026-04-02-12-51-42-048-6524f15d",
+      "updatedAt": "2026-04-02T12:51:42.087Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/results/experiments/EXP-201/analysis-report.md",
+      ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+      ".vibe-science-environment/results/experiments/EXP-201/figure-catalog.md",
+      ".vibe-science-environment/results/experiments/EXP-201/figures/plots/package-201.png",
+      ".vibe-science-environment/results/experiments/EXP-201/stats-appendix.md",
+      ".vibe-science-environment/results/experiments/EXP-201/tables/package-201.csv"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": null,
+    "degradedHonestyScore": 1,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 9,
+  "checksTotal": 9,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/results/experiments/EXP-201/analysis-report.md",
+    ".vibe-science-environment/results/experiments/EXP-201/bundle-manifest.json",
+    ".vibe-science-environment/results/experiments/EXP-201/figure-catalog.md",
+    ".vibe-science-environment/results/experiments/EXP-201/figures/plots/package-201.png",
+    ".vibe-science-environment/results/experiments/EXP-201/stats-appendix.md",
+    ".vibe-science-environment/results/experiments/EXP-201/tables/package-201.csv"
+  ]
+}

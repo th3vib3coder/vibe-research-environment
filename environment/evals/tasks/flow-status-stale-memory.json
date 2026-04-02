@@ -1,0 +1,82 @@
+{
+  "taskId": "flow-status-stale-memory",
+  "version": "1.0.0",
+  "phase": 2,
+  "benchmarkIds": ["phase2-memory-packaging"],
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "goal": "Surface stale memory mirrors explicitly through /flow-status without fabricating freshness.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/flows/index.json",
+        "kind": "flow-index",
+        "state": "present",
+        "overrides": {
+          "activeFlow": "experiment",
+          "currentStage": "handoff-ready",
+          "nextActions": ["refresh memory mirrors before review"],
+          "blockers": [],
+          "lastCommand": "/flow-results"
+        }
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    },
+    "seedSyncState": {
+      "schemaVersion": "vibe-env.memory-sync-state.v1",
+      "lastSyncAt": "2026-04-01T07:00:00Z",
+      "lastSuccessfulSyncAt": "2026-04-01T07:00:00Z",
+      "status": "ok",
+      "kernelDbAvailable": true,
+      "degradedReason": null,
+      "mirrors": [],
+      "warnings": []
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/flow-status",
+      "signals": {
+        "staleMemory": true
+      }
+    },
+    "resultAssertions": {
+      "warnings": [
+        "STALE — run /sync-memory to refresh"
+      ],
+      "payload": {
+        "memory": {
+          "isStale": true,
+          "warning": "STALE — run /sync-memory to refresh"
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "snapshot-publish-success",
+    "state-write-scope",
+    "attempt-lifecycle-completeness"
+  ],
+  "sourceTests": [
+    "environment/tests/control/query.test.js",
+    "environment/tests/control/middleware.test.js",
+    "environment/tests/integration/control-plane-rebuild.test.js"
+  ]
+}

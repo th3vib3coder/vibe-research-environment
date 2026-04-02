@@ -1,0 +1,36 @@
+{
+  "benchmarkId": "phase2-memory-packaging",
+  "version": "1.0.0",
+  "phase": 2,
+  "description": "Phase 2 operator-trust benchmark for explicit memory sync, stale visibility, typed result packaging, and result findability.",
+  "taskIds": [
+    "sync-memory-refresh",
+    "flow-status-stale-memory",
+    "flow-results-package",
+    "flow-status-results-findability"
+  ],
+  "metricIds": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "repeatPolicy": {
+    "defaultRepeats": 1,
+    "preserveAllRepeats": true,
+    "overwriteExistingRepeats": false
+  },
+  "passCriteria": {
+    "requiredTaskIds": [
+      "sync-memory-refresh",
+      "flow-status-stale-memory",
+      "flow-results-package",
+      "flow-status-results-findability"
+    ],
+    "forbidKernelWriteViolations": true,
+    "maxFindabilitySeconds": 60,
+    "requireSourceAttemptId": true,
+    "requireExplicitStaleWarning": true
+  }
+}

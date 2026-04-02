@@ -1,0 +1,147 @@
+{
+  "taskId": "flow-status-results-findability",
+  "version": "1.0.0",
+  "phase": 2,
+  "benchmarkIds": ["phase2-memory-packaging"],
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "goal": "Find a previously packaged experiment result bundle and linked session digest from operator-facing status surfaces in under one minute.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/flows/index.json",
+        "kind": "flow-index",
+        "state": "present",
+        "overrides": {
+          "activeFlow": "results",
+          "currentStage": "result-packaging",
+          "nextActions": ["review packaged bundle for EXP-301"],
+          "blockers": [],
+          "lastCommand": "/flow-results"
+        }
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    },
+    "seedSyncState": {
+      "schemaVersion": "vibe-env.memory-sync-state.v1",
+      "lastSyncAt": "2026-04-02T17:50:00Z",
+      "lastSuccessfulSyncAt": "2026-04-02T17:50:00Z",
+      "status": "ok",
+      "kernelDbAvailable": true,
+      "degradedReason": null,
+      "mirrors": [],
+      "warnings": []
+    },
+    "seedExperiment": {
+      "manifest": {
+        "experimentId": "EXP-301",
+        "title": "Wave 5 findability fixture",
+        "objective": "Keep one packaged result discoverable from status.",
+        "status": "planned",
+        "createdAt": "2026-04-02T17:40:00Z",
+        "executionPolicy": {
+          "timeoutSeconds": 3600,
+          "unresponsiveSeconds": 300,
+          "maxAttempts": 2
+        },
+        "latestAttemptId": null,
+        "parameters": {
+          "seed": 301
+        },
+        "codeRef": {
+          "entrypoint": "scripts/run_wave5_findability.py",
+          "gitCommit": "find301"
+        },
+        "inputArtifacts": ["data/input-301.h5ad"],
+        "outputArtifacts": ["plots/findability-301.png"],
+        "relatedClaims": ["C-301"],
+        "blockers": [],
+        "notes": ""
+      },
+      "updates": [
+        {
+          "status": "active",
+          "latestAttemptId": "ATT-2026-04-02-301"
+        },
+        {
+          "status": "completed"
+        }
+      ]
+    },
+    "seedOutputArtifacts": [
+      {
+        "path": "plots/findability-301.png",
+        "contents": "png-data-301"
+      }
+    ],
+    "packageOptions": {
+      "now": "2026-04-02T18:25:00Z",
+      "datasetHash": "sha256:phase2-findability-301",
+      "artifactMetadata": {
+        "plots/findability-301.png": {
+          "type": "figure",
+          "role": "main-result",
+          "purpose": "Keep one packaged result discoverable.",
+          "caption": "Findability figure for EXP-301.",
+          "interpretation": "Status surfaces should point back here."
+        }
+      }
+    },
+    "seedDigest": {
+      "sourceSessionId": "session-2026-04-02-findability",
+      "now": "2026-04-02T18:30:00Z",
+      "experimentIds": ["EXP-301"],
+      "attemptIds": ["ATT-2026-04-02-301"]
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "maxElapsedSeconds": 60,
+    "snapshotAssertions": {
+      "lastCommand": "/flow-status",
+      "signals": {
+        "staleMemory": false
+      }
+    },
+    "resultAssertions": {
+      "payload": {
+        "foundBundle": {
+          "experimentId": "EXP-301",
+          "bundleDir": ".vibe-science-environment/results/experiments/EXP-301",
+          "sourceAttemptId": "ATT-2026-04-02-301"
+        },
+        "foundDigest": {
+          "digestId": "DIGEST-session-2026-04-02-findability"
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "resume-latency",
+    "snapshot-publish-success",
+    "state-write-scope",
+    "attempt-lifecycle-completeness"
+  ],
+  "sourceTests": [
+    "environment/tests/control/query.test.js",
+    "environment/tests/flows/results-discovery.test.js",
+    "environment/tests/integration/results-packaging.test.js",
+    "environment/tests/integration/session-digest-export.test.js"
+  ]
+}

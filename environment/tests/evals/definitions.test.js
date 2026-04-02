@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  BENCHMARK_SPECS,
   EXPECTED_METRIC_FILES,
   EXPECTED_METRIC_IDS,
   EXPECTED_TASK_FILES,
+  PHASE1_EXPECTED_TASK_FILES,
+  PHASE2_EXPECTED_TASK_FILES,
   assertRepoPathExists,
   assertSetEqual,
   commandDocPath,
@@ -12,40 +15,50 @@ import {
   readRepoJson
 } from './_helpers.js';
 
-test('phase 1 eval benchmark references only the intended tasks and metrics', async () => {
-  const benchmark = await readRepoJson(
-    'environment/evals/benchmarks/phase1-core.benchmark.json'
-  );
-  const tasks = await Promise.all(
-    EXPECTED_TASK_FILES.map((file) => readRepoJson(`environment/evals/tasks/${file}`))
-  );
+test('eval benchmarks reference only the intended tasks and metrics', async () => {
   const metrics = await Promise.all(
     EXPECTED_METRIC_FILES.map((file) =>
       importRepoModule(`environment/evals/metrics/${file}`)
     )
   );
 
-  assert.equal(benchmark.phase, 1);
-  assert.equal(benchmark.benchmarkId, 'phase1-core');
+  for (const spec of BENCHMARK_SPECS) {
+    const benchmark = await readRepoJson(spec.benchmarkFile);
+    const tasks = await Promise.all(
+      spec.taskFiles.map((file) => readRepoJson(`environment/evals/tasks/${file}`))
+    );
 
-  assertSetEqual(
-    new Set(benchmark.taskIds),
-    new Set(tasks.map((task) => task.taskId)),
-    'Benchmark task set drifted from the task definitions.'
-  );
-  assertSetEqual(
-    new Set(benchmark.metricIds),
-    new Set(metrics.map((metric) => metric.metricId)),
-    'Benchmark metric set drifted from the metric modules.'
-  );
+    assert.equal(benchmark.phase, spec.phase);
+    assert.equal(benchmark.benchmarkId, spec.benchmarkId);
+
+    assertSetEqual(
+      new Set(benchmark.taskIds),
+      new Set(tasks.map((task) => task.taskId)),
+      `Benchmark task set drifted from ${spec.benchmarkId}.`
+    );
+    assertSetEqual(
+      new Set(benchmark.metricIds),
+      new Set(metrics.map((metric) => metric.metricId)),
+      `Benchmark metric set drifted from ${spec.benchmarkId}.`
+    );
+  }
 });
 
-test('phase 1 task definitions stay wired to real commands, source tests, and safe write scopes', async () => {
+test('eval task definitions stay wired to real commands, source tests, and safe write scopes', async () => {
+  const benchmarkIdByFile = new Map([
+    ...PHASE1_EXPECTED_TASK_FILES.map((file) => [file, 'phase1-core']),
+    ...PHASE2_EXPECTED_TASK_FILES.map((file) => [file, 'phase2-memory-packaging'])
+  ]);
+  const phaseByFile = new Map([
+    ...PHASE1_EXPECTED_TASK_FILES.map((file) => [file, 1]),
+    ...PHASE2_EXPECTED_TASK_FILES.map((file) => [file, 2])
+  ]);
+
   for (const file of EXPECTED_TASK_FILES) {
     const task = await readRepoJson(`environment/evals/tasks/${file}`);
 
-    assert.equal(task.phase, 1);
-    assert.deepEqual(task.benchmarkIds, ['phase1-core']);
+    assert.equal(task.phase, phaseByFile.get(file));
+    assert.deepEqual(task.benchmarkIds, [benchmarkIdByFile.get(file)]);
     assert.equal(task.taskId, file.replace('.json', ''));
     assert.equal(typeof task.command?.name, 'string');
     assert.ok(Array.isArray(task.metrics) && task.metrics.length > 0);

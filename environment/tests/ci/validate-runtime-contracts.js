@@ -43,7 +43,11 @@ const activeEvalTaskFiles = [
   'flow-status-resume.json',
   'flow-literature-register.json',
   'flow-experiment-register.json',
-  'degraded-kernel-mode.json'
+  'degraded-kernel-mode.json',
+  'sync-memory-refresh.json',
+  'flow-status-stale-memory.json',
+  'flow-results-package.json',
+  'flow-status-results-findability.json'
 ];
 
 const activeEvalMetricFiles = [
@@ -54,7 +58,18 @@ const activeEvalMetricFiles = [
   'snapshot-publish-success.js'
 ];
 
-const activeEvalBenchmarkFiles = ['phase1-core.benchmark.json'];
+const evalBenchmarkSpecs = [
+  {
+    file: 'phase1-core.benchmark.json',
+    phase: 1,
+    benchmarkId: 'phase1-core'
+  },
+  {
+    file: 'phase2-memory-packaging.benchmark.json',
+    phase: 2,
+    benchmarkId: 'phase2-memory-packaging'
+  }
+];
 const activeFlowTestFiles = [
   'experiment.test.js',
   'literature.test.js',
@@ -107,8 +122,18 @@ export default async function validateRuntimeContracts() {
   const taskIdSet = new Set();
   for (const taskFile of activeEvalTaskFiles) {
     const task = await readJson(`environment/evals/tasks/${taskFile}`);
-    assert(task.phase === 1, `Eval task ${taskFile} must stay in Phase 1`);
-    assert(Array.isArray(task.benchmarkIds) && task.benchmarkIds.includes('phase1-core'), `Eval task ${taskFile} must belong to phase1-core`);
+    const expectedPhase = taskFile.startsWith('flow-status-resume') ||
+      taskFile.startsWith('flow-literature-register') ||
+      taskFile.startsWith('flow-experiment-register') ||
+      taskFile.startsWith('degraded-kernel-mode')
+      ? 1
+      : 2;
+    const expectedBenchmarkId = expectedPhase === 1 ? 'phase1-core' : 'phase2-memory-packaging';
+    assert(task.phase === expectedPhase, `Eval task ${taskFile} drifted from Phase ${expectedPhase}`);
+    assert(
+      Array.isArray(task.benchmarkIds) && task.benchmarkIds.includes(expectedBenchmarkId),
+      `Eval task ${taskFile} must belong to ${expectedBenchmarkId}`
+    );
     assert(Array.isArray(task.metrics) && task.metrics.length > 0, `Eval task ${taskFile} missing metric references`);
     for (const metricId of task.metrics) {
       assert(metricIdSet.has(metricId), `Eval task ${taskFile} references unknown metric ${metricId}`);
@@ -116,15 +141,16 @@ export default async function validateRuntimeContracts() {
     taskIdSet.add(task.taskId);
   }
 
-  for (const benchmarkFile of activeEvalBenchmarkFiles) {
-    assert(await pathExists(`environment/evals/benchmarks/${benchmarkFile}`), `Missing eval benchmark: ${benchmarkFile}`);
-    const benchmark = await readJson(`environment/evals/benchmarks/${benchmarkFile}`);
-    assert(benchmark.phase === 1, `Eval benchmark ${benchmarkFile} must stay in Phase 1`);
+  for (const benchmarkSpec of evalBenchmarkSpecs) {
+    assert(await pathExists(`environment/evals/benchmarks/${benchmarkSpec.file}`), `Missing eval benchmark: ${benchmarkSpec.file}`);
+    const benchmark = await readJson(`environment/evals/benchmarks/${benchmarkSpec.file}`);
+    assert(benchmark.phase === benchmarkSpec.phase, `Eval benchmark ${benchmarkSpec.file} drifted from Phase ${benchmarkSpec.phase}`);
+    assert(benchmark.benchmarkId === benchmarkSpec.benchmarkId, `Eval benchmark ${benchmarkSpec.file} drifted from ${benchmarkSpec.benchmarkId}`);
     for (const taskId of benchmark.taskIds ?? []) {
-      assert(taskIdSet.has(taskId), `Eval benchmark ${benchmarkFile} references unknown task ${taskId}`);
+      assert(taskIdSet.has(taskId), `Eval benchmark ${benchmarkSpec.file} references unknown task ${taskId}`);
     }
     for (const metricId of benchmark.metricIds ?? []) {
-      assert(metricIdSet.has(metricId), `Eval benchmark ${benchmarkFile} references unknown metric ${metricId}`);
+      assert(metricIdSet.has(metricId), `Eval benchmark ${benchmarkSpec.file} references unknown metric ${metricId}`);
     }
   }
 

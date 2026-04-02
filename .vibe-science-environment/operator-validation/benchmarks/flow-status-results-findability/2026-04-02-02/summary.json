@@ -1,0 +1,209 @@
+{
+  "taskId": "flow-status-results-findability",
+  "repeatId": "2026-04-02-02",
+  "benchmarkId": "phase2-memory-packaging",
+  "startedAt": "2026-04-02T12:51:42.230Z",
+  "endedAt": "2026-04-02T12:51:42.288Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-02-12-51-42-239-595fa7fd",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "maxElapsedSeconds": 60,
+    "snapshotAssertions": {
+      "lastCommand": "/flow-status",
+      "signals": {
+        "staleMemory": false
+      }
+    },
+    "resultAssertions": {
+      "payload": {
+        "foundBundle": {
+          "experimentId": "EXP-301",
+          "bundleDir": ".vibe-science-environment/results/experiments/EXP-301",
+          "sourceAttemptId": "ATT-2026-04-02-301"
+        },
+        "foundDigest": {
+          "digestId": "DIGEST-session-2026-04-02-findability"
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Found packaged results for EXP-301 at .vibe-science-environment/results/experiments/EXP-301.",
+      "warnings": [],
+      "signals": {
+        "staleMemory": false
+      },
+      "payload": {
+        "results": {
+          "totalBundles": 1,
+          "bundles": [
+            {
+              "hasBundle": true,
+              "experimentId": "EXP-301",
+              "manifestPath": ".vibe-science-environment/experiments/manifests/EXP-301.json",
+              "bundleDir": ".vibe-science-environment/results/experiments/EXP-301",
+              "bundleManifestPath": ".vibe-science-environment/results/experiments/EXP-301/bundle-manifest.json",
+              "bundledAt": "2026-04-02T18:25:00Z",
+              "sourceAttemptId": "ATT-2026-04-02-301",
+              "relatedClaims": [
+                "C-301"
+              ],
+              "datasetHash": "sha256:phase2-findability-301",
+              "artifactCount": 4,
+              "analysisReportPath": ".vibe-science-environment/results/experiments/EXP-301/analysis-report.md",
+              "statsAppendixPath": ".vibe-science-environment/results/experiments/EXP-301/stats-appendix.md",
+              "figureCatalogPath": ".vibe-science-environment/results/experiments/EXP-301/figure-catalog.md",
+              "latestSessionDigest": {
+                "digestId": "DIGEST-session-2026-04-02-findability",
+                "generatedAt": "2026-04-02T18:30:00Z",
+                "jsonPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.json",
+                "markdownPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.md"
+              }
+            }
+          ],
+          "totalSessionDigests": 1,
+          "sessionDigests": [
+            {
+              "digestId": "DIGEST-session-2026-04-02-findability",
+              "digestDir": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability",
+              "jsonPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.json",
+              "markdownPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.md",
+              "generatedAt": "2026-04-02T18:30:00Z",
+              "sourceSessionId": "session-2026-04-02-findability",
+              "experimentIds": [
+                "EXP-301"
+              ],
+              "attemptIds": [
+                "ATT-2026-04-02-301"
+              ],
+              "warnings": [
+                "Session snapshot unavailable; used flow index fallback when possible.",
+                "No decision lineage could be resolved for this digest.",
+                "No session metrics record was available during digest export."
+              ]
+            }
+          ],
+          "warnings": []
+        },
+        "foundBundle": {
+          "hasBundle": true,
+          "experimentId": "EXP-301",
+          "manifestPath": ".vibe-science-environment/experiments/manifests/EXP-301.json",
+          "bundleDir": ".vibe-science-environment/results/experiments/EXP-301",
+          "bundleManifestPath": ".vibe-science-environment/results/experiments/EXP-301/bundle-manifest.json",
+          "bundledAt": "2026-04-02T18:25:00Z",
+          "sourceAttemptId": "ATT-2026-04-02-301",
+          "relatedClaims": [
+            "C-301"
+          ],
+          "datasetHash": "sha256:phase2-findability-301",
+          "artifactCount": 4,
+          "analysisReportPath": ".vibe-science-environment/results/experiments/EXP-301/analysis-report.md",
+          "statsAppendixPath": ".vibe-science-environment/results/experiments/EXP-301/stats-appendix.md",
+          "figureCatalogPath": ".vibe-science-environment/results/experiments/EXP-301/figure-catalog.md",
+          "latestSessionDigest": {
+            "digestId": "DIGEST-session-2026-04-02-findability",
+            "generatedAt": "2026-04-02T18:30:00Z",
+            "jsonPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.json",
+            "markdownPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.md"
+          }
+        },
+        "foundDigest": {
+          "digestId": "DIGEST-session-2026-04-02-findability",
+          "digestDir": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability",
+          "jsonPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.json",
+          "markdownPath": ".vibe-science-environment/results/summaries/DIGEST-session-2026-04-02-findability/session-digest.md",
+          "generatedAt": "2026-04-02T18:30:00Z",
+          "sourceSessionId": "session-2026-04-02-findability",
+          "experimentIds": [
+            "EXP-301"
+          ],
+          "attemptIds": [
+            "ATT-2026-04-02-301"
+          ],
+          "warnings": [
+            "Session snapshot unavailable; used flow index fallback when possible.",
+            "No decision lineage could be resolved for this digest.",
+            "No session metrics record was available during digest export."
+          ]
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "results",
+      "currentStage": "result-packaging",
+      "nextActions": [
+        "add complete statistical details for EXP-301",
+        "review packaged bundle for EXP-301",
+        "check evidence linkage for EXP-301"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/flow-status",
+      "lastAttemptId": "ATT-2026-04-02-12-51-42-239-595fa7fd",
+      "updatedAt": "2026-04-02T12:51:42.270Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": 0.058,
+    "degradedHonestyScore": null,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 5,
+  "checksTotal": 5,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json"
+  ]
+}
