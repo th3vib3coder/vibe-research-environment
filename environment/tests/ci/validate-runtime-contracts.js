@@ -22,6 +22,7 @@ const templateSchemaPairs = [
 const activeSchemaFiles = [
   'session-snapshot.schema.json',
   'capabilities-snapshot.schema.json',
+  'memory-sync-state.schema.json',
   'attempt-record.schema.json',
   'event-record.schema.json',
   'decision-record.schema.json',
