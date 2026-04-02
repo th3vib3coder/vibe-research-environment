@@ -48,6 +48,18 @@ Read in numerical order. Each document is self-contained but builds on previous 
 
 ---
 
+## Companion Future Overlay Specs
+
+These are intentionally separate from the numbered core reading order:
+
+- [Surface Orchestrator Layer](./surface-orchestrator/00-index.md)
+
+The surface orchestrator is a future user-facing coordination layer above VRE.
+It is designed now so we do not lose the idea, but it is not part of the
+active Phase 1-3 implementation path.
+
+---
+
 ## Design Principles
 
 1. **Each Phase 1-3 document is one agent's workload.** An implementation agent reads ONE document and builds what it describes. Deferred docs (10-12) are boundary specs first and only become implementation tickets when their phase opens.

@@ -146,6 +146,8 @@ outer-project control plane, and build the first two flows on top of it.
 - Bibliography adapters AFTER literature flow works
 - Automations AFTER flows define "stale" and "blocked"
 - Domain packs AFTER flows define workflow stages
+- Surface orchestrator layer AFTER VRE southbound contracts are stable enough to
+  support a user-facing supervision runtime
 - Use Claude Code Channels for event ingress
 - Use Claude Code Scheduled Tasks for durable automation
 - Add richer eval storage only after control plane and base flows are stable
