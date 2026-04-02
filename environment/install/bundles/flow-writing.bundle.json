@@ -1,0 +1,27 @@
+{
+  "bundleId": "flow-writing",
+  "phase": 3,
+  "dependsOn": [
+    "governance-core",
+    "control-plane",
+    "memory-sync",
+    "flow-results"
+  ],
+  "capabilitiesProvided": [
+    "writingHandoff",
+    "exportSnapshots",
+    "exportAuditTrail",
+    "advisorPacks",
+    "rebuttalPacks"
+  ],
+  "ownedPaths": [
+    "environment/schemas/export-snapshot.schema.json",
+    "environment/schemas/export-record.schema.json",
+    "environment/schemas/export-alert-record.schema.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/writing/exports/",
+    ".vibe-science-environment/writing/advisor-packs/",
+    ".vibe-science-environment/writing/rebuttal/"
+  ]
+}

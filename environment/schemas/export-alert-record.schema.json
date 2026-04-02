@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/export-alert-record.schema.json",
+  "title": "VRE Export Alert Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "alertId",
+    "claimId",
+    "snapshotId",
+    "detectedAt",
+    "kind",
+    "severity",
+    "message"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.export-alert-record.v1"
+    },
+    "alertId": {
+      "type": "string",
+      "pattern": "^WALERT-.+$"
+    },
+    "claimId": {
+      "type": "string",
+      "pattern": "^C-[0-9]{3}$"
+    },
+    "snapshotId": {
+      "type": "string",
+      "pattern": "^WEXP-.+$"
+    },
+    "detectedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "claim_killed",
+        "claim_disputed",
+        "citation_invalidated",
+        "confidence_changed"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "citationId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "snapshotStatus": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "currentStatus": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "snapshotConfidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "currentConfidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

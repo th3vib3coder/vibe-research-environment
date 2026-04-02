@@ -12,7 +12,7 @@ Responsibilities:
 - create the frozen export snapshot first
 - gather export-eligible claims through the shared helper
 - separate claim-backed, artifact-backed, and free surfaces
-- generate structured claim-backed seeds that carry `snapshotId`
+- generate structured claim-backed seeds that carry both `snapshotId` and `claimId`
 - keep artifact-backed sections grounded in manifests and result bundles only
 
 Rules:
@@ -21,7 +21,7 @@ Rules:
 - free writing stays clearly marked as non-kernel-authoritative
 
 Acceptance:
-- every claim-backed artifact references `snapshotId`
+- every claim-backed artifact references both `snapshotId` and `claimId`
 - non-eligible claims never appear as validated findings
 - artifact-backed sections trace to Phase 2 manifests and bundles only
 

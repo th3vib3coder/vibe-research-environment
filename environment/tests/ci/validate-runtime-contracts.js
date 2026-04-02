@@ -35,6 +35,9 @@ const activeSchemaFiles = [
   'experiment-manifest.schema.json',
   'experiment-bundle-manifest.schema.json',
   'session-digest.schema.json',
+  'export-snapshot.schema.json',
+  'export-record.schema.json',
+  'export-alert-record.schema.json',
   'costs-record.schema.json',
   'install-state.schema.json'
 ];

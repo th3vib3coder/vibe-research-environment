@@ -123,27 +123,43 @@ Contract:
 - `environment/schemas/export-snapshot.schema.json`
 - `environment/flows/writing.js`
 
-Suggested shape:
+V1 shape:
 
 ```json
 {
+  "schemaVersion": "vibe-env.export-snapshot.v1",
   "snapshotId": "WEXP-2026-03-30-001",
   "createdAt": "2026-03-30T09:45:00Z",
   "claimIds": ["C-014"],
-  "eligibility": [
-    {"claimId": "C-014", "eligible": true, "reasons": []}
+  "claims": [
+    {
+      "claimId": "C-014",
+      "statusAtExport": "PROMOTED",
+      "confidenceAtExport": 0.91,
+      "eligible": true,
+      "reasons": [],
+      "governanceProfileAtCreation": "default",
+      "hasFreshSchemaValidation": true
+    }
   ],
   "citations": [
-    {"claimId": "C-014", "citationId": "CIT-033", "verificationStatus": "VERIFIED"}
+    {
+      "claimId": "C-014",
+      "citationId": "CIT-033",
+      "verificationStatusAtExport": "VERIFIED"
+    }
   ],
   "capabilities": {
-    "governanceProfileAtCreation": false
-  }
+    "governanceProfileAtCreationAvailable": true,
+    "schemaValidationSurfaceAvailable": true
+  },
+  "warnings": []
 }
 ```
 
 Rules:
 - all claim-backed writing artifacts reference `snapshotId`
+- every frozen claim entry carries both `claimId` and export-time status/confidence
 - advisor packs and export logs may reference a snapshot when generated from the
   same run
 - post-export safety compares current projections against the frozen snapshot,
@@ -198,16 +214,24 @@ This seed contains kernel-validated facts plus optional manually-linked or
 future-export-packet enrichments. The researcher transforms it into paper prose.
 ```
 
+Storage contract:
+- claim-backed seed path: `.vibe-science-environment/writing/exports/seeds/<snapshotId>/<claimId>.md`
+- rerunning the same snapshot overwrites machine-written seed files in that directory
+- every claim-backed seed carries both `snapshotId` and `claimId`
+
 ### Step 4: Track Export
 
 Every claim export is tracked:
 ```json
 {
+  "schemaVersion": "vibe-env.export-record.v1",
   "claimId": "C-014",
   "snapshotId": "WEXP-2026-03-30-001",
   "exportedAt": "2026-03-29T15:00:00Z",
   "exportedToFlow": "writing",
-  "governanceProfileAtExport": "default"
+  "governanceProfileAtExport": "default",
+  "profileSafetyMode": "full",
+  "artifactPath": ".vibe-science-environment/writing/exports/seeds/WEXP-2026-03-30-001/C-014.md"
 }
 ```
 
@@ -232,6 +256,14 @@ Reads kernel state + experiment registry + memory:
 └── next-steps.md           — proposed next actions
 ```
 
+V1 contract:
+- advisor packs are date-scoped directories under `.vibe-science-environment/writing/advisor-packs/YYYY-MM-DD/`
+- rerunning the same date overwrites machine-written files in that directory
+- `status-summary.md`, `experiment-progress.md`, `open-questions.md`, and `next-steps.md` are machine-written
+- `figures/` holds copied figure artifacts from Phase 2 result bundles when canonical figure outputs exist
+- V1 does NOT require a machine-owned `pack-manifest.json`; directory/file convention is the normative contract
+- researcher edits belong in copied deliverables outside the machine-owned pack directory
+
 ### Rebuttal Prep Pack (Phase 3)
 
 After paper submission, when reviewer comments arrive:
@@ -242,6 +274,12 @@ After paper submission, when reviewer comments arrive:
 ├── experiment-plan.md      — new experiments needed to address feedback
 └── response-draft.md       — structured response skeleton
 ```
+
+V1 contract:
+- rebuttal packs are submission-scoped directories under `.vibe-science-environment/writing/rebuttal/<submission-id>/`
+- rerunning the same submission overwrites machine-written files in that directory
+- `reviewer-comments.md`, `claim-status.md`, `experiment-plan.md`, and `response-draft.md` are machine-written assembly outputs
+- V1 does NOT require a machine-owned `pack-manifest.json`; file conventions are enough while the pack stays derived
 
 ---
 
@@ -277,15 +315,22 @@ Persist warning records to:
 Contract:
 - `environment/schemas/export-alert-record.schema.json`
 
+Replay rules:
+- alerts are append-only observational records
+- replay key: `(snapshotId, claimId, kind, citationId ?? null)`
+- reruns append a new alert only when the drift condition is first observed or meaningfully changes
+- `claim_killed`, `claim_disputed`, and `citation_invalidated` are warnings
+- `confidence_changed` is informational unless a later policy escalates it
+
 ---
 
 ## Invariants
 
 1. Claim-backed writing ONLY references export-eligible claims
-2. Every exported claim carries claim_id for audit traceability
+2. Every exported claim carries both `claimId` and `snapshotId` for audit traceability
 3. Export eligibility is computed once in the shared helper, not re-encoded per flow
 4. Post-export changes surface warnings, not silent updates
-5. Free writing (intro, discussion) is explicitly NOT claim-backed
+5. Free writing (intro, discussion) is explicitly NOT claim-backed; if it asserts findings without traceable claim/artifact backing, it must be flagged instead of laundered into Results
 6. The writing flow prepares materials — the human writes the paper
 7. Claim-backed exports consume citations already verified by kernel workflows; they do not verify citations themselves
 8. Claim-backed export runs against a frozen snapshot, not live state that may drift mid-command

@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/export-snapshot.schema.json",
+  "title": "VRE Export Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "snapshotId",
+    "createdAt",
+    "claimIds",
+    "claims",
+    "citations",
+    "capabilities",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.export-snapshot.v1"
+    },
+    "snapshotId": {
+      "type": "string",
+      "pattern": "^WEXP-.+$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "claimIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^C-[0-9]{3}$"
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claimId",
+          "statusAtExport",
+          "confidenceAtExport",
+          "eligible",
+          "reasons",
+          "governanceProfileAtCreation",
+          "hasFreshSchemaValidation"
+        ],
+        "properties": {
+          "claimId": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3}$"
+          },
+          "statusAtExport": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confidenceAtExport": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "governanceProfileAtCreation": {
+            "type": "string",
+            "enum": [
+              "default",
+              "strict",
+              "unknown"
+            ]
+          },
+          "hasFreshSchemaValidation": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claimId",
+          "citationId",
+          "verificationStatusAtExport"
+        ],
+        "properties": {
+          "claimId": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3}$"
+          },
+          "citationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "verificationStatusAtExport": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "UNVERIFIED",
+              "RETRACTED",
+              "UNKNOWN"
+            ]
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "governanceProfileAtCreationAvailable",
+        "schemaValidationSurfaceAvailable"
+      ],
+      "properties": {
+        "governanceProfileAtCreationAvailable": {
+          "type": "boolean"
+        },
+        "schemaValidationSurfaceAvailable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

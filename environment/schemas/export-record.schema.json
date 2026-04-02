@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/export-record.schema.json",
+  "title": "VRE Export Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "claimId",
+    "snapshotId",
+    "exportedAt",
+    "exportedToFlow",
+    "governanceProfileAtExport",
+    "profileSafetyMode",
+    "artifactPath"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.export-record.v1"
+    },
+    "claimId": {
+      "type": "string",
+      "pattern": "^C-[0-9]{3}$"
+    },
+    "snapshotId": {
+      "type": "string",
+      "pattern": "^WEXP-.+$"
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "exportedToFlow": {
+      "type": "string",
+      "enum": [
+        "writing"
+      ]
+    },
+    "governanceProfileAtExport": {
+      "type": "string",
+      "enum": [
+        "default",
+        "strict"
+      ]
+    },
+    "profileSafetyMode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "degraded_compatibility"
+      ]
+    },
+    "artifactPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

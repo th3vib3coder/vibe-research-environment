@@ -40,12 +40,12 @@ Create the missing Phase 3 machine-owned contracts:
 - `environment/install/bundles/flow-writing.bundle.json`
 
 Ownership rules to freeze here:
-- `flow-writing.bundle.json` owns `environment/lib/export-eligibility.js`
-- it owns `environment/flows/writing.js`
-- it owns the three Phase 3 export schemas
-- it owns `.vibe-science-environment/writing/exports/`
-- it owns `.vibe-science-environment/writing/advisor-packs/`
-- it owns `.vibe-science-environment/writing/rebuttal/`
+- `flow-writing.bundle.json` starts by owning the three Phase 3 export schemas
+- it bootstraps `.vibe-science-environment/writing/exports/`
+- it bootstraps `.vibe-science-environment/writing/advisor-packs/`
+- it bootstraps `.vibe-science-environment/writing/rebuttal/`
+- later Phase 3 waves extend bundle ownership with `environment/lib/export-eligibility.js`
+- later Phase 3 waves extend bundle ownership with `environment/flows/writing.js`
 
 Acceptance:
 - lifecycle commands can reason about the new Phase 3 bundle
@@ -69,6 +69,7 @@ Rules:
 - do not implement pack generation before one contract exists
 - do not let packs become a second truth path
 - do not let pack assembly reach back into raw kernel files ad hoc
+- V1 prefers file conventions over a pack-manifest unless a later phase proves one is necessary
 
 Acceptance:
 - one concrete advisor-pack contract exists in the active spec set

@@ -129,12 +129,20 @@ Later Phase 2 waves extend it with:
 - `environment/flows/results.js`
 - `commands/flow-results.md`
 
-The `flow-writing` bundle (Phase 3, not part of the Phase 1 install surface)
-will own:
-- `environment/lib/export-eligibility.js`
+The `flow-writing` bundle (Phase 3) starts by owning:
 - `environment/schemas/export-snapshot.schema.json`
 - `environment/schemas/export-record.schema.json`
 - `environment/schemas/export-alert-record.schema.json`
+
+Later Phase 3 waves extend it with:
+- `environment/lib/export-eligibility.js`
+- `environment/flows/writing.js`
+- `commands/flow-writing.md`
+
+Its bootstrap surface also owns:
+- `.vibe-science-environment/writing/exports/`
+- `.vibe-science-environment/writing/advisor-packs/`
+- `.vibe-science-environment/writing/rebuttal/`
 
 ---
 

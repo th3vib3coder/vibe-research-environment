@@ -94,9 +94,11 @@ Every machine-owned file shape gets:
 - one invalid fixture
 - one partial/degraded fixture where allowed
 
-Active Phase 1 schemas:
+Active machine-owned schemas:
 - `session-snapshot.schema.json`
 - `capabilities-snapshot.schema.json`
+- `memory-sync-state.schema.json`
+- `memory-mark-record.schema.json`
 - `attempt-record.schema.json`
 - `event-record.schema.json`
 - `decision-record.schema.json`
@@ -105,13 +107,15 @@ Active Phase 1 schemas:
 - `experiment-flow-state.schema.json`
 - `schema-validation-record.schema.json`
 - `experiment-manifest.schema.json`
+- `experiment-bundle-manifest.schema.json`
+- `session-digest.schema.json`
+- `export-snapshot.schema.json`
+- `export-record.schema.json`
+- `export-alert-record.schema.json`
 - `costs-record.schema.json`
 - `install-state.schema.json`
 
-Later phases add schema tests for:
-- `export-snapshot.schema.json` (Phase 3)
-- `export-record.schema.json` (Phase 3)
-- `export-alert-record.schema.json` (Phase 3)
+Later phases add schema tests only when new machine-owned artifacts land.
 
 ### Integration Tests
 
@@ -122,10 +126,11 @@ Minimum integration scenarios:
 4. corrupt flow state or control snapshot fails closed and rebuilds cleanly
 5. `/flow-literature` registers a paper and persists linked claim IDs
 6. `/flow-experiment` creates and lists manifests without duplicating attempt lifecycle
+7. memory sync mirrors control-plane decisions without becoming a second truth path
+8. session digest export writes under `results/summaries/` without inventing a canonical session id
 
 Later phases add integration scenarios for:
 - export snapshot creation before claim-backed export (Phase 3)
-- memory sync mirroring control-plane decisions without becoming a second truth path (Phase 2)
 
 ---
 
@@ -301,11 +306,9 @@ environment/tests/
 
 Later phases add:
 - `environment/tests/lib/export-eligibility.test.js` (Phase 3)
-- `environment/tests/schemas/export-snapshot.schema.test.js` (Phase 3)
-- `environment/tests/schemas/export-record.schema.test.js` (Phase 3)
-- `environment/tests/schemas/export-alert-record.schema.test.js` (Phase 3)
+- `environment/tests/flows/writing.test.js` (Phase 3)
 - `environment/tests/integration/export-snapshot.test.js` (Phase 3)
-- `environment/tests/integration/memory-sync.test.js` (Phase 2)
+- `environment/tests/integration/writing-warning-replay.test.js` (Phase 3)
 
 ---
 
