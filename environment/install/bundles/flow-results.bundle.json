@@ -20,7 +20,8 @@
     "environment/flows/results-discovery.js",
     "environment/flows/results.js",
     "environment/flows/results-render.js",
-    "environment/flows/session-digest.js"
+    "environment/flows/session-digest.js",
+    "commands/flow-results.md"
   ],
   "bootstrapPaths": [
     ".vibe-science-environment/results/experiments/",
