@@ -8,11 +8,11 @@ const expectedCounts = {
   evalMetrics: 5,
   evalBenchmarks: 2,
   controlTests: 7,
-  flowTests: 6,
+  flowTests: 7,
   libTests: 9,
   evalTests: 2,
   installTests: 5,
-  integrationTests: 7,
+  integrationTests: 8,
   schemaTests: 19,
   ciValidators: 9
 };

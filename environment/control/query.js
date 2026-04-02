@@ -12,6 +12,7 @@ import { appendDecision, listDecisions } from './decisions.js';
 import { getMemoryFreshness } from '../memory/status.js';
 import { getMemoryMarks } from '../memory/marks.js';
 import { getResultsOverview } from '../flows/results-discovery.js';
+import { getWritingOverview } from '../flows/writing-overview.js';
 
 export {
   appendDecision,
@@ -30,7 +31,7 @@ export {
 };
 
 export async function getOperatorStatus(projectPath) {
-  const [session, capabilities, memory, marks, results] = await Promise.all([
+  const [session, capabilities, memory, marks, results, writing] = await Promise.all([
     getSessionSnapshot(projectPath),
     getCapabilitiesSnapshot(projectPath),
     getMemoryFreshness(projectPath),
@@ -38,7 +39,13 @@ export async function getOperatorStatus(projectPath) {
     getResultsOverview(projectPath, {
       bundleLimit: 5,
       digestLimit: 5
-    })
+    }),
+    getWritingOverview(projectPath, {
+      snapshotLimit: 5,
+      exportLimit: 5,
+      alertLimit: 5,
+      packLimit: 5
+    }),
   ]);
 
   return {
@@ -49,6 +56,7 @@ export async function getOperatorStatus(projectPath) {
       marks
     },
     results,
+    writing,
     hasSession: session !== null
   };
 }

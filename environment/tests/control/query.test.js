@@ -218,6 +218,129 @@ describe('query', () => {
     assert.match(status.memory.marks.warnings.join('\n'), /Ignoring invalid memory mark record/);
   });
 
+  it('surfaces writing snapshots, export alerts, and pack directories in operator status', async () => {
+    await session.publishSessionSnapshot(dir, {
+      schemaVersion: 'vibe-env.session.v1',
+      activeFlow: 'writing',
+      currentStage: 'advisor-pack',
+      nextActions: ['review advisor pack'],
+      blockers: ['C-014: claim_killed'],
+      kernel: { dbAvailable: true, degradedReason: null },
+      capabilities: {
+        claimHeads: true,
+        citationChecks: true,
+        governanceProfileAtCreation: true,
+        claimSearch: false
+      },
+      budget: {
+        state: 'ok',
+        toolCalls: 0,
+        estimatedCostUsd: 0,
+        countingMode: 'unknown'
+      },
+      signals: {
+        staleMemory: false,
+        unresolvedClaims: 0,
+        blockedExperiments: 0,
+        exportAlerts: 1
+      },
+      lastCommand: '/flow-writing',
+      lastAttemptId: 'ATT-2026-04-02-002',
+      updatedAt: new Date().toISOString()
+    });
+
+    const snapshotPath = path.join(
+      dir,
+      '.vibe-science-environment',
+      'writing',
+      'exports',
+      'snapshots',
+      'WEXP-2026-04-02-200.json'
+    );
+    await mkdir(path.dirname(snapshotPath), { recursive: true });
+    await writeFile(
+      snapshotPath,
+      `${JSON.stringify({
+        schemaVersion: 'vibe-env.export-snapshot.v1',
+        snapshotId: 'WEXP-2026-04-02-200',
+        createdAt: '2026-04-02T16:00:00Z',
+        claimIds: ['C-014'],
+        claims: [{
+          claimId: 'C-014',
+          statusAtExport: 'PROMOTED',
+          confidenceAtExport: 0.91,
+          eligible: true,
+          reasons: [],
+          governanceProfileAtCreation: 'strict',
+          hasFreshSchemaValidation: true
+        }],
+        citations: [],
+        capabilities: {
+          governanceProfileAtCreationAvailable: true,
+          schemaValidationSurfaceAvailable: true
+        },
+        warnings: []
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    const exportAlertPath = path.join(
+      dir,
+      '.vibe-science-environment',
+      'writing',
+      'exports',
+      'export-alerts.jsonl'
+    );
+    await mkdir(path.dirname(exportAlertPath), { recursive: true });
+    await writeFile(
+      exportAlertPath,
+      `${JSON.stringify({
+        schemaVersion: 'vibe-env.export-alert-record.v1',
+        alertId: 'WALERT-2026-04-02-200',
+        claimId: 'C-014',
+        snapshotId: 'WEXP-2026-04-02-200',
+        detectedAt: '2026-04-02T16:05:00Z',
+        kind: 'claim_killed',
+        severity: 'warning',
+        message: 'C-014 was exported but is now KILLED.',
+        citationId: null,
+        snapshotStatus: 'PROMOTED',
+        currentStatus: 'KILLED',
+        snapshotConfidence: 0.91,
+        currentConfidence: 0.22
+      })}\n`,
+      'utf8'
+    );
+
+    const advisorDir = path.join(
+      dir,
+      '.vibe-science-environment',
+      'writing',
+      'advisor-packs',
+      '2026-04-02'
+    );
+    await mkdir(path.join(advisorDir, 'figures'), { recursive: true });
+    await writeFile(path.join(advisorDir, 'status-summary.md'), '# Status\n', 'utf8');
+
+    const rebuttalDir = path.join(
+      dir,
+      '.vibe-science-environment',
+      'writing',
+      'rebuttal',
+      'submission-001'
+    );
+    await mkdir(rebuttalDir, { recursive: true });
+    await writeFile(path.join(rebuttalDir, 'response-draft.md'), '# Draft\n', 'utf8');
+
+    const status = await query.getOperatorStatus(dir);
+    assert.equal(status.writing.totalSnapshots, 1);
+    assert.equal(status.writing.totalAlerts, 1);
+    assert.equal(status.writing.snapshots[0].snapshotId, 'WEXP-2026-04-02-200');
+    assert.equal(status.writing.alerts[0].kind, 'claim_killed');
+    assert.equal(status.writing.advisorPacks[0].packId, '2026-04-02');
+    assert.equal(status.writing.rebuttalPacks[0].packId, 'submission-001');
+  });
+
   it('returns attempt history enriched with events and decisions', async () => {
     const attempt = await attempts.openAttempt(dir, { scope: '/flow-experiment' });
     await attempts.updateAttempt(dir, attempt.attemptId, { status: 'running' });

@@ -2,12 +2,11 @@ import { refreshCapabilitiesSnapshot, getCapabilitiesSnapshot } from './capabili
 import { openAttempt, updateAttempt } from './attempts.js';
 import { appendDecision } from './decisions.js';
 import { appendEvent } from './events.js';
-import { readJsonl } from './_io.js';
 import { rebuildSessionSnapshot } from './session-snapshot.js';
 import { readFlowIndex } from '../lib/flow-state.js';
 import { listManifests } from '../lib/manifest.js';
 import { getMemoryFreshness } from '../memory/status.js';
-import path from 'node:path';
+import { getWritingSignalSummary } from '../flows/writing-overview.js';
 
 const FINAL_ATTEMPT_STATUSES = new Set([
   'succeeded',
@@ -113,6 +112,10 @@ async function deriveSignals(projectPath, reader, explicitSignals = {}) {
     explicitSignals.staleMemory === undefined
       ? await getMemoryFreshness(projectPath)
       : null;
+  const writingSignals =
+    explicitSignals.exportAlerts === undefined
+      ? await getWritingSignalSummary(projectPath)
+      : null;
   const unresolvedClaims =
     explicitSignals.unresolvedClaims ??
     (reader?.dbAvailable && typeof reader.listUnresolvedClaims === 'function'
@@ -123,15 +126,8 @@ async function deriveSignals(projectPath, reader, explicitSignals = {}) {
     explicitSignals.blockedExperiments ??
     (await listManifests(projectPath, { status: 'blocked' })).length;
 
-  const exportAlertsPath = path.join(
-    projectPath,
-    '.vibe-science-environment',
-    'writing',
-    'exports',
-    'export-alerts.jsonl'
-  );
   const exportAlerts =
-    explicitSignals.exportAlerts ?? (await readJsonl(exportAlertsPath)).length;
+    explicitSignals.exportAlerts ?? writingSignals?.totalAlerts ?? 0;
 
   return {
     staleMemory: explicitSignals.staleMemory ?? memoryFreshness?.isStale ?? false,

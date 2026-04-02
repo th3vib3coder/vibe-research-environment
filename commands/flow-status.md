@@ -50,6 +50,7 @@ Report:
 - blocked experiments
 - export alerts
 - memory freshness / last sync
+- writing snapshots, recent export alerts, and latest advisor/rebuttal pack directories
 - recent packaged experiment bundles / latest digest pointers
 - last command
 - last attempt id
@@ -67,6 +68,9 @@ If mirrors are stale, any resume text inside markdown mirrors is non-authoritati
 
 Result bundle locations and session digest pointers are outer-project findability aids only.
 They do not certify claims, citations, gate outcomes, or export eligibility.
+
+Writing snapshots, export alerts, and advisor/rebuttal pack paths are also derived outer-project surfaces only.
+They help the operator resume safely; they do not mutate truth or paper prose.
 
 If the snapshot is missing, say so clearly and report that the control plane will rebuild it on the next successful run.
 

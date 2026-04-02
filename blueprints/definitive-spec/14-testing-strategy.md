@@ -129,6 +129,7 @@ Minimum integration scenarios:
 6. `/flow-experiment` creates and lists manifests without duplicating attempt lifecycle
 7. memory sync mirrors control-plane decisions without becoming a second truth path
 8. session digest export writes under `results/summaries/` without inventing a canonical session id
+9. `/flow-writing` can assemble advisor and rebuttal packs through middleware without inventing claim truth
 
 Later phases add integration scenarios for:
 - export snapshot creation before claim-backed export (Phase 3)
@@ -260,7 +261,8 @@ environment/tests/
 ├── flows/
 │   ├── literature.test.js
 │   ├── experiment.test.js
-│   └── writing.test.js
+│   ├── writing.test.js
+│   └── writing-packs.test.js
 ├── schemas/
 │   ├── session-snapshot.schema.test.js
 │   ├── capabilities-snapshot.schema.test.js
