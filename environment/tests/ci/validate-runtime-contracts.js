@@ -16,7 +16,8 @@ const templateSchemaPairs = [
   ['environment/templates/flow-index.v1.json', 'environment/schemas/flow-index.schema.json'],
   ['environment/templates/literature-flow-state.v1.json', 'environment/schemas/literature-flow-state.schema.json'],
   ['environment/templates/experiment-flow-state.v1.json', 'environment/schemas/experiment-flow-state.schema.json'],
-  ['environment/templates/experiment-manifest.v1.json', 'environment/schemas/experiment-manifest.schema.json']
+  ['environment/templates/experiment-manifest.v1.json', 'environment/schemas/experiment-manifest.schema.json'],
+  ['environment/templates/experiment-bundle-manifest.v1.json', 'environment/schemas/experiment-bundle-manifest.schema.json']
 ];
 
 const activeSchemaFiles = [
@@ -32,6 +33,7 @@ const activeSchemaFiles = [
   'experiment-flow-state.schema.json',
   'schema-validation-record.schema.json',
   'experiment-manifest.schema.json',
+  'experiment-bundle-manifest.schema.json',
   'costs-record.schema.json',
   'install-state.schema.json'
 ];

@@ -15,7 +15,8 @@
   "ownedPaths": [
     "environment/schemas/experiment-bundle-manifest.schema.json",
     "environment/schemas/session-digest.schema.json",
-    "environment/templates/experiment-bundle-manifest.v1.json"
+    "environment/templates/experiment-bundle-manifest.v1.json",
+    "environment/lib/bundle-manifest.js"
   ],
   "bootstrapPaths": [
     ".vibe-science-environment/results/experiments/",
