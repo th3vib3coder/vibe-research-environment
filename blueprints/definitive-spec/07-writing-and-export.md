@@ -30,7 +30,7 @@ The helper returns:
 ```js
 {
   eligible: true | false,
-  reasons: ['not_promoted', 'unverified_citations', 'zero_citations', ...]
+  reasons: ['not_promoted', 'unverified_citations', 'zero_citations', 'missing_governance_profile_metadata', ...]
 }
 ```
 
@@ -76,6 +76,9 @@ If the kernel does not yet expose `governanceProfileAtCreation`, the outer
 project may treat the claim as `default` for compatibility, but it MUST record
 that the mode-safety extension was not fully available. That is a degraded
 mode, not silent equivalence.
+
+The explicit degraded reason code is:
+- `missing_governance_profile_metadata`
 
 ```js
 function exportEligibility(claimId, reader, options = {}) {

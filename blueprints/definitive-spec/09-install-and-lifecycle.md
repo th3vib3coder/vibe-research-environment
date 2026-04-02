@@ -136,6 +136,8 @@ The `flow-writing` bundle (Phase 3) starts by owning:
 
 Later Phase 3 waves extend it with:
 - `environment/lib/export-eligibility.js`
+- `environment/lib/export-snapshot.js`
+- `environment/lib/export-records.js`
 - `environment/flows/writing.js`
 - `commands/flow-writing.md`
 

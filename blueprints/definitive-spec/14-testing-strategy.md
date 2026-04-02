@@ -83,9 +83,9 @@ Minimum modules:
 - `environment/lib/manifest.js`
 - `environment/lib/token-counter.js`
 - `environment/lib/session-metrics.js`
-
-Later phases add:
-- `environment/lib/export-eligibility.js` (Phase 3)
+- `environment/lib/export-eligibility.js`
+- `environment/lib/export-snapshot.js`
+- `environment/lib/export-records.js`
 
 ### Schema Tests
 
@@ -305,7 +305,6 @@ environment/tests/
 ```
 
 Later phases add:
-- `environment/tests/lib/export-eligibility.test.js` (Phase 3)
 - `environment/tests/flows/writing.test.js` (Phase 3)
 - `environment/tests/integration/export-snapshot.test.js` (Phase 3)
 - `environment/tests/integration/writing-warning-replay.test.js` (Phase 3)
