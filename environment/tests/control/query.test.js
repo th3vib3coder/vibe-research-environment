@@ -177,6 +177,32 @@ describe('query', () => {
       'utf8'
     );
 
+    const marksPath = path.join(
+      dir,
+      '.vibe-science-environment',
+      'memory',
+      'index',
+      'marks.jsonl'
+    );
+    await mkdir(path.dirname(marksPath), { recursive: true });
+    await writeFile(
+      marksPath,
+      [
+        JSON.stringify({
+          targetType: 'claim',
+          targetId: 'C-014',
+          mark: 'writing_ready'
+        }),
+        '{"targetType":"claim","targetId":"C-014","mark":"Writing Ready"}',
+        JSON.stringify({
+          targetType: 'experiment',
+          targetId: 'EXP-003',
+          mark: 'follow_up'
+        })
+      ].join('\n'),
+      'utf8'
+    );
+
     const status = await query.getOperatorStatus(dir);
     assert.equal(status.session.signals.staleMemory, true);
     assert.equal(status.session.lastCommand, '/sync-memory');
@@ -184,6 +210,12 @@ describe('query', () => {
     assert.equal(status.memory.isStale, true);
     assert.equal(status.memory.warning, 'STALE — run /sync-memory to refresh');
     assert.equal(status.memory.lastSyncAt, '2026-04-01T08:00:00Z');
+    assert.equal(status.memory.marks.hasMarksFile, true);
+    assert.equal(status.memory.marks.totalMarks, 2);
+    assert.equal(status.memory.marks.byTargetType.claim, 1);
+    assert.equal(status.memory.marks.byTargetType.experiment, 1);
+    assert.equal(status.memory.marks.prioritizedTargets.length, 2);
+    assert.match(status.memory.marks.warnings.join('\n'), /Ignoring invalid memory mark record/);
   });
 
   it('returns attempt history enriched with events and decisions', async () => {

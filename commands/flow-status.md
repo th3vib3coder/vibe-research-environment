@@ -53,6 +53,9 @@ Report:
 - last command
 - last attempt id
 
+If marks exist, marked claims or experiments may be surfaced first as operator hints only.
+They do not override blockers, claim state, or kernel truth.
+
 If memory freshness says mirrors are stale, show exactly:
 
 ```text

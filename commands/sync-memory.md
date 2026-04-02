@@ -21,6 +21,7 @@ The command may read:
 - `.vibe-science-environment/control/session.json`
 - `.vibe-science-environment/control/decisions.jsonl`
 - `.vibe-science-environment/experiments/manifests/*.json`
+- optional `.vibe-science-environment/memory/index/marks.jsonl`
 
 The command may write only:
 
@@ -69,6 +70,12 @@ Report:
 - kernel availability / degraded reason
 - mirrors refreshed
 - warnings
+
+If marks are present:
+
+- they may highlight or reorder items surfaced first
+- they remain retrieval hints only
+- they must not change claim truth, blocker truth, or evidence status
 
 If degraded:
 

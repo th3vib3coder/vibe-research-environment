@@ -12,6 +12,11 @@ import {
 } from '../control/_io.js';
 import { getSessionSnapshot, listDecisions } from '../control/query.js';
 import { listManifests } from '../lib/manifest.js';
+import {
+  buildMarkIndex,
+  getMemoryMarks,
+  prioritizeByMarks
+} from './marks.js';
 
 const SCHEMA_FILE = 'memory-sync-state.schema.json';
 const SCHEMA_VERSION = 'vibe-env.memory-sync-state.v1';
@@ -170,6 +175,14 @@ function marker(label, value) {
   return `[${label}:${value}]`;
 }
 
+function formatMarkMarkers(marks = []) {
+  return marks
+    .filter((mark) => typeof mark === 'string' && mark.trim() !== '')
+    .map((mark) => marker('mark', mark))
+    .filter(Boolean)
+    .join(' ');
+}
+
 function syncedMarker(syncedAt) {
   return marker('synced', syncedAt);
 }
@@ -195,6 +208,7 @@ function formatClaimLine(head, syncedAt) {
   const markers = [
     marker('claim', head.claimId),
     marker('session', head.sessionId),
+    formatMarkMarkers(head.marks),
     syncedMarker(syncedAt)
   ]
     .filter(Boolean)
@@ -215,6 +229,7 @@ function formatExperimentLine(manifest, syncedAt) {
   ].filter(Boolean);
   const markers = [
     marker('experiment', manifest.experimentId),
+    formatMarkMarkers(manifest.marks),
     syncedMarker(syncedAt)
   ]
     .filter(Boolean)
@@ -259,9 +274,16 @@ function buildSection(title, lines, syncedAt) {
 }
 
 function sortClaimHeadsByRecency(claimHeads = []) {
-  return [...claimHeads].sort((left, right) =>
-    String(right.timestamp ?? '').localeCompare(String(left.timestamp ?? ''))
-  );
+  return [...claimHeads].sort((left, right) => {
+    const leftMarked = Array.isArray(left.marks) && left.marks.length > 0 ? 1 : 0;
+    const rightMarked = Array.isArray(right.marks) && right.marks.length > 0 ? 1 : 0;
+
+    if (leftMarked !== rightMarked) {
+      return rightMarked - leftMarked;
+    }
+
+    return String(right.timestamp ?? '').localeCompare(String(left.timestamp ?? ''));
+  });
 }
 
 function sortManifestsForOverview(manifests = []) {
@@ -272,6 +294,13 @@ function sortManifestsForOverview(manifests = []) {
   ]);
 
   return [...manifests].sort((left, right) => {
+    const leftMarked = Array.isArray(left.marks) && left.marks.length > 0 ? 1 : 0;
+    const rightMarked = Array.isArray(right.marks) && right.marks.length > 0 ? 1 : 0;
+
+    if (leftMarked !== rightMarked) {
+      return rightMarked - leftMarked;
+    }
+
     const leftRank = rank.get(left.status) ?? 9;
     const rightRank = rank.get(right.status) ?? 9;
     if (leftRank !== rightRank) {
@@ -279,6 +308,14 @@ function sortManifestsForOverview(manifests = []) {
     }
 
     return String(right.createdAt ?? '').localeCompare(String(left.createdAt ?? ''));
+  });
+}
+
+function attachMarks(records, { targetType, getTargetId, markIndex }) {
+  return prioritizeByMarks(records, {
+    targetType,
+    getTargetId,
+    markIndex
   });
 }
 
@@ -565,6 +602,11 @@ export async function syncMemory(projectPath, options = {}) {
   const syncedAt = options.syncedAt ?? now();
   const reader = normalizeReader(options.reader, sourceWarnings);
   const previousState = await readPreviousSyncState(projectPath, syncWarningCollector);
+  const marksSummary = await getMemoryMarks(projectPath);
+  for (const warning of marksSummary.warnings) {
+    sourceWarnings.add(warning);
+  }
+  const markIndex = buildMarkIndex(marksSummary.records);
 
   const sessionRead = await safeWorkspaceRead(
     () => getSessionSnapshot(projectPath),
@@ -616,13 +658,23 @@ export async function syncMemory(projectPath, options = {}) {
     label: 'Kernel unresolved claims',
     warningCollector: sourceWarnings
   });
+  const markedClaimHeads = attachMarks(claimHeadsRead.value, {
+    targetType: 'claim',
+    getTargetId: (head) => head.claimId,
+    markIndex
+  });
+  const markedManifests = attachMarks(manifestsRead.value, {
+    targetType: 'experiment',
+    getTargetId: (manifest) => manifest.experimentId,
+    markIndex
+  });
 
   const renderedProjectOverview = renderProjectOverviewMirror({
     syncedAt,
     overview: overviewRead.value,
-    claimHeads: claimHeadsRead.value,
+    claimHeads: markedClaimHeads,
     unresolvedClaims: unresolvedRead.value,
-    manifests: manifestsRead.value,
+    manifests: markedManifests,
     sessionSnapshot: sessionRead.value,
     warnings: sourceWarnings.warnings,
     limits: {
@@ -643,7 +695,8 @@ export async function syncMemory(projectPath, options = {}) {
       ? 'kernel'
       : null,
     sessionRead.sourceRead ? 'control' : null,
-    manifestsRead.sourceRead ? 'experiments' : null
+    manifestsRead.sourceRead ? 'experiments' : null,
+    marksSummary.totalMarks > 0 ? 'marks' : null
   ].filter(Boolean);
   const decisionLogSourceKinds = [decisionsRead.sourceRead ? 'control' : null].filter(
     Boolean

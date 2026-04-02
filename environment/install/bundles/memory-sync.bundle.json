@@ -11,8 +11,10 @@
   ],
   "ownedPaths": [
     "environment/schemas/memory-sync-state.schema.json",
+    "environment/schemas/memory-mark-record.schema.json",
     "environment/memory/sync.js",
-    "environment/memory/status.js"
+    "environment/memory/status.js",
+    "environment/memory/marks.js"
   ],
   "bootstrapPaths": [
     ".vibe-science-environment/memory/",

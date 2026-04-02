@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readdir, readFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -140,6 +140,19 @@ async function seedWorkspace(projectRoot) {
     status: 'blocked',
     blockers: ['Missing reagent data']
   });
+}
+
+async function seedMarks(projectRoot, lines) {
+  const marksPath = path.join(
+    projectRoot,
+    '.vibe-science-environment',
+    'memory',
+    'index',
+    'marks.jsonl'
+  );
+  await mkdir(path.dirname(marksPath), { recursive: true });
+  await writeFile(marksPath, `${lines.join('\n')}\n`, 'utf8');
+  return marksPath;
 }
 
 function makeHealthyReader() {
@@ -347,6 +360,65 @@ test('syncMemory writes only inside the memory-owned surface', async () => {
       'memory/mirrors/project-overview.md',
       'memory/sync-state.json'
     ]);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('syncMemory treats marks as prioritization hints only and tolerates partial marks files', async () => {
+  const projectRoot = await createFixtureProject('vre-memory-marks-');
+
+  try {
+    await seedWorkspace(projectRoot);
+    await seedMarks(projectRoot, [
+      JSON.stringify({
+        targetType: 'claim',
+        targetId: 'C-003',
+        mark: 'writing_ready'
+      }),
+      JSON.stringify({
+        targetType: 'experiment',
+        targetId: 'EXP-002',
+        mark: 'follow_up'
+      }),
+      '{"targetType":"paper","targetId":"LIT-008","mark":"Method Conflict"}'
+    ]);
+
+    const result = await syncMemory(projectRoot, {
+      reader: makeHealthyReader(),
+      syncedAt: SYNCED_AT
+    });
+
+    const projectOverview = await readText(
+      path.join(
+        projectRoot,
+        '.vibe-science-environment',
+        'memory',
+        'mirrors',
+        'project-overview.md'
+      )
+    );
+
+    const activeClaimsSection = projectOverview
+      .split('## Active Claims\n')[1]
+      .split('\n## Pending Experiments')[0];
+    const pendingExperimentsSection = projectOverview
+      .split('## Pending Experiments\n')[1]
+      .split('\n## Recent Claim Feedback')[0];
+
+    const c003Position = activeClaimsSection.indexOf('C-003');
+    const c014Position = activeClaimsSection.indexOf('C-014');
+    const exp002Position = pendingExperimentsSection.indexOf('EXP-002');
+    const exp001Position = pendingExperimentsSection.indexOf('EXP-001');
+
+    assert.equal(result.status, 'partial');
+    assert.match(result.warnings.join('\n'), /Ignoring invalid memory mark record/);
+    assert.ok(c003Position >= 0 && c014Position >= 0 && c003Position < c014Position);
+    assert.ok(exp002Position >= 0 && exp001Position >= 0 && exp002Position < exp001Position);
+    assert.match(projectOverview, /\[mark:writing_ready\]/);
+    assert.match(projectOverview, /\[mark:follow_up\]/);
+    assert.ok(!/Method Conflict/.test(projectOverview));
+    assert.ok(result.mirrors.some((entry) => entry.sourceKinds.includes('marks')));
   } finally {
     await cleanupFixtureProject(projectRoot);
   }
