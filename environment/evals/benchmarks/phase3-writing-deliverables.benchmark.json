@@ -1,0 +1,44 @@
+{
+  "benchmarkId": "phase3-writing-deliverables",
+  "version": "1.0.0",
+  "phase": 3,
+  "description": "Phase 3 operator-trust benchmark for export-safe writing handoff, post-export warning replay, and advisor/rebuttal deliverables.",
+  "taskIds": [
+    "flow-writing-export-eligibility-positive",
+    "flow-writing-default-mode-blocked",
+    "flow-writing-snapshot-export",
+    "flow-writing-advisor-pack",
+    "flow-writing-rebuttal-pack",
+    "flow-writing-warning-replay",
+    "flow-results-export-policy"
+  ],
+  "metricIds": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "repeatPolicy": {
+    "defaultRepeats": 1,
+    "preserveAllRepeats": true,
+    "overwriteExistingRepeats": false
+  },
+  "passCriteria": {
+    "requiredTaskIds": [
+      "flow-writing-export-eligibility-positive",
+      "flow-writing-default-mode-blocked",
+      "flow-writing-snapshot-export",
+      "flow-writing-advisor-pack",
+      "flow-writing-rebuttal-pack",
+      "flow-writing-warning-replay",
+      "flow-results-export-policy"
+    ],
+    "forbidKernelWriteViolations": true,
+    "requireSharedExportHelper": true,
+    "requireFrozenSnapshotTraceability": true,
+    "requirePostExportWarningReplay": true,
+    "requireAdvisorPack": true,
+    "requireRebuttalPack": true
+  }
+}

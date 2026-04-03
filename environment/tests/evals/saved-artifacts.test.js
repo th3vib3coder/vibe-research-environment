@@ -7,6 +7,7 @@ import {
   assertRepoPathExists,
   PHASE1_EXPECTED_TASK_FILES,
   PHASE2_EXPECTED_TASK_FILES,
+  PHASE3_EXPECTED_TASK_FILES,
   repoRoot,
   listSavedBenchmarkRepeats,
   readRepoJson
@@ -80,6 +81,33 @@ test('saved benchmark artifacts exist for every Phase 2 task and include the req
     assert.equal(input.repeatId, repeatId);
     assert.equal(summary.repeatId, repeatId);
     assert.equal(summary.benchmarkId, 'phase2-memory-packaging');
+    assert.equal(summary.passed, true, `Expected saved repeat ${taskId}/${repeatId} to pass`);
+    assert.ok(Array.isArray(summary.actualWrites));
+    assert.equal(typeof summary.transcriptPath, 'string');
+    await access(path.join(repoRoot, summary.transcriptPath));
+  }
+});
+
+test('saved benchmark artifacts exist for every Phase 3 task and include the required files', async () => {
+  for (const fileName of PHASE3_EXPECTED_TASK_FILES) {
+    const taskId = taskIdFromFile(fileName);
+    const repeats = await listSavedBenchmarkRepeats(taskId);
+
+    assert.ok(repeats.length >= 1, `Expected at least one saved repeat for ${taskId}`);
+
+    const repeatId = repeats.at(-1);
+    const input = await readRepeatArtifact(taskId, repeatId, 'input.json');
+    const output = await readRepeatArtifact(taskId, repeatId, 'output.json');
+    const metrics = await readRepeatArtifact(taskId, repeatId, 'metrics.json');
+    const summary = await readRepeatArtifact(taskId, repeatId, 'summary.json');
+
+    assert.equal(input.taskId, taskId);
+    assert.equal(output.taskId, taskId);
+    assert.equal(metrics.taskId, taskId);
+    assert.equal(summary.taskId, taskId);
+    assert.equal(input.repeatId, repeatId);
+    assert.equal(summary.repeatId, repeatId);
+    assert.equal(summary.benchmarkId, 'phase3-writing-deliverables');
     assert.equal(summary.passed, true, `Expected saved repeat ${taskId}/${repeatId} to pass`);
     assert.ok(Array.isArray(summary.actualWrites));
     assert.equal(typeof summary.transcriptPath, 'string');
@@ -180,6 +208,115 @@ test('saved flow-status-results-findability artifact proves discoverability with
   );
 });
 
+test('saved Phase 3 export-eligibility artifact records one shared-helper positive export path', async () => {
+  const repeats = await listSavedBenchmarkRepeats('flow-writing-export-eligibility-positive');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'flow-writing-export-eligibility-positive',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.snapshot.claims[0].eligible, true);
+  assert.equal(output.result.payload.seeds.length, 1);
+  assert.equal(output.result.payload.exportRecord.claimId, 'C-501');
+  assert.equal(output.result.payload.exportRecord.snapshotId, 'WEXP-2026-04-03-501');
+});
+
+test('saved Phase 3 default-mode block artifact records explicit schema-validation gating', async () => {
+  const repeats = await listSavedBenchmarkRepeats('flow-writing-default-mode-blocked');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'flow-writing-default-mode-blocked',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.seeds.length, 0);
+  assert.match(
+    output.result.payload.blockedClaims[0].reasons.join(','),
+    /needs_fresh_schema_validation/u
+  );
+  assert.equal(output.result.payload.snapshot.claims[0].governanceProfileAtCreation, 'default');
+});
+
+test('saved Phase 3 snapshot-export artifact keeps snapshot ids traceable across writing outputs', async () => {
+  const repeats = await listSavedBenchmarkRepeats('flow-writing-snapshot-export');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'flow-writing-snapshot-export',
+    latestRepeat,
+    'output.json'
+  );
+  const summary = await readRepeatArtifact(
+    'flow-writing-snapshot-export',
+    latestRepeat,
+    'summary.json'
+  );
+
+  assert.equal(output.result.payload.snapshot.snapshotId, 'WEXP-2026-04-03-503');
+  assert.equal(output.result.payload.seed.snapshotId, 'WEXP-2026-04-03-503');
+  assert.equal(output.result.payload.exportRecord.snapshotId, 'WEXP-2026-04-03-503');
+  assert.ok(summary.actualWrites.includes('.vibe-science-environment/writing/exports/export-log.jsonl'));
+});
+
+test('saved Phase 3 pack artifacts prove both advisor and rebuttal pack assembly', async () => {
+  const advisorRepeats = await listSavedBenchmarkRepeats('flow-writing-advisor-pack');
+  const rebuttalRepeats = await listSavedBenchmarkRepeats('flow-writing-rebuttal-pack');
+  const advisorOutput = await readRepeatArtifact(
+    'flow-writing-advisor-pack',
+    advisorRepeats.at(-1),
+    'output.json'
+  );
+  const rebuttalOutput = await readRepeatArtifact(
+    'flow-writing-rebuttal-pack',
+    rebuttalRepeats.at(-1),
+    'output.json'
+  );
+
+  assert.equal(advisorOutput.result.payload.packType, 'advisor');
+  assert.ok(advisorOutput.result.payload.copiedFigures.length >= 1);
+  assert.equal(rebuttalOutput.result.payload.packType, 'rebuttal');
+  assert.deepEqual(rebuttalOutput.result.payload.claimIds, ['C-504']);
+});
+
+test('saved Phase 3 warning replay artifact records visible post-export alerts after drift', async () => {
+  const repeats = await listSavedBenchmarkRepeats('flow-writing-warning-replay');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'flow-writing-warning-replay',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.ok(
+    output.result.payload.alerts.some((entry) => entry.kind === 'claim_killed')
+  );
+  assert.ok(
+    output.result.payload.alerts.some((entry) => entry.kind === 'citation_invalidated')
+  );
+  assert.ok(
+    output.actualWrites.includes('.vibe-science-environment/writing/exports/export-alerts.jsonl')
+  );
+});
+
+test('saved Phase 3 results-policy artifact proves results and writing share the export helper surface', async () => {
+  const repeats = await listSavedBenchmarkRepeats('flow-results-export-policy');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'flow-results-export-policy',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.claimExportStatuses.length, 1);
+  assert.equal(output.result.payload.claimExportStatuses[0].claimId, 'C-507');
+  assert.match(
+    output.result.payload.claimExportStatuses[0].reasons.join(','),
+    /unverified_citations/u
+  );
+});
+
 test('saved operator-validation artifact points to a passing flow-status resume repeat', async () => {
   const artifact = await readRepoJson(
     '.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json'
@@ -274,6 +411,43 @@ test('saved Phase 2 operator-validation artifact points to passing evidence repe
   }
 });
 
+test('saved Phase 3 operator-validation artifact points to passing evidence repeats', async () => {
+  const artifact = await readRepoJson(
+    '.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json'
+  );
+
+  assert.equal(artifact.artifactId, 'phase3-operator-validation');
+  assert.equal(artifact.phase, 3);
+  assert.equal(artifact.benchmarkId, 'phase3-writing-deliverables');
+  assert.equal(artifact.passed, true);
+  assert.ok(Array.isArray(artifact.validationClaims) && artifact.validationClaims.length >= 5);
+  assert.equal(
+    artifact.decisions.profileSafetyDegradedMode,
+    'Missing governanceProfileAtCreation metadata stays explicit degraded compatibility, not silent strict equivalence.'
+  );
+  assert.equal(
+    artifact.decisions.exportSnapshotAndReplay,
+    'Claim-backed writing always references a frozen snapshot and later drift is surfaced as append-only alerts against that snapshot.'
+  );
+
+  for (const key of [
+    'positiveExport',
+    'defaultModeBlock',
+    'snapshotTraceability',
+    'advisorPack',
+    'rebuttalPack',
+    'warningReplay',
+    'resultsPolicy',
+  ]) {
+    const evidence = artifact.evidence[key];
+    await assertRepoPathExists(evidence.sourceRepeat.inputPath);
+    await assertRepoPathExists(evidence.sourceRepeat.outputPath);
+    await assertRepoPathExists(evidence.sourceRepeat.metricsPath);
+    await assertRepoPathExists(evidence.sourceRepeat.summaryPath);
+    await assertRepoPathExists(evidence.sourceRepeat.transcriptPath);
+  }
+});
+
 test('Phase 2 closeout dossier exists and links to the saved evidence surfaces', async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase2-closeout.md';
@@ -284,4 +458,18 @@ test('Phase 2 closeout dossier exists and links to the saved evidence surfaces',
   await assertRepoPathExists(closeoutPath);
   assert.match(closeout, /phase2-operator-validation\.json/u);
   assert.match(closeout, /flow-status-results-findability/u);
+});
+
+test('Phase 3 closeout dossier exists and links to the saved evidence surfaces', async () => {
+  const closeoutPath =
+    'blueprints/definitive-spec/implementation-plan/phase3-closeout.md';
+  const closeout = await readFile(
+    path.join(repoRoot, closeoutPath),
+    'utf8'
+  );
+  await assertRepoPathExists(closeoutPath);
+  assert.match(closeout, /phase3-operator-validation\.json/u);
+  assert.match(closeout, /flow-writing-warning-replay/u);
+  assert.match(closeout, /flow-writing-advisor-pack/u);
+  assert.match(closeout, /flow-writing-rebuttal-pack/u);
 });

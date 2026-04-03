@@ -1,0 +1,252 @@
+{
+  "taskId": "flow-writing-default-mode-blocked",
+  "repeatId": "2026-04-03-01",
+  "benchmarkId": "phase3-writing-deliverables",
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": []
+  },
+  "result": {
+    "summary": "Default-mode claim C-502 stayed blocked until a fresh schema-validation artifact exists.",
+    "warnings": [],
+    "payload": {
+      "snapshot": {
+        "snapshotId": "WEXP-2026-04-03-502",
+        "createdAt": "2026-04-03T11:05:00Z",
+        "claimIds": [
+          "C-502"
+        ],
+        "claims": [
+          {
+            "claimId": "C-502",
+            "eligible": false,
+            "reasons": [
+              "needs_fresh_schema_validation"
+            ],
+            "statusAtExport": "PROMOTED",
+            "confidenceAtExport": 0.83,
+            "governanceProfileAtCreation": "default",
+            "hasFreshSchemaValidation": false
+          }
+        ]
+      },
+      "seeds": [],
+      "blockedClaims": [
+        {
+          "claimId": "C-502",
+          "reasons": [
+            "needs_fresh_schema_validation"
+          ]
+        }
+      ]
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-03-11-05-00-502-bbbb2222",
+    "scope": "flow-writing",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-03T11:05:00Z",
+    "lastHeartbeatAt": "2026-04-03T11:05:08Z",
+    "endedAt": "2026-04-03T11:05:08Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Default-mode claim C-502 stayed blocked until a fresh schema-validation artifact exists."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "writing",
+    "currentStage": "writing-handoff",
+    "nextActions": [
+      "resolve export blockers for C-502"
+    ],
+    "blockers": [
+      "C-502: needs_fresh_schema_validation"
+    ],
+    "kernel": {
+      "dbAvailable": true,
+      "degradedReason": null
+    },
+    "capabilities": {
+      "claimHeads": true,
+      "citationChecks": true,
+      "governanceProfileAtCreation": true,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/flow-writing",
+    "lastAttemptId": "ATT-2026-04-03-11-05-00-502-bbbb2222",
+    "updatedAt": "2026-04-03T11:05:08Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": true,
+      "projections": {
+        "overview": false,
+        "claimHeads": true,
+        "unresolvedClaims": true,
+        "citationChecks": true
+      },
+      "advanced": {
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": [
+        "governance-core",
+        "control-plane",
+        "memory-sync",
+        "flow-results",
+        "flow-writing"
+      ]
+    },
+    "updatedAt": "2026-04-03T11:05:00Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-502.json"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "session-snapshot",
+      "passed": true,
+      "expected": null,
+      "actual": {
+        "schemaVersion": "vibe-env.session.v1",
+        "activeFlow": "writing",
+        "currentStage": "writing-handoff",
+        "nextActions": [
+          "resolve export blockers for C-502"
+        ],
+        "blockers": [
+          "C-502: needs_fresh_schema_validation"
+        ],
+        "kernel": {
+          "dbAvailable": true,
+          "degradedReason": null
+        },
+        "capabilities": {
+          "claimHeads": true,
+          "citationChecks": true,
+          "governanceProfileAtCreation": true,
+          "claimSearch": false
+        },
+        "budget": {
+          "state": "unknown",
+          "toolCalls": 0,
+          "estimatedCostUsd": 0,
+          "countingMode": "unknown"
+        },
+        "signals": {
+          "staleMemory": false,
+          "unresolvedClaims": 0,
+          "blockedExperiments": 0,
+          "exportAlerts": 0
+        },
+        "lastCommand": "/flow-writing",
+        "lastAttemptId": "ATT-2026-04-03-11-05-00-502-bbbb2222",
+        "updatedAt": "2026-04-03T11:05:08Z"
+      }
+    },
+    {
+      "name": "command-result",
+      "passed": true,
+      "expected": null,
+      "actual": {
+        "summary": "Default-mode claim C-502 stayed blocked until a fresh schema-validation artifact exists.",
+        "warnings": [],
+        "payload": {
+          "snapshot": {
+            "snapshotId": "WEXP-2026-04-03-502",
+            "createdAt": "2026-04-03T11:05:00Z",
+            "claimIds": [
+              "C-502"
+            ],
+            "claims": [
+              {
+                "claimId": "C-502",
+                "eligible": false,
+                "reasons": [
+                  "needs_fresh_schema_validation"
+                ],
+                "statusAtExport": "PROMOTED",
+                "confidenceAtExport": 0.83,
+                "governanceProfileAtCreation": "default",
+                "hasFreshSchemaValidation": false
+              }
+            ]
+          },
+          "seeds": [],
+          "blockedClaims": [
+            {
+              "claimId": "C-502",
+              "reasons": [
+                "needs_fresh_schema_validation"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-502.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-502.json"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-502.json"
+      ]
+    }
+  ]
+}

@@ -17,9 +17,20 @@ export const PHASE2_EXPECTED_TASK_FILES = [
   'flow-status-results-findability.json'
 ];
 
+export const PHASE3_EXPECTED_TASK_FILES = [
+  'flow-writing-export-eligibility-positive.json',
+  'flow-writing-default-mode-blocked.json',
+  'flow-writing-snapshot-export.json',
+  'flow-writing-advisor-pack.json',
+  'flow-writing-rebuttal-pack.json',
+  'flow-writing-warning-replay.json',
+  'flow-results-export-policy.json'
+];
+
 export const EXPECTED_TASK_FILES = [
   ...PHASE1_EXPECTED_TASK_FILES,
-  ...PHASE2_EXPECTED_TASK_FILES
+  ...PHASE2_EXPECTED_TASK_FILES,
+  ...PHASE3_EXPECTED_TASK_FILES
 ];
 
 export const EXPECTED_METRIC_FILES = [
@@ -50,6 +61,12 @@ export const BENCHMARK_SPECS = [
     benchmarkId: 'phase2-memory-packaging',
     phase: 2,
     taskFiles: PHASE2_EXPECTED_TASK_FILES
+  },
+  {
+    benchmarkFile: 'environment/evals/benchmarks/phase3-writing-deliverables.benchmark.json',
+    benchmarkId: 'phase3-writing-deliverables',
+    phase: 3,
+    taskFiles: PHASE3_EXPECTED_TASK_FILES
   }
 ];
 

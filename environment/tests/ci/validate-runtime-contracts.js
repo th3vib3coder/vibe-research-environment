@@ -50,7 +50,14 @@ const activeEvalTaskFiles = [
   'sync-memory-refresh.json',
   'flow-status-stale-memory.json',
   'flow-results-package.json',
-  'flow-status-results-findability.json'
+  'flow-status-results-findability.json',
+  'flow-writing-export-eligibility-positive.json',
+  'flow-writing-default-mode-blocked.json',
+  'flow-writing-snapshot-export.json',
+  'flow-writing-advisor-pack.json',
+  'flow-writing-rebuttal-pack.json',
+  'flow-writing-warning-replay.json',
+  'flow-results-export-policy.json'
 ];
 
 const activeEvalMetricFiles = [
@@ -71,6 +78,11 @@ const evalBenchmarkSpecs = [
     file: 'phase2-memory-packaging.benchmark.json',
     phase: 2,
     benchmarkId: 'phase2-memory-packaging'
+  },
+  {
+    file: 'phase3-writing-deliverables.benchmark.json',
+    phase: 3,
+    benchmarkId: 'phase3-writing-deliverables'
   }
 ];
 const activeFlowTestFiles = [
@@ -144,13 +156,24 @@ export default async function validateRuntimeContracts() {
   const taskIdSet = new Set();
   for (const taskFile of activeEvalTaskFiles) {
     const task = await readJson(`environment/evals/tasks/${taskFile}`);
-    const expectedPhase = taskFile.startsWith('flow-status-resume') ||
+    const expectedPhase =
+      taskFile.startsWith('flow-status-resume') ||
       taskFile.startsWith('flow-literature-register') ||
       taskFile.startsWith('flow-experiment-register') ||
       taskFile.startsWith('degraded-kernel-mode')
-      ? 1
-      : 2;
-    const expectedBenchmarkId = expectedPhase === 1 ? 'phase1-core' : 'phase2-memory-packaging';
+        ? 1
+        : taskFile.startsWith('sync-memory-refresh') ||
+            taskFile.startsWith('flow-status-stale-memory') ||
+            taskFile.startsWith('flow-results-package') ||
+            taskFile.startsWith('flow-status-results-findability')
+          ? 2
+          : 3;
+    const expectedBenchmarkId =
+      expectedPhase === 1
+        ? 'phase1-core'
+        : expectedPhase === 2
+          ? 'phase2-memory-packaging'
+          : 'phase3-writing-deliverables';
     assert(task.phase === expectedPhase, `Eval task ${taskFile} drifted from Phase ${expectedPhase}`);
     assert(
       Array.isArray(task.benchmarkIds) && task.benchmarkIds.includes(expectedBenchmarkId),

@@ -1,0 +1,247 @@
+{
+  "taskId": "flow-writing-warning-replay",
+  "repeatId": "2026-04-03-01",
+  "benchmarkId": "phase3-writing-deliverables",
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": []
+  },
+  "result": {
+    "summary": "Post-export warning replay surfaced append-only alerts after claim drift.",
+    "warnings": [],
+    "payload": {
+      "snapshot": {
+        "snapshotId": "WEXP-2026-04-03-505B"
+      },
+      "alerts": [
+        {
+          "alertId": "WALERT-2026-04-03-505-1",
+          "claimId": "C-505",
+          "snapshotId": "WEXP-2026-04-03-505A",
+          "kind": "claim_killed",
+          "severity": "warning"
+        },
+        {
+          "alertId": "WALERT-2026-04-03-505-2",
+          "claimId": "C-505",
+          "snapshotId": "WEXP-2026-04-03-505A",
+          "kind": "citation_invalidated",
+          "severity": "warning"
+        },
+        {
+          "alertId": "WALERT-2026-04-03-505-3",
+          "claimId": "C-505",
+          "snapshotId": "WEXP-2026-04-03-505A",
+          "kind": "confidence_changed",
+          "severity": "info"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-03-11-25-00-506-ffff6666",
+    "scope": "flow-writing",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-03T11:25:00Z",
+    "lastHeartbeatAt": "2026-04-03T11:25:12Z",
+    "endedAt": "2026-04-03T11:25:12Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Post-export warning replay surfaced append-only alerts after claim drift."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "writing",
+    "currentStage": "writing-handoff",
+    "nextActions": [
+      "review 3 post-export alerts"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": true,
+      "degradedReason": null
+    },
+    "capabilities": {
+      "claimHeads": true,
+      "citationChecks": true,
+      "governanceProfileAtCreation": true,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 3
+    },
+    "lastCommand": "/flow-writing",
+    "lastAttemptId": "ATT-2026-04-03-11-25-00-506-ffff6666",
+    "updatedAt": "2026-04-03T11:25:12Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": true,
+      "projections": {
+        "overview": false,
+        "claimHeads": true,
+        "unresolvedClaims": true,
+        "citationChecks": true
+      },
+      "advanced": {
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": [
+        "governance-core",
+        "control-plane",
+        "memory-sync",
+        "flow-results",
+        "flow-writing"
+      ]
+    },
+    "updatedAt": "2026-04-03T11:25:00Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/exports/export-alerts.jsonl",
+    ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505B.json"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "session-snapshot",
+      "passed": true,
+      "expected": null,
+      "actual": {
+        "schemaVersion": "vibe-env.session.v1",
+        "activeFlow": "writing",
+        "currentStage": "writing-handoff",
+        "nextActions": [
+          "review 3 post-export alerts"
+        ],
+        "blockers": [],
+        "kernel": {
+          "dbAvailable": true,
+          "degradedReason": null
+        },
+        "capabilities": {
+          "claimHeads": true,
+          "citationChecks": true,
+          "governanceProfileAtCreation": true,
+          "claimSearch": false
+        },
+        "budget": {
+          "state": "unknown",
+          "toolCalls": 0,
+          "estimatedCostUsd": 0,
+          "countingMode": "unknown"
+        },
+        "signals": {
+          "staleMemory": false,
+          "unresolvedClaims": 0,
+          "blockedExperiments": 0,
+          "exportAlerts": 3
+        },
+        "lastCommand": "/flow-writing",
+        "lastAttemptId": "ATT-2026-04-03-11-25-00-506-ffff6666",
+        "updatedAt": "2026-04-03T11:25:12Z"
+      }
+    },
+    {
+      "name": "command-result",
+      "passed": true,
+      "expected": null,
+      "actual": {
+        "summary": "Post-export warning replay surfaced append-only alerts after claim drift.",
+        "warnings": [],
+        "payload": {
+          "snapshot": {
+            "snapshotId": "WEXP-2026-04-03-505B"
+          },
+          "alerts": [
+            {
+              "alertId": "WALERT-2026-04-03-505-1",
+              "claimId": "C-505",
+              "snapshotId": "WEXP-2026-04-03-505A",
+              "kind": "claim_killed",
+              "severity": "warning"
+            },
+            {
+              "alertId": "WALERT-2026-04-03-505-2",
+              "claimId": "C-505",
+              "snapshotId": "WEXP-2026-04-03-505A",
+              "kind": "citation_invalidated",
+              "severity": "warning"
+            },
+            {
+              "alertId": "WALERT-2026-04-03-505-3",
+              "claimId": "C-505",
+              "snapshotId": "WEXP-2026-04-03-505A",
+              "kind": "confidence_changed",
+              "severity": "info"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/exports/export-alerts.jsonl"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/exports/export-alerts.jsonl",
+        ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505B.json"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/exports/export-alerts.jsonl",
+        ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505B.json"
+      ]
+    }
+  ]
+}

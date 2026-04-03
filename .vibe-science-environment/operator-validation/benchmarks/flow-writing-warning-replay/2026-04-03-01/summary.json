@@ -1,0 +1,127 @@
+{
+  "taskId": "flow-writing-warning-replay",
+  "repeatId": "2026-04-03-01",
+  "benchmarkId": "phase3-writing-deliverables",
+  "startedAt": "2026-04-03T11:25:00Z",
+  "endedAt": "2026-04-03T11:25:12Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-03-11-25-00-506-ffff6666",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-03-01/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/exports/export-alerts.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Post-export warning replay surfaced append-only alerts after claim drift.",
+      "warnings": [],
+      "payload": {
+        "snapshot": {
+          "snapshotId": "WEXP-2026-04-03-505B"
+        },
+        "alerts": [
+          {
+            "alertId": "WALERT-2026-04-03-505-1",
+            "claimId": "C-505",
+            "snapshotId": "WEXP-2026-04-03-505A",
+            "kind": "claim_killed",
+            "severity": "warning"
+          },
+          {
+            "alertId": "WALERT-2026-04-03-505-2",
+            "claimId": "C-505",
+            "snapshotId": "WEXP-2026-04-03-505A",
+            "kind": "citation_invalidated",
+            "severity": "warning"
+          },
+          {
+            "alertId": "WALERT-2026-04-03-505-3",
+            "claimId": "C-505",
+            "snapshotId": "WEXP-2026-04-03-505A",
+            "kind": "confidence_changed",
+            "severity": "info"
+          }
+        ],
+        "warnings": []
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "writing",
+      "currentStage": "writing-handoff",
+      "nextActions": [
+        "review 3 post-export alerts"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": true,
+        "degradedReason": null
+      },
+      "capabilities": {
+        "claimHeads": true,
+        "citationChecks": true,
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 3
+      },
+      "lastCommand": "/flow-writing",
+      "lastAttemptId": "ATT-2026-04-03-11-25-00-506-ffff6666",
+      "updatedAt": "2026-04-03T11:25:12Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/exports/export-alerts.jsonl",
+      ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505B.json"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": null,
+    "degradedHonestyScore": null,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 5,
+  "checksTotal": 5,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/exports/export-alerts.jsonl",
+    ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505B.json"
+  ]
+}

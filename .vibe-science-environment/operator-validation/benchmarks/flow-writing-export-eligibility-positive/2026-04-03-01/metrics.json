@@ -1,0 +1,38 @@
+{
+  "taskId": "flow-writing-export-eligibility-positive",
+  "repeatId": "2026-04-03-01",
+  "benchmarkId": "phase3-writing-deliverables",
+  "results": {
+    "snapshot-publish-success": {
+      "metricId": "snapshot-publish-success",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "snapshotExists": true,
+        "schemaValid": true,
+        "publishError": null
+      }
+    },
+    "state-write-scope": {
+      "metricId": "state-write-scope",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "violations": []
+      }
+    },
+    "attempt-lifecycle-completeness": {
+      "metricId": "attempt-lifecycle-completeness",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "statuses": [
+          "preparing",
+          "running",
+          "succeeded"
+        ],
+        "terminalStatus": "succeeded"
+      }
+    }
+  }
+}
