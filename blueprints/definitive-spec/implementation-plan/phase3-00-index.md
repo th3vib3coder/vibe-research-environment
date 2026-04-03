@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-02  
 **Scope:** Phase 3 exit gates from [13-delivery-roadmap.md](../13-delivery-roadmap.md) and [07-writing-and-export.md](../07-writing-and-export.md)  
-**Status:** Active execution entrypoint after Phase 2 closeout
+**Status:** Closed with saved evidence and closeout dossier
 
 ---
 
@@ -14,6 +14,9 @@ Phase 2 is closed with saved evidence and a green closeout dossier:
 Phase 3 is the next product slice because it solves the next two user problems:
 - Story 3: advisor prep and structured deliverables
 - Story 4: safe writing handoff grounded in frozen, export-eligible claims
+
+Closeout:
+- [phase3-closeout.md](./phase3-closeout.md)
 
 ---
 
@@ -97,9 +100,9 @@ Best split:
 
 ## Final Gate
 
-Phase 3 is not done when writing helpers merely exist.
+Phase 3 was not done when writing helpers merely existed.
 
-Phase 3 is done only when:
+Phase 3 closed only when:
 - export eligibility is enforced by one shared helper
 - claim-backed writing uses frozen snapshots
 - post-export warnings surface drift honestly

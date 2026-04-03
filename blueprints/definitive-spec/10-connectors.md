@@ -51,6 +51,23 @@ Prefer Claude Code's native event and scheduling surfaces (Channels, Scheduled T
 **Safe:** Event ingress via Claude Code Channels for external notifications.
 **Unsafe:** Connector defines workflow semantics or substitutes for Flow Engine.
 
+## Phase 4 Opening Slice
+
+Phase 4 should open with the lowest-risk connector surfaces first:
+- connector registry and manifest resolution under `environment/connectors/`
+- machine-owned connector state under `.vibe-science-environment/connectors/`
+- one-way filesystem exporters for results, figures, and writing deliverables
+- one-way Obsidian mirror export from already-derived VRE artifacts
+
+Optional in the same phase only if Wave 0 freezes the contract cleanly:
+- Zotero metadata import as read-only paper metadata ingress
+
+Deliberately deferred from the opening slice:
+- bidirectional sync of any kind
+- Zotero write-back
+- reviewer-comment import from third-party hosts before connector audit/state surfaces exist
+- any connector that reimplements Phase 3 export policy
+
 ---
 
 ## What's Safe to Build Early (once Phase 3 stable)

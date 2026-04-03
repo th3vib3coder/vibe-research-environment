@@ -1,8 +1,8 @@
 # VRE Implementation Plan
 
-**Date:** 2026-04-01
+**Date:** 2026-04-03
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1 closed, Phase 2 closed, Phase 3 active
+**Status:** Phase 1-3 closed, Phase 4 planning active
 
 ---
 
@@ -37,7 +37,7 @@ The plan sets currently on disk are:
 - [implementation-plan/phase2-06-wave-5-operator-evidence-and-closeout.md](./implementation-plan/phase2-06-wave-5-operator-evidence-and-closeout.md)
 - [implementation-plan/phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 
-### Phase 3 (active)
+### Phase 3 (completed)
 
 - [implementation-plan/phase3-00-index.md](./implementation-plan/phase3-00-index.md)
 - [implementation-plan/phase3-01-wave-0-boundaries-and-contracts.md](./implementation-plan/phase3-01-wave-0-boundaries-and-contracts.md)
@@ -46,6 +46,17 @@ The plan sets currently on disk are:
 - [implementation-plan/phase3-04-wave-3-shims-and-packs.md](./implementation-plan/phase3-04-wave-3-shims-and-packs.md)
 - [implementation-plan/phase3-05-wave-4-tests-and-validators.md](./implementation-plan/phase3-05-wave-4-tests-and-validators.md)
 - [implementation-plan/phase3-06-wave-5-operator-evidence-and-closeout.md](./implementation-plan/phase3-06-wave-5-operator-evidence-and-closeout.md)
+- [implementation-plan/phase3-closeout.md](./implementation-plan/phase3-closeout.md)
+
+### Phase 4 (planning active)
+
+- [implementation-plan/phase4-00-index.md](./implementation-plan/phase4-00-index.md)
+- [implementation-plan/phase4-01-wave-0-boundaries-and-contracts.md](./implementation-plan/phase4-01-wave-0-boundaries-and-contracts.md)
+- [implementation-plan/phase4-02-wave-1-connector-substrate.md](./implementation-plan/phase4-02-wave-1-connector-substrate.md)
+- [implementation-plan/phase4-03-wave-2-automation-substrate.md](./implementation-plan/phase4-03-wave-2-automation-substrate.md)
+- [implementation-plan/phase4-04-wave-3-domain-pack-runtime.md](./implementation-plan/phase4-04-wave-3-domain-pack-runtime.md)
+- [implementation-plan/phase4-05-wave-4-tests-and-validators.md](./implementation-plan/phase4-05-wave-4-tests-and-validators.md)
+- [implementation-plan/phase4-06-wave-5-evals-and-closeout.md](./implementation-plan/phase4-06-wave-5-evals-and-closeout.md)
 
 ### Companion Future Overlay Specs
 
@@ -61,7 +72,8 @@ user-facing orchestration layer above VRE and below channel/UI surfaces.
 
 - Phase 1 is closed at `17/17 PASS`: see [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
-- Phase 3 is the active planning and execution slice: see [phase3-00-index.md](./implementation-plan/phase3-00-index.md)
+- Phase 3 is closed with saved evidence: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
+- Phase 4 planning is now active: see [phase4-00-index.md](./implementation-plan/phase4-00-index.md)
 - Surface orchestrator is preserved as a companion future overlay spec:
   see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
 

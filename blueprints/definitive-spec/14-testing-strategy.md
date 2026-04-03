@@ -137,6 +137,12 @@ Active Phase 3 integration coverage also proves:
 - post-export warning replay stays append-only
 - results and writing surfaces share one export-policy helper
 
+Phase 4+ must add:
+- connector failure visibility without kernel-write side effects
+- automation artifact visibility plus idempotent rerun behavior where practical
+- domain-pack activation, invalid-pack rejection, and clean fallback to default behavior
+- operator summary surfacing of active automations, connector health, and active domain pack without inventing new truth paths
+
 ---
 
 ## Command Shim Validation

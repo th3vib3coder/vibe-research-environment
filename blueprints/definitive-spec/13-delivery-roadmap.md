@@ -6,6 +6,18 @@
 
 Build from highest researcher pain to lowest epistemic risk.
 
+## Live Status Snapshot (2026-04-03)
+
+- Phase 0: complete
+- Phase 1: closed with [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
+- Phase 2: closed with [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
+- Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
+- Phase 4+: planning active through [phase4-00-index.md](./implementation-plan/phase4-00-index.md)
+
+The sections below preserve the original build order and gate definitions.
+Audited completion state now lives in the implementation-plan indexes and
+closeout dossiers instead of being backfilled into every historical checklist.
+
 ---
 
 ## Phase 0: Contract (COMPLETE)
@@ -22,10 +34,13 @@ All design foundations are decided.
 
 ---
 
-## Phase 1: Control Plane + Flow Engine MVP
+## Phase 1: Control Plane + Flow Engine MVP (COMPLETE)
 
 **Goal:** Expose kernel state through a stable read-only API, add a canonical
 outer-project control plane, and build the first two flows on top of it.
+
+Closeout:
+- [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 
 ### Deliverables
 
@@ -83,9 +98,12 @@ outer-project control plane, and build the first two flows on top of it.
 
 ---
 
-## Phase 2: Memory Mirrors + Experiment Packaging
+## Phase 2: Memory Mirrors + Experiment Packaging (COMPLETE)
 
 **Goal:** Solve Story 1 (orientation) and Story 2 (experiment findability).
+
+Closeout:
+- [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 
 ### Deliverables
 
@@ -111,9 +129,12 @@ outer-project control plane, and build the first two flows on top of it.
 
 ---
 
-## Phase 3: Writing Handoff + Deliverables
+## Phase 3: Writing Handoff + Deliverables (COMPLETE)
 
 **Goal:** Solve Story 3 (advisor prep) and Story 4 (safe writing).
+
+Closeout:
+- [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 
 ### Deliverables
 
@@ -139,9 +160,10 @@ outer-project control plane, and build the first two flows on top of it.
 
 ---
 
-## Phase 4+: Connectors, Automations, Domain Packs (Deferred)
+## Phase 4+: Connectors, Automations, Domain Packs (Planning Active)
 
-**Do not build until Phases 1-3 are stable.**
+**Now that Phases 1-3 are stable, open this phase through the Phase 4 plan set
+before landing runtime code.**
 
 - Bibliography adapters AFTER literature flow works
 - Automations AFTER flows define "stale" and "blocked"

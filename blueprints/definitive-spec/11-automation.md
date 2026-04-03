@@ -68,6 +68,24 @@ Automations are command-driven or scheduled. NEVER kernel-hook-triggered.
 
 **Critical rule:** SessionStart is NOT an outer-project automation trigger. The kernel's SessionStart injects TRACE context. The outer project's automations run on-demand or on schedule.
 
+## Phase 4 Opening Slice
+
+Phase 4 should start with reviewable automations only:
+- automation definitions under `environment/automation/`
+- machine-owned run ledgers and visible artifacts under `.vibe-science-environment/automation/`
+- a weekly research digest
+- a stale-memory reminder
+- an export-warning digest that summarizes existing Phase 3 alerts without mutating them
+
+Scheduling rule:
+- every automation must remain runnable as an explicit command even if host scheduling is unavailable
+
+Deliberately deferred from the opening slice:
+- hidden background jobs with no artifact trail
+- automations that write claim or citation truth
+- advisor/rebuttal prose generation
+- cross-project or org-wide schedulers before one-project behavior is proven
+
 ---
 
 ## What's Safe Later (after Phases 1-3)

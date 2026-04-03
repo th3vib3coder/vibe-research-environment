@@ -69,6 +69,20 @@ Every pack MUST declare:
 4. What artifacts it produces
 5. What it does NOT modify in the core
 
+## Phase 4 Opening Slice
+
+Phase 4 should start with:
+- pack registry and resolver runtime under `environment/domain-packs/`
+- repo-owned pack manifests, templates, and presets under `environment/domain-packs/<pack>/`
+- project-scoped activation from `.vibe-science-environment/domain-config.json`
+- one reference production pack, `omics`, because it is specific enough to prove the model without changing truth semantics
+
+Deliberately deferred from the opening slice:
+- pack composition or inheritance chains
+- connector-specific write privileges
+- packs that alter automation permissions or kernel semantics
+- more than one production-grade pack before the base resolver is proven stable
+
 ---
 
 ## Candidate Packs
