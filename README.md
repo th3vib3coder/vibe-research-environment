@@ -1,14 +1,14 @@
 # Vibe Research Environment
 
-Vibe Research Environment (VRE) is the outer-project shell that sits around the
+Vibe Research Environment (VRE) is the outer-project shell around the
 Vibe Science kernel.
 
-It owns:
+It owns the operator-facing side of the system:
 - flow orchestration
 - control-plane state
-- experiment packaging
-- operator-facing surfaces
-- testing and evaluation harnesses for the shell
+- memory and result packaging surfaces
+- export-safe writing handoff
+- tests, validators, and evaluation harnesses for the shell
 
 It does **not** own kernel truth.
 
@@ -19,32 +19,48 @@ The kernel remains authoritative for:
 - session integrity
 - governance enforcement owned by Vibe Science
 
-## Phase 1 Status
+## Current Status
 
-VRE Phase 1 is implemented in this repository and backed by saved evidence on
-disk.
+The repository is currently closed through **Phase 3**.
 
-Current closeout status:
-- `17/17` Phase 1 exit gates are `PASS`
-- `0/17` are `PARTIAL`
-- Phase 1 sign-off accepts the kernel's documented `default/strict` governance
-  mode baseline as sufficient for the outer-project contract
+- **Phase 1:** control plane, literature flow, experiment flow, baseline evals
+  and compatibility checks
+- **Phase 2:** memory mirrors, stale surfacing, marks, typed result packaging,
+  and session digests
+- **Phase 3:** export-safe writing handoff, frozen export snapshots,
+  append-only export alerts, `/flow-writing`, advisor packs, and rebuttal packs
 
-Closeout dossier:
+Closeout dossiers:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
+- [Phase 2 Closeout](blueprints/definitive-spec/implementation-plan/phase2-closeout.md)
+- [Phase 3 Closeout](blueprints/definitive-spec/implementation-plan/phase3-closeout.md)
 
-## Spec Entry Points
+## What You Can Run
 
-- [Definitive Spec Index](blueprints/definitive-spec/00-INDEX.md)
-- [Implementation Plan](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
-- [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
+Operator-facing command surfaces currently in repo:
+- [`/flow-status`](commands/flow-status.md)
+- [`/flow-literature`](commands/flow-literature.md)
+- [`/flow-experiment`](commands/flow-experiment.md)
+- [`/sync-memory`](commands/sync-memory.md)
+- [`/flow-results`](commands/flow-results.md)
+- [`/flow-writing`](commands/flow-writing.md)
+
+## Repository Layout
+
+- [`environment/`](environment/) runtime code, schemas, templates, evals, and
+  tests
+- [`commands/`](commands/) operator-facing command shims
+- [`blueprints/`](blueprints/) definitive spec, implementation plan, and
+  closeout dossiers
+- [`.vibe-science-environment/`](.vibe-science-environment/) machine-owned
+  runtime state plus saved operator-validation evidence
 
 ## Quickstart
 
 Requirements:
 - Node `18+`
 - sibling checkout of `vibe-science` during incubation, because some eval and
-  compatibility artifacts read kernel-owned files from `../vibe-science`
+  compatibility paths read kernel-owned files from `../vibe-science`
 
 Install:
 
@@ -60,7 +76,7 @@ npm test
 npm run check
 ```
 
-Wave 5 evidence scripts:
+Currently available evidence scripts:
 
 ```bash
 npm run eval:save-phase1
@@ -68,33 +84,46 @@ npm run eval:save-operator-validation
 npm run eval:measure-context-baseline
 ```
 
-Saved Phase 1 evidence lives under:
-- `.vibe-science-environment/operator-validation/benchmarks/`
-- `.vibe-science-environment/operator-validation/artifacts/`
+## Evidence And Evaluation
 
-## Runtime Rule
+Benchmark definitions live under:
+- [`environment/evals/benchmarks/`](environment/evals/benchmarks/)
+
+Scenario tasks live under:
+- [`environment/evals/tasks/`](environment/evals/tasks/)
+
+Saved operator-validation artifacts live under:
+- [`.vibe-science-environment/operator-validation/artifacts/`](.vibe-science-environment/operator-validation/artifacts/)
+
+Saved benchmark repeats live under:
+- [`.vibe-science-environment/operator-validation/benchmarks/`](.vibe-science-environment/operator-validation/benchmarks/)
+
+The current benchmark set covers:
+- Phase 1 shell baseline
+- Phase 2 memory and result packaging
+- Phase 3 writing and export-safe deliverables
+
+## Spec Entry Points
+
+- [Definitive Spec Index](blueprints/definitive-spec/00-INDEX.md)
+- [Implementation Plan](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
+- [Architecture Overview](blueprints/definitive-spec/03-architecture-overview.md)
+- [Control Plane And Query Surface](blueprints/definitive-spec/03A-control-plane-and-query-surface.md)
+- [Writing And Export](blueprints/definitive-spec/07-writing-and-export.md)
+- [Install And Lifecycle](blueprints/definitive-spec/09-install-and-lifecycle.md)
+- [Testing Strategy](blueprints/definitive-spec/14-testing-strategy.md)
+
+## Runtime Boundary
 
 All outer-project runtime state lives under:
 
-`.vibe-science-environment/`
+[`.vibe-science-environment/`](.vibe-science-environment/)
 
 All code owned by this repository lives under:
+- [`environment/`](environment/)
+- [`commands/`](commands/)
+- [`blueprints/`](blueprints/)
 
-- `environment/`
-- `commands/`
-- `blueprints/`
-
-## Repo Contract
-
-This repo owns:
-- control-plane state and query surfaces
-- flow-local state and experiment manifests
-- middleware, validators, tests, and eval harnesses
-- operator-facing command shims
-
-This repo does **not** own:
-- claim truth
-- citation truth
-- gate truth
-- kernel lifecycle truth
-- kernel governance decisions
+This repo does **not** turn shell-owned artifacts into a second truth path.
+Mirrors, digests, packs, snapshots, and alerts stay operational and
+observational unless the kernel says otherwise.
