@@ -31,9 +31,8 @@
     "direction": {
       "type": "string",
       "enum": [
-        "read-only",
-        "write-only",
-        "one-way-export"
+        "import",
+        "export"
       ]
     },
     "reads": {

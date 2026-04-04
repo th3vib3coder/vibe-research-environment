@@ -3,10 +3,7 @@
   "phase": 4,
   "dependsOn": [
     "governance-core",
-    "control-plane",
-    "memory-sync",
-    "flow-results",
-    "flow-writing"
+    "control-plane"
   ],
   "capabilitiesProvided": [
     "automationRegistry",

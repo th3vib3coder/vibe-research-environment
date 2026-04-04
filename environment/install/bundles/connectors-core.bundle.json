@@ -3,10 +3,7 @@
   "phase": 4,
   "dependsOn": [
     "governance-core",
-    "control-plane",
-    "flow-literature",
-    "flow-results",
-    "flow-writing"
+    "control-plane"
   ],
   "capabilitiesProvided": [
     "connectorRegistry",

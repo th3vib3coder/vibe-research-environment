@@ -7,7 +7,7 @@ defineSchemaFixtureTests({
     schemaVersion: 'vibe-env.connector-manifest.v1',
     connectorId: 'filesystem-export',
     displayName: 'Filesystem Export',
-    direction: 'one-way-export',
+    direction: 'export',
     reads: [
       '.vibe-science-environment/results/experiments/',
       '.vibe-science-environment/writing/advisor-packs/'
@@ -56,7 +56,7 @@ defineSchemaFixtureTests({
     schemaVersion: 'vibe-env.connector-manifest.v1',
     connectorId: 'zotero-import',
     displayName: 'Zotero Metadata Import',
-    direction: 'read-only',
+    direction: 'import',
     reads: [
       'zotero://library/items'
     ],

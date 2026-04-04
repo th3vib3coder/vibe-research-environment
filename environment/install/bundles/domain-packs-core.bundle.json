@@ -2,11 +2,8 @@
   "bundleId": "domain-packs-core",
   "phase": 4,
   "dependsOn": [
-    "control-plane",
-    "flow-literature",
-    "flow-experiment",
-    "flow-results",
-    "flow-writing"
+    "governance-core",
+    "control-plane"
   ],
   "capabilitiesProvided": [
     "domainPackRegistry",

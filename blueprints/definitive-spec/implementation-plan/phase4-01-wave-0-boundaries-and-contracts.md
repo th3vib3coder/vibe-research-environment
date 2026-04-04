@@ -34,7 +34,7 @@ Freeze the machine-owned state zone:
 
 Minimum contract fields:
 - connector id
-- connector direction (`read-only`, `write-only`, or `one-way-export`)
+- connector direction (`import` or `export`)
 - owned paths
 - failure visibility surface
 - last run / last health check metadata
@@ -61,6 +61,7 @@ Freeze the machine-owned state zone:
 Minimum contract fields:
 - automation id
 - trigger type (`command` or `scheduled`)
+- command surface for manual rerun, even when host scheduling exists
 - artifact path
 - idempotency key or rerun guard where practical
 - visible status (`ready`, `blocked`, `degraded`, `failed`)

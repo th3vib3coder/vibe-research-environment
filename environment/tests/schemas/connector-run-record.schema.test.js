@@ -23,11 +23,7 @@ defineSchemaFixtureTests({
       kind: 'external',
       path: 'D:/exports/project-a/'
     },
-    healthCheck: {
-      checkedAt: ISO_DATE,
-      status: 'ok',
-      details: null
-    },
+    healthCheck: null,
     visibleFailure: {
       surfacedInStatus: true,
       failureKind: 'none',

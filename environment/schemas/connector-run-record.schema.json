@@ -86,7 +86,10 @@
       }
     },
     "healthCheck": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "required": [
         "checkedAt",
