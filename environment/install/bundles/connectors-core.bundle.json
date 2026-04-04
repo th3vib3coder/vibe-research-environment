@@ -1,0 +1,25 @@
+{
+  "bundleId": "connectors-core",
+  "phase": 4,
+  "dependsOn": [
+    "governance-core",
+    "control-plane",
+    "flow-literature",
+    "flow-results",
+    "flow-writing"
+  ],
+  "capabilitiesProvided": [
+    "connectorRegistry",
+    "connectorHealth",
+    "oneWayExports",
+    "readOnlyIngress"
+  ],
+  "ownedPaths": [
+    "environment/connectors/.gitkeep",
+    "environment/schemas/connector-manifest.schema.json",
+    "environment/schemas/connector-run-record.schema.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/connectors/"
+  ]
+}

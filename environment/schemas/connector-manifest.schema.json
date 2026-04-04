@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/connector-manifest.schema.json",
+  "title": "VRE Connector Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "connectorId",
+    "displayName",
+    "direction",
+    "reads",
+    "writes",
+    "workspaceStatePaths",
+    "capabilitiesProvided",
+    "forbiddenMutations",
+    "failureSurface"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.connector-manifest.v1"
+    },
+    "connectorId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "read-only",
+        "write-only",
+        "one-way-export"
+      ]
+    },
+    "reads": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "workspaceStatePaths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^\\.vibe-science-environment/connectors/.+"
+      }
+    },
+    "capabilitiesProvided": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbiddenMutations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "failureSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summaryPath",
+        "runLogPath",
+        "surfacedInStatus"
+      ],
+      "properties": {
+        "summaryPath": {
+          "type": "string",
+          "pattern": "^\\.vibe-science-environment/connectors/.+"
+        },
+        "runLogPath": {
+          "type": "string",
+          "pattern": "^\\.vibe-science-environment/connectors/.+"
+        },
+        "surfacedInStatus": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

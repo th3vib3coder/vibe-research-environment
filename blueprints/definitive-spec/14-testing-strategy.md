@@ -113,6 +113,12 @@ Active machine-owned schemas:
 - `export-snapshot.schema.json`
 - `export-record.schema.json`
 - `export-alert-record.schema.json`
+- `connector-manifest.schema.json`
+- `connector-run-record.schema.json`
+- `automation-definition.schema.json`
+- `automation-run-record.schema.json`
+- `domain-config.schema.json`
+- `domain-pack.schema.json`
 - `costs-record.schema.json`
 - `install-state.schema.json`
 
@@ -142,6 +148,11 @@ Phase 4+ must add:
 - automation artifact visibility plus idempotent rerun behavior where practical
 - domain-pack activation, invalid-pack rejection, and clean fallback to default behavior
 - operator summary surfacing of active automations, connector health, and active domain pack without inventing new truth paths
+
+Phase 4 Wave 0 now adds schema coverage for:
+- connector contracts and visible failure records
+- automation definitions and run ledgers
+- domain-pack activation config and pack manifests
 
 ---
 

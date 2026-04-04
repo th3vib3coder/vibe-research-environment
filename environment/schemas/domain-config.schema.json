@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/domain-config.schema.json",
+  "title": "VRE Domain Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "activePackId",
+    "displayName",
+    "updatedAt",
+    "authorityBoundary",
+    "literatureSources",
+    "workflowPresets",
+    "deliverablePresets"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.domain-config.v1"
+    },
+    "activePackId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "authorityBoundary": {
+      "const": "presets-only"
+    },
+    "literatureSources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "workflowPresets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultExperimentFields",
+        "commonConfounders"
+      ],
+      "properties": {
+        "defaultExperimentFields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "commonConfounders": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "deliverablePresets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reportTemplate",
+        "writingPackTemplate"
+      ],
+      "properties": {
+        "reportTemplate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "writingPackTemplate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "expectedConnectors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    }
+  }
+}

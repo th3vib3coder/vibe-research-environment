@@ -23,9 +23,9 @@ The outer project is installable through capability bundles, not monolithic "ins
 | `flow-results` | Results packaging, analysis bundle templates | 2 |
 | `flow-writing` | Writing handoff, export snapshots, export record/alert schemas, advisor/rebuttal bundles | 3 |
 | `memory-sync` | Memory layer, sync command, mirror templates | 2 |
-| `connectors` | Zotero, Obsidian, filesystem adapters | 4+ |
-| `automation` | Digests, reminders, scheduled checks | 4+ |
-| `domain-packs` | Domain overlays and templates | 4+ |
+| `connectors-core` | Connector contracts, one-way adapter substrate, connector health and run state | 4+ |
+| `automation-core` | Automation contracts, run ledgers, digest/reminder substrate | 4+ |
+| `domain-packs-core` | Domain-pack contracts, activation config, preset resolver substrate | 4+ |
 
 `instinct-learning` is intentionally NOT installable in V1/V2. It requires its own dedicated spec covering storage, review states, sensitivity filtering, and lifecycle gates before it can join the install surface.
 
@@ -149,6 +149,33 @@ Its bootstrap surface also owns:
 - `.vibe-science-environment/writing/exports/`
 - `.vibe-science-environment/writing/advisor-packs/`
 - `.vibe-science-environment/writing/rebuttal/`
+
+The `connectors-core` bundle (Phase 4) starts by owning:
+- `environment/schemas/connector-manifest.schema.json`
+- `environment/schemas/connector-run-record.schema.json`
+
+Its bootstrap surface also owns:
+- `.vibe-science-environment/connectors/`
+
+The `automation-core` bundle (Phase 4) starts by owning:
+- `environment/schemas/automation-definition.schema.json`
+- `environment/schemas/automation-run-record.schema.json`
+
+Its bootstrap surface also owns:
+- `.vibe-science-environment/automation/definitions/`
+- `.vibe-science-environment/automation/runs/`
+- `.vibe-science-environment/automation/artifacts/`
+
+The `domain-packs-core` bundle (Phase 4) starts by owning:
+- `environment/schemas/domain-config.schema.json`
+- `environment/schemas/domain-pack.schema.json`
+
+Project-scoped activation still lives at:
+- `.vibe-science-environment/domain-config.json`
+
+Wave 0 rule:
+- the activation file is created on first pack selection, not during base install bootstrap
+- repo-owned pack assets remain under `environment/domain-packs/`
 
 ---
 

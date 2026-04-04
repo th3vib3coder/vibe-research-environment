@@ -38,6 +38,12 @@ const activeSchemaFiles = [
   'export-snapshot.schema.json',
   'export-record.schema.json',
   'export-alert-record.schema.json',
+  'connector-manifest.schema.json',
+  'connector-run-record.schema.json',
+  'automation-definition.schema.json',
+  'automation-run-record.schema.json',
+  'domain-config.schema.json',
+  'domain-pack.schema.json',
   'costs-record.schema.json',
   'install-state.schema.json'
 ];

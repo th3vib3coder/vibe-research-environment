@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/automation-definition.schema.json",
+  "title": "VRE Automation Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "automationId",
+    "displayName",
+    "triggerType",
+    "commandSurface",
+    "purpose",
+    "sourceSurfaces",
+    "artifactDirectory",
+    "rerunPolicy",
+    "visibleStatuses",
+    "forbiddenMutations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.automation-definition.v1"
+    },
+    "automationId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "triggerType": {
+      "type": "string",
+      "enum": [
+        "command",
+        "scheduled"
+      ]
+    },
+    "commandSurface": {
+      "type": "string",
+      "pattern": "^/[a-z0-9-]+$"
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "digest",
+        "reminder",
+        "packaging",
+        "alert"
+      ]
+    },
+    "sourceSurfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "artifactDirectory": {
+      "type": "string",
+      "pattern": "^\\.vibe-science-environment/automation/artifacts/.+"
+    },
+    "rerunPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "keyField"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "interval-guard",
+            "source-state-guard"
+          ]
+        },
+        "keyField": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "schedule": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "cadence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hostNative": {
+          "type": "boolean"
+        }
+      }
+    },
+    "visibleStatuses": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "blocked",
+          "degraded",
+          "failed"
+        ]
+      }
+    },
+    "forbiddenMutations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

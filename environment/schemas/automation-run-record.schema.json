@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/automation-run-record.schema.json",
+  "title": "VRE Automation Run Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "automationId",
+    "triggerType",
+    "status",
+    "startedAt",
+    "endedAt",
+    "artifactPath",
+    "sourceSurfaces",
+    "idempotencyKey",
+    "blockedReason",
+    "degradedReason",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.automation-run-record.v1"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^AUTO-RUN-.+$"
+    },
+    "automationId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "triggerType": {
+      "type": "string",
+      "enum": [
+        "command",
+        "scheduled"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "blocked",
+        "degraded",
+        "failed"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "artifactPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sourceSurfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "idempotencyKey": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blockedReason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "degradedReason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schedulerContext": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "scheduledByHost": {
+          "type": "boolean"
+        },
+        "scheduledFor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

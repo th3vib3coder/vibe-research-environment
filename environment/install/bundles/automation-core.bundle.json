@@ -1,0 +1,27 @@
+{
+  "bundleId": "automation-core",
+  "phase": 4,
+  "dependsOn": [
+    "governance-core",
+    "control-plane",
+    "memory-sync",
+    "flow-results",
+    "flow-writing"
+  ],
+  "capabilitiesProvided": [
+    "automationRegistry",
+    "automationRunLedger",
+    "reviewableDigests",
+    "reviewableReminders"
+  ],
+  "ownedPaths": [
+    "environment/automation/.gitkeep",
+    "environment/schemas/automation-definition.schema.json",
+    "environment/schemas/automation-run-record.schema.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/automation/definitions/",
+    ".vibe-science-environment/automation/runs/",
+    ".vibe-science-environment/automation/artifacts/"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "bundleId": "domain-packs-core",
+  "phase": 4,
+  "dependsOn": [
+    "control-plane",
+    "flow-literature",
+    "flow-experiment",
+    "flow-results",
+    "flow-writing"
+  ],
+  "capabilitiesProvided": [
+    "domainPackRegistry",
+    "domainPackActivation",
+    "domainWorkflowPresets",
+    "domainDeliverableTemplates"
+  ],
+  "ownedPaths": [
+    "environment/domain-packs/.gitkeep",
+    "environment/schemas/domain-config.schema.json",
+    "environment/schemas/domain-pack.schema.json"
+  ],
+  "bootstrapPaths": []
+}
