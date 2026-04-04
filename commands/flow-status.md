@@ -50,6 +50,7 @@ Report:
 - blocked experiments
 - export alerts
 - memory freshness / last sync
+- automation readiness / latest automation artifacts
 - connector health / latest connector failures
 - writing snapshots, recent export alerts, and latest advisor/rebuttal pack directories
 - recent packaged experiment bundles / latest digest pointers
@@ -75,6 +76,9 @@ They help the operator resume safely; they do not mutate truth or paper prose.
 
 Connector health summaries and connector run paths are adapter-observability surfaces only.
 They do not validate claims, verify citations, or certify export eligibility.
+
+Automation summaries and automation artifact paths are review surfaces only.
+They do not schedule hidden work, mutate truth, or replace the control plane.
 
 If the snapshot is missing, say so clearly and report that the control plane will rebuild it on the next successful run.
 

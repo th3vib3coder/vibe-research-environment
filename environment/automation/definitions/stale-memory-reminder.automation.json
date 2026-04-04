@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "vibe-env.automation-definition.v1",
+  "automationId": "stale-memory-reminder",
+  "displayName": "Stale Memory Reminder",
+  "triggerType": "scheduled",
+  "commandSurface": "/stale-memory-reminder",
+  "purpose": "reminder",
+  "sourceSurfaces": [
+    ".vibe-science-environment/memory/sync-state.json"
+  ],
+  "artifactDirectory": ".vibe-science-environment/automation/artifacts/stale-memory-reminder/",
+  "rerunPolicy": {
+    "mode": "source-state-guard",
+    "keyField": "memory-freshness-state"
+  },
+  "schedule": {
+    "cadence": "daily",
+    "hostNative": true
+  },
+  "visibleStatuses": [
+    "ready",
+    "blocked",
+    "degraded",
+    "failed"
+  ],
+  "forbiddenMutations": [
+    "memory freshness truth",
+    "claim truth",
+    "citation truth"
+  ]
+}

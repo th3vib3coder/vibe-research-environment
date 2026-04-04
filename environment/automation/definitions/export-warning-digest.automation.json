@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "vibe-env.automation-definition.v1",
+  "automationId": "export-warning-digest",
+  "displayName": "Export Warning Digest",
+  "triggerType": "scheduled",
+  "commandSurface": "/export-warning-digest",
+  "purpose": "alert",
+  "sourceSurfaces": [
+    ".vibe-science-environment/writing/exports/export-alerts.jsonl"
+  ],
+  "artifactDirectory": ".vibe-science-environment/automation/artifacts/export-warning-digest/",
+  "rerunPolicy": {
+    "mode": "source-state-guard",
+    "keyField": "latest-alert-replay-key"
+  },
+  "schedule": {
+    "cadence": "daily",
+    "hostNative": true
+  },
+  "visibleStatuses": [
+    "ready",
+    "blocked",
+    "degraded",
+    "failed"
+  ],
+  "forbiddenMutations": [
+    "export alert deletion",
+    "claim truth",
+    "citation truth"
+  ]
+}

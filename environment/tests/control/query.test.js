@@ -7,6 +7,11 @@ import path from 'node:path';
 async function setup() {
   const tmp = await mkdtemp(path.join(tmpdir(), 'vre-query-'));
   await cp(
+    path.join(process.cwd(), 'environment', 'automation'),
+    path.join(tmp, 'environment', 'automation'),
+    { recursive: true }
+  );
+  await cp(
     path.join(process.cwd(), 'environment', 'connectors'),
     path.join(tmp, 'environment', 'connectors'),
     { recursive: true }
@@ -412,6 +417,87 @@ describe('query', () => {
     );
     assert.equal(obsidian.healthStatus, 'unknown');
     assert.equal(obsidian.totalRuns, 0);
+  });
+
+  it('surfaces automation readiness through operator status when automation-core is installed', async () => {
+    const installStatePath = path.join(
+      dir,
+      '.vibe-science-environment',
+      '.install-state.json'
+    );
+    await mkdir(path.dirname(installStatePath), { recursive: true });
+    await writeFile(
+      installStatePath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 'vibe-env.install.v1',
+          installedAt: '2026-04-04T08:00:00Z',
+          bundles: ['governance-core', 'control-plane', 'automation-core'],
+          bundleManifestVersion: '1.0.0',
+          operations: [],
+          source: {
+            version: '0.1.0',
+            commit: 'query-test'
+          }
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+
+    await session.publishSessionSnapshot(dir, {
+      schemaVersion: 'vibe-env.session.v1',
+      activeFlow: null,
+      currentStage: null,
+      nextActions: ['review digest'],
+      blockers: [],
+      kernel: { dbAvailable: false, degradedReason: 'offline' },
+      capabilities: {
+        claimHeads: false,
+        citationChecks: false,
+        governanceProfileAtCreation: false,
+        claimSearch: false
+      },
+      budget: {
+        state: 'ok',
+        toolCalls: 0,
+        estimatedCostUsd: 0,
+        countingMode: 'unknown'
+      },
+      signals: {
+        staleMemory: false,
+        unresolvedClaims: 0,
+        blockedExperiments: 0,
+        exportAlerts: 0
+      },
+      lastCommand: '/weekly-digest',
+      lastAttemptId: 'ATT-2026-04-04-010',
+      updatedAt: '2026-04-04T09:00:00Z'
+    });
+
+    const { runWeeklyResearchDigest } = await import(`../../automation/runtime.js?${Date.now()}`);
+    await runWeeklyResearchDigest(dir, {
+      now: '2026-04-04T09:00:00Z',
+      triggerType: 'command'
+    });
+
+    const status = await query.getOperatorStatus(dir);
+    assert.equal(status.automations.runtimeInstalled, true);
+    assert.equal(status.automations.totalAutomations, 3);
+
+    const weekly = status.automations.automations.find(
+      (entry) => entry.automationId === 'weekly-research-digest'
+    );
+    assert.equal(weekly.status, 'completed');
+    assert.equal(weekly.latestArtifactPath, '.vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md');
+    assert.equal(weekly.nextDueAt, '2026-04-11T09:00:00.000Z');
+
+    const staleMemory = status.automations.automations.find(
+      (entry) => entry.automationId === 'stale-memory-reminder'
+    );
+    assert.equal(staleMemory.status, 'ready');
+    assert.equal(staleMemory.totalRuns, 0);
   });
 
   it('returns attempt history enriched with events and decisions', async () => {

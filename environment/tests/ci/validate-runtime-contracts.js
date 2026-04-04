@@ -77,6 +77,11 @@ const builtInConnectorManifestFiles = [
   'filesystem-export.connector.json',
   'obsidian-export.connector.json'
 ];
+const builtInAutomationDefinitionFiles = [
+  'weekly-research-digest.automation.json',
+  'stale-memory-reminder.automation.json',
+  'export-warning-digest.automation.json'
+];
 
 const evalBenchmarkSpecs = [
   {
@@ -118,6 +123,7 @@ const activeCompatibilityTestFiles = [
   'export-profile-safety.test.js'
 ];
 const activeIntegrationTestFiles = [
+  'automation-runtime.test.js',
   'flow-bootstrap.test.js',
   'control-plane-rebuild.test.js',
   'literature-register.test.js',
@@ -155,6 +161,14 @@ export default async function validateRuntimeContracts() {
     const manifest = await readJson(manifestPath);
     const result = await validateWithSchema('environment/schemas/connector-manifest.schema.json', manifest);
     assert(result.ok, `Built-in connector manifest ${manifestFile} failed schema validation: ${formatErrors(result.errors)}`);
+  }
+
+  for (const definitionFile of builtInAutomationDefinitionFiles) {
+    const definitionPath = `environment/automation/definitions/${definitionFile}`;
+    assert(await pathExists(definitionPath), `Missing built-in automation definition: ${definitionFile}`);
+    const definition = await readJson(definitionPath);
+    const result = await validateWithSchema('environment/schemas/automation-definition.schema.json', definition);
+    assert(result.ok, `Built-in automation definition ${definitionFile} failed schema validation: ${formatErrors(result.errors)}`);
   }
 
   for (const taskFile of activeEvalTaskFiles) {

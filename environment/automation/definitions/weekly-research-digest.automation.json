@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "vibe-env.automation-definition.v1",
+  "automationId": "weekly-research-digest",
+  "displayName": "Weekly Research Digest",
+  "triggerType": "scheduled",
+  "commandSurface": "/weekly-digest",
+  "purpose": "digest",
+  "sourceSurfaces": [
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/memory/sync-state.json",
+    ".vibe-science-environment/results/summaries/",
+    ".vibe-science-environment/writing/exports/",
+    ".vibe-science-environment/connectors/"
+  ],
+  "artifactDirectory": ".vibe-science-environment/automation/artifacts/weekly-research-digest/",
+  "rerunPolicy": {
+    "mode": "interval-guard",
+    "keyField": "calendar-week"
+  },
+  "schedule": {
+    "cadence": "weekly",
+    "hostNative": true
+  },
+  "visibleStatuses": [
+    "ready",
+    "blocked",
+    "degraded",
+    "failed"
+  ],
+  "forbiddenMutations": [
+    "claim truth",
+    "citation truth",
+    "gate truth",
+    "export alert mutation"
+  ]
+}

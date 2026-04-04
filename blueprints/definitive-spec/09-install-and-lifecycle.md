@@ -170,6 +170,21 @@ The `automation-core` bundle (Phase 4) starts by owning:
 - `environment/schemas/automation-definition.schema.json`
 - `environment/schemas/automation-run-record.schema.json`
 
+Later Phase 4 waves extend it with:
+- `environment/automation/definitions.js`
+- `environment/automation/run-log.js`
+- `environment/automation/artifacts.js`
+- `environment/automation/builtin-plans.js`
+- `environment/automation/plan-render.js`
+- `environment/automation/runtime.js`
+- `environment/automation/definitions/weekly-research-digest.automation.json`
+- `environment/automation/definitions/stale-memory-reminder.automation.json`
+- `environment/automation/definitions/export-warning-digest.automation.json`
+- `commands/weekly-digest.md`
+- `commands/stale-memory-reminder.md`
+- `commands/export-warning-digest.md`
+- `commands/automation-status.md`
+
 Its bootstrap surface also owns:
 - `.vibe-science-environment/automation/definitions/`
 - `.vibe-science-environment/automation/runs/`

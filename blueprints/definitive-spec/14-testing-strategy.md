@@ -90,6 +90,12 @@ Minimum modules:
 - `environment/connectors/health.js`
 - `environment/connectors/filesystem-export.js`
 - `environment/connectors/obsidian-export.js`
+- `environment/automation/definitions.js`
+- `environment/automation/run-log.js`
+- `environment/automation/artifacts.js`
+- `environment/automation/builtin-plans.js`
+- `environment/automation/plan-render.js`
+- `environment/automation/runtime.js`
 - `environment/flows/writing.js`
 
 ### Schema Tests
@@ -162,6 +168,11 @@ Phase 4 Wave 1 adds runtime coverage for:
 - connector registry discovery plus overlap rejection
 - one-way filesystem and Obsidian export adapters consuming already-derived VRE artifacts
 - operator status surfacing of connector health without inventing a second task system
+
+Phase 4 Wave 2 adds runtime coverage for:
+- automation definition discovery plus run-ledger validation
+- reviewable digest/reminder artifacts with idempotent rerun guards
+- operator status surfacing of automation readiness and latest artifact paths
 
 ---
 

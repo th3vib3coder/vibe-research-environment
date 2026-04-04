@@ -11,6 +11,7 @@ import { appendEvent, listEvents } from './events.js';
 import { appendDecision, listDecisions } from './decisions.js';
 import { getMemoryFreshness } from '../memory/status.js';
 import { getMemoryMarks } from '../memory/marks.js';
+import { getAutomationOverview } from '../automation/artifacts.js';
 import { getConnectorHealthOverview } from '../connectors/health.js';
 import { getResultsOverview } from '../flows/results-discovery.js';
 import { getWritingOverview } from '../flows/writing-overview.js';
@@ -32,11 +33,12 @@ export {
 };
 
 export async function getOperatorStatus(projectPath) {
-  const [session, capabilities, memory, marks, connectors, results, writing] = await Promise.all([
+  const [session, capabilities, memory, marks, automations, connectors, results, writing] = await Promise.all([
     getSessionSnapshot(projectPath),
     getCapabilitiesSnapshot(projectPath),
     getMemoryFreshness(projectPath),
     getMemoryMarks(projectPath),
+    getAutomationOverview(projectPath),
     getConnectorHealthOverview(projectPath),
     getResultsOverview(projectPath, {
       bundleLimit: 5,
@@ -57,6 +59,7 @@ export async function getOperatorStatus(projectPath) {
       ...memory,
       marks
     },
+    automations,
     connectors,
     results,
     writing,
