@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/connector-status.schema.json",
+  "title": "VRE Connector Status Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "connectorId",
+    "updatedAt",
+    "displayName",
+    "status",
+    "lastRunId",
+    "lastRunStatus",
+    "lastRunKind",
+    "lastFailureKind",
+    "lastFailureMessage",
+    "surfacedInStatus"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.connector-status.v1"
+    },
+    "connectorId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "degraded",
+        "unavailable",
+        "unknown"
+      ]
+    },
+    "lastRunId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^CONN-RUN-.+$"
+    },
+    "lastRunStatus": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "completed",
+        "degraded",
+        "failed",
+        null
+      ]
+    },
+    "lastRunKind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "export",
+        "import",
+        "health-check",
+        null
+      ]
+    },
+    "lastFailureKind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "none",
+        "external-unavailable",
+        "path-error",
+        "contract-error",
+        "unknown",
+        null
+      ]
+    },
+    "lastFailureMessage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "surfacedInStatus": {
+      "type": "boolean"
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { getResultsOverview } from '../flows/results-discovery.js';
 import { getWritingOverview } from '../flows/writing-overview.js';
 import { recordConnectorRun } from './health.js';
 import { getConnectorById } from './registry.js';
+import { resolveExternalTargetRoot } from './target-root.js';
 
 export class ConnectorExportError extends Error {
   constructor(message, options = {}) {
@@ -19,7 +20,20 @@ export async function exportResultsBundle(projectPath, experimentId, options = {
   const projectRoot = resolveProjectRoot(projectPath);
   const connector = await expectExportConnector(projectPath, 'filesystem-export');
   const timestamp = normalizeTimestamp(options.now);
-  const targetRoot = normalizeTargetDirectory(options.targetDir);
+  let targetRoot;
+  try {
+    targetRoot = resolveExternalTargetRoot(projectPath, options.targetDir, 'targetDir');
+  } catch (error) {
+    return failConnectorExport(projectPath, connector, {
+      runKind: 'export',
+      timestamp,
+      sourceSurfaces: [],
+      targetPath: String(options.targetDir ?? ''),
+      failureKind: 'path-error',
+      message: error.message,
+      warnings: [],
+    });
+  }
   const overview = await getResultsOverview(projectRoot, {
     experimentIds: [experimentId],
     bundleLimit: null,
@@ -85,7 +99,20 @@ export async function exportWritingPack(projectPath, options = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
   const connector = await expectExportConnector(projectPath, 'filesystem-export');
   const timestamp = normalizeTimestamp(options.now);
-  const targetRoot = normalizeTargetDirectory(options.targetDir);
+  let targetRoot;
+  try {
+    targetRoot = resolveExternalTargetRoot(projectPath, options.targetDir, 'targetDir');
+  } catch (error) {
+    return failConnectorExport(projectPath, connector, {
+      runKind: 'export',
+      timestamp,
+      sourceSurfaces: [],
+      targetPath: String(options.targetDir ?? ''),
+      failureKind: 'path-error',
+      message: error.message,
+      warnings: [],
+    });
+  }
   const kind = normalizePackKind(options.kind);
   const packId = normalizeNonEmptyString(options.packId, 'packId');
   const overview = await getWritingOverview(projectRoot, {
@@ -227,13 +254,6 @@ function normalizeTimestamp(value) {
     throw new TypeError('now must be a valid ISO date-time string when provided.');
   }
   return candidate;
-}
-
-function normalizeTargetDirectory(value) {
-  if (typeof value !== 'string' || value.trim() === '') {
-    throw new TypeError('targetDir must be a non-empty string.');
-  }
-  return path.resolve(value);
 }
 
 function normalizePackKind(value) {

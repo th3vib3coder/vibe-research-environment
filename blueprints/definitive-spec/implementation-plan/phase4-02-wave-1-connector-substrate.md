@@ -40,6 +40,7 @@ Acceptance:
 - exporters only consume already-derived VRE artifacts
 - connector code does not recreate Phase 3 export-policy logic
 - target-path failures are visible in connector run records
+- export targets are rejected if they resolve inside the project workspace
 
 ---
 
@@ -72,6 +73,7 @@ Minimum surfaces:
 Acceptance:
 - researchers can tell whether a connector is healthy, degraded, or unavailable
 - connector status stays observational and never becomes a second task system
+- connector status payloads are schema-validated before publication
 
 ---
 

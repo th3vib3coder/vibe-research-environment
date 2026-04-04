@@ -1,0 +1,48 @@
+import {
+  ISO_DATE,
+  defineSchemaFixtureTests,
+} from './schema-test-helper.js';
+
+defineSchemaFixtureTests({
+  schemaFile: 'connector-status.schema.json',
+  suiteName: 'connector-status.schema',
+  validFixture: {
+    schemaVersion: 'vibe-env.connector-status.v1',
+    connectorId: 'filesystem-export',
+    updatedAt: ISO_DATE,
+    displayName: 'Filesystem Export',
+    status: 'ok',
+    lastRunId: 'CONN-RUN-2026-04-04-001',
+    lastRunStatus: 'completed',
+    lastRunKind: 'export',
+    lastFailureKind: 'none',
+    lastFailureMessage: null,
+    surfacedInStatus: true,
+  },
+  invalidFixture: {
+    schemaVersion: 'vibe-env.connector-status.v1',
+    connectorId: 'FilesystemExport',
+    updatedAt: 'not-a-date',
+    displayName: '',
+    status: 'green',
+    lastRunId: 'RUN-2026-04-04-001',
+    lastRunStatus: 'blocked',
+    lastRunKind: 'sync',
+    lastFailureKind: 'bad-state',
+    lastFailureMessage: null,
+    surfacedInStatus: 'yes',
+  },
+  degradedFixture: {
+    schemaVersion: 'vibe-env.connector-status.v1',
+    connectorId: 'obsidian-export',
+    updatedAt: ISO_DATE,
+    displayName: 'Obsidian Export',
+    status: 'unavailable',
+    lastRunId: 'CONN-RUN-2026-04-04-compat',
+    lastRunStatus: 'failed',
+    lastRunKind: 'export',
+    lastFailureKind: 'external-unavailable',
+    lastFailureMessage: 'Vault path is unavailable.',
+    surfacedInStatus: true,
+  },
+});

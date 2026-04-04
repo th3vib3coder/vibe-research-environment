@@ -7,6 +7,7 @@ import { writeBundleManifest } from '../../lib/bundle-manifest.js';
 import {
   appendConnectorRunRecord,
   listConnectorRunRecords,
+  publishConnectorStatus,
 } from '../../connectors/manifest.js';
 import {
   ConnectorExportError,
@@ -57,9 +58,41 @@ test('connector registry discovers built-in manifests and rejects overlapping wo
   }
 });
 
+test('connector registry rejects manifest files whose connectorId does not match the file name', async () => {
+  const projectRoot = await createFixtureProject('vre-connectors-registry-mismatch-');
+
+  try {
+    await writeInstallState(projectRoot);
+
+    const mismatchedPath = path.join(
+      projectRoot,
+      'environment',
+      'connectors',
+      'manifests',
+      'filesystem-export.connector.json',
+    );
+    const mismatchedManifest = JSON.parse(await readFile(mismatchedPath, 'utf8'));
+    await writeFile(
+      mismatchedPath,
+      `${JSON.stringify({
+        ...mismatchedManifest,
+        connectorId: 'renamed-export',
+      }, null, 2)}\n`,
+      'utf8',
+    );
+
+    await assert.rejects(
+      () => getConnectorRegistry(projectRoot),
+      /Connector manifest file name mismatch/u,
+    );
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
 test('filesystem connector exports results bundles and writing packs through derived artifacts only', async () => {
   const projectRoot = await createFixtureProject('vre-connectors-filesystem-');
-  const targetDir = path.join(projectRoot, 'external-target');
+  const targetDir = path.join(path.dirname(projectRoot), `${path.basename(projectRoot)}-external-target`);
 
   try {
     await writeInstallState(projectRoot);
@@ -141,9 +174,97 @@ test('connector run log appends through the shared control-plane lock discipline
   }
 });
 
+test('filesystem connector rejects project-internal target roots and leaves kernel-owned paths untouched', async () => {
+  const projectRoot = await createFixtureProject('vre-connectors-kernel-guard-');
+  const kernelRoot = path.join(projectRoot, '.vibe-science');
+
+  try {
+    await writeInstallState(projectRoot);
+    await seedResultsBundle(projectRoot, 'EXP-201');
+    await mkdir(path.join(kernelRoot, 'events'), { recursive: true });
+    await writeFile(path.join(kernelRoot, 'STATE.md'), '# Kernel State\n', 'utf8');
+    await writeFile(path.join(kernelRoot, 'CLAIM-LEDGER.md'), '# Claim Ledger\n', 'utf8');
+
+    const beforeKernelTree = await snapshotTextTree(kernelRoot);
+
+    await assert.rejects(
+      () => exportResultsBundle(projectRoot, 'EXP-201', {
+        targetDir: kernelRoot,
+        now: '2026-04-04T09:30:00Z',
+      }),
+      /outside the project workspace/u,
+    );
+
+    const afterKernelTree = await snapshotTextTree(kernelRoot);
+    const health = await getConnectorHealth(projectRoot, 'filesystem-export');
+
+    assert.deepEqual(afterKernelTree, beforeKernelTree);
+    assert.equal(health.healthStatus, 'degraded');
+    assert.equal(health.lastRunStatus, 'failed');
+    assert.match(health.failureMessage, /outside the project workspace/u);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('connector status writes are schema-validated and corrupt status files degrade honestly', async () => {
+  const projectRoot = await createFixtureProject('vre-connectors-status-');
+
+  try {
+    await writeInstallState(projectRoot);
+
+    await assert.rejects(
+      () =>
+        publishConnectorStatus(projectRoot, 'filesystem-export', {
+          displayName: 'Filesystem Export',
+          status: 'green',
+          lastRunId: 'RUN-001',
+          lastRunStatus: 'completed',
+          lastRunKind: 'export',
+          lastFailureKind: 'none',
+          lastFailureMessage: null,
+          surfacedInStatus: true,
+        }),
+      /Invalid connector status record/u,
+    );
+
+    const statusPath = path.join(
+      projectRoot,
+      '.vibe-science-environment',
+      'connectors',
+      'filesystem-export',
+      'status.json',
+    );
+    await mkdir(path.dirname(statusPath), { recursive: true });
+    await writeFile(
+      statusPath,
+      `${JSON.stringify({
+        schemaVersion: 'vibe-env.connector-status.v1',
+        connectorId: 'filesystem-export',
+        updatedAt: 'not-a-date',
+        displayName: 'Filesystem Export',
+        status: 'ok',
+        lastRunId: 'CONN-RUN-2026-04-04-001',
+        lastRunStatus: 'completed',
+        lastRunKind: 'export',
+        lastFailureKind: 'none',
+        lastFailureMessage: null,
+        surfacedInStatus: true,
+      }, null, 2)}\n`,
+      'utf8',
+    );
+
+    const health = await getConnectorHealth(projectRoot, 'filesystem-export');
+    assert.equal(health.healthStatus, 'unknown');
+    assert.match(health.warnings.join('\n'), /Ignoring invalid connector status/u);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
 test('filesystem connector records visible failure when the requested artifact does not exist', async () => {
   const projectRoot = await createFixtureProject('vre-connectors-failure-');
-  const targetDir = path.join(projectRoot, 'external-target');
+  const targetDir = path.join(path.dirname(projectRoot), `${path.basename(projectRoot)}-external-target`);
 
   try {
     await writeInstallState(projectRoot);
@@ -183,7 +304,7 @@ test('filesystem connector records visible failure when the requested artifact d
 
 test('obsidian connector exports memory mirrors and tracks healthy connector state', async () => {
   const projectRoot = await createFixtureProject('vre-connectors-obsidian-');
-  const vaultDir = path.join(projectRoot, 'obsidian-vault');
+  const vaultDir = path.join(path.dirname(projectRoot), `${path.basename(projectRoot)}-obsidian-vault`);
 
   try {
     await writeInstallState(projectRoot);
@@ -314,4 +435,33 @@ function buildConnectorRunRecordFixture({
     },
     warnings: ['fixture record'],
   };
+}
+
+async function snapshotTextTree(rootDir, relativeDir = '') {
+  const currentDir = path.join(rootDir, relativeDir);
+  const entries = await readdir(currentDir, { withFileTypes: true });
+  const snapshot = [];
+
+  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    const relativePath = path.posix.join(
+      ...path.join(relativeDir, entry.name).split(path.sep).filter(Boolean),
+    );
+
+    if (entry.isDirectory()) {
+      snapshot.push({
+        type: 'directory',
+        path: relativePath,
+      });
+      snapshot.push(...(await snapshotTextTree(rootDir, path.join(relativeDir, entry.name))));
+      continue;
+    }
+
+    snapshot.push({
+      type: 'file',
+      path: relativePath,
+      content: await readFile(path.join(rootDir, relativeDir, entry.name), 'utf8'),
+    });
+  }
+
+  return snapshot;
 }

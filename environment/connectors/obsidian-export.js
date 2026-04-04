@@ -5,6 +5,7 @@ import path from 'node:path';
 import { resolveInside, resolveProjectRoot } from '../control/_io.js';
 import { recordConnectorRun } from './health.js';
 import { getConnectorById } from './registry.js';
+import { resolveExternalTargetRoot } from './target-root.js';
 
 export class ObsidianExportError extends Error {
   constructor(message, options = {}) {
@@ -22,7 +23,22 @@ export async function exportMemoryMirror(projectPath, options = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
   const connector = await expectExportConnector(projectPath, 'obsidian-export');
   const timestamp = normalizeTimestamp(options.now);
-  const targetRoot = normalizeTargetDirectory(options.vaultDir);
+  let targetRoot;
+  try {
+    targetRoot = resolveExternalTargetRoot(projectPath, options.vaultDir, 'vaultDir');
+  } catch (error) {
+    const record = buildConnectorRunRecord({
+      connectorId: connector.connectorId,
+      timestamp,
+      sourceSurfaces: [],
+      targetPath: String(options.vaultDir ?? ''),
+      status: 'failed',
+      failureKind: 'path-error',
+      message: error.message,
+    });
+    await recordConnectorRun(projectPath, connector.connectorId, record);
+    throw new ObsidianExportError(error.message);
+  }
   const mirrorKind = normalizeMirrorKind(options.mirrorKind);
   const fileName = MIRROR_FILE_BY_KIND[mirrorKind];
   const sourcePath = resolveInside(
@@ -118,13 +134,6 @@ function normalizeTimestamp(value) {
     throw new TypeError('now must be a valid ISO date-time string when provided.');
   }
   return candidate;
-}
-
-function normalizeTargetDirectory(value) {
-  if (typeof value !== 'string' || value.trim() === '') {
-    throw new TypeError('vaultDir must be a non-empty string.');
-  }
-  return path.resolve(value);
 }
 
 function normalizeMirrorKind(value) {

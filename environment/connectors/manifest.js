@@ -16,6 +16,7 @@ import {
 const CONNECTORS_CORE_BUNDLE = 'connectors-core';
 const CONNECTOR_MANIFEST_SCHEMA = 'connector-manifest.schema.json';
 const CONNECTOR_RUN_RECORD_SCHEMA = 'connector-run-record.schema.json';
+const CONNECTOR_STATUS_SCHEMA = 'connector-status.schema.json';
 const CONNECTOR_MANIFEST_SUFFIX = '.connector.json';
 const CONNECTOR_MANIFESTS_SEGMENTS = ['environment', 'connectors', 'manifests'];
 const CONNECTOR_STATE_SEGMENTS = ['.vibe-science-environment', 'connectors'];
@@ -88,6 +89,12 @@ export async function readConnectorManifest(projectPath, fileName) {
   await validateConnectorManifest(projectPath, manifest, {
     context: `Connector manifest ${fileName}`,
   });
+  const expectedConnectorId = fileName.slice(0, -CONNECTOR_MANIFEST_SUFFIX.length);
+  if (manifest.connectorId !== expectedConnectorId) {
+    throw new Error(
+      `Connector manifest file name mismatch: ${fileName} declares connectorId ${manifest.connectorId}.`,
+    );
+  }
   return manifest;
 }
 
@@ -100,6 +107,12 @@ export async function validateConnectorManifest(projectPath, manifest, options =
 export async function validateConnectorRunRecord(projectPath, record, options = {}) {
   const validate = await loadValidator(projectPath, CONNECTOR_RUN_RECORD_SCHEMA);
   assertValid(validate, record, options.context ?? 'connector run record');
+  return record;
+}
+
+export async function validateConnectorStatusRecord(projectPath, record, options = {}) {
+  const validate = await loadValidator(projectPath, CONNECTOR_STATUS_SCHEMA);
+  assertValid(validate, record, options.context ?? 'connector status record');
   return record;
 }
 
@@ -146,17 +159,32 @@ export async function listConnectorRunRecords(projectPath, connectorId) {
 export async function publishConnectorStatus(projectPath, connectorId, summary) {
   await ensureConnectorStateDir(projectPath, connectorId);
   const payload = {
+    schemaVersion: 'vibe-env.connector-status.v1',
     connectorId,
     updatedAt: now(),
-    ...summary,
+    displayName: summary.displayName,
+    status: summary.status,
+    lastRunId: summary.lastRunId ?? null,
+    lastRunStatus: summary.lastRunStatus ?? null,
+    lastRunKind: summary.lastRunKind ?? null,
+    lastFailureKind: summary.lastFailureKind ?? null,
+    lastFailureMessage: summary.lastFailureMessage ?? null,
+    surfacedInStatus: summary.surfacedInStatus,
   };
+  await validateConnectorStatusRecord(projectPath, payload, {
+    context: `connector status record ${connectorId}`,
+  });
   await atomicWriteJson(connectorStatusPath(projectPath, connectorId), payload);
   return payload;
 }
 
 export async function readConnectorStatus(projectPath, connectorId) {
   try {
-    return await readJson(connectorStatusPath(projectPath, connectorId));
+    const payload = await readJson(connectorStatusPath(projectPath, connectorId));
+    await validateConnectorStatusRecord(projectPath, payload, {
+      context: `connector status record ${connectorId}`,
+    });
+    return payload;
   } catch (error) {
     if (error?.code === 'ENOENT') {
       return null;

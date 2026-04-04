@@ -40,6 +40,7 @@ const activeSchemaFiles = [
   'export-alert-record.schema.json',
   'connector-manifest.schema.json',
   'connector-run-record.schema.json',
+  'connector-status.schema.json',
   'automation-definition.schema.json',
   'automation-run-record.schema.json',
   'domain-config.schema.json',

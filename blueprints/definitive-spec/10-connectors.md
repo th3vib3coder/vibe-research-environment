@@ -17,6 +17,7 @@ Every connector must declare: what it reads, what it writes, whether one-way or 
 
 ### Rule 2: One-Way by Default
 Preferred direction: kernel/outer-project → external tool. Bidirectional sync is high-risk and requires explicit design review before implementation.
+Export targets must resolve outside the project workspace. Connectors may not write into `.vibe-science/`, `.vibe-science-environment/`, or sibling project-owned paths as a shortcut for "export."
 
 ### Rule 3: No Gate Semantics in Connectors
 Connectors may surface warnings and metadata. They may NOT define gate pass/fail logic.

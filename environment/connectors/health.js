@@ -68,7 +68,15 @@ export async function getConnectorHealthOverview(projectPath, options = {}) {
 }
 
 export async function getConnectorHealth(projectPath, connectorId) {
-  const status = await readConnectorStatus(projectPath, connectorId);
+  let status = null;
+  const warnings = [];
+
+  try {
+    status = await readConnectorStatus(projectPath, connectorId);
+  } catch (error) {
+    warnings.push(`Ignoring invalid connector status for ${connectorId}: ${error.message}`);
+  }
+
   const records = await listConnectorRunRecords(projectPath, connectorId);
   const latestRun = records.items[0] ?? null;
   const lastRunAt = latestRun?.endedAt ?? latestRun?.startedAt ?? status?.updatedAt ?? null;
@@ -81,7 +89,7 @@ export async function getConnectorHealth(projectPath, connectorId) {
     lastRunAt,
     failureMessage,
     totalRuns: records.total,
-    warnings: records.warnings,
+    warnings: [...warnings, ...records.warnings],
   };
 }
 
