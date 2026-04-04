@@ -5,6 +5,7 @@ import {
   assertValid,
   loadValidator,
   readJsonl,
+  withLock,
 } from '../control/_io.js';
 import {
   automationRunLogPath,
@@ -25,7 +26,13 @@ export async function appendAutomationRunRecord(projectPath, automationId, recor
     context: `automation run record ${record.runId ?? automationId}`,
   });
   const targetPath = automationRunLogPath(projectPath, automationId);
-  await appendFile(targetPath, `${JSON.stringify(record)}\n`, 'utf8');
+  await withLock(
+    projectPath,
+    `automation-run-log-${automationId}`,
+    async () => {
+      await appendFile(targetPath, `${JSON.stringify(record)}\n`, 'utf8');
+    },
+  );
   return targetPath;
 }
 

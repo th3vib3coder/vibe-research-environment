@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { publishSessionSnapshot } from '../../control/session-snapshot.js';
@@ -12,7 +12,10 @@ import {
   runStaleMemoryReminder,
   runWeeklyResearchDigest,
 } from '../../automation/runtime.js';
-import { listAutomationRunRecords } from '../../automation/run-log.js';
+import {
+  appendAutomationRunRecord,
+  listAutomationRunRecords,
+} from '../../automation/run-log.js';
 import { createFixtureProject, cleanupFixtureProject } from '../integration/_fixture.js';
 
 test('automation registry discovers built-in definitions and rejects duplicate command surfaces', async () => {
@@ -115,6 +118,72 @@ test('weekly digest writes a reviewable artifact, blocks duplicate reruns, and s
     assert.equal(runs.total, 3);
     assert.equal(runs.items[0].triggerType, 'scheduled');
     assert.equal(runs.items[0].schedulerContext.scheduledByHost, true);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('automation run log appends through the shared control-plane lock discipline', async () => {
+  const projectRoot = await createFixtureProject('vre-automation-run-log-');
+
+  try {
+    const records = Array.from({ length: 8 }, (_, index) =>
+      buildAutomationRunRecordFixture({
+        runId: `AUTO-RUN-20260404-14000${index}`,
+        endedAt: `2026-04-04T14:00:0${index}Z`,
+        idempotencyKey: `fixture-${index}`,
+      }),
+    );
+
+    await Promise.all(
+      records.map((record) =>
+        appendAutomationRunRecord(projectRoot, 'weekly-research-digest', record),
+      ),
+    );
+
+    const runs = await listAutomationRunRecords(projectRoot, 'weekly-research-digest');
+    const lockEntries = await readdir(
+      path.join(projectRoot, '.vibe-science-environment', 'control', 'locks'),
+    );
+
+    assert.equal(runs.total, records.length);
+    assert.equal(runs.warnings.length, 0);
+    assert.equal(new Set(runs.items.map((record) => record.runId)).size, records.length);
+    assert.deepEqual(lockEntries, []);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('weekly digest keeps kernel-owned .vibe-science state untouched while writing outer artifacts', async () => {
+  const projectRoot = await createFixtureProject('vre-automation-kernel-guard-');
+  const kernelRoot = path.join(projectRoot, '.vibe-science');
+
+  try {
+    await writeInstallState(projectRoot);
+    await publishMinimalSessionSnapshot(projectRoot, '2026-04-04T16:00:00Z');
+    await mkdir(path.join(kernelRoot, 'events'), { recursive: true });
+    await writeFile(path.join(kernelRoot, 'STATE.md'), '# Kernel State\n', 'utf8');
+    await writeFile(path.join(kernelRoot, 'CLAIM-LEDGER.md'), '# Claim Ledger\n', 'utf8');
+    await writeFile(
+      path.join(kernelRoot, 'events', 'governance_events.json'),
+      '{"events":[]}\n',
+      'utf8',
+    );
+
+    const beforeKernelTree = await snapshotTextTree(kernelRoot);
+    const run = await runWeeklyResearchDigest(projectRoot, {
+      now: '2026-04-04T16:00:00Z',
+      triggerType: 'command',
+    });
+    const afterKernelTree = await snapshotTextTree(kernelRoot);
+
+    assert.equal(run.status, 'completed');
+    assert.equal(
+      run.artifactPath,
+      '.vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md',
+    );
+    assert.deepEqual(afterKernelTree, beforeKernelTree);
   } finally {
     await cleanupFixtureProject(projectRoot);
   }
@@ -293,4 +362,55 @@ async function writeMemorySyncState(projectRoot, overrides) {
     }, null, 2)}\n`,
     'utf8',
   );
+}
+
+function buildAutomationRunRecordFixture({
+  runId,
+  endedAt,
+  idempotencyKey,
+}) {
+  return {
+    schemaVersion: 'vibe-env.automation-run-record.v1',
+    runId,
+    automationId: 'weekly-research-digest',
+    triggerType: 'command',
+    status: 'completed',
+    startedAt: endedAt,
+    endedAt,
+    artifactPath: '.vibe-science-environment/automation/artifacts/weekly-research-digest/fixture.md',
+    sourceSurfaces: ['control/session.json'],
+    idempotencyKey,
+    blockedReason: null,
+    degradedReason: null,
+    warnings: ['fixture record'],
+  };
+}
+
+async function snapshotTextTree(rootDir, relativeDir = '') {
+  const currentDir = path.join(rootDir, relativeDir);
+  const entries = await readdir(currentDir, { withFileTypes: true });
+  const snapshot = [];
+
+  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    const relativePath = path.posix.join(
+      ...path.join(relativeDir, entry.name).split(path.sep).filter(Boolean),
+    );
+
+    if (entry.isDirectory()) {
+      snapshot.push({
+        type: 'directory',
+        path: relativePath,
+      });
+      snapshot.push(...(await snapshotTextTree(rootDir, path.join(relativeDir, entry.name))));
+      continue;
+    }
+
+    snapshot.push({
+      type: 'file',
+      path: relativePath,
+      content: await readFile(path.join(rootDir, relativeDir, entry.name), 'utf8'),
+    });
+  }
+
+  return snapshot;
 }

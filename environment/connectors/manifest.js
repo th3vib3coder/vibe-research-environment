@@ -10,6 +10,7 @@ import {
   readJsonl,
   resolveInside,
   resolveProjectRoot,
+  withLock,
 } from '../control/_io.js';
 
 const CONNECTORS_CORE_BUNDLE = 'connectors-core';
@@ -108,7 +109,13 @@ export async function appendConnectorRunRecord(projectPath, connectorId, record)
     context: `connector run record ${record.runId ?? connectorId}`,
   });
   const targetPath = connectorRunLogPath(projectPath, connectorId);
-  await appendFile(targetPath, `${JSON.stringify(record)}\n`, 'utf8');
+  await withLock(
+    projectPath,
+    `connector-run-log-${connectorId}`,
+    async () => {
+      await appendFile(targetPath, `${JSON.stringify(record)}\n`, 'utf8');
+    },
+  );
   return targetPath;
 }
 

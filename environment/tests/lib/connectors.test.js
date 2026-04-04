@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { writeBundleManifest } from '../../lib/bundle-manifest.js';
+import {
+  appendConnectorRunRecord,
+  listConnectorRunRecords,
+} from '../../connectors/manifest.js';
 import {
   ConnectorExportError,
   exportResultsBundle,
@@ -100,6 +104,38 @@ test('filesystem connector exports results bundles and writing packs through der
     assert.equal(filesystem.lastRunStatus, 'completed');
     assert.equal(filesystem.totalRuns, 2);
     assert.equal(filesystem.healthStatus, 'ok');
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('connector run log appends through the shared control-plane lock discipline', async () => {
+  const projectRoot = await createFixtureProject('vre-connectors-run-log-');
+
+  try {
+    const records = Array.from({ length: 8 }, (_, index) =>
+      buildConnectorRunRecordFixture({
+        runId: `CONN-RUN-20260404-15000${index}`,
+        endedAt: `2026-04-04T15:00:0${index}Z`,
+        targetPath: `external/export-${index}`,
+      }),
+    );
+
+    await Promise.all(
+      records.map((record) =>
+        appendConnectorRunRecord(projectRoot, 'filesystem-export', record),
+      ),
+    );
+
+    const runs = await listConnectorRunRecords(projectRoot, 'filesystem-export');
+    const lockEntries = await readdir(
+      path.join(projectRoot, '.vibe-science-environment', 'control', 'locks'),
+    );
+
+    assert.equal(runs.total, records.length);
+    assert.equal(runs.warnings.length, 0);
+    assert.equal(new Set(runs.items.map((record) => record.runId)).size, records.length);
+    assert.deepEqual(lockEntries, []);
   } finally {
     await cleanupFixtureProject(projectRoot);
   }
@@ -250,4 +286,32 @@ async function seedAdvisorPack(projectRoot, packId) {
   );
   await mkdir(packDir, { recursive: true });
   await writeFile(path.join(packDir, 'status-summary.md'), '# Advisor Pack\n', 'utf8');
+}
+
+function buildConnectorRunRecordFixture({
+  runId,
+  endedAt,
+  targetPath,
+}) {
+  return {
+    schemaVersion: 'vibe-env.connector-run-record.v1',
+    runId,
+    connectorId: 'filesystem-export',
+    runKind: 'export',
+    status: 'completed',
+    startedAt: endedAt,
+    endedAt,
+    sourceSurfaces: ['results/experiments'],
+    target: {
+      kind: 'external',
+      path: targetPath,
+    },
+    healthCheck: null,
+    visibleFailure: {
+      surfacedInStatus: true,
+      failureKind: 'none',
+      message: null,
+    },
+    warnings: ['fixture record'],
+  };
 }
