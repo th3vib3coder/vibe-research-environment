@@ -57,6 +57,7 @@ Packs are activated via `domain-config.json` in the project root:
 **NOT loaded by:** Kernel SessionStart. The kernel does NOT know about domain packs.
 **Scope:** Project-scoped (one config per project), not global.
 **Fallback:** If file missing, flows use default presets (no domain-specific behavior).
+**Overwrite rule:** Activation is safe-by-default. If a domain config already exists, helpers must not silently replace it unless the caller explicitly opts into overwrite behavior.
 
 ---
 

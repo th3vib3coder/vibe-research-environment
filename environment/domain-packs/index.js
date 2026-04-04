@@ -20,10 +20,22 @@ export async function getDomainPackRegistry(projectPath) {
 
   const packIds = await listDomainPackIds(projectPath);
   const packs = [];
+  const warnings = [];
   const seenPackIds = new Set();
 
   for (const packId of packIds) {
-    const pack = await readDomainPackManifest(projectPath, packId);
+    let pack;
+    try {
+      pack = await readDomainPackManifest(projectPath, packId);
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        warnings.push(
+          `Ignoring domain-pack directory ${packId} because ${packId}/pack.domain-pack.json is missing.`,
+        );
+        continue;
+      }
+      throw error;
+    }
 
     if (seenPackIds.has(pack.packId)) {
       throw new Error(`Duplicate domain pack id: ${pack.packId}`);
@@ -39,7 +51,7 @@ export async function getDomainPackRegistry(projectPath) {
     runtimeInstalled,
     installedBundles,
     packs,
-    warnings: [],
+    warnings,
   };
 }
 

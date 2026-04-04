@@ -21,6 +21,7 @@ Acceptance:
 - invalid or missing configs fail closed to default presets
 - unknown pack ids never crash the flow runtime
 - active pack metadata is available to operator-facing surfaces
+- existing domain-config state is not silently overwritten without an explicit operator-facing override
 
 ---
 

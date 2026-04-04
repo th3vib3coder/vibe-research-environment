@@ -15,12 +15,28 @@ const DEFAULT_DELIVERABLE_PRESETS = Object.freeze({
   writingPackTemplate: null,
 });
 
+export class DomainPackActivationError extends Error {
+  constructor(message, options = {}) {
+    super(message, options);
+    this.name = new.target.name;
+  }
+}
+
 export async function activateDomainPack(projectPath, packId, options = {}) {
-  const pack = await getDomainPackById(projectPath, packId);
+  const [pack, existingConfig] = await Promise.all([
+    getDomainPackById(projectPath, packId),
+    readDomainConfig(projectPath),
+  ]);
   const config = buildDomainConfigFromPack(pack, {
     displayName: options.displayName,
     updatedAt: options.updatedAt,
   });
+
+  if (existingConfig != null && options.allowOverwrite !== true) {
+    throw new DomainPackActivationError(
+      `Refusing to overwrite the existing domain config for ${existingConfig.activePackId} without allowOverwrite: true.`,
+    );
+  }
 
   await writeDomainConfig(projectPath, config);
   return getDomainPackOverview(projectPath);

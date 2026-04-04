@@ -180,7 +180,8 @@ Phase 4 Wave 2 adds runtime coverage for:
 
 Phase 4 Wave 3 adds runtime coverage for:
 - domain-pack registry and repo-owned pack loading
-- project-scoped activation plus invalid/unknown-pack fallback
+- project-scoped activation plus invalid/unknown-pack/not-installed fallback
+- safe activation that refuses silent config overwrite unless explicitly forced
 - preset-only flow surfacing for literature, experiment, results, and writing helpers
 - operator status surfacing of the active domain pack without inventing a new truth path
 
