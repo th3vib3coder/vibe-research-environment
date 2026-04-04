@@ -185,6 +185,11 @@ Phase 4 Wave 3 adds runtime coverage for:
 - preset-only flow surfacing for literature, experiment, results, and writing helpers
 - operator status surfacing of the active domain pack without inventing a new truth path
 
+Phase 4 Wave 4 adds cross-surface coverage for:
+- neutral `runtimeInstalled: false` behavior across connectors, automation, and domain-pack runtimes
+- install, doctor, repair, uninstall, and upgrade coverage with Phase 4 bundles present
+- validator coverage that scans Phase 4 runtime modules for kernel-write-adjacent references
+
 ---
 
 ## Command Shim Validation

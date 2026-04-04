@@ -21,7 +21,10 @@ test('uninstall removes managed workspace state and preserves kernel files', asy
       'control-plane',
       'flow-experiment',
       'memory-sync',
-      'flow-results'
+      'flow-results',
+      'connectors-core',
+      'automation-core',
+      'domain-packs-core',
     ]);
     await mkdir(path.join(projectRoot, '.vibe-science'), { recursive: true });
     await writeFile(path.join(projectRoot, '.vibe-science', 'STATE.md'), 'kernel state\n', 'utf8');
@@ -40,6 +43,22 @@ test('uninstall removes managed workspace state and preserves kernel files', asy
     );
     await assert.rejects(
       () => stat(path.join(projectRoot, '.vibe-science-environment', 'results', 'summaries')),
+      /ENOENT/u
+    );
+    await assert.rejects(
+      () => stat(path.join(projectRoot, '.vibe-science-environment', 'connectors')),
+      /ENOENT/u
+    );
+    await assert.rejects(
+      () => stat(path.join(projectRoot, '.vibe-science-environment', 'automation', 'definitions')),
+      /ENOENT/u
+    );
+    await assert.rejects(
+      () => stat(path.join(projectRoot, '.vibe-science-environment', 'automation', 'runs')),
+      /ENOENT/u
+    );
+    await assert.rejects(
+      () => stat(path.join(projectRoot, '.vibe-science-environment', 'automation', 'artifacts')),
       /ENOENT/u
     );
   } finally {

@@ -21,11 +21,18 @@ test('doctor reports ok on healthy bootstrap and error on corrupted control stat
       'control-plane',
       'flow-experiment',
       'memory-sync',
-      'flow-results'
+      'flow-results',
+      'connectors-core',
+      'automation-core',
+      'domain-packs-core',
     ]);
     const healthy = await doctorWorkspaceState(projectRoot);
     assert.equal(healthy.ok, true);
 
+    await rm(path.join(projectRoot, '.vibe-science-environment', 'automation', 'runs'), {
+      recursive: true,
+      force: true
+    });
     await rm(path.join(projectRoot, '.vibe-science-environment', 'memory', 'mirrors'), {
       recursive: true,
       force: true
@@ -34,6 +41,10 @@ test('doctor reports ok on healthy bootstrap and error on corrupted control stat
     assert.equal(broken.ok, false);
     assert.equal(
       broken.checks.find((check) => check.check === 'bundle:memory-sync:.vibe-science-environment/memory/mirrors/')?.status,
+      'error'
+    );
+    assert.equal(
+      broken.checks.find((check) => check.check === 'bundle:automation-core:.vibe-science-environment/automation/runs/')?.status,
       'error'
     );
   } finally {

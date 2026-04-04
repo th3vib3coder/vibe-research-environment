@@ -115,13 +115,19 @@ export async function uninstallWorkspaceState(projectRoot) {
   }
 
   for (const bootstrapPath of bootstrapPaths) {
-    await rm(path.join(projectRoot, ...bootstrapPath.split('/').filter(Boolean)), {
+    const absolutePath = path.join(projectRoot, ...bootstrapPath.split('/').filter(Boolean));
+    await rm(absolutePath, {
       recursive: true,
       force: true
     });
+    await pruneEmptyWorkspaceAncestors(projectRoot, absolutePath);
   }
 
   await unlink(path.join(projectRoot, '.vibe-science-environment', '.install-state.json')).catch(() => {});
+  await pruneEmptyWorkspaceAncestors(
+    projectRoot,
+    path.join(projectRoot, '.vibe-science-environment', '.install-state.json'),
+  );
 }
 
 export async function upgradeInstallState(projectRoot, version) {
@@ -167,4 +173,24 @@ async function readInstalledBundleManifests(projectRoot) {
   }
 
   return manifests;
+}
+
+async function pruneEmptyWorkspaceAncestors(projectRoot, startPath) {
+  const workspaceRoot = path.join(projectRoot, '.vibe-science-environment');
+  let current = path.dirname(startPath);
+
+  while (current.startsWith(workspaceRoot) && current.length >= workspaceRoot.length) {
+    const entries = await readdir(current).catch(() => null);
+    if (entries == null || entries.length > 0) {
+      return;
+    }
+
+    await rm(current, { recursive: false, force: true }).catch(() => {});
+
+    if (current === workspaceRoot) {
+      return;
+    }
+
+    current = path.dirname(current);
+  }
 }

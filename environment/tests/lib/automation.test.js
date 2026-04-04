@@ -57,6 +57,28 @@ test('automation registry discovers built-in definitions and rejects duplicate c
   }
 });
 
+test('automation surfaces stay neutral when automation-core is not installed', async () => {
+  const projectRoot = await createFixtureProject('vre-automation-not-installed-');
+
+  try {
+    await writeInstallState(projectRoot, ['governance-core', 'control-plane']);
+
+    const registry = await getAutomationRegistry(projectRoot);
+    const overview = await getAutomationOverview(projectRoot);
+
+    assert.equal(registry.runtimeInstalled, false);
+    assert.deepEqual(registry.automations, []);
+    assert.deepEqual(registry.warnings, []);
+
+    assert.equal(overview.runtimeInstalled, false);
+    assert.equal(overview.totalAutomations, 0);
+    assert.deepEqual(overview.automations, []);
+    assert.deepEqual(overview.warnings, []);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
 test('weekly digest writes a reviewable artifact, blocks duplicate reruns, and shares the same run contract for scheduled runs', async () => {
   const projectRoot = await createFixtureProject('vre-automation-weekly-');
 
@@ -284,7 +306,10 @@ test('export-warning digest summarizes existing alerts without mutating the aler
   }
 });
 
-async function writeInstallState(projectRoot) {
+async function writeInstallState(
+  projectRoot,
+  bundles = ['governance-core', 'control-plane', 'automation-core'],
+) {
   const installStatePath = path.join(
     projectRoot,
     '.vibe-science-environment',
@@ -296,7 +321,7 @@ async function writeInstallState(projectRoot) {
     `${JSON.stringify({
       schemaVersion: 'vibe-env.install.v1',
       installedAt: '2026-04-04T08:00:00Z',
-      bundles: ['governance-core', 'control-plane', 'automation-core'],
+      bundles,
       bundleManifestVersion: '1.0.0',
       operations: [],
       source: {

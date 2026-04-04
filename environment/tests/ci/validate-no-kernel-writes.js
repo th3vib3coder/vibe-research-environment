@@ -13,7 +13,10 @@ export default async function validateNoKernelWrites() {
     include: (file) =>
       ((file.startsWith('environment/control/') ||
         file.startsWith('environment/flows/') ||
-        file.startsWith('environment/lib/')) &&
+        file.startsWith('environment/lib/') ||
+        file.startsWith('environment/connectors/') ||
+        file.startsWith('environment/automation/') ||
+        file.startsWith('environment/domain-packs/')) &&
         file.endsWith('.js')) ||
       (file.startsWith('commands/') && file.endsWith('.md'))
   });

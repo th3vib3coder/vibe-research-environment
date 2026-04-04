@@ -22,8 +22,19 @@ test('repair recreates missing generated control state via bootstrap semantics',
       'control-plane',
       'flow-experiment',
       'memory-sync',
-      'flow-results'
+      'flow-results',
+      'connectors-core',
+      'automation-core',
+      'domain-packs-core',
     ]);
+    await rm(path.join(projectRoot, '.vibe-science-environment', 'connectors'), {
+      recursive: true,
+      force: true
+    });
+    await rm(path.join(projectRoot, '.vibe-science-environment', 'automation', 'artifacts'), {
+      recursive: true,
+      force: true
+    });
     await rm(path.join(projectRoot, '.vibe-science-environment', 'memory', 'mirrors'), {
       recursive: true,
       force: true
@@ -39,6 +50,14 @@ test('repair recreates missing generated control state via bootstrap semantics',
     await repairWorkspaceState(projectRoot);
     health = await doctorWorkspaceState(projectRoot);
     assert.equal(health.ok, true);
+    assert.equal(
+      health.checks.find((check) => check.check === 'bundle:connectors-core:.vibe-science-environment/connectors/')?.status,
+      'ok'
+    );
+    assert.equal(
+      health.checks.find((check) => check.check === 'bundle:automation-core:.vibe-science-environment/automation/artifacts/')?.status,
+      'ok'
+    );
   } finally {
     await cleanupInstallFixture(projectRoot);
   }

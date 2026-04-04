@@ -17,11 +17,17 @@ test('upgrade updates install-state version metadata while preserving bundles', 
       'control-plane',
       'flow-experiment',
       'memory-sync',
-      'flow-results'
+      'flow-results',
+      'connectors-core',
+      'automation-core',
+      'domain-packs-core',
     ]);
     const upgraded = await upgradeInstallState(projectRoot, '1.0.1');
 
     assert.deepEqual(upgraded.bundles, initial.bundles);
+    assert.ok(upgraded.bundles.includes('connectors-core'));
+    assert.ok(upgraded.bundles.includes('automation-core'));
+    assert.ok(upgraded.bundles.includes('domain-packs-core'));
     assert.equal(upgraded.bundleManifestVersion, '1.0.1');
     assert.equal(upgraded.source.version, '1.0.1');
   } finally {

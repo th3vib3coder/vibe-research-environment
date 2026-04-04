@@ -90,6 +90,28 @@ test('connector registry rejects manifest files whose connectorId does not match
   }
 });
 
+test('connector surfaces stay neutral when connectors-core is not installed', async () => {
+  const projectRoot = await createFixtureProject('vre-connectors-not-installed-');
+
+  try {
+    await writeInstallState(projectRoot, ['governance-core', 'control-plane']);
+
+    const registry = await getConnectorRegistry(projectRoot);
+    const overview = await getConnectorHealthOverview(projectRoot);
+
+    assert.equal(registry.runtimeInstalled, false);
+    assert.deepEqual(registry.connectors, []);
+    assert.deepEqual(registry.warnings, []);
+
+    assert.equal(overview.runtimeInstalled, false);
+    assert.equal(overview.totalConnectors, 0);
+    assert.deepEqual(overview.connectors, []);
+    assert.deepEqual(overview.warnings, []);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
 test('filesystem connector exports results bundles and writing packs through derived artifacts only', async () => {
   const projectRoot = await createFixtureProject('vre-connectors-filesystem-');
   const targetDir = path.join(path.dirname(projectRoot), `${path.basename(projectRoot)}-external-target`);
@@ -340,7 +362,10 @@ test('obsidian connector exports memory mirrors and tracks healthy connector sta
   }
 });
 
-async function writeInstallState(projectRoot) {
+async function writeInstallState(
+  projectRoot,
+  bundles = ['governance-core', 'control-plane', 'connectors-core'],
+) {
   const installStatePath = path.join(
     projectRoot,
     '.vibe-science-environment',
@@ -352,7 +377,7 @@ async function writeInstallState(projectRoot) {
     `${JSON.stringify({
       schemaVersion: 'vibe-env.install.v1',
       installedAt: '2026-04-04T08:00:00Z',
-      bundles: ['governance-core', 'control-plane', 'connectors-core'],
+      bundles,
       bundleManifestVersion: '1.0.0',
       operations: [],
       source: {
