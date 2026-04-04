@@ -7,6 +7,11 @@ import path from 'node:path';
 async function setup() {
   const tmp = await mkdtemp(path.join(tmpdir(), 'vre-query-'));
   await cp(
+    path.join(process.cwd(), 'environment', 'connectors'),
+    path.join(tmp, 'environment', 'connectors'),
+    { recursive: true }
+  );
+  await cp(
     path.join(process.cwd(), 'environment', 'schemas'),
     path.join(tmp, 'environment', 'schemas'),
     { recursive: true }
@@ -339,6 +344,74 @@ describe('query', () => {
     assert.equal(status.writing.alerts[0].kind, 'claim_killed');
     assert.equal(status.writing.advisorPacks[0].packId, '2026-04-02');
     assert.equal(status.writing.rebuttalPacks[0].packId, 'submission-001');
+  });
+
+  it('surfaces connector health through operator status when connectors-core is installed', async () => {
+    const installStatePath = path.join(
+      dir,
+      '.vibe-science-environment',
+      '.install-state.json'
+    );
+    await mkdir(path.dirname(installStatePath), { recursive: true });
+    await writeFile(
+      installStatePath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 'vibe-env.install.v1',
+          installedAt: '2026-04-04T08:00:00Z',
+          bundles: ['governance-core', 'control-plane', 'connectors-core'],
+          bundleManifestVersion: '1.0.0',
+          operations: [],
+          source: {
+            version: '0.1.0',
+            commit: 'query-test'
+          }
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+
+    const { recordConnectorRun } = await import(`../../connectors/health.js?${Date.now()}`);
+    await recordConnectorRun(dir, 'filesystem-export', {
+      schemaVersion: 'vibe-env.connector-run-record.v1',
+      runId: 'CONN-RUN-2026-04-04-001',
+      connectorId: 'filesystem-export',
+      runKind: 'export',
+      status: 'completed',
+      startedAt: '2026-04-04T08:05:00Z',
+      endedAt: '2026-04-04T08:05:00Z',
+      sourceSurfaces: ['.vibe-science-environment/results/experiments/EXP-001'],
+      target: {
+        kind: 'external',
+        path: path.join(dir, 'external-results', 'EXP-001')
+      },
+      healthCheck: null,
+      visibleFailure: {
+        surfacedInStatus: true,
+        failureKind: 'none',
+        message: null
+      },
+      warnings: []
+    });
+
+    const status = await query.getOperatorStatus(dir);
+    assert.equal(status.connectors.runtimeInstalled, true);
+    assert.equal(status.connectors.totalConnectors, 2);
+
+    const filesystem = status.connectors.connectors.find(
+      (entry) => entry.connectorId === 'filesystem-export'
+    );
+    assert.equal(filesystem.healthStatus, 'ok');
+    assert.equal(filesystem.lastRunStatus, 'completed');
+    assert.equal(filesystem.totalRuns, 1);
+
+    const obsidian = status.connectors.connectors.find(
+      (entry) => entry.connectorId === 'obsidian-export'
+    );
+    assert.equal(obsidian.healthStatus, 'unknown');
+    assert.equal(obsidian.totalRuns, 0);
   });
 
   it('returns attempt history enriched with events and decisions', async () => {

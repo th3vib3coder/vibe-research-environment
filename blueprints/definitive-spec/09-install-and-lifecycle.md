@@ -154,6 +154,15 @@ The `connectors-core` bundle (Phase 4) starts by owning:
 - `environment/schemas/connector-manifest.schema.json`
 - `environment/schemas/connector-run-record.schema.json`
 
+Later Phase 4 waves extend it with:
+- `environment/connectors/manifest.js`
+- `environment/connectors/registry.js`
+- `environment/connectors/health.js`
+- `environment/connectors/filesystem-export.js`
+- `environment/connectors/obsidian-export.js`
+- `environment/connectors/manifests/filesystem-export.connector.json`
+- `environment/connectors/manifests/obsidian-export.connector.json`
+
 Its bootstrap surface also owns:
 - `.vibe-science-environment/connectors/`
 

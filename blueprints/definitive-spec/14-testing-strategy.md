@@ -86,6 +86,10 @@ Minimum modules:
 - `environment/lib/export-eligibility.js`
 - `environment/lib/export-snapshot.js`
 - `environment/lib/export-records.js`
+- `environment/connectors/registry.js`
+- `environment/connectors/health.js`
+- `environment/connectors/filesystem-export.js`
+- `environment/connectors/obsidian-export.js`
 - `environment/flows/writing.js`
 
 ### Schema Tests
@@ -153,6 +157,11 @@ Phase 4 Wave 0 now adds schema coverage for:
 - connector contracts and visible failure records
 - automation definitions and run ledgers
 - domain-pack activation config and pack manifests
+
+Phase 4 Wave 1 adds runtime coverage for:
+- connector registry discovery plus overlap rejection
+- one-way filesystem and Obsidian export adapters consuming already-derived VRE artifacts
+- operator status surfacing of connector health without inventing a second task system
 
 ---
 

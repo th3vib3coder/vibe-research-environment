@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "vibe-env.connector-manifest.v1",
+  "connectorId": "filesystem-export",
+  "displayName": "Filesystem Export",
+  "direction": "export",
+  "reads": [
+    ".vibe-science-environment/results/experiments/",
+    ".vibe-science-environment/writing/advisor-packs/",
+    ".vibe-science-environment/writing/rebuttal/"
+  ],
+  "writes": [
+    "external/filesystem/"
+  ],
+  "workspaceStatePaths": [
+    ".vibe-science-environment/connectors/filesystem-export/",
+    ".vibe-science-environment/connectors/filesystem-export/status.json",
+    ".vibe-science-environment/connectors/filesystem-export/run-log.jsonl"
+  ],
+  "capabilitiesProvided": [
+    "resultsExport",
+    "writingPackExport"
+  ],
+  "forbiddenMutations": [
+    "claim truth",
+    "citation truth",
+    "gate truth",
+    "export policy decisions"
+  ],
+  "failureSurface": {
+    "summaryPath": ".vibe-science-environment/connectors/filesystem-export/status.json",
+    "runLogPath": ".vibe-science-environment/connectors/filesystem-export/run-log.jsonl",
+    "surfacedInStatus": true
+  }
+}

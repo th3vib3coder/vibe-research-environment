@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "vibe-env.connector-manifest.v1",
+  "connectorId": "obsidian-export",
+  "displayName": "Obsidian Export",
+  "direction": "export",
+  "reads": [
+    ".vibe-science-environment/memory/project-overview.md",
+    ".vibe-science-environment/memory/decision-log.md"
+  ],
+  "writes": [
+    "external/obsidian-vault/"
+  ],
+  "workspaceStatePaths": [
+    ".vibe-science-environment/connectors/obsidian-export/",
+    ".vibe-science-environment/connectors/obsidian-export/status.json",
+    ".vibe-science-environment/connectors/obsidian-export/run-log.jsonl"
+  ],
+  "capabilitiesProvided": [
+    "memoryMirrorExport"
+  ],
+  "forbiddenMutations": [
+    "claim truth",
+    "citation truth",
+    "gate truth",
+    "mirror authority promotion"
+  ],
+  "failureSurface": {
+    "summaryPath": ".vibe-science-environment/connectors/obsidian-export/status.json",
+    "runLogPath": ".vibe-science-environment/connectors/obsidian-export/run-log.jsonl",
+    "surfacedInStatus": true
+  }
+}

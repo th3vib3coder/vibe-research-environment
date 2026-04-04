@@ -8,6 +8,9 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../
 export async function createFixtureProject(prefix) {
   const root = await mkdtemp(path.join(os.tmpdir(), prefix));
   await mkdir(path.join(root, 'environment'), { recursive: true });
+  await cp(path.join(repoRoot, 'environment', 'connectors'), path.join(root, 'environment', 'connectors'), {
+    recursive: true
+  });
   await cp(path.join(repoRoot, 'environment', 'templates'), path.join(root, 'environment', 'templates'), {
     recursive: true
   });

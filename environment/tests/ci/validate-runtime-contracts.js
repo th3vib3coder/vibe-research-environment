@@ -73,6 +73,10 @@ const activeEvalMetricFiles = [
   'attempt-lifecycle-completeness.js',
   'snapshot-publish-success.js'
 ];
+const builtInConnectorManifestFiles = [
+  'filesystem-export.connector.json',
+  'obsidian-export.connector.json'
+];
 
 const evalBenchmarkSpecs = [
   {
@@ -143,6 +147,14 @@ export default async function validateRuntimeContracts() {
     const template = await readJson(templatePath);
     const result = await validateWithSchema(schemaPath, template);
     assert(result.ok, `Template ${templatePath} failed ${schemaPath}: ${formatErrors(result.errors)}`);
+  }
+
+  for (const manifestFile of builtInConnectorManifestFiles) {
+    const manifestPath = `environment/connectors/manifests/${manifestFile}`;
+    assert(await pathExists(manifestPath), `Missing built-in connector manifest: ${manifestFile}`);
+    const manifest = await readJson(manifestPath);
+    const result = await validateWithSchema('environment/schemas/connector-manifest.schema.json', manifest);
+    assert(result.ok, `Built-in connector manifest ${manifestFile} failed schema validation: ${formatErrors(result.errors)}`);
   }
 
   for (const taskFile of activeEvalTaskFiles) {

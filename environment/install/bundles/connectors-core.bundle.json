@@ -13,6 +13,13 @@
   ],
   "ownedPaths": [
     "environment/connectors/.gitkeep",
+    "environment/connectors/manifest.js",
+    "environment/connectors/registry.js",
+    "environment/connectors/health.js",
+    "environment/connectors/filesystem-export.js",
+    "environment/connectors/obsidian-export.js",
+    "environment/connectors/manifests/filesystem-export.connector.json",
+    "environment/connectors/manifests/obsidian-export.connector.json",
     "environment/schemas/connector-manifest.schema.json",
     "environment/schemas/connector-run-record.schema.json"
   ],
