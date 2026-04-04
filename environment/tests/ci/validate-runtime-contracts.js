@@ -64,7 +64,13 @@ const activeEvalTaskFiles = [
   'flow-writing-advisor-pack.json',
   'flow-writing-rebuttal-pack.json',
   'flow-writing-warning-replay.json',
-  'flow-results-export-policy.json'
+  'flow-results-export-policy.json',
+  'flow-status-connector-failure-visibility.json',
+  'weekly-digest-reviewable-artifact.json',
+  'stale-memory-reminder-reviewable-artifact.json',
+  'export-warning-digest-reviewable-artifact.json',
+  'flow-status-domain-pack-omics.json',
+  'flow-status-domain-pack-fallback.json'
 ];
 
 const activeEvalMetricFiles = [
@@ -102,6 +108,11 @@ const evalBenchmarkSpecs = [
     file: 'phase3-writing-deliverables.benchmark.json',
     phase: 3,
     benchmarkId: 'phase3-writing-deliverables'
+  },
+  {
+    file: 'phase4-external-surfaces.benchmark.json',
+    phase: 4,
+    benchmarkId: 'phase4-external-surfaces'
   }
 ];
 const activeFlowTestFiles = [
@@ -211,13 +222,22 @@ export default async function validateRuntimeContracts() {
             taskFile.startsWith('flow-results-package') ||
             taskFile.startsWith('flow-status-results-findability')
           ? 2
-          : 3;
+          : taskFile.startsWith('flow-status-connector-failure-visibility') ||
+              taskFile.startsWith('weekly-digest-reviewable-artifact') ||
+              taskFile.startsWith('stale-memory-reminder-reviewable-artifact') ||
+              taskFile.startsWith('export-warning-digest-reviewable-artifact') ||
+              taskFile.startsWith('flow-status-domain-pack-omics') ||
+              taskFile.startsWith('flow-status-domain-pack-fallback')
+            ? 4
+            : 3;
     const expectedBenchmarkId =
       expectedPhase === 1
         ? 'phase1-core'
         : expectedPhase === 2
           ? 'phase2-memory-packaging'
-          : 'phase3-writing-deliverables';
+          : expectedPhase === 3
+            ? 'phase3-writing-deliverables'
+            : 'phase4-external-surfaces';
     assert(task.phase === expectedPhase, `Eval task ${taskFile} drifted from Phase ${expectedPhase}`);
     assert(
       Array.isArray(task.benchmarkIds) && task.benchmarkIds.includes(expectedBenchmarkId),

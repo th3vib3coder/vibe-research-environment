@@ -1,0 +1,123 @@
+{
+  "taskId": "flow-status-domain-pack-fallback",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "startedAt": "2026-04-04T18:25:00Z",
+  "endedAt": "2026-04-04T18:25:06Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-04-18-25-00-406-f6666666",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/flow-status"
+    },
+    "resultAssertions": {
+      "domain": {
+        "activePackId": null,
+        "configState": "invalid"
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Surfaced the default domain fallback after invalid domain activation config.",
+      "warnings": [],
+      "domain": {
+        "runtimeInstalled": true,
+        "hasActivation": false,
+        "configState": "invalid",
+        "configPath": null,
+        "activePackId": null,
+        "displayName": "Default Presets",
+        "manifestPath": null,
+        "authorityBoundary": "presets-only",
+        "literatureSources": [],
+        "workflowPresets": {
+          "defaultExperimentFields": [],
+          "commonConfounders": []
+        },
+        "deliverablePresets": {
+          "reportTemplate": null,
+          "writingPackTemplate": null
+        },
+        "expectedConnectors": [],
+        "advisoryHints": [],
+        "warnings": [
+          "Ignoring invalid domain config: Unexpected end of JSON input"
+        ]
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": null,
+      "currentStage": null,
+      "nextActions": [
+        "repair domain-config.json before relying on domain presets"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/flow-status",
+      "lastAttemptId": "ATT-2026-04-04-18-25-00-406-f6666666",
+      "updatedAt": "2026-04-04T18:25:06Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": 0.06,
+    "degradedHonestyScore": 1,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json"
+  ]
+}

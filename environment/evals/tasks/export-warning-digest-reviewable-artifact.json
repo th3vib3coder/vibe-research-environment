@@ -1,0 +1,56 @@
+{
+  "taskId": "export-warning-digest-reviewable-artifact",
+  "version": "1.0.0",
+  "phase": 4,
+  "benchmarkIds": ["phase4-external-surfaces"],
+  "command": {
+    "name": "/export-warning-digest",
+    "scope": "export-warning-digest",
+    "args": []
+  },
+  "goal": "Generate one export-warning digest artifact that summarizes existing alerts without mutating the alert ledger.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/.install-state.json",
+        "kind": "install-state",
+        "state": "present"
+      },
+      {
+        "path": ".vibe-science-environment/writing/exports/export-alerts.jsonl",
+        "kind": "export-alert-log",
+        "state": "present"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+      ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "sourceTests": [
+    "environment/tests/lib/automation.test.js",
+    "environment/tests/integration/automation-runtime.test.js"
+  ]
+}

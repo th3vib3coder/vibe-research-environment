@@ -1,0 +1,104 @@
+{
+  "taskId": "weekly-digest-reviewable-artifact",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "startedAt": "2026-04-04T18:05:00Z",
+  "endedAt": "2026-04-04T18:05:11Z",
+  "passed": true,
+  "command": {
+    "name": "/weekly-digest",
+    "scope": "weekly-digest",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-04-18-05-00-402-b2222222",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md",
+      ".vibe-science-environment/automation/runs/weekly-research-digest.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Generated one weekly digest artifact and recorded the run in the automation ledger.",
+      "warnings": [],
+      "payload": {
+        "automationId": "weekly-research-digest",
+        "status": "completed",
+        "latestArtifactPath": ".vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md",
+        "artifactPreview": "# Weekly Research Digest\n\nActive flow: none\nTrigger type: command",
+        "nextDueAt": "2026-04-11T09:00:00.000Z",
+        "totalRuns": 1
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": null,
+      "currentStage": null,
+      "nextActions": [
+        "review weekly digest artifact"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/weekly-digest",
+      "lastAttemptId": "ATT-2026-04-04-18-05-00-402-b2222222",
+      "updatedAt": "2026-04-04T18:05:10Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md",
+      ".vibe-science-environment/automation/runs/weekly-research-digest.jsonl"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": null,
+    "degradedHonestyScore": null,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md",
+    ".vibe-science-environment/automation/runs/weekly-research-digest.jsonl"
+  ]
+}

@@ -27,10 +27,20 @@ export const PHASE3_EXPECTED_TASK_FILES = [
   'flow-results-export-policy.json'
 ];
 
+export const PHASE4_EXPECTED_TASK_FILES = [
+  'flow-status-connector-failure-visibility.json',
+  'weekly-digest-reviewable-artifact.json',
+  'stale-memory-reminder-reviewable-artifact.json',
+  'export-warning-digest-reviewable-artifact.json',
+  'flow-status-domain-pack-omics.json',
+  'flow-status-domain-pack-fallback.json'
+];
+
 export const EXPECTED_TASK_FILES = [
   ...PHASE1_EXPECTED_TASK_FILES,
   ...PHASE2_EXPECTED_TASK_FILES,
-  ...PHASE3_EXPECTED_TASK_FILES
+  ...PHASE3_EXPECTED_TASK_FILES,
+  ...PHASE4_EXPECTED_TASK_FILES
 ];
 
 export const EXPECTED_METRIC_FILES = [
@@ -67,6 +77,12 @@ export const BENCHMARK_SPECS = [
     benchmarkId: 'phase3-writing-deliverables',
     phase: 3,
     taskFiles: PHASE3_EXPECTED_TASK_FILES
+  },
+  {
+    benchmarkFile: 'environment/evals/benchmarks/phase4-external-surfaces.benchmark.json',
+    benchmarkId: 'phase4-external-surfaces',
+    phase: 4,
+    taskFiles: PHASE4_EXPECTED_TASK_FILES
   }
 ];
 

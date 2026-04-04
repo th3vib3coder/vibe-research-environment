@@ -1,0 +1,103 @@
+{
+  "taskId": "export-warning-digest-reviewable-artifact",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "startedAt": "2026-04-04T18:15:00Z",
+  "endedAt": "2026-04-04T18:15:08Z",
+  "passed": true,
+  "command": {
+    "name": "/export-warning-digest",
+    "scope": "export-warning-digest",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-04-18-15-00-404-d4444444",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+      ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Generated one export-warning digest artifact from the append-only alert log.",
+      "warnings": [],
+      "payload": {
+        "automationId": "export-warning-digest",
+        "status": "completed",
+        "latestArtifactPath": ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+        "artifactPreview": "# Export Warning Digest\n\nWALERT-2026-04-04-001 - claim_killed",
+        "totalRuns": 1
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": null,
+      "currentStage": null,
+      "nextActions": [
+        "review export warning digest before reusing exported writing evidence"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 1
+      },
+      "lastCommand": "/export-warning-digest",
+      "lastAttemptId": "ATT-2026-04-04-18-15-00-404-d4444444",
+      "updatedAt": "2026-04-04T18:15:08Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+      ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": null,
+    "degradedHonestyScore": null,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+    ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+  ]
+}

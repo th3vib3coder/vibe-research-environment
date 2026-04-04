@@ -1,0 +1,63 @@
+{
+  "taskId": "flow-status-domain-pack-fallback",
+  "version": "1.0.0",
+  "phase": 4,
+  "benchmarkIds": ["phase4-external-surfaces"],
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "goal": "Surface the neutral default-domain fallback through /flow-status when domain activation is invalid.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/.install-state.json",
+        "kind": "install-state",
+        "state": "present"
+      },
+      {
+        "path": ".vibe-science-environment/domain-config.json",
+        "kind": "domain-config",
+        "state": "invalid"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/flow-status"
+    },
+    "resultAssertions": {
+      "domain": {
+        "activePackId": null,
+        "configState": "invalid"
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "sourceTests": [
+    "environment/tests/lib/domain-packs.test.js",
+    "environment/tests/control/query.test.js"
+  ]
+}

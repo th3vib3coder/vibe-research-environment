@@ -1,0 +1,136 @@
+{
+  "artifactId": "phase4-operator-validation",
+  "phase": 4,
+  "createdAt": "2026-04-04T19:00:00Z",
+  "benchmarkId": "phase4-external-surfaces",
+  "passed": true,
+  "validationClaims": [
+    "Connector export failures stay visible through /flow-status instead of disappearing behind terminal output.",
+    "Weekly digests, stale-memory reminders, and export-warning digests all produce reviewable artifacts with durable run-ledger traces.",
+    "Domain-pack activation surfaces omics presets without changing truth, gate, or export semantics.",
+    "Invalid domain activation falls back to neutral defaults instead of crashing or inventing a second truth path.",
+    "Phase 4 surfaces remain bounded to outer-project state with zero kernel-write-scope violations in saved repeats.",
+    "Install and lifecycle coverage includes all active Phase 4 bundles."
+  ],
+  "decisions": {
+    "connectorFailureVisibility": "Connector failures stay observational and become operator-visible through status surfaces without inventing recovery.",
+    "automationArtifactContract": "Automation outputs remain reviewable artifacts plus run-ledger records, not hidden background side effects.",
+    "domainPackAuthorityBoundary": "Domain packs change presets only and invalid activation falls back to neutral defaults instead of altering truth semantics."
+  },
+  "evidence": {
+    "connectorFailure": {
+      "claim": "Connector failures remain visible through the operator status surface.",
+      "sourceRepeat": {
+        "taskId": "flow-status-connector-failure-visibility",
+        "repeatId": "2026-04-04-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.06,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "weeklyDigest": {
+      "claim": "Weekly digests remain reviewable artifacts with durable run ledger evidence.",
+      "sourceRepeat": {
+        "taskId": "weekly-digest-reviewable-artifact",
+        "repeatId": "2026-04-04-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "staleMemoryReminder": {
+      "claim": "Stale-memory reminders remain visible artifacts instead of implicit background behavior.",
+      "sourceRepeat": {
+        "taskId": "stale-memory-reminder-reviewable-artifact",
+        "repeatId": "2026-04-04-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "exportWarningDigest": {
+      "claim": "Export-warning digests summarize append-only alerts without mutating the alert ledger.",
+      "sourceRepeat": {
+        "taskId": "export-warning-digest-reviewable-artifact",
+        "repeatId": "2026-04-04-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "domainOmics": {
+      "claim": "Active omics presets surface through operator status without changing truth semantics.",
+      "sourceRepeat": {
+        "taskId": "flow-status-domain-pack-omics",
+        "repeatId": "2026-04-04-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.06,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "domainFallback": {
+      "claim": "Invalid domain activation falls back to neutral defaults instead of crashing flows.",
+      "sourceRepeat": {
+        "taskId": "flow-status-domain-pack-fallback",
+        "repeatId": "2026-04-04-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.06,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    }
+  }
+}

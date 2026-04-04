@@ -1,0 +1,119 @@
+{
+  "taskId": "export-warning-digest-reviewable-artifact",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "command": {
+    "name": "/export-warning-digest",
+    "scope": "export-warning-digest",
+    "args": []
+  },
+  "result": {
+    "summary": "Generated one export-warning digest artifact from the append-only alert log.",
+    "warnings": [],
+    "payload": {
+      "automationId": "export-warning-digest",
+      "status": "completed",
+      "latestArtifactPath": ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+      "artifactPreview": "# Export Warning Digest\n\nWALERT-2026-04-04-001 - claim_killed",
+      "totalRuns": 1
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-04-18-15-00-404-d4444444",
+    "scope": "export-warning-digest",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-04T18:15:00Z",
+    "lastHeartbeatAt": "2026-04-04T18:15:08Z",
+    "endedAt": "2026-04-04T18:15:08Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Generated one export-warning digest artifact from the append-only alert log."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": null,
+    "currentStage": null,
+    "nextActions": [
+      "review export warning digest before reusing exported writing evidence"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 1
+    },
+    "lastCommand": "/export-warning-digest",
+    "lastAttemptId": "ATT-2026-04-04-18-15-00-404-d4444444",
+    "updatedAt": "2026-04-04T18:15:08Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+    ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+        ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+        ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/automation/artifacts/export-warning-digest/alerts-WALERT-2026-04-04-001-1.md",
+        ".vibe-science-environment/automation/runs/export-warning-digest.jsonl"
+      ]
+    }
+  ]
+}

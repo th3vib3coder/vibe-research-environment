@@ -1,0 +1,54 @@
+{
+  "taskId": "flow-status-domain-pack-omics",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "results": {
+    "resume-latency": {
+      "metricId": "resume-latency",
+      "passed": true,
+      "value": 0.06,
+      "details": {
+        "elapsedSeconds": 0.06
+      }
+    },
+    "honesty-under-degradation": {
+      "metricId": "honesty-under-degradation",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "degradedHonestyScore": 1
+      }
+    },
+    "state-write-scope": {
+      "metricId": "state-write-scope",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "violations": []
+      }
+    },
+    "attempt-lifecycle-completeness": {
+      "metricId": "attempt-lifecycle-completeness",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "statuses": [
+          "preparing",
+          "running",
+          "succeeded"
+        ],
+        "terminalStatus": "succeeded"
+      }
+    },
+    "snapshot-publish-success": {
+      "metricId": "snapshot-publish-success",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "snapshotExists": true,
+        "schemaValid": true,
+        "publishError": null
+      }
+    }
+  }
+}

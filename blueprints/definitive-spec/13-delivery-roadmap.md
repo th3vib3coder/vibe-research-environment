@@ -6,13 +6,13 @@
 
 Build from highest researcher pain to lowest epistemic risk.
 
-## Live Status Snapshot (2026-04-03)
+## Live Status Snapshot (2026-04-04)
 
 - Phase 0: complete
 - Phase 1: closed with [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 - Phase 2: closed with [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
-- Phase 4+: planning active through [phase4-00-index.md](./implementation-plan/phase4-00-index.md)
+- Phase 4: closed with [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 
 The sections below preserve the original build order and gate definitions.
 Audited completion state now lives in the implementation-plan indexes and
@@ -160,10 +160,10 @@ Closeout:
 
 ---
 
-## Phase 4+: Connectors, Automations, Domain Packs (Planning Active)
+## Phase 4+: Connectors, Automations, Domain Packs (COMPLETE)
 
-**Now that Phases 1-3 are stable, open this phase through the Phase 4 plan set
-before landing runtime code.**
+Closeout:
+- [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 
 - Bibliography adapters AFTER literature flow works
 - Automations AFTER flows define "stale" and "blocked"

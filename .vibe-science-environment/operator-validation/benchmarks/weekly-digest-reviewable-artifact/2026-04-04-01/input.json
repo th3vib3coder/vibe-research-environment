@@ -1,0 +1,45 @@
+{
+  "taskId": "weekly-digest-reviewable-artifact",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "taskVersion": "1.0.0",
+  "command": {
+    "name": "/weekly-digest",
+    "scope": "weekly-digest",
+    "args": []
+  },
+  "goal": "Generate one reviewable weekly digest artifact and keep the run ledger visible without mutating kernel truth.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/.install-state.json",
+        "kind": "install-state",
+        "state": "present"
+      },
+      {
+        "path": ".vibe-science-environment/control/session.json",
+        "kind": "session-snapshot",
+        "state": "present"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/weekly-research-digest/2026-W14.md",
+      ".vibe-science-environment/automation/runs/weekly-research-digest.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  }
+}

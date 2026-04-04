@@ -1,0 +1,139 @@
+{
+  "taskId": "flow-status-connector-failure-visibility",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "result": {
+    "summary": "Surfaced one failed filesystem export through /flow-status without hiding the connector error.",
+    "warnings": [],
+    "connectors": {
+      "runtimeInstalled": true,
+      "totalConnectors": 2,
+      "warnings": [],
+      "connectors": [
+        {
+          "connectorId": "filesystem-export",
+          "displayName": "Filesystem Export",
+          "direction": "export",
+          "summaryPath": ".vibe-science-environment/connectors/filesystem-export/status.json",
+          "runLogPath": ".vibe-science-environment/connectors/filesystem-export/run-log.jsonl",
+          "surfacedInStatus": true,
+          "healthStatus": "degraded",
+          "lastRunId": "CONN-RUN-2026-04-04-404",
+          "lastRunStatus": "failed",
+          "lastRunAt": "2026-04-04T17:58:00Z",
+          "failureMessage": "No packaged results bundle exists for EXP-404.",
+          "totalRuns": 1
+        },
+        {
+          "connectorId": "obsidian-export",
+          "displayName": "Obsidian Export",
+          "direction": "export",
+          "summaryPath": ".vibe-science-environment/connectors/obsidian-export/status.json",
+          "runLogPath": ".vibe-science-environment/connectors/obsidian-export/run-log.jsonl",
+          "surfacedInStatus": true,
+          "healthStatus": "unknown",
+          "lastRunId": null,
+          "lastRunStatus": null,
+          "lastRunAt": null,
+          "failureMessage": null,
+          "totalRuns": 0
+        }
+      ]
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-04-18-00-00-401-a1111111",
+    "scope": "flow-status",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-04T18:00:00Z",
+    "lastHeartbeatAt": "2026-04-04T18:00:06Z",
+    "endedAt": "2026-04-04T18:00:06Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Surfaced one failed filesystem export through /flow-status without hiding the connector error."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": null,
+    "currentStage": null,
+    "nextActions": [
+      "inspect failed connector run before retrying export"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/flow-status",
+    "lastAttemptId": "ATT-2026-04-04-18-00-00-401-a1111111",
+    "updatedAt": "2026-04-04T18:00:05Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json"
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json"
+      ]
+    }
+  ]
+}

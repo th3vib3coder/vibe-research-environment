@@ -8,6 +8,7 @@ import {
   PHASE1_EXPECTED_TASK_FILES,
   PHASE2_EXPECTED_TASK_FILES,
   PHASE3_EXPECTED_TASK_FILES,
+  PHASE4_EXPECTED_TASK_FILES,
   repoRoot,
   listSavedBenchmarkRepeats,
   readRepoJson
@@ -108,6 +109,33 @@ test('saved benchmark artifacts exist for every Phase 3 task and include the req
     assert.equal(input.repeatId, repeatId);
     assert.equal(summary.repeatId, repeatId);
     assert.equal(summary.benchmarkId, 'phase3-writing-deliverables');
+    assert.equal(summary.passed, true, `Expected saved repeat ${taskId}/${repeatId} to pass`);
+    assert.ok(Array.isArray(summary.actualWrites));
+    assert.equal(typeof summary.transcriptPath, 'string');
+    await access(path.join(repoRoot, summary.transcriptPath));
+  }
+});
+
+test('saved benchmark artifacts exist for every Phase 4 task and include the required files', async () => {
+  for (const fileName of PHASE4_EXPECTED_TASK_FILES) {
+    const taskId = taskIdFromFile(fileName);
+    const repeats = await listSavedBenchmarkRepeats(taskId);
+
+    assert.ok(repeats.length >= 1, `Expected at least one saved repeat for ${taskId}`);
+
+    const repeatId = repeats.at(-1);
+    const input = await readRepeatArtifact(taskId, repeatId, 'input.json');
+    const output = await readRepeatArtifact(taskId, repeatId, 'output.json');
+    const metrics = await readRepeatArtifact(taskId, repeatId, 'metrics.json');
+    const summary = await readRepeatArtifact(taskId, repeatId, 'summary.json');
+
+    assert.equal(input.taskId, taskId);
+    assert.equal(output.taskId, taskId);
+    assert.equal(metrics.taskId, taskId);
+    assert.equal(summary.taskId, taskId);
+    assert.equal(input.repeatId, repeatId);
+    assert.equal(summary.repeatId, repeatId);
+    assert.equal(summary.benchmarkId, 'phase4-external-surfaces');
     assert.equal(summary.passed, true, `Expected saved repeat ${taskId}/${repeatId} to pass`);
     assert.ok(Array.isArray(summary.actualWrites));
     assert.equal(typeof summary.transcriptPath, 'string');
@@ -317,6 +345,76 @@ test('saved Phase 3 results-policy artifact proves results and writing share the
   );
 });
 
+test('saved Phase 4 connector artifact records visible failure through flow-status', async () => {
+  const repeats = await listSavedBenchmarkRepeats('flow-status-connector-failure-visibility');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'flow-status-connector-failure-visibility',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.connectors.runtimeInstalled, true);
+  assert.equal(output.result.connectors.totalConnectors, 2);
+  assert.equal(output.result.connectors.connectors[0].connectorId, 'filesystem-export');
+  assert.equal(output.result.connectors.connectors[0].healthStatus, 'degraded');
+  assert.match(output.result.connectors.connectors[0].failureMessage, /EXP-404/u);
+});
+
+test('saved Phase 4 automation artifacts stay reviewable and visible', async () => {
+  const weeklyRepeats = await listSavedBenchmarkRepeats('weekly-digest-reviewable-artifact');
+  const staleRepeats = await listSavedBenchmarkRepeats('stale-memory-reminder-reviewable-artifact');
+  const exportRepeats = await listSavedBenchmarkRepeats('export-warning-digest-reviewable-artifact');
+
+  const weeklyOutput = await readRepeatArtifact(
+    'weekly-digest-reviewable-artifact',
+    weeklyRepeats.at(-1),
+    'output.json'
+  );
+  const staleOutput = await readRepeatArtifact(
+    'stale-memory-reminder-reviewable-artifact',
+    staleRepeats.at(-1),
+    'output.json'
+  );
+  const exportOutput = await readRepeatArtifact(
+    'export-warning-digest-reviewable-artifact',
+    exportRepeats.at(-1),
+    'output.json'
+  );
+
+  assert.match(weeklyOutput.result.payload.latestArtifactPath, /weekly-research-digest\/2026-W14\.md/u);
+  assert.equal(weeklyOutput.result.payload.status, 'completed');
+  assert.match(staleOutput.result.payload.latestArtifactPath, /memory-stale-2026-04-01T08-00-00Z\.md/u);
+  assert.match(staleOutput.result.payload.artifactPreview, /STALE/u);
+  assert.match(exportOutput.result.payload.latestArtifactPath, /alerts-WALERT-2026-04-04-001-1\.md/u);
+  assert.match(exportOutput.result.payload.artifactPreview, /WALERT-2026-04-04-001/u);
+});
+
+test('saved Phase 4 domain-pack artifacts prove activation and fallback stay preset-only', async () => {
+  const omicsRepeats = await listSavedBenchmarkRepeats('flow-status-domain-pack-omics');
+  const fallbackRepeats = await listSavedBenchmarkRepeats('flow-status-domain-pack-fallback');
+  const omicsOutput = await readRepeatArtifact(
+    'flow-status-domain-pack-omics',
+    omicsRepeats.at(-1),
+    'output.json'
+  );
+  const fallbackOutput = await readRepeatArtifact(
+    'flow-status-domain-pack-fallback',
+    fallbackRepeats.at(-1),
+    'output.json'
+  );
+
+  assert.equal(omicsOutput.result.domain.activePackId, 'omics');
+  assert.equal(omicsOutput.result.domain.authorityBoundary, 'presets-only');
+  assert.equal(omicsOutput.result.domain.deliverablePresets.reportTemplate, 'omics-standard');
+  assert.ok(omicsOutput.result.domain.workflowPresets.commonConfounders.includes('batch_effect'));
+
+  assert.equal(fallbackOutput.result.domain.activePackId, null);
+  assert.equal(fallbackOutput.result.domain.configState, 'invalid');
+  assert.equal(fallbackOutput.result.domain.displayName, 'Default Presets');
+  assert.match(fallbackOutput.result.domain.warnings.join('\n'), /Ignoring invalid domain config/u);
+});
+
 test('saved operator-validation artifact points to a passing flow-status resume repeat', async () => {
   const artifact = await readRepoJson(
     '.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json'
@@ -448,6 +546,42 @@ test('saved Phase 3 operator-validation artifact points to passing evidence repe
   }
 });
 
+test('saved Phase 4 operator-validation artifact points to passing evidence repeats', async () => {
+  const artifact = await readRepoJson(
+    '.vibe-science-environment/operator-validation/artifacts/phase4-operator-validation.json'
+  );
+
+  assert.equal(artifact.artifactId, 'phase4-operator-validation');
+  assert.equal(artifact.phase, 4);
+  assert.equal(artifact.benchmarkId, 'phase4-external-surfaces');
+  assert.equal(artifact.passed, true);
+  assert.ok(Array.isArray(artifact.validationClaims) && artifact.validationClaims.length >= 5);
+  assert.equal(
+    artifact.decisions.connectorFailureVisibility,
+    'Connector failures stay observational and become operator-visible through status surfaces without inventing recovery.'
+  );
+  assert.equal(
+    artifact.decisions.domainPackAuthorityBoundary,
+    'Domain packs change presets only and invalid activation falls back to neutral defaults instead of altering truth semantics.'
+  );
+
+  for (const key of [
+    'connectorFailure',
+    'weeklyDigest',
+    'staleMemoryReminder',
+    'exportWarningDigest',
+    'domainOmics',
+    'domainFallback',
+  ]) {
+    const evidence = artifact.evidence[key];
+    await assertRepoPathExists(evidence.sourceRepeat.inputPath);
+    await assertRepoPathExists(evidence.sourceRepeat.outputPath);
+    await assertRepoPathExists(evidence.sourceRepeat.metricsPath);
+    await assertRepoPathExists(evidence.sourceRepeat.summaryPath);
+    await assertRepoPathExists(evidence.sourceRepeat.transcriptPath);
+  }
+});
+
 test('Phase 2 closeout dossier exists and links to the saved evidence surfaces', async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase2-closeout.md';
@@ -472,4 +606,18 @@ test('Phase 3 closeout dossier exists and links to the saved evidence surfaces',
   assert.match(closeout, /flow-writing-warning-replay/u);
   assert.match(closeout, /flow-writing-advisor-pack/u);
   assert.match(closeout, /flow-writing-rebuttal-pack/u);
+});
+
+test('Phase 4 closeout dossier exists and links to the saved evidence surfaces', async () => {
+  const closeoutPath =
+    'blueprints/definitive-spec/implementation-plan/phase4-closeout.md';
+  const closeout = await readFile(
+    path.join(repoRoot, closeoutPath),
+    'utf8'
+  );
+  await assertRepoPathExists(closeoutPath);
+  assert.match(closeout, /phase4-operator-validation\.json/u);
+  assert.match(closeout, /flow-status-connector-failure-visibility/u);
+  assert.match(closeout, /weekly-digest-reviewable-artifact/u);
+  assert.match(closeout, /flow-status-domain-pack-omics/u);
 });

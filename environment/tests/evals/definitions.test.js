@@ -9,6 +9,7 @@ import {
   PHASE1_EXPECTED_TASK_FILES,
   PHASE2_EXPECTED_TASK_FILES,
   PHASE3_EXPECTED_TASK_FILES,
+  PHASE4_EXPECTED_TASK_FILES,
   assertRepoPathExists,
   assertSetEqual,
   commandDocPath,
@@ -49,12 +50,14 @@ test('eval task definitions stay wired to real commands, source tests, and safe 
   const benchmarkIdByFile = new Map([
     ...PHASE1_EXPECTED_TASK_FILES.map((file) => [file, 'phase1-core']),
     ...PHASE2_EXPECTED_TASK_FILES.map((file) => [file, 'phase2-memory-packaging']),
-    ...PHASE3_EXPECTED_TASK_FILES.map((file) => [file, 'phase3-writing-deliverables'])
+    ...PHASE3_EXPECTED_TASK_FILES.map((file) => [file, 'phase3-writing-deliverables']),
+    ...PHASE4_EXPECTED_TASK_FILES.map((file) => [file, 'phase4-external-surfaces'])
   ]);
   const phaseByFile = new Map([
     ...PHASE1_EXPECTED_TASK_FILES.map((file) => [file, 1]),
     ...PHASE2_EXPECTED_TASK_FILES.map((file) => [file, 2]),
-    ...PHASE3_EXPECTED_TASK_FILES.map((file) => [file, 3])
+    ...PHASE3_EXPECTED_TASK_FILES.map((file) => [file, 3]),
+    ...PHASE4_EXPECTED_TASK_FILES.map((file) => [file, 4])
   ]);
 
   for (const file of EXPECTED_TASK_FILES) {

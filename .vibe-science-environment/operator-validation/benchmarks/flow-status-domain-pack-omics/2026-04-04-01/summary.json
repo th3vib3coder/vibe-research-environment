@@ -1,0 +1,141 @@
+{
+  "taskId": "flow-status-domain-pack-omics",
+  "repeatId": "2026-04-04-01",
+  "benchmarkId": "phase4-external-surfaces",
+  "startedAt": "2026-04-04T18:20:00Z",
+  "endedAt": "2026-04-04T18:20:06Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-status",
+    "scope": "flow-status",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-04-18-20-00-405-e5555555",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/flow-status"
+    },
+    "resultAssertions": {
+      "domain": {
+        "activePackId": "omics",
+        "configState": "resolved"
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Surfaced the active omics pack through /flow-status with preset-only authority.",
+      "warnings": [],
+      "domain": {
+        "runtimeInstalled": true,
+        "hasActivation": true,
+        "configState": "resolved",
+        "configPath": ".vibe-science-environment/domain-config.json",
+        "activePackId": "omics",
+        "displayName": "Omics Research Presets",
+        "manifestPath": "environment/domain-packs/omics/pack.domain-pack.json",
+        "authorityBoundary": "presets-only",
+        "literatureSources": [
+          "PubMed",
+          "bioRxiv",
+          "GEO"
+        ],
+        "workflowPresets": {
+          "defaultExperimentFields": [
+            "organism",
+            "tissue",
+            "cell_count",
+            "sequencing_platform",
+            "library_chemistry"
+          ],
+          "commonConfounders": [
+            "batch_effect",
+            "dropout_rate",
+            "cell_cycle_phase",
+            "doublet_rate"
+          ]
+        },
+        "deliverablePresets": {
+          "reportTemplate": "omics-standard",
+          "writingPackTemplate": "omics-advisor-pack"
+        },
+        "expectedConnectors": [
+          "filesystem-export"
+        ],
+        "advisoryHints": [
+          "Document batch handling explicitly before comparing cell populations.",
+          "Validate cell-type assumptions before promoting scRNA-seq interpretation claims."
+        ],
+        "warnings": []
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": null,
+      "currentStage": null,
+      "nextActions": [
+        "use omics presets when registering new experiments and writing packs"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0
+      },
+      "lastCommand": "/flow-status",
+      "lastAttemptId": "ATT-2026-04-04-18-20-00-405-e5555555",
+      "updatedAt": "2026-04-04T18:20:06Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": 0.06,
+    "degradedHonestyScore": 1,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json"
+  ]
+}

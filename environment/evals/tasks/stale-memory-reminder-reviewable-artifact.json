@@ -1,0 +1,56 @@
+{
+  "taskId": "stale-memory-reminder-reviewable-artifact",
+  "version": "1.0.0",
+  "phase": 4,
+  "benchmarkIds": ["phase4-external-surfaces"],
+  "command": {
+    "name": "/stale-memory-reminder",
+    "scope": "stale-memory-reminder",
+    "args": []
+  },
+  "goal": "Generate one stale-memory reminder artifact that stays reviewable and visible instead of silently touching mirrors or kernel state.",
+  "setup": {
+    "workspaceFixtures": [
+      {
+        "path": ".vibe-science-environment/.install-state.json",
+        "kind": "install-state",
+        "state": "present"
+      },
+      {
+        "path": ".vibe-science-environment/memory/sync-state.json",
+        "kind": "memory-sync-state",
+        "state": "present"
+      }
+    ],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/automation/artifacts/stale-memory-reminder/memory-stale-2026-04-01T08-00-00Z.md",
+      ".vibe-science-environment/automation/runs/stale-memory-reminder.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "metrics": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "sourceTests": [
+    "environment/tests/lib/automation.test.js",
+    "environment/tests/integration/automation-runtime.test.js"
+  ]
+}
