@@ -13,6 +13,10 @@
   ],
   "ownedPaths": [
     "environment/domain-packs/.gitkeep",
+    "environment/domain-packs/index.js",
+    "environment/domain-packs/loader.js",
+    "environment/domain-packs/resolver.js",
+    "environment/domain-packs/omics/pack.domain-pack.json",
     "environment/schemas/domain-config.schema.json",
     "environment/schemas/domain-pack.schema.json"
   ],

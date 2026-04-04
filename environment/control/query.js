@@ -13,6 +13,7 @@ import { getMemoryFreshness } from '../memory/status.js';
 import { getMemoryMarks } from '../memory/marks.js';
 import { getAutomationOverview } from '../automation/artifacts.js';
 import { getConnectorHealthOverview } from '../connectors/health.js';
+import { getDomainPackOverview } from '../domain-packs/resolver.js';
 import { getResultsOverview } from '../flows/results-discovery.js';
 import { getWritingOverview } from '../flows/writing-overview.js';
 
@@ -33,13 +34,14 @@ export {
 };
 
 export async function getOperatorStatus(projectPath) {
-  const [session, capabilities, memory, marks, automations, connectors, results, writing] = await Promise.all([
+  const [session, capabilities, memory, marks, automations, connectors, domain, results, writing] = await Promise.all([
     getSessionSnapshot(projectPath),
     getCapabilitiesSnapshot(projectPath),
     getMemoryFreshness(projectPath),
     getMemoryMarks(projectPath),
     getAutomationOverview(projectPath),
     getConnectorHealthOverview(projectPath),
+    getDomainPackOverview(projectPath),
     getResultsOverview(projectPath, {
       bundleLimit: 5,
       digestLimit: 5
@@ -61,6 +63,7 @@ export async function getOperatorStatus(projectPath) {
     },
     automations,
     connectors,
+    domain,
     results,
     writing,
     hasSession: session !== null

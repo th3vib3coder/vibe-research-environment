@@ -17,6 +17,11 @@ async function setup() {
     { recursive: true }
   );
   await cp(
+    path.join(process.cwd(), 'environment', 'domain-packs'),
+    path.join(tmp, 'environment', 'domain-packs'),
+    { recursive: true }
+  );
+  await cp(
     path.join(process.cwd(), 'environment', 'schemas'),
     path.join(tmp, 'environment', 'schemas'),
     { recursive: true }
@@ -498,6 +503,46 @@ describe('query', () => {
     );
     assert.equal(staleMemory.status, 'ready');
     assert.equal(staleMemory.totalRuns, 0);
+  });
+
+  it('surfaces the active domain pack through operator status when domain-packs-core is installed', async () => {
+    const installStatePath = path.join(
+      dir,
+      '.vibe-science-environment',
+      '.install-state.json'
+    );
+    await mkdir(path.dirname(installStatePath), { recursive: true });
+    await writeFile(
+      installStatePath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 'vibe-env.install.v1',
+          installedAt: '2026-04-04T08:00:00Z',
+          bundles: ['governance-core', 'control-plane', 'domain-packs-core'],
+          bundleManifestVersion: '1.0.0',
+          operations: [],
+          source: {
+            version: '0.1.0',
+            commit: 'query-test'
+          }
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+
+    const { activateDomainPack } = await import(`../../domain-packs/resolver.js?${Date.now()}`);
+    await activateDomainPack(dir, 'omics', {
+      updatedAt: '2026-04-04T09:15:00Z'
+    });
+
+    const status = await query.getOperatorStatus(dir);
+    assert.equal(status.domain.runtimeInstalled, true);
+    assert.equal(status.domain.activePackId, 'omics');
+    assert.equal(status.domain.configState, 'resolved');
+    assert.equal(status.domain.deliverablePresets.reportTemplate, 'omics-standard');
+    assert.ok(status.domain.workflowPresets.commonConfounders.includes('batch_effect'));
   });
 
   it('returns attempt history enriched with events and decisions', async () => {

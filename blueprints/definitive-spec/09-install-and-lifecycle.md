@@ -194,6 +194,12 @@ The `domain-packs-core` bundle (Phase 4) starts by owning:
 - `environment/schemas/domain-config.schema.json`
 - `environment/schemas/domain-pack.schema.json`
 
+Later Phase 4 waves extend it with:
+- `environment/domain-packs/index.js`
+- `environment/domain-packs/loader.js`
+- `environment/domain-packs/resolver.js`
+- `environment/domain-packs/omics/pack.domain-pack.json`
+
 Project-scoped activation still lives at:
 - `.vibe-science-environment/domain-config.json`
 

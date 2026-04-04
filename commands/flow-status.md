@@ -52,6 +52,7 @@ Report:
 - memory freshness / last sync
 - automation readiness / latest automation artifacts
 - connector health / latest connector failures
+- active domain pack / domain-specific preset surfaces
 - writing snapshots, recent export alerts, and latest advisor/rebuttal pack directories
 - recent packaged experiment bundles / latest digest pointers
 - last command
@@ -79,6 +80,9 @@ They do not validate claims, verify citations, or certify export eligibility.
 
 Automation summaries and automation artifact paths are review surfaces only.
 They do not schedule hidden work, mutate truth, or replace the control plane.
+
+Domain-pack activation is a preset surface only.
+It may change suggested literature sources, experiment fields, or deliverable template names, but it does not change kernel truth, middleware, export policy, or gate semantics.
 
 If the snapshot is missing, say so clearly and report that the control plane will rebuild it on the next successful run.
 

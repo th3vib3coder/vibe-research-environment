@@ -2,6 +2,7 @@ import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import { validateBundleManifest } from '../lib/bundle-manifest.js';
+import { getResultsDomainPresets } from '../domain-packs/resolver.js';
 import {
   assertValid,
   loadValidator,
@@ -44,10 +45,13 @@ export async function getResultsOverview(projectPath, options = {}) {
     ? null
     : uniqueExperimentIds(options.experimentIds);
 
-  const digestData = await listSessionDigests(projectRoot, {
-    experimentIds,
-    limit: normalizeLimit(options.digestLimit),
-  });
+  const [digestData, domain] = await Promise.all([
+    listSessionDigests(projectRoot, {
+      experimentIds,
+      limit: normalizeLimit(options.digestLimit),
+    }),
+    getResultsDomainPresets(projectPath),
+  ]);
   const bundleData = await listResultBundles(projectRoot, {
     experimentIds,
     limit: normalizeLimit(options.bundleLimit),
@@ -55,6 +59,7 @@ export async function getResultsOverview(projectPath, options = {}) {
   });
 
   return {
+    domain,
     totalBundles: bundleData.totalBundles,
     bundles: bundleData.bundles,
     totalSessionDigests: digestData.totalDigests,

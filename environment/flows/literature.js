@@ -4,6 +4,7 @@ import {
   writeFlowIndex,
   writeFlowState,
 } from '../lib/flow-state.js';
+import { getLiteratureDomainPresets } from '../domain-packs/resolver.js';
 
 const FLOW_NAME = 'literature';
 const CLAIM_ID_PATTERN = /^C-[0-9]{3}$/u;
@@ -30,9 +31,10 @@ export class PaperNotFoundError extends LiteratureFlowError {}
 export class InvalidClaimLinkError extends LiteratureFlowError {}
 
 export async function registerPaper(projectPath, paperData) {
-  const [state, index] = await Promise.all([
+  const [state, index, domain] = await Promise.all([
     readFlowState(projectPath, FLOW_NAME),
     readFlowIndex(projectPath),
+    getLiteratureDomainPresets(projectPath),
   ]);
   const timestamp = resolveTimestamp();
   const paper = normalizePaperInput(paperData, state.papers, timestamp);
@@ -60,14 +62,16 @@ export async function registerPaper(projectPath, paperData) {
     paper,
     state: nextState,
     index: nextIndex,
+    domain,
     warnings: [],
   };
 }
 
 export async function listPapers(projectPath, filters = {}) {
-  const [state, index] = await Promise.all([
+  const [state, index, domain] = await Promise.all([
     readFlowState(projectPath, FLOW_NAME),
     readFlowIndex(projectPath),
+    getLiteratureDomainPresets(projectPath),
   ]);
   const timestamp = resolveTimestamp(filters.updatedAt);
   const derived = deriveLiteratureView(state);
@@ -84,14 +88,16 @@ export async function listPapers(projectPath, filters = {}) {
     papers,
     state,
     index: nextIndex,
+    domain,
     warnings: [],
   };
 }
 
 export async function surfaceGaps(projectPath, options = {}) {
-  const [state, index] = await Promise.all([
+  const [state, index, domain] = await Promise.all([
     readFlowState(projectPath, FLOW_NAME),
     readFlowIndex(projectPath),
+    getLiteratureDomainPresets(projectPath),
   ]);
   const timestamp = resolveTimestamp(options.now);
   const derived = deriveLiteratureView(state, {
@@ -117,6 +123,7 @@ export async function surfaceGaps(projectPath, options = {}) {
 
   return {
     gaps: derived.gaps,
+    domain,
     warnings: derived.warnings,
     state: nextState,
     index: nextIndex,
@@ -126,9 +133,10 @@ export async function surfaceGaps(projectPath, options = {}) {
 export async function linkPaperToClaim(projectPath, paperId, claimId, options = {}) {
   const paperReference = normalizePaperReference(paperId);
   const normalizedClaimId = normalizeClaimId(claimId, 'claimId');
-  const [state, index] = await Promise.all([
+  const [state, index, domain] = await Promise.all([
     readFlowState(projectPath, FLOW_NAME),
     readFlowIndex(projectPath),
+    getLiteratureDomainPresets(projectPath),
   ]);
   const timestamp = resolveTimestamp(options.now);
   const paperIndex = findPaperIndex(state.papers, paperReference);
@@ -178,6 +186,7 @@ export async function linkPaperToClaim(projectPath, paperId, claimId, options = 
 
   return {
     paper: updatedPaper,
+    domain,
     warnings: uniqueStrings([...linkWarnings, ...derived.warnings]),
     state: nextState,
     index: nextIndex,

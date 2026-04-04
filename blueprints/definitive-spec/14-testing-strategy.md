@@ -96,6 +96,9 @@ Minimum modules:
 - `environment/automation/builtin-plans.js`
 - `environment/automation/plan-render.js`
 - `environment/automation/runtime.js`
+- `environment/domain-packs/index.js`
+- `environment/domain-packs/loader.js`
+- `environment/domain-packs/resolver.js`
 - `environment/flows/writing.js`
 
 ### Schema Tests
@@ -125,6 +128,7 @@ Active machine-owned schemas:
 - `export-alert-record.schema.json`
 - `connector-manifest.schema.json`
 - `connector-run-record.schema.json`
+- `connector-status.schema.json`
 - `automation-definition.schema.json`
 - `automation-run-record.schema.json`
 - `domain-config.schema.json`
@@ -173,6 +177,12 @@ Phase 4 Wave 2 adds runtime coverage for:
 - automation definition discovery plus run-ledger validation
 - reviewable digest/reminder artifacts with idempotent rerun guards
 - operator status surfacing of automation readiness and latest artifact paths
+
+Phase 4 Wave 3 adds runtime coverage for:
+- domain-pack registry and repo-owned pack loading
+- project-scoped activation plus invalid/unknown-pack fallback
+- preset-only flow surfacing for literature, experiment, results, and writing helpers
+- operator status surfacing of the active domain pack without inventing a new truth path
 
 ---
 

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "vibe-env.domain-pack.v1",
+  "packId": "omics",
+  "displayName": "Omics Research Pack",
+  "authorityBoundary": "presets-only",
+  "domainAssumptions": [
+    "Sequencing studies often depend on assay-sensitive preprocessing choices.",
+    "Sample provenance and batch-aware metadata matter for downstream interpretation."
+  ],
+  "supportedWorkflows": [
+    "literature",
+    "experiment",
+    "results",
+    "writing"
+  ],
+  "literatureSources": [
+    "PubMed",
+    "bioRxiv",
+    "GEO"
+  ],
+  "experimentPresets": {
+    "defaultFields": [
+      "organism",
+      "tissue",
+      "cell_count",
+      "sequencing_platform",
+      "library_chemistry"
+    ],
+    "commonConfounders": [
+      "batch_effect",
+      "dropout_rate",
+      "cell_cycle_phase",
+      "doublet_rate"
+    ]
+  },
+  "deliverableTemplates": [
+    "omics-standard",
+    "omics-advisor-pack"
+  ],
+  "expectedConnectors": [
+    "filesystem-export"
+  ],
+  "advisoryHints": [
+    "Call out batch handling explicitly in operator summaries and exports.",
+    "Keep cell-type annotation assumptions visible when results are provisional.",
+    "Surface sequencing chemistry and filtering choices alongside main findings."
+  ],
+  "doesNotModify": [
+    "claim truth",
+    "citation truth",
+    "gate semantics",
+    "kernel stop behavior"
+  ]
+}

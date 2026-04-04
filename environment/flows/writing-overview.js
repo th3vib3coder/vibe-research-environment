@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import { resolveInside, resolveProjectRoot } from '../control/_io.js';
+import { getWritingDomainPresets } from '../domain-packs/resolver.js';
 import { validateExportAlertRecord, validateExportRecord } from '../lib/export-records.js';
 import { validateExportSnapshot } from '../lib/export-snapshot.js';
 
@@ -12,31 +13,35 @@ const REBUTTAL_PACKS_SEGMENTS = ['.vibe-science-environment', 'writing', 'rebutt
 
 export async function getWritingOverview(projectPath, options = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
-  const snapshotData = await listSnapshots(projectRoot, normalizeLimit(options.snapshotLimit));
-  const exportData = await listJsonlRecords(
-    resolveInside(projectRoot, ...EXPORTS_SEGMENTS, 'export-log.jsonl'),
-    validateExportRecord,
-    'export record',
-    normalizeLimit(options.exportLimit),
-  );
-  const alertData = await listJsonlRecords(
-    resolveInside(projectRoot, ...EXPORTS_SEGMENTS, 'export-alerts.jsonl'),
-    validateExportAlertRecord,
-    'export alert',
-    normalizeLimit(options.alertLimit),
-  );
-  const advisorPackData = await listPackDirectories(
-    resolveInside(projectRoot, ...ADVISOR_PACKS_SEGMENTS),
-    'advisor',
-    normalizeLimit(options.packLimit),
-  );
-  const rebuttalPackData = await listPackDirectories(
-    resolveInside(projectRoot, ...REBUTTAL_PACKS_SEGMENTS),
-    'rebuttal',
-    normalizeLimit(options.packLimit),
-  );
+  const [snapshotData, exportData, alertData, advisorPackData, rebuttalPackData, domain] = await Promise.all([
+    listSnapshots(projectRoot, normalizeLimit(options.snapshotLimit)),
+    listJsonlRecords(
+      resolveInside(projectRoot, ...EXPORTS_SEGMENTS, 'export-log.jsonl'),
+      validateExportRecord,
+      'export record',
+      normalizeLimit(options.exportLimit),
+    ),
+    listJsonlRecords(
+      resolveInside(projectRoot, ...EXPORTS_SEGMENTS, 'export-alerts.jsonl'),
+      validateExportAlertRecord,
+      'export alert',
+      normalizeLimit(options.alertLimit),
+    ),
+    listPackDirectories(
+      resolveInside(projectRoot, ...ADVISOR_PACKS_SEGMENTS),
+      'advisor',
+      normalizeLimit(options.packLimit),
+    ),
+    listPackDirectories(
+      resolveInside(projectRoot, ...REBUTTAL_PACKS_SEGMENTS),
+      'rebuttal',
+      normalizeLimit(options.packLimit),
+    ),
+    getWritingDomainPresets(projectPath),
+  ]);
 
   return {
+    domain,
     totalSnapshots: snapshotData.total,
     snapshots: snapshotData.items,
     totalExports: exportData.total,

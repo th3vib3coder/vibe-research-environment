@@ -83,6 +83,9 @@ const builtInAutomationDefinitionFiles = [
   'stale-memory-reminder.automation.json',
   'export-warning-digest.automation.json'
 ];
+const builtInDomainPackFiles = [
+  'omics/pack.domain-pack.json'
+];
 
 const evalBenchmarkSpecs = [
   {
@@ -170,6 +173,14 @@ export default async function validateRuntimeContracts() {
     const definition = await readJson(definitionPath);
     const result = await validateWithSchema('environment/schemas/automation-definition.schema.json', definition);
     assert(result.ok, `Built-in automation definition ${definitionFile} failed schema validation: ${formatErrors(result.errors)}`);
+  }
+
+  for (const packFile of builtInDomainPackFiles) {
+    const packPath = `environment/domain-packs/${packFile}`;
+    assert(await pathExists(packPath), `Missing built-in domain pack: ${packFile}`);
+    const pack = await readJson(packPath);
+    const result = await validateWithSchema('environment/schemas/domain-pack.schema.json', pack);
+    assert(result.ok, `Built-in domain pack ${packFile} failed schema validation: ${formatErrors(result.errors)}`);
   }
 
   for (const taskFile of activeEvalTaskFiles) {

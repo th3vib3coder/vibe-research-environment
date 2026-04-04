@@ -14,6 +14,9 @@ export async function createFixtureProject(prefix) {
   await cp(path.join(repoRoot, 'environment', 'connectors'), path.join(root, 'environment', 'connectors'), {
     recursive: true
   });
+  await cp(path.join(repoRoot, 'environment', 'domain-packs'), path.join(root, 'environment', 'domain-packs'), {
+    recursive: true
+  });
   await cp(path.join(repoRoot, 'environment', 'templates'), path.join(root, 'environment', 'templates'), {
     recursive: true
   });

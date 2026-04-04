@@ -8,6 +8,7 @@ import {
   listManifests,
   updateManifest
 } from '../lib/manifest.js';
+import { getExperimentDomainPresets } from '../domain-packs/resolver.js';
 import { discoverBundlesByExperiment } from './results-discovery.js';
 
 const FLOW_NAME = 'experiment';
@@ -166,6 +167,7 @@ async function syncExperimentState(projectPath, manifests, options = {}) {
 }
 
 export async function registerExperiment(projectPath, data, options = {}) {
+  const domain = await getExperimentDomainPresets(projectPath);
   const manifest = await createManifest(projectPath, data);
   const synced = await syncExperimentState(projectPath, await listManifests(projectPath), {
     ...options,
@@ -173,12 +175,14 @@ export async function registerExperiment(projectPath, data, options = {}) {
   });
   return {
     manifest,
+    domain,
     summary: synced.summary,
     index: synced.index
   };
 }
 
 export async function updateExperiment(projectPath, experimentId, patch, options = {}) {
+  const domain = await getExperimentDomainPresets(projectPath);
   const manifest = await updateManifest(projectPath, experimentId, patch);
   const synced = await syncExperimentState(projectPath, await listManifests(projectPath), {
     ...options,
@@ -186,12 +190,14 @@ export async function updateExperiment(projectPath, experimentId, patch, options
   });
   return {
     manifest,
+    domain,
     summary: synced.summary,
     index: synced.index
   };
 }
 
 export async function listExperiments(projectPath, filters = {}, options = {}) {
+  const domain = await getExperimentDomainPresets(projectPath);
   const manifests = await listManifests(projectPath);
   const synced = await syncExperimentState(projectPath, manifests, {
     ...options,
@@ -203,6 +209,7 @@ export async function listExperiments(projectPath, filters = {}, options = {}) {
   const visible = limit == null ? filtered : filtered.slice(0, limit);
 
   return {
+    domain,
     experiments: await buildViewSummaries(projectPath, visible),
     summary: synced.summary,
     index: synced.index
@@ -210,6 +217,7 @@ export async function listExperiments(projectPath, filters = {}, options = {}) {
 }
 
 export async function surfaceBlockers(projectPath, options = {}) {
+  const domain = await getExperimentDomainPresets(projectPath);
   const manifests = await listManifests(projectPath);
   const synced = await syncExperimentState(projectPath, manifests, {
     ...options,
@@ -234,6 +242,7 @@ export async function surfaceBlockers(projectPath, options = {}) {
   const visible = limit == null ? blockers : blockers.slice(0, limit);
 
   return {
+    domain,
     blockers: await buildViewSummaries(projectPath, visible),
     blockerMessages: synced.blockers,
     summary: synced.summary,
