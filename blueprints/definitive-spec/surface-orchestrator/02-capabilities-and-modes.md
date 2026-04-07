@@ -37,6 +37,36 @@ The future orchestrator may provide all of the following:
 
 ---
 
+## Mode To Lane Mapping
+
+Modes are not the same thing as lanes.
+
+Modes describe the orchestrator's current behavioral stance.
+Lanes describe which bounded worker role is currently doing the work.
+
+The default mapping should be:
+
+| Mode | Primary lane |
+|------|--------------|
+| `intake` | `Coordination` |
+| `brainstorm` | `Coordination` |
+| `execute` | `Execution` |
+| `supervise` | `Coordination` |
+| `review` | `Review` |
+| `report` | `Reporting` |
+| `monitor` | `Monitoring` |
+| `recover` | `Coordination` |
+
+Notes:
+- one lane may serve multiple modes
+- a mode switch does not necessarily imply a lane switch
+- `Coordination` is the default lane for routing, shaping, escalation, and
+  recovery decisions
+- `Execution`, `Review`, `Reporting`, and `Monitoring` are specialized lanes,
+  not full conversational personas
+
+---
+
 ## Mode Rules
 
 1. `brainstorm` may generate ideas, but it must label them as non-validated

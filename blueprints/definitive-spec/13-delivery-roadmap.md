@@ -174,6 +174,11 @@ Closeout:
 - Use Claude Code Scheduled Tasks for durable automation
 - Add richer eval storage only after control plane and base flows are stable
 
+With Phase 1-4 now closed, that surface-orchestrator prerequisite is satisfied.
+The next planning frontier is the companion orchestrator Phase 0 contract-freeze
+track under `surface-orchestrator/`, including continuity-profile and
+context-assembly semantics above VRE.
+
 ---
 
 ## What We Deliberately Avoid

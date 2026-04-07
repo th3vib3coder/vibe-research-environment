@@ -8,6 +8,30 @@ Maintain human-readable project memory that researchers can open in any text edi
 
 ---
 
+## Memory vs Retrieval vs Future Continuity
+
+The repository now has three related but different ideas that must not be
+collapsed into one "memory" concept:
+
+- **memory mirrors**: human-readable project mirrors owned by VRE
+- **artifact retrieval**: bundles, packs, decisions, and other historical
+  surfaces that can be looked up later
+- **future orchestrator continuity**: stable operator/project preferences plus
+  dynamic operational context assembled above VRE
+
+This file owns only the first item.
+
+It does **not** define:
+- truth
+- generic semantic retrieval over all project artifacts
+- a future orchestrator continuity profile
+
+That future continuity layer may read VRE mirrors, but it does not replace
+their ownership or sync discipline. See
+[surface-orchestrator/11-continuity-profiles-and-context-assembly.md](./surface-orchestrator/11-continuity-profiles-and-context-assembly.md).
+
+---
+
 ## The Four Mirror Rules
 
 ### Rule 1: Mirror, Do Not Compete

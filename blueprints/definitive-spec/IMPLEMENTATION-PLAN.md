@@ -63,9 +63,9 @@ The plan sets currently on disk are:
 
 - [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
 
-This spec set is intentionally tracked here for planning continuity, but it is
-not part of the active Phase 1-3 execution path. It defines a future
-user-facing orchestration layer above VRE and below channel/UI surfaces.
+This spec set is intentionally tracked here for planning continuity. It is not
+part of the closed Phase 1-4 runtime, but it is now the active **next planning
+frontier** above VRE and below any future UI/channel surfaces.
 
 ---
 
@@ -75,8 +75,11 @@ user-facing orchestration layer above VRE and below channel/UI surfaces.
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3 is closed with saved evidence: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4 is closed with saved evidence: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
-- Surface orchestrator is preserved as a companion future overlay spec:
+- Surface orchestrator is the active companion pre-planning track:
   see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
+- The recommended next planning move is orchestrator Phase 0 contract freeze:
+  state files, continuity-profile and context modes, lane policy, status split,
+  provider strategy, and recovery contract
 
 ---
 

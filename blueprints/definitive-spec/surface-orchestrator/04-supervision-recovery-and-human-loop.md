@@ -36,9 +36,11 @@ The orchestrator should classify failure before reacting:
 - token cooldown or budget pause
 - tool failure
 - dependency unavailable
+- contract mismatch
 - state conflict or corruption
 - ambiguous user request
 - blocked scientific prerequisite
+- lane drift
 
 Different failure classes should trigger different recovery policies.
 
@@ -59,6 +61,15 @@ Forbidden behaviors:
 - silently dropping blocked work
 - retrying forever without visibility
 - converting a blocked scientific prerequisite into a fake success
+
+This file is the **authoritative source** for:
+- autonomy levels
+- failure classes
+- recovery behaviors
+- human-loop escalation semantics
+
+Other orchestrator documents may reference these rules, but should not redefine
+them with diverging lists.
 
 ---
 

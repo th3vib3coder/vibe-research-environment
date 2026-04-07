@@ -21,7 +21,7 @@ The kernel remains authoritative for:
 
 ## Current Status
 
-The repository is currently closed through **Phase 3**.
+The repository is currently closed through **Phase 4**.
 
 - **Phase 1:** control plane, literature flow, experiment flow, baseline evals
   and compatibility checks
@@ -29,11 +29,20 @@ The repository is currently closed through **Phase 3**.
   and session digests
 - **Phase 3:** export-safe writing handoff, frozen export snapshots,
   append-only export alerts, `/flow-writing`, advisor packs, and rebuttal packs
+- **Phase 4:** connector substrate, automation substrate, domain-pack runtime,
+  `omics` presets, hardening, validators, and closeout evidence
 
 Closeout dossiers:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
 - [Phase 2 Closeout](blueprints/definitive-spec/implementation-plan/phase2-closeout.md)
 - [Phase 3 Closeout](blueprints/definitive-spec/implementation-plan/phase3-closeout.md)
+- [Phase 4 Closeout](blueprints/definitive-spec/implementation-plan/phase4-closeout.md)
+
+Current design frontier:
+- [Surface Orchestrator Layer](blueprints/definitive-spec/surface-orchestrator/00-index.md)
+  — the future coordination shell above VRE
+  with current planning focused on continuity profiles, recall modes, and
+  explicit context assembly above VRE
 
 ## What You Can Run
 
@@ -44,6 +53,10 @@ Operator-facing command surfaces currently in repo:
 - [`/sync-memory`](commands/sync-memory.md)
 - [`/flow-results`](commands/flow-results.md)
 - [`/flow-writing`](commands/flow-writing.md)
+- [`/weekly-digest`](commands/weekly-digest.md)
+- [`/stale-memory-reminder`](commands/stale-memory-reminder.md)
+- [`/export-warning-digest`](commands/export-warning-digest.md)
+- [`/automation-status`](commands/automation-status.md)
 
 ## Repository Layout
 
@@ -102,6 +115,7 @@ The current benchmark set covers:
 - Phase 1 shell baseline
 - Phase 2 memory and result packaging
 - Phase 3 writing and export-safe deliverables
+- Phase 4 connectors, automation, and domain-pack evidence
 
 ## Spec Entry Points
 
@@ -112,6 +126,7 @@ The current benchmark set covers:
 - [Writing And Export](blueprints/definitive-spec/07-writing-and-export.md)
 - [Install And Lifecycle](blueprints/definitive-spec/09-install-and-lifecycle.md)
 - [Testing Strategy](blueprints/definitive-spec/14-testing-strategy.md)
+- [Surface Orchestrator Layer](blueprints/definitive-spec/surface-orchestrator/00-index.md)
 
 ## Runtime Boundary
 

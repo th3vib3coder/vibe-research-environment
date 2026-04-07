@@ -53,10 +53,12 @@ Read in numerical order. Each document is self-contained but builds on previous 
 These are intentionally separate from the numbered core reading order:
 
 - [Surface Orchestrator Layer](./surface-orchestrator/00-index.md)
+- continuity-profile and context-assembly planning now live inside that
+  orchestrator spec set
 
 The surface orchestrator is a future user-facing coordination layer above VRE.
-It is designed now so we do not lose the idea, but it is not part of the
-active Phase 1-3 implementation path.
+It is not part of the closed Phase 1-4 runtime, but it is now the active
+companion pre-planning track for what comes next above VRE.
 
 ---
 
