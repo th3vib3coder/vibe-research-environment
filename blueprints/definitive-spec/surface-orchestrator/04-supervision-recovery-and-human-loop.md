@@ -28,6 +28,15 @@ Future implementations should support explicit autonomy levels:
 
 The chosen level is an operator preference, not a scientific fact.
 
+Precedence rule:
+1. lane policy override
+2. continuity-profile default
+3. system default
+
+That means the continuity profile may express the operator's default autonomy
+preference, but lane policies remain the authoritative per-lane override
+surface.
+
 ---
 
 ## Failure Classification

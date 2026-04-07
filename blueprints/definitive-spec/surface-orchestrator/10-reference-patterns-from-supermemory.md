@@ -10,34 +10,22 @@ memory authority or a hosted dependency as the foundation of our system.
 
 This is a design filter, not an implementation plan.
 
-It exists because `supermemory` is unusually relevant to our next step:
-- it treats continuity as a first-class problem
-- it distinguishes profile context from query retrieval
-- it exposes multiple integration shapes: API, middleware, MCP, and router
-- it sits closer to our continuity and recall problems than the shell-heavy
-  repos we inspected before
+It exists because `supermemory` is unusually relevant to our next step: it
+treats continuity as a first-class problem, distinguishes profile context from
+query retrieval, and sits closer to our recall/continuity problem than the
+shell-heavy repos we inspected before.
 
 Reference repo surfaces inspected (docs + runtime code):
-- `apps/docs/concepts/memory-vs-rag.mdx`
-- `apps/docs/concepts/how-it-works.mdx`
-- `apps/docs/concepts/user-profiles.mdx`
-- `apps/docs/concepts/graph-memory.mdx`
-- `apps/docs/user-profiles/api.mdx`
-- `apps/docs/user-profiles/examples.mdx`
-- `apps/docs/memory-router/overview.mdx`
-- `apps/docs/connectors/overview.mdx`
-- `packages/tools/src/shared/memory-client.ts` — actual API client
-- `packages/tools/src/shared/prompt-builder.ts` — context assembly
-- `packages/tools/src/shared/cache.ts` — per-turn LRU cache
-- `packages/tools/src/shared/context.ts` — client factory
-- `packages/tools/src/shared/types.ts` — MemoryMode, ProfileStructure
-- `packages/tools/src/vercel/middleware.ts` — transparent injection
-- `packages/tools/src/openai/middleware.ts` — transparent injection
-- `packages/tools/src/claude-memory.ts` — Claude file-system adapter
-- `packages/lib/api.ts` — backend API schema (Zod)
-- `packages/validation/api.ts` — validation schemas
-- `apps/mcp/src/server.ts` — MCP tool surface
-- `packages/memory-graph/src/` — visualization package
+- docs: `memory-vs-rag`, `how-it-works`, `user-profiles`, `graph-memory`,
+  `memory-router`, `connectors`
+- SDK/runtime: `memory-client.ts`, `prompt-builder.ts`, `cache.ts`,
+  `context.ts`, `types.ts`
+- transparent integrations: `vercel/middleware.ts`,
+  `openai/middleware.ts`, `claude-memory.ts`
+- backend contracts exposed in client packages: `packages/lib/api.ts`,
+  `packages/validation/api.ts`
+- tool surface and visualization: `apps/mcp/src/server.ts`,
+  `packages/memory-graph/src/`
 
 ---
 
@@ -56,6 +44,12 @@ and search engine live on a hosted Cloudflare service that is NOT open source.
 no local implementation to fork or adapt. Everything we adopt must be built from
 scratch on top of VRE state surfaces.
 
+**Important clarification:** the repo's many integration shapes do not represent
+separate memory engines. API client, middleware, MCP server, router, and
+"Claude memory" adapter are all client faces over the same hosted backend.
+That means the reusable value for us is the contract shape, not the transport
+variety by itself.
+
 **Implication for the "memory graph" package:** `packages/memory-graph/` is
 purely a **canvas visualization** (renderer, hit-test, simulation, viewport).
 It is NOT a graph database or a local knowledge store.
@@ -68,11 +62,10 @@ It is NOT a graph database or a local knowledge store.
 truth with a hosted memory platform.
 
 What it does tell us is more specific and more useful:
-
-1. continuity context should be assembled deliberately, not improvised
-2. stable profile context and query recall are different things
-3. one-call context assembly is a real product advantage
-4. per-turn caching matters once a coordinator loops across tools and lanes
+- continuity context should be assembled deliberately, not improvised
+- stable profile context and query recall are different things
+- one-call context assembly is a real product advantage
+- per-turn caching matters once a coordinator loops across tools and lanes
 
 The right adoption path is therefore:
 - keep truth in the kernel
@@ -196,7 +189,24 @@ image, video, webpage, code. This matters for relevance ranking.
   prioritize appropriately (e.g., recent decisions rank higher than old mirror
   summaries for a resume task)
 
-### 9. Separate Tools For Save, Recall, And Context
+### 9. Deduplication Has A Declared Priority
+
+In `packages/tools/src/tools-shared.ts`, supermemory does not merely deduplicate
+"somehow". It prefers higher-value surfaces in a fixed order:
+- static profile memories first
+- dynamic memories second
+- search results last
+
+**Mapped into our architecture:**
+- stable continuity profile should win over dynamic context when they say the
+  same thing
+- dynamic VRE-derived context should win over recall hits
+- recall hits should fill gaps, not override fresher operational state
+
+This is a better contract than generic "dedup by content" because it explains
+which source survives and why.
+
+### 10. Separate Tools For Save, Recall, And Context
 
 The MCP server exposes distinct surfaces:
 - `memory`
@@ -208,19 +218,6 @@ Mapped into our architecture:
   "do-everything memory" surface
 - profile retrieval, recall lookup, and prompt/context assembly should stay
   separate concerns even when composed together
-
----
-
-## What Maps Cleanly To Our System
-
-| Supermemory idea | Our equivalent |
-|------------------|----------------|
-| static profile | stable continuity profile for operator/project preferences |
-| dynamic profile | live operational context derived from VRE state |
-| profile + query response | `profile`, `query`, `full` context modes |
-| container tag | project / thread / queue-task scope |
-| per-turn cache | per-turn or per-task continuity cache |
-| memory tool + recall tool + context prompt | future distinct orchestrator helpers for profile, recall, and assembled context |
 
 ---
 
@@ -327,18 +324,24 @@ The eventual northbound surface should likely expose distinct concepts for:
 
 Even if a UI later hides that distinction from the user.
 
+### 6. Deduplication Should Be Ordered, Not Generic
+
+If continuity assembly combines stable profile, dynamic context, and recall
+hits, the contract should declare source precedence explicitly instead of
+leaving "duplicate handling" to implementation taste.
+
 ---
 
 ## Open Questions For Phase 0
 
-1. Which stable preferences belong in an orchestrator-owned continuity profile
-   versus VRE or kernel state?
+1. Which remaining stable preferences belong in an orchestrator-owned
+   continuity profile versus VRE or kernel state, now that domain-pack
+   selection and per-lane overrides are already assigned elsewhere?
 2. Which live state fields belong in dynamic continuity context versus raw
    `/flow-status`?
-3. Which recall sources are allowed in `query` mode on day one?
-4. When continuity recall disagrees with current VRE state, how is staleness
-   labeled and who wins?
-5. Is the first continuity cache purely in-memory, or does any part become
+3. Which recall sources are allowed in `query` mode on day one, and how is
+   staleness labeled when recall disagrees with current VRE state?
+4. Is the first continuity cache purely in-memory, or does any part become
    durable on disk?
 
 ---

@@ -121,6 +121,10 @@ At minimum, the orchestrator should eventually own:
 
 Without this, the orchestrator collapses back into an opaque assistant.
 
+Lane policy is the authoritative per-lane override surface.
+If it conflicts with the continuity profile's default autonomy preference, lane
+policy wins.
+
 ---
 
 ## Durable State Shape
@@ -136,6 +140,7 @@ The authoritative file inventory lives in
 |------|---------|
 | `router-session.json` | current mode, objective, active thread, current target, escalation state |
 | `continuity-profile.json` | durable non-truth operator and project preferences used for continuity assembly |
+| `continuity-profile-history.jsonl` | append-only audit log of continuity-profile updates and forget actions |
 | `run-queue.jsonl` | atomic tasks, owner lane, status, dependencies, timestamps |
 | `lane-policies.json` | per-lane model, autonomy, retry, and escalation ceilings |
 | `lane-runs.jsonl` | each lane invocation, linked queue item, outcome, artifact refs |

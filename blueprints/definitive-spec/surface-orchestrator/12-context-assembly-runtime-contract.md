@@ -34,6 +34,17 @@ When the assembled context exceeds the budget:
 2. Truncate dynamic context details second (keep blockers, drop history)
 3. Never truncate the stable profile (it is the cheapest and most reusable)
 
+`maxTokens` is the assembler's sub-budget, not the total prompt budget.
+The full prompt budget must be arbitrated by an upstream coordinator that knows
+about all context injectors:
+- kernel-owned base context
+- VRE command or helper context
+- orchestrator continuity context
+
+If no global budget coordinator exists yet, Phase 0 should use a conservative
+ceiling for continuity assembly rather than assume it owns the full model
+window.
+
 This budget analysis should be re-measured after the first coordinator runtime
 exists, not assumed to be final.
 
@@ -55,6 +66,7 @@ assembleContinuityContext(projectPath, {
   threadId,
   queueTaskId,
   queryText,
+  maxTokens,
   limit,
 })
 ```
@@ -68,6 +80,8 @@ Candidate return shape:
   "retrievalHits": [],
   "sourceRefs": [],
   "warnings": [],
+  "totalTokens": 0,
+  "truncated": false,
   "assembledAt": "2026-04-07T10:00:00Z"
 }
 ```
@@ -76,6 +90,7 @@ Future build surfaces:
 - `environment/orchestrator/continuity-profile.js`
 - `environment/orchestrator/context-assembly.js`
 - `environment/schemas/orchestrator-continuity-profile.schema.json`
+- `environment/schemas/orchestrator-continuity-update.schema.json`
 
 ---
 
@@ -129,12 +144,25 @@ This gives us undo capability and "explain why this changed" for free, inspired
 by supermemory's version chain model (`updates`, `extends`, `derives` relations
 in their memory entries).
 
+Destination rule:
+- `continuity-profile.json` stores current effective state only
+- `continuity-profile-history.jsonl` stores append-only update and forget
+  records
+
+This keeps the live profile compact while preserving auditable history.
+
 ### Explicit Forget
 
 The stable profile should support explicit "forget this preference" with a
 reason, inspired by supermemory's `memoryForget` tool with `reason` field.
 The forgotten preference should be soft-marked (not hard-deleted) so the
 history remains auditable.
+
+At minimum, the soft-forget record should preserve:
+- prior value
+- `forgetReason`
+- `forgottenAt`
+- actor (`operator` or proposed-by-orchestrator)
 
 ### Anti-Patterns For Updates
 
@@ -186,7 +214,12 @@ with an explicit `deduplicateMemories()` pass before prompt assembly
 Our assembler should do the same:
 - deduplicate across stable profile, dynamic context, and recall hits BEFORE
   formatting
-- dedup key should be content-based (normalized text), not source-based
+- when duplicates overlap, keep them in this order:
+  stable profile first, dynamic context second, recall hits last
+- dedup key should be content-based, not source-based
+- in Phase 0, "normalized text" means deterministic textual normalization only
+  (for example trim, and optionally repeated-whitespace collapse if declared)
+- fuzzy or semantic dedup is explicitly out of scope for the first contract
 - log the dedup count so we can measure redundancy over time
 
 This is cheap and prevents the assembled context from wasting tokens on
@@ -209,6 +242,8 @@ Our equivalent:
 - the formatter is overridable so different lanes can format differently
   (e.g., concise for reporting, detailed for execution)
 - the default formatter should produce markdown sections with source labels
+- the formatter should receive source type metadata so ordering and truncation
+  can prefer decision logs over old mirror summaries when appropriate
 
 This keeps assembly and formatting as separate concerns.
 
@@ -230,6 +265,10 @@ stable continuity profile through an explicit capture path:
 
 This is the opposite of ambient capture: it is **confirmed, explicit,
 auditable preference ingestion**.
+
+The exact detection mechanism is still a Phase 0 open question.
+It may be operator-invoked, rule-based, classifier-assisted, or proposed by a
+lane, but it must never silently persist a preference without visible review.
 
 ---
 

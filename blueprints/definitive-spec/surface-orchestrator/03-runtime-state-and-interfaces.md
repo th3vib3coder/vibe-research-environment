@@ -78,6 +78,7 @@ Continuity-profile semantics are defined in
 Candidate machine-owned files:
 - `router-session.json`
 - `continuity-profile.json`
+- `continuity-profile-history.jsonl`
 - `run-queue.jsonl`
 - `lane-policies.json`
 - `lane-runs.jsonl`

@@ -45,7 +45,7 @@ truth.
 
 Examples:
 - preferred reporting verbosity
-- preferred autonomy level
+- default autonomy preference
 - preferred review strictness
 - quiet hours and delivery windows
 - primary audience (`advisor`, `coauthors`, `self`)
@@ -75,6 +75,14 @@ Examples:
 Stable continuity should persist.
 Dynamic continuity should be derived fresh and decay naturally.
 
+Autonomy precedence:
+1. lane policy override
+2. continuity-profile default
+3. system default
+
+The continuity profile may declare the operator's default autonomy preference,
+but it does not replace per-lane policy.
+
 ---
 
 ## Proposed Durable Surface
@@ -91,7 +99,7 @@ Candidate shape:
 {
   "schemaVersion": "vibe-orch.continuity-profile.v1",
   "operator": {
-    "autonomyPreference": "supervised",
+    "defaultAutonomyPreference": "supervised",
     "reportVerbosity": "concise",
     "reviewStrictness": "high",
     "quietHoursLocal": ["22:00-07:00"]
@@ -138,6 +146,13 @@ forbids scraping files when helpers exist. The context assembler should call:
 - `getAutomationOverview(projectPath)` — when automation installed
 - `getDomainPackOverview(projectPath)` — when domain packs installed
 
+Additional discipline:
+- the assembler should prefer read-only helpers, not convenience aggregators
+  that may bootstrap missing state as a side effect
+- if a required VRE surface only exists today through a bootstrap-on-read
+  helper, Phase 0 should add a read-only variant before the assembler depends
+  on it
+
 Primary orchestrator-owned inputs (read directly because we own them):
 - `run-queue.jsonl`
 - `lane-runs.jsonl`
@@ -160,6 +175,14 @@ as:
 - writing packs
 - export alerts
 - future orchestrator lane-run summaries
+
+Day 1 rule:
+- query recall should start with helper-backed summary surfaces only
+- writing packs and export alerts should come through
+  `getWritingOverview(projectPath, ...)`
+- experiment bundles should come through `getResultsOverview(projectPath, ...)`
+- free-text recall over raw mirrors or arbitrary JSONL logs is a later surface,
+  not a Phase 0 assumption
 
 But query recall remains:
 - historical
