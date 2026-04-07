@@ -166,6 +166,20 @@ But query recall remains:
 - attributable
 - subordinate to current VRE state
 
+Each recall hit should carry source type metadata (inspired by supermemory's
+content type awareness across text/pdf/code/etc). Our source types:
+- `memory-mirror` — human-readable orientation
+- `decision-log` — control-plane workflow decisions
+- `attempt-summary` — past run outcomes
+- `experiment-bundle` — packaged results
+- `writing-pack` — advisor/rebuttal deliverables
+- `export-alert` — post-export warnings
+- `lane-run` — orchestrator-owned execution history
+
+Source type matters for relevance ranking: recent decisions rank higher than
+old mirror summaries for a resume task. The formatter should use source type
+to prioritize, not just recency.
+
 If recall conflicts with current validated state, the current state wins and
 the recall hit is labeled stale or historical.
 
@@ -219,165 +233,9 @@ Typical use:
 
 ---
 
-## Context Budget
+## Runtime Mechanics
 
-The VRE baseline context measurement (Phase 1) showed ~20K tokens for
-kernel-owned base (CLAUDE.md + SKILL.md + SessionStart). Adding orchestrator
-continuity on top:
+Context budget, helper API, caching, deduplication, formatting, update rules,
+and VRE relationship are defined in the companion document:
 
-| Surface | Estimated cost | Notes |
-|---------|---------------|-------|
-| Stable profile | ~200-500 tokens | Small JSON, rarely changes |
-| Dynamic context | ~1-3K tokens | Derived from VRE helpers, bounded by query limits |
-| Query recall hits | ~2-8K tokens | Variable, must be limit-capped |
-| Per-turn cache overhead | 0 (in-memory) | No token cost, only compute |
-
-In `full` mode, worst case is ~12K additional tokens. On a 200K context model
-this is manageable. On a 100K model it is ~12% of budget.
-
-**Truncation rule:** The context assembler MUST accept a `maxTokens` parameter.
-When the assembled context exceeds the budget:
-1. Truncate recall hits first (least critical)
-2. Truncate dynamic context details second (keep blockers, drop history)
-3. Never truncate the stable profile (it is the cheapest and most reusable)
-
-This budget analysis should be re-measured after the first coordinator runtime
-exists, not assumed to be final.
-
----
-
-## Candidate Helper Surface
-
-Phase 0 should freeze a helper shape roughly like this.
-
-**Note:** Parameters `laneId`, `threadId`, and `queueTaskId` depend on the
-queue and lane contracts from doc 07, which are not yet frozen. This signature
-is a candidate shape. Final parameter names will be settled when the queue
-contract freezes.
-
-```ts
-assembleContinuityContext(projectPath, {
-  mode: "profile" | "query" | "full",
-  laneId,
-  threadId,
-  queueTaskId,
-  queryText,
-  limit,
-})
-```
-
-Candidate return shape:
-
-```json
-{
-  "stableProfile": {},
-  "dynamicContext": {},
-  "retrievalHits": [],
-  "sourceRefs": [],
-  "warnings": [],
-  "assembledAt": "2026-04-07T10:00:00Z"
-}
-```
-
-Future build surfaces:
-- `environment/orchestrator/continuity-profile.js`
-- `environment/orchestrator/context-assembly.js`
-- `environment/schemas/orchestrator-continuity-profile.schema.json`
-
----
-
-## Per-Turn Cache Rule
-
-Context assembly should support a non-authoritative per-turn cache.
-
-**Simplicity principle from the supermemory audit:** The actual supermemory
-per-turn cache (`packages/tools/src/shared/cache.ts`) is a 74-line LRU with
-max 100 entries and no TTL. It works. We should not over-engineer this.
-
-The cache key should include:
-- project scope
-- mode
-- lane id or thread id
-- normalized query text
-
-That is sufficient. The supermemory reference confirms that a simple
-`scope:mode:query` key works in practice.
-
-The cache should be invalidated when:
-- a new user turn begins
-- the mode or lane changes
-
-We should NOT add field-level change detection on `session.json` as an
-invalidation trigger — that would invalidate on every middleware run and make
-the cache useless. If the cache is wrong after a VRE state change, the next
-fresh assembly will fix it. The cache is disposable by design.
-
-The cache is a performance optimization, not a source of truth.
-
----
-
-## Update And Forgetting Rules
-
-### Stable Profile Updates
-
-Stable continuity profile should change only through:
-- explicit operator choice
-- explicit orchestrator-owned settings changes
-- future declared update flows with audit visibility
-
-It should **not** change because:
-- every user utterance is auto-captured
-- one summary guessed a new preference
-- a lane hallucinated an operator habit
-
-### Dynamic Context Decay
-
-Dynamic continuity is derived, so it can decay naturally through source
-freshness:
-- resolved blockers disappear
-- old queue failures move to history
-- stale mirror warnings remain warnings, not active context forever
-
-This gives us the useful part of "automatic forgetting" without inventing a
-hidden memory authority.
-
----
-
-## Relationship To VRE Memory Layer
-
-VRE memory mirrors remain:
-- human-readable
-- filesystem-first
-- explicitly synced
-- non-canonical for truth and resume
-
-The orchestrator continuity contract is different:
-- it is northbound
-- it assembles context for coordination
-- it can use mirrors as one source among several
-- it does not redefine mirror ownership or sync rules
-
-That means:
-- VRE memory stays mirror-first
-- orchestrator continuity stays coordination-first
-
----
-
-## What We Explicitly Avoid
-
-1. auto-saving every chat turn into durable continuity state
-2. using inferred or derived memories as claim truth
-3. rebuilding continuity through a hidden proxy instead of explicit helpers
-4. letting continuity recall outrank current VRE state
-5. turning one convenience cache into a shadow database
-
----
-
-## Invariants
-
-1. Continuity is not truth.
-2. Stable profile and dynamic context remain distinct.
-3. `profile`, `query`, and `full` are separate modes with separate semantics.
-4. Current VRE state wins over historical recall.
-5. Context caching is explicit, bounded, and disposable.
-6. Stable profile changes require visible ownership, not ambient chat capture.
+[12 — Context Assembly Runtime Contract](./12-context-assembly-runtime-contract.md)

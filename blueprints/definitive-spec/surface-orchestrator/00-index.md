@@ -35,7 +35,8 @@ system.
 | 08 | [Provider and Runtime Strategy](./08-provider-and-runtime-strategy.md) | monthly-plan-first provider policy and host pattern |
 | 09 | [Reference Patterns from Repo Forensics](./09-reference-patterns-from-repo-forensics.md) | what other agent repos teach us about this layer |
 | 10 | [Reference Patterns from Supermemory](./10-reference-patterns-from-supermemory.md) | continuity-profile, recall, and context-assembly ideas worth importing |
-| 11 | [Continuity Profiles and Context Assembly](./11-continuity-profiles-and-context-assembly.md) | the concrete continuity contract above VRE and below future UI |
+| 11 | [Continuity Profiles and Context Assembly](./11-continuity-profiles-and-context-assembly.md) | stable profile, dynamic context, recall modes, source types |
+| 12 | [Context Assembly Runtime Contract](./12-context-assembly-runtime-contract.md) | budget, helper API, caching, dedup, formatting, update rules |
 
 ---
 

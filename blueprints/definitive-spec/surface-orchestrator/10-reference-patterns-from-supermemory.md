@@ -152,7 +152,51 @@ Mapped into our architecture:
   context scopes
 - continuity context should always declare which scope it was assembled for
 
-### 6. Separate Tools For Save, Recall, And Context
+### 6. Memory Version Chains
+
+Supermemory's backend data model (`packages/validation/api.ts` lines 690-760)
+tracks memory evolution through version chains:
+- each memory entry can have `parents` and `children`
+- relations are typed: `updates`, `extends`, `derives`
+- version distance is tracked (-1 for direct parent, +1 for direct child)
+
+Example: "Dhravya is working on a patent at Cloudflare" → (updates) →
+"Dhravya has filed the patent successfully."
+
+**Mapped into our architecture:**
+- the stable continuity profile should not just store current preferences — it
+  should record WHY a preference changed (update reason + previous value)
+- this is NOT the same as kernel claim versioning; it is operational preference
+  history
+- the version chain gives us "undo" and "explain why this changed" for free
+
+### 7. Explicit Forget With Reason
+
+The MCP server exposes `memoryForget` with an optional `reason` field. The
+backend marks the memory as `isForgotten` with `forgetReason` — soft delete,
+not hard delete.
+
+**Mapped into our architecture:**
+- stable profile updates should support explicit "forget this preference" with
+  a reason
+- the reason should be logged in the profile update history
+- this is the counterpart to "explicit confirmed capture" — both directions
+  (add and remove) should be auditable
+
+### 8. Source Type Awareness In Recall
+
+Supermemory's validation schemas distinguish content types: text, pdf, tweet,
+image, video, webpage, code. This matters for relevance ranking.
+
+**Mapped into our architecture:**
+- our query recall sources are not all equal: memory mirrors, decision logs,
+  attempt summaries, experiment bundles, writing packs, export alerts all have
+  different relevance for different modes
+- the context assembler should carry source type metadata so the formatter can
+  prioritize appropriately (e.g., recent decisions rank higher than old mirror
+  summaries for a resume task)
+
+### 9. Separate Tools For Save, Recall, And Context
 
 The MCP server exposes distinct surfaces:
 - `memory`
