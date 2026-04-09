@@ -83,6 +83,15 @@ Autonomy precedence:
 The continuity profile may declare the operator's default autonomy preference,
 but it does not replace per-lane policy.
 
+API-fallback precedence follows the same pattern:
+1. lane policy override
+2. continuity-profile default
+3. system default
+
+The continuity profile may declare a default preference, but the lane binding
+remains authoritative for whether a specific lane may fall back to API-backed
+execution.
+
 ---
 
 ## Proposed Durable Surface
@@ -110,7 +119,7 @@ Candidate shape:
   },
   "runtime": {
     "preferredLaneRoles": ["primary-execution", "primary-review"],
-    "allowApiFallback": false
+    "defaultAllowApiFallback": false
   },
   "updatedAt": "2026-04-07T10:00:00Z"
 }

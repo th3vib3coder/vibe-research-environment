@@ -81,8 +81,8 @@ write only through explicitly owned outer-project surfaces.
 ## Invariants
 
 1. The orchestrator owns supervision and communication, not scientific truth.
-2. Every southbound action must map to a known VRE contract or owned future
-   contract.
+2. Every southbound action must map to a known VRE contract or a declared
+   orchestrator-owned contract that has already been frozen in this spec set.
 3. Human-facing convenience never justifies bypassing kernel or VRE rules.
 4. The orchestrator may pause, escalate, or retry, but it may not silently
    redefine what counts as evidence or export-safe output.

@@ -29,7 +29,7 @@ system.
 | 02 | [Capabilities and Modes](./02-capabilities-and-modes.md) | what the orchestrator does for the operator |
 | 03 | [Runtime, State, and Interfaces](./03-runtime-state-and-interfaces.md) | state zones, southbound contracts, runtime edges |
 | 04 | [Supervision, Recovery, and Human Loop](./04-supervision-recovery-and-human-loop.md) | autonomy, retry, escalation, review lanes |
-| 05 | [Roadmap and Open Questions](./05-roadmap-and-open-questions.md) | next planning move, build stages, unresolved decisions |
+| 05 | [Roadmap and Phase 0 Decisions](./05-roadmap-and-open-questions.md) | next planning move, build stages, and now-closed Phase 0 choices |
 | 06 | [Reference Patterns from Feynman](./06-reference-patterns-from-feynman.md) | design filter for product-shell ideas worth importing |
 | 07 | [Structure and Build Order](./07-orchestrator-structure-and-build-order.md) | architecture shape of the coordination runtime |
 | 08 | [Provider and Runtime Strategy](./08-provider-and-runtime-strategy.md) | monthly-plan-first provider policy and host pattern |

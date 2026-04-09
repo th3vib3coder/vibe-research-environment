@@ -1,4 +1,4 @@
-# Surface Orchestrator Layer — Roadmap and Open Questions
+# Surface Orchestrator Layer — Roadmap and Phase 0 Decisions
 
 ---
 
@@ -86,17 +86,35 @@ Before implementation starts, we still need to freeze:
 
 ---
 
-## Open Questions
+## Phase 0 Decisions Now Closed
 
-1. Should the orchestrator live in the same repo as VRE or as its own repo?
-2. What is the minimum operator shell above `/flow-status` and existing VRE
-   summaries?
-3. Which lane/provider combinations are allowed on day one?
-4. Which actions are always human-gated, even under bounded autonomy?
-5. What is the minimum durable state needed to resume interrupted work cleanly?
-6. Which future delivery channel comes first after the current chat surface?
-7. Should the first runtime live inside this repo or in a sibling coordinator
-   repo once contracts are frozen?
+The following decisions are now closed for the first runtime:
+
+1. Repo and runtime location
+   Current decision: the first orchestrator runtime lives in the same repo as
+   VRE and is implemented locally inside this repo. Extraction to a sibling
+   repo is a later optimization, not a Phase 0 requirement.
+2. Minimum operator shell
+   Current decision: use a dedicated minimal shell above `/flow-status` and
+   existing VRE summaries. It should expose queue, lane, escalation, recovery,
+   and next-action state, but should not become a dashboard.
+3. First delivery channel after the current chat surface
+   Current decision: use command-shim entry points plus filesystem-backed
+   artifacts. External channel adapters remain later delivery surfaces.
+4. Continuity update posture
+   Current decision: stable continuity updates are explicit or explicitly
+   confirmed. Phase 0 does not auto-capture preferences from arbitrary chat
+   turns.
+
+Questions now materially answered by later docs:
+
+1. Day-one lane/provider combinations
+   Current answer: freeze them through the provider-lane contract in doc 08.
+2. Which actions are always human-gated under bounded autonomy
+   Current answer: use the escalation and human-loop rules in doc 04.
+3. Minimum durable state needed for clean resume
+   Current answer: use the state inventory and continuity contract in docs 03,
+   07, 11, and 12.
 
 ---
 
@@ -105,11 +123,18 @@ Before implementation starts, we still need to freeze:
 Start **orchestrator Phase 0** now.
 
 The first implementation should be:
+- stay in the VRE repo, not split early into a sibling repo
 - local, not cloud-first
 - VRE-consuming, not VRE-replacing
 - monthly-plan-first where provider policy allows it
-- UI-later, not dashboard-first
+- command-shim plus filesystem-first after the current chat surface
+- minimal-shell-first, not dashboard-first
 - explicit about queue, lane, escalation, and recovery state from day one
+- explicit-only or explicitly confirmed continuity updates from day one
 
 The continuity-profile and context-assembly contract is now part of that Phase
 0 freeze, not a later polish item.
+
+No Phase 0 architecture decision remains intentionally open.
+The next move is contract and schema freeze, not more branching on product
+shape.

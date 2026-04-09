@@ -115,6 +115,7 @@ At minimum, the orchestrator should eventually own:
 - model per lane
 - thinking depth per lane
 - autonomy level per lane
+- API-fallback allowance per lane
 - retry policy per lane
 - cost ceiling per lane
 - escalation threshold per lane
@@ -263,20 +264,27 @@ Freeze:
 
 ### Step 2 — Local Coordination Runtime
 
+The first executable coordinator should live inside this repo and consume VRE
+through the declared local helper surfaces. Splitting it into a sibling repo is
+a later extraction concern, not a Day 1 requirement.
+
 Build:
 - one local runtime
 - one queue
 - one execution lane
 - one review lane
 - one reporting path to the current chat surface
+- one command-shim entry point
+- one minimal operator shell above `/flow-status` and existing VRE summaries
 
 ### Step 3 — Continuity Surfaces
 
 Build:
 - recall / resume
 - artifact browser
-- recovery replay
+- durable queue replay
 - interruption recovery
+- filesystem-backed continuity and reporting artifacts
 
 ### Step 4 — Monitoring And Delivery
 

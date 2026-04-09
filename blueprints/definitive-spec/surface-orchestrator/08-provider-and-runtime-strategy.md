@@ -179,10 +179,10 @@ Phase 0 should freeze a contract roughly like this for each lane binding.
 | Field | Meaning |
 |------|---------|
 | `providerRef` | `anthropic/claude-code`, `openai/codex`, `google/gemini-cli`, or future ref |
-| `transportKind` | `local-cli`, `cloud-task`, or `api` |
 | `integrationKind` | `local-cli`, `sdk`, `api`, or `cloud-task` |
 | `authMode` | `subscription`, `enterprise-seat`, `api-key`, or `cloud-iam` |
 | `billingMode` | `plan-included`, `usage-based`, or `mixed` |
+| `apiFallbackAllowed` | whether this lane may cross from plan-backed local runtime into API-backed execution |
 | `supervisionCapability` | `fire-and-forget`, `output-only`, `streaming`, or `programmatic` |
 | `interactive` | whether the lane is suited to local interactive turns |
 | `backgroundSafe` | whether it is suitable for durable always-on execution |
@@ -197,6 +197,14 @@ also:
 - integration controllability
 - retry semantics
 - background suitability
+
+Precedence rule for API fallback:
+1. lane policy override
+2. continuity-profile default
+3. system default
+
+That means the continuity profile may carry the operator's default preference,
+but the lane binding remains the authoritative override surface.
 
 ---
 

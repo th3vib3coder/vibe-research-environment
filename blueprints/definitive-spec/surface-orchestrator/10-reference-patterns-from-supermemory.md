@@ -119,7 +119,8 @@ of mode and then locally selects what to include in the assembled prompt:
 
 ### 4. Per-Turn Memory Cache
 
-`packages/tools/src/shared/cache.ts` is a thin LRU wrapper (74 lines,
+`packages/tools/src/shared/cache.ts` is a thin LRU wrapper (roughly 80 lines in
+the current forensic clone,
 `lru-cache` with `max: 100`). The cache key is
 `containerTag:threadId:mode:normalizedMessage`. There is no TTL, no
 freshness-based invalidation, no persistence. It exists solely to avoid
@@ -332,17 +333,22 @@ leaving "duplicate handling" to implementation taste.
 
 ---
 
-## Open Questions For Phase 0
+## Phase 0 Decisions From This Audit
 
-1. Which remaining stable preferences belong in an orchestrator-owned
-   continuity profile versus VRE or kernel state, now that domain-pack
-   selection and per-lane overrides are already assigned elsewhere?
-2. Which live state fields belong in dynamic continuity context versus raw
-   `/flow-status`?
-3. Which recall sources are allowed in `query` mode on day one, and how is
-   staleness labeled when recall disagrees with current VRE state?
-4. Is the first continuity cache purely in-memory, or does any part become
-   durable on disk?
+1. Stable continuity profile scope
+   Restrict Phase 0 stable profile fields to explicit operator and project
+   defaults such as those in doc 11. Domain-pack selection stays in VRE, and
+   per-lane provider/autonomy overrides stay in lane policy.
+2. Dynamic context scope
+   Dynamic continuity context should contain bounded helper-derived summaries.
+   Raw `/flow-status` remains an operator-facing status surface, not the prompt
+   assembly contract itself.
+3. Day-one `query` mode
+   Query mode should start with helper-backed summary surfaces only, and any
+   recall conflict with current VRE state should be labeled stale or historical.
+4. First continuity cache shape
+   The first continuity cache should be a purely in-memory LRU. No durable
+   continuity cache belongs on disk in Phase 0.
 
 ---
 

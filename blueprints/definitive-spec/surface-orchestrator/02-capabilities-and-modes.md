@@ -69,14 +69,21 @@ Notes:
 
 ## Mode Rules
 
-1. `brainstorm` may generate ideas, but it must label them as non-validated
+1. `intake` may orient, inspect, and propose, but it must not silently start
+   execution before an explicit route into an execution-capable mode.
+2. `brainstorm` may generate ideas, but it must label them as non-validated
    unless routed through VRE evidence surfaces.
-2. `execute` may call VRE flows, but it must not invent new truth semantics.
-3. `review` may challenge outputs, but it must not mutate canonical truth on its
+3. `execute` may call VRE flows, but it must not invent new truth semantics.
+4. `supervise` may coordinate lanes, compare outputs, and reroute work, but it
+   must not rewrite disagreement into fake consensus or silently discard lane
+   objections.
+5. `review` may challenge outputs, but it must not mutate canonical truth on its
    own.
-4. `report` may translate technical state into human summaries, but it must
+6. `report` may translate technical state into human summaries, but it must
    preserve uncertainty and warnings.
-5. `recover` may resume or retry work, but it must keep interruption history
+7. `monitor` may poll safe status surfaces and watch timers, but it must not
+   escalate or notify without declared trigger rules and visible state.
+8. `recover` may resume or retry work, but it must keep interruption history
    visible.
 
 ---
@@ -92,6 +99,9 @@ The orchestrator should eventually support:
 - quiet hours and schedule windows
 
 These are operator preferences, not research truth.
+
+They are defaults, not absolute lane rules.
+Per-lane policy may override them where the orchestrator contract says so.
 
 ---
 

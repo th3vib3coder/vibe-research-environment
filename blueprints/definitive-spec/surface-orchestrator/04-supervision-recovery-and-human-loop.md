@@ -62,6 +62,7 @@ Allowed future behaviors:
 - resume after cooldown expiry
 - restate or reissue an interrupted prompt
 - switch execution lane while preserving context
+- stop and preserve state for inspection or repair
 - escalate to the user when ambiguity or risk is too high
 - request a contrarian review before proceeding
 
@@ -70,6 +71,26 @@ Forbidden behaviors:
 - silently dropping blocked work
 - retrying forever without visibility
 - converting a blocked scientific prerequisite into a fake success
+
+### Default Failure-To-Recovery Mapping
+
+This is the default mapping that other orchestrator documents should assume
+unless a narrower lane-specific rule is frozen later.
+
+| Failure class | Default recovery | Default escalation posture |
+|------|---------|------------------|
+| token cooldown or budget pause | resume after cooldown expiry | escalate only if repeated pauses breach operator preference |
+| tool failure | retry with backoff, then switch lane if bounded retries fail | escalate after bounded retries are exhausted |
+| dependency unavailable | retry with backoff if plausibly transient | escalate if the dependency remains unavailable |
+| contract mismatch | stop and log the mismatch | escalate immediately; do not blind-retry |
+| state conflict or corruption | stop, preserve state, require inspection or repair | escalate immediately; do not switch lanes as a workaround |
+| ambiguous user request | pause and request clarification | escalate immediately |
+| blocked scientific prerequisite | pause the task and surface the blocker | escalate immediately; optionally request contrarian review |
+| lane drift | restate scope once, then reroute or request review | escalate if drift repeats after one bounded correction |
+
+This table is intentionally conservative.
+Lane-specific policy may tighten these defaults, but should not weaken them in
+a way that hides risk or failure.
 
 This file is the **authoritative source** for:
 - autonomy levels

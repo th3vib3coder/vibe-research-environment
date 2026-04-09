@@ -99,7 +99,8 @@ Future build surfaces:
 Context assembly should support a non-authoritative per-turn cache.
 
 **Simplicity principle from the supermemory audit:** The actual supermemory
-per-turn cache (`packages/tools/src/shared/cache.ts`) is a 74-line LRU with
+per-turn cache (`packages/tools/src/shared/cache.ts`) is a roughly 80-line LRU
+in the current forensic clone, with
 max 100 entries and no TTL. It works. We should not over-engineer this.
 
 The cache key should include:
@@ -258,7 +259,8 @@ legitimate case for capturing specific operator decisions made during chat:
 
 These are not truth — they are operational preferences. They should enter the
 stable continuity profile through an explicit capture path:
-- the orchestrator detects a preference-like statement
+- the operator invokes capture explicitly, or a lane emits a visible capture
+  proposal
 - it proposes a stable profile update
 - the operator confirms or rejects
 - the update is logged with audit visibility
@@ -266,9 +268,10 @@ stable continuity profile through an explicit capture path:
 This is the opposite of ambient capture: it is **confirmed, explicit,
 auditable preference ingestion**.
 
-The exact detection mechanism is still a Phase 0 open question.
-It may be operator-invoked, rule-based, classifier-assisted, or proposed by a
-lane, but it must never silently persist a preference without visible review.
+Phase 0 decision:
+- do not auto-detect or auto-persist preferences from arbitrary chat turns
+- capture remains explicit or explicitly proposed and confirmed
+- if no explicit invocation or visible proposal exists, nothing is persisted
 
 ---
 
