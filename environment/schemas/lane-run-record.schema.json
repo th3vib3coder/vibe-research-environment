@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/lane-run-record.schema.json",
+  "title": "VRE Orchestrator Lane Run Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "laneRunId",
+    "laneId",
+    "taskId",
+    "providerRef",
+    "integrationKind",
+    "supervisionCapability",
+    "status",
+    "attemptNumber",
+    "startedAt",
+    "endedAt",
+    "artifactRefs",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.lane-run-record.v1"
+    },
+    "laneRunId": {
+      "type": "string",
+      "pattern": "^ORCH-RUN-.+$"
+    },
+    "laneId": {
+      "type": "string",
+      "enum": [
+        "coordination",
+        "execution",
+        "review",
+        "reporting",
+        "monitoring"
+      ]
+    },
+    "taskId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-TASK-.+$"
+    },
+    "providerRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "integrationKind": {
+      "type": "string",
+      "enum": [
+        "local-cli",
+        "sdk",
+        "api",
+        "cloud-task",
+        "local-logic"
+      ]
+    },
+    "supervisionCapability": {
+      "type": "string",
+      "enum": [
+        "fire-and-forget",
+        "output-only",
+        "streaming",
+        "programmatic"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "completed",
+        "degraded",
+        "failed",
+        "cancelled",
+        "escalated"
+      ]
+    },
+    "attemptNumber": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "threadId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "artifactRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "errorCode": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "warningCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

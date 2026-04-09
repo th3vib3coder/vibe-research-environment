@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/recovery-record.schema.json",
+  "title": "VRE Orchestrator Recovery Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "recoveryId",
+    "taskId",
+    "failureClass",
+    "recoveryAction",
+    "result",
+    "recordedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.recovery-record.v1"
+    },
+    "recoveryId": {
+      "type": "string",
+      "pattern": "^ORCH-REC-.+$"
+    },
+    "taskId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-TASK-.+$"
+    },
+    "laneRunId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-RUN-.+$"
+    },
+    "failureClass": {
+      "type": "string",
+      "enum": [
+        "token-cooldown-or-budget-pause",
+        "tool-failure",
+        "dependency-unavailable",
+        "contract-mismatch",
+        "state-conflict-or-corruption",
+        "ambiguous-user-request",
+        "blocked-scientific-prerequisite",
+        "lane-drift"
+      ]
+    },
+    "recoveryAction": {
+      "type": "string",
+      "enum": [
+        "retry-with-backoff",
+        "resume-after-cooldown",
+        "restate-or-reissue-prompt",
+        "switch-execution-lane",
+        "stop-and-preserve-state",
+        "escalate-to-user",
+        "request-contrarian-review"
+      ]
+    },
+    "attemptNumber": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "nextLaneId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "coordination",
+        "execution",
+        "review",
+        "reporting",
+        "monitoring",
+        null
+      ]
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "failed",
+        "superseded",
+        "escalated"
+      ]
+    },
+    "cooldownUntil": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "escalationId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-ESC-.+$"
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

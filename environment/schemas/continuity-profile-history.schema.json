@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/continuity-profile-history.schema.json",
+  "title": "VRE Orchestrator Continuity Profile History Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "entryId",
+    "eventKind",
+    "path",
+    "previousValue",
+    "actor",
+    "recordedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.continuity-profile-history.v1"
+    },
+    "entryId": {
+      "type": "string",
+      "pattern": "^ORCH-CPH-.+$"
+    },
+    "eventKind": {
+      "type": "string",
+      "enum": [
+        "update",
+        "forget"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "previousValue": {},
+    "newValue": {},
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "forgetReason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "enum": [
+        "operator",
+        "orchestrator-proposal"
+      ]
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "forgottenAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventKind": {
+            "const": "update"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "newValue",
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventKind": {
+            "const": "forget"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "forgetReason",
+          "forgottenAt"
+        ]
+      }
+    }
+  ]
+}

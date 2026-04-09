@@ -1,0 +1,39 @@
+{
+  "bundleId": "orchestrator-core",
+  "phase": 5,
+  "dependsOn": [
+    "governance-core",
+    "control-plane",
+    "flow-literature",
+    "flow-experiment",
+    "memory-sync",
+    "flow-results",
+    "flow-writing"
+  ],
+  "capabilitiesProvided": [
+    "orchestratorStateZone",
+    "durableQueueReplay",
+    "lanePolicy",
+    "continuityProfile",
+    "continuityAssembly",
+    "localCoordinatorMvp"
+  ],
+  "ownedPaths": [
+    "environment/orchestrator/.gitkeep",
+    "commands/orchestrator-run.md",
+    "commands/orchestrator-status.md",
+    "environment/schemas/router-session.schema.json",
+    "environment/schemas/run-queue-record.schema.json",
+    "environment/schemas/lane-policy.schema.json",
+    "environment/schemas/lane-run-record.schema.json",
+    "environment/schemas/recovery-record.schema.json",
+    "environment/schemas/escalation-record.schema.json",
+    "environment/schemas/external-review-record.schema.json",
+    "environment/schemas/continuity-profile.schema.json",
+    "environment/schemas/continuity-profile-history.schema.json",
+    "environment/schemas/assembled-continuity-payload.schema.json"
+  ],
+  "bootstrapPaths": [
+    ".vibe-science-environment/orchestrator/"
+  ]
+}

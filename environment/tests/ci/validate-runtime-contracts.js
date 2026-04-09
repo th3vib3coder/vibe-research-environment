@@ -46,7 +46,17 @@ const activeSchemaFiles = [
   'domain-config.schema.json',
   'domain-pack.schema.json',
   'costs-record.schema.json',
-  'install-state.schema.json'
+  'install-state.schema.json',
+  'router-session.schema.json',
+  'run-queue-record.schema.json',
+  'lane-policy.schema.json',
+  'lane-run-record.schema.json',
+  'recovery-record.schema.json',
+  'escalation-record.schema.json',
+  'external-review-record.schema.json',
+  'continuity-profile.schema.json',
+  'continuity-profile-history.schema.json',
+  'assembled-continuity-payload.schema.json'
 ];
 
 const activeEvalTaskFiles = [

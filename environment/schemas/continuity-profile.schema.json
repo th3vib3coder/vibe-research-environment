@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/continuity-profile.schema.json",
+  "title": "VRE Orchestrator Continuity Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "operator",
+    "project",
+    "runtime",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.continuity-profile.v1"
+    },
+    "operator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultAutonomyPreference",
+        "reportVerbosity",
+        "reviewStrictness",
+        "quietHoursLocal"
+      ],
+      "properties": {
+        "defaultAutonomyPreference": {
+          "type": "string",
+          "enum": [
+            "advisory",
+            "supervised",
+            "bounded-autonomous"
+          ]
+        },
+        "reportVerbosity": {
+          "type": "string",
+          "enum": [
+            "concise",
+            "standard",
+            "detailed"
+          ]
+        },
+        "reviewStrictness": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "quietHoursLocal": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}-\\d{2}:\\d{2}$"
+          }
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primaryAudience",
+        "defaultReportKinds"
+      ],
+      "properties": {
+        "primaryAudience": {
+          "type": "string",
+          "enum": [
+            "advisor",
+            "coauthors",
+            "self"
+          ]
+        },
+        "defaultReportKinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "advisor-pack",
+              "weekly-digest",
+              "rebuttal-pack",
+              "session-digest"
+            ]
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferredLaneRoles",
+        "defaultAllowApiFallback"
+      ],
+      "properties": {
+        "preferredLaneRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "primary-execution",
+              "primary-review",
+              "primary-reporting",
+              "primary-monitoring"
+            ]
+          }
+        },
+        "defaultAllowApiFallback": {
+          "type": "boolean"
+        }
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

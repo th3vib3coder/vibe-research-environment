@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/run-queue-record.schema.json",
+  "title": "VRE Orchestrator Queue Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "eventKind",
+    "mode",
+    "ownerLane",
+    "status",
+    "dependencyTaskIds",
+    "recordedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.run-queue-record.v1"
+    },
+    "taskId": {
+      "type": "string",
+      "pattern": "^ORCH-TASK-.+$"
+    },
+    "parentTaskId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-TASK-.+$"
+    },
+    "eventKind": {
+      "type": "string",
+      "enum": [
+        "created",
+        "status-change",
+        "dependency-change",
+        "lane-reassignment",
+        "recovery-update",
+        "escalation-link",
+        "closed"
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "brainstorm",
+        "execute",
+        "supervise",
+        "review",
+        "report",
+        "monitor",
+        "recover"
+      ]
+    },
+    "ownerLane": {
+      "type": "string",
+      "enum": [
+        "coordination",
+        "execution",
+        "review",
+        "reporting",
+        "monitoring"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "ready",
+        "running",
+        "blocked",
+        "waiting-review",
+        "completed",
+        "failed",
+        "cancelled",
+        "escalated"
+      ]
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "objective": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "targetRef": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "dependencyTaskIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^ORCH-TASK-.+$"
+      }
+    },
+    "laneRunId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-RUN-.+$"
+    },
+    "artifactRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "statusReason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "escalationNeeded": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

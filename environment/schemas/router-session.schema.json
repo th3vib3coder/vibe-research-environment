@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/router-session.schema.json",
+  "title": "VRE Orchestrator Router Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "currentMode",
+    "objective",
+    "activeThreadId",
+    "currentTarget",
+    "queueFocusTaskId",
+    "escalationState",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.router-session.v1"
+    },
+    "sessionId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-SESSION-.+$"
+    },
+    "currentMode": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "brainstorm",
+        "execute",
+        "supervise",
+        "review",
+        "report",
+        "monitor",
+        "recover"
+      ]
+    },
+    "objective": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "activeThreadId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "queueFocusTaskId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-TASK-.+$"
+    },
+    "currentTarget": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "claim",
+            "paper",
+            "experiment",
+            "bundle",
+            "writing-pack",
+            "session",
+            "flow",
+            "queue-task"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "escalationState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "pendingEscalationId",
+        "summary"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "pending",
+            "blocked",
+            "resolved"
+          ]
+        },
+        "pendingEscalationId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^ORCH-ESC-.+$"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

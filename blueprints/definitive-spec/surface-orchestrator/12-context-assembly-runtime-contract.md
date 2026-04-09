@@ -89,8 +89,9 @@ Candidate return shape:
 Future build surfaces:
 - `environment/orchestrator/continuity-profile.js`
 - `environment/orchestrator/context-assembly.js`
-- `environment/schemas/orchestrator-continuity-profile.schema.json`
-- `environment/schemas/orchestrator-continuity-update.schema.json`
+- `environment/schemas/continuity-profile.schema.json`
+- `environment/schemas/continuity-profile-history.schema.json`
+- `environment/schemas/assembled-continuity-payload.schema.json`
 
 ---
 

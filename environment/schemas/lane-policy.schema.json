@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/lane-policy.schema.json",
+  "title": "VRE Orchestrator Lane Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lanes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.lane-policy.v1"
+    },
+    "lanes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution",
+        "review"
+      ],
+      "properties": {
+        "coordination": {
+          "$ref": "#/$defs/laneConfig"
+        },
+        "execution": {
+          "$ref": "#/$defs/laneConfig"
+        },
+        "review": {
+          "$ref": "#/$defs/laneConfig"
+        },
+        "reporting": {
+          "$ref": "#/$defs/laneConfig"
+        },
+        "monitoring": {
+          "$ref": "#/$defs/laneConfig"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "laneConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "providerRef",
+        "integrationKind",
+        "authMode",
+        "billingMode",
+        "apiFallbackAllowed",
+        "supervisionCapability",
+        "interactive",
+        "backgroundSafe",
+        "parallelAllowed",
+        "reviewOnly",
+        "model",
+        "thinkingDepth",
+        "autonomyLevel",
+        "retryPolicy",
+        "costCeiling",
+        "escalationThreshold"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "providerRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "integrationKind": {
+          "type": "string",
+          "enum": [
+            "local-cli",
+            "sdk",
+            "api",
+            "cloud-task",
+            "local-logic"
+          ]
+        },
+        "authMode": {
+          "type": "string",
+          "enum": [
+            "subscription",
+            "enterprise-seat",
+            "api-key",
+            "cloud-iam",
+            "local-only"
+          ]
+        },
+        "billingMode": {
+          "type": "string",
+          "enum": [
+            "plan-included",
+            "usage-based",
+            "mixed",
+            "none"
+          ]
+        },
+        "apiFallbackAllowed": {
+          "type": "boolean"
+        },
+        "supervisionCapability": {
+          "type": "string",
+          "enum": [
+            "fire-and-forget",
+            "output-only",
+            "streaming",
+            "programmatic"
+          ]
+        },
+        "interactive": {
+          "type": "boolean"
+        },
+        "backgroundSafe": {
+          "type": "boolean"
+        },
+        "parallelAllowed": {
+          "type": "boolean"
+        },
+        "reviewOnly": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thinkingDepth": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        },
+        "autonomyLevel": {
+          "type": "string",
+          "enum": [
+            "advisory",
+            "supervised",
+            "bounded-autonomous"
+          ]
+        },
+        "retryPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxAttempts",
+            "backoffStrategy",
+            "cooldownMinutes"
+          ],
+          "properties": {
+            "maxAttempts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "backoffStrategy": {
+              "type": "string",
+              "enum": [
+                "fixed",
+                "exponential",
+                "manual"
+              ]
+            },
+            "cooldownMinutes": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "costCeiling": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxPromptTokens",
+            "maxOutputTokens",
+            "maxUsd"
+          ],
+          "properties": {
+            "maxPromptTokens": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "maxOutputTokens": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "maxUsd": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "escalationThreshold": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "immediate"
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

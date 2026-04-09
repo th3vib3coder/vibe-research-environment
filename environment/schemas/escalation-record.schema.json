@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/escalation-record.schema.json",
+  "title": "VRE Orchestrator Escalation Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "escalationId",
+    "taskId",
+    "status",
+    "triggerKind",
+    "decisionNeeded",
+    "contextShown",
+    "recordedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-orch.escalation-record.v1"
+    },
+    "escalationId": {
+      "type": "string",
+      "pattern": "^ORCH-ESC-.+$"
+    },
+    "taskId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-TASK-.+$"
+    },
+    "laneRunId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^ORCH-RUN-.+$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "resolved",
+        "dismissed",
+        "superseded"
+      ]
+    },
+    "triggerKind": {
+      "type": "string",
+      "enum": [
+        "direction-change",
+        "ambiguous-evidence",
+        "budget-or-time-limit",
+        "external-delivery",
+        "truth-boundary",
+        "blocked-prerequisite",
+        "contract-mismatch",
+        "state-conflict",
+        "review-disagreement",
+        "operator-request"
+      ]
+    },
+    "decisionNeeded": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextShown": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "resolutionSummary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolvedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}
