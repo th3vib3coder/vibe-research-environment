@@ -13,6 +13,7 @@ Build from highest researcher pain to lowest epistemic risk.
 - Phase 2: closed with [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4: closed with [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
+- Phase 5: active planning in [phase5-00-index.md](./implementation-plan/phase5-00-index.md)
 
 The sections below preserve the original build order and gate definitions.
 Audited completion state now lives in the implementation-plan indexes and
@@ -178,6 +179,29 @@ With Phase 1-4 now closed, that surface-orchestrator prerequisite is satisfied.
 The next planning frontier is the companion orchestrator Phase 0 contract-freeze
 track under `surface-orchestrator/`, including continuity-profile and
 context-assembly semantics above VRE.
+
+---
+
+## Phase 5: Surface Orchestrator MVP (PLANNED)
+
+**Goal:** Ship the first local coordinator runtime above VRE without turning
+the project into a general-purpose agent platform.
+
+Planning set:
+- [implementation-plan/phase5-00-index.md](./implementation-plan/phase5-00-index.md)
+- [implementation-plan/phase5-01-wave-0-contract-artifacts.md](./implementation-plan/phase5-01-wave-0-contract-artifacts.md)
+- [implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md](./implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md)
+- [implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md](./implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md)
+- [implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md](./implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md)
+- [implementation-plan/phase5-05-wave-4-tests-and-validators.md](./implementation-plan/phase5-05-wave-4-tests-and-validators.md)
+- [implementation-plan/phase5-06-wave-5-evals-and-closeout.md](./implementation-plan/phase5-06-wave-5-evals-and-closeout.md)
+
+Critical scope calls:
+- local runtime in the VRE repo
+- command-shim and filesystem-first operator surfaces
+- one execution lane plus one review lane
+- explicit continuity updates only
+- tests, validators, evals, and closeout evidence are part of the phase, not cleanup work
 
 ---
 

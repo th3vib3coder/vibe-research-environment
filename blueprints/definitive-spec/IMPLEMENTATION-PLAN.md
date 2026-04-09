@@ -59,6 +59,16 @@ The plan sets currently on disk are:
 - [implementation-plan/phase4-06-wave-5-evals-and-closeout.md](./implementation-plan/phase4-06-wave-5-evals-and-closeout.md)
 - [implementation-plan/phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 
+### Phase 5 (active planning)
+
+- [implementation-plan/phase5-00-index.md](./implementation-plan/phase5-00-index.md)
+- [implementation-plan/phase5-01-wave-0-contract-artifacts.md](./implementation-plan/phase5-01-wave-0-contract-artifacts.md)
+- [implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md](./implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md)
+- [implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md](./implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md)
+- [implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md](./implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md)
+- [implementation-plan/phase5-05-wave-4-tests-and-validators.md](./implementation-plan/phase5-05-wave-4-tests-and-validators.md)
+- [implementation-plan/phase5-06-wave-5-evals-and-closeout.md](./implementation-plan/phase5-06-wave-5-evals-and-closeout.md)
+
 ### Companion Future Overlay Specs
 
 - [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
@@ -75,11 +85,12 @@ frontier** above VRE and below any future UI/channel surfaces.
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3 is closed with saved evidence: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4 is closed with saved evidence: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
-- Surface orchestrator is the active companion pre-planning track:
+- Surface orchestrator spec is now Phase 0-closed and implementation-ready:
   see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
-- The recommended next planning move is orchestrator Phase 0 contract freeze:
-  state files, continuity-profile and context modes, lane policy, status split,
-  provider strategy, and recovery contract
+- Phase 5 is the active implementation-planning slice:
+  see [implementation-plan/phase5-00-index.md](./implementation-plan/phase5-00-index.md)
+- The recommended next execution move is Phase 5 Wave 0 contract artifacts, not
+  new architecture prose
 
 ---
 
