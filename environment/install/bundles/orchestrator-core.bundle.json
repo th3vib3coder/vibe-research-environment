@@ -20,6 +20,12 @@
   ],
   "ownedPaths": [
     "environment/orchestrator/.gitkeep",
+    "environment/orchestrator/_paths.js",
+    "environment/orchestrator/_io.js",
+    "environment/orchestrator/state.js",
+    "environment/orchestrator/queue.js",
+    "environment/orchestrator/ledgers.js",
+    "environment/orchestrator/query.js",
     "commands/orchestrator-run.md",
     "commands/orchestrator-status.md",
     "environment/schemas/router-session.schema.json",
