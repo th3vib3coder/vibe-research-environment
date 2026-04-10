@@ -1,0 +1,96 @@
+{
+  "artifactId": "phase5-operator-validation",
+  "phase": 5,
+  "createdAt": "2026-04-10T14:57:23.901Z",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "passed": true,
+  "validationClaims": [
+    "One queued orchestrator objective remains visible on disk and can be resumed safely through the public runtime.",
+    "Continuity assembly now has explicit evidence for profile, query, and full modes without auto-capturing operator preferences during read.",
+    "Execution and review lanes can share one execution-backed lineage with durable external review evidence.",
+    "Bounded execution failures become explicit recovery plus pending escalation state instead of disappearing behind runtime errors."
+  ],
+  "decisions": {
+    "publicResumeSurface": "Phase 5 resume stays operator-visible through /orchestrator-status plus taskId-based rerun, not hidden background workers.",
+    "continuityUpdatePolicy": "Continuity profile changes remain explicit operator actions or explicit confirmed proposals; read paths do not mutate the profile.",
+    "localMvpBoundary": "The MVP coordinator keeps execution local and review CLI-backed, with provider escalation visible before any future cloud expansion."
+  },
+  "evidence": {
+    "queueResume": {
+      "claim": "Queued orchestrator work can be inspected first and resumed later through the public runtime surface.",
+      "sourceRepeat": {
+        "taskId": "orchestrator-status-queue-resume",
+        "repeatId": "2026-04-10-03",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.246,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "continuityModes": {
+      "claim": "Profile, query, and full continuity modes all assemble from the real runtime without hidden profile mutation.",
+      "sourceRepeat": {
+        "taskId": "orchestrator-continuity-modes",
+        "repeatId": "2026-04-10-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.231,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "executionReview": {
+      "claim": "One execution result can flow into an execution-backed review lineage with durable external review evidence.",
+      "sourceRepeat": {
+        "taskId": "orchestrator-execution-review-lineage",
+        "repeatId": "2026-04-10-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.242,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "boundedFailure": {
+      "claim": "A bounded execution failure becomes explicit recovery and escalation state that the operator can inspect from status.",
+      "sourceRepeat": {
+        "taskId": "orchestrator-bounded-failure-recovery",
+        "repeatId": "2026-04-10-02",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": 0.213,
+        "degradedHonestyScore": 1,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    }
+  }
+}

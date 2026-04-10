@@ -21,7 +21,7 @@ The kernel remains authoritative for:
 
 ## Current Status
 
-The repository is closed through **Phase 4** and **Phase 5 is now underway**.
+The repository is closed through **Phase 5**.
 
 - **Phase 1:** control plane, literature flow, experiment flow, baseline evals
   and compatibility checks
@@ -31,26 +31,23 @@ The repository is closed through **Phase 4** and **Phase 5 is now underway**.
   append-only export alerts, `/flow-writing`, advisor packs, and rebuttal packs
 - **Phase 4:** connector substrate, automation substrate, domain-pack runtime,
   `omics` presets, hardening, validators, and closeout evidence
-- **Phase 5:** surface orchestrator implementation has started, with Wave 0
-  contract artifacts, Wave 1 state and queue foundations, and Wave 2
-  continuity profile plus context assembly runtime now landed in repo.
-  Wave 3 local coordinator MVP is now landed with router, provider
-  gateway, execution lane, review lane, and middleware-backed run/status
-  surfaces implemented in code
+- **Phase 5:** local surface orchestrator MVP, continuity runtime, queue and
+  ledger state, public run/status surfaces, saved coordinator evals,
+  operator-validation evidence, measured context/cost baseline, and closeout
+  dossier
 
 Closeout dossiers:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
 - [Phase 2 Closeout](blueprints/definitive-spec/implementation-plan/phase2-closeout.md)
 - [Phase 3 Closeout](blueprints/definitive-spec/implementation-plan/phase3-closeout.md)
 - [Phase 4 Closeout](blueprints/definitive-spec/implementation-plan/phase4-closeout.md)
+- [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
 
 Current design frontier:
 - [Surface Orchestrator Layer](blueprints/definitive-spec/surface-orchestrator/00-index.md)
   — the future coordination shell above VRE
-  with implementation now started on bundle ownership, orchestrator schemas,
-  continuity contracts, state helpers, append-only queue replay,
-  recovery/escalation ledgers, helper-backed recall adapters, and shared
-  continuity assembly surfaces
+  with the local MVP now shipped and the next frontier moved to post-MVP
+  expansion rather than first implementation
 
 ## What You Can Run
 
@@ -112,6 +109,9 @@ Currently available evidence scripts:
 npm run eval:save-phase1
 npm run eval:save-operator-validation
 npm run eval:measure-context-baseline
+node environment/evals/save-phase5-artifacts.js
+node environment/evals/save-phase5-operator-validation-artifact.js
+node environment/evals/measure-phase5-context-and-cost.js
 ```
 
 ## Evidence And Evaluation
@@ -133,12 +133,16 @@ The current benchmark set covers:
 - Phase 2 memory and result packaging
 - Phase 3 writing and export-safe deliverables
 - Phase 4 connectors, automation, and domain-pack evidence
+- Phase 5 orchestrator MVP evidence
 
 Phase 5 implementation is following the atomic wave plan under:
 - [`blueprints/definitive-spec/implementation-plan/phase5-00-index.md`](blueprints/definitive-spec/implementation-plan/phase5-00-index.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md`](blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md`](blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md`](blueprints/definitive-spec/implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md`](blueprints/definitive-spec/implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-05-wave-4-tests-and-validators.md`](blueprints/definitive-spec/implementation-plan/phase5-05-wave-4-tests-and-validators.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-06-wave-5-evals-and-closeout.md`](blueprints/definitive-spec/implementation-plan/phase5-06-wave-5-evals-and-closeout.md)
 
 ## Spec Entry Points
 

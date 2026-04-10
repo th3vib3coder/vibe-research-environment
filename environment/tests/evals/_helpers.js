@@ -36,11 +36,19 @@ export const PHASE4_EXPECTED_TASK_FILES = [
   'flow-status-domain-pack-fallback.json'
 ];
 
+export const PHASE5_EXPECTED_TASK_FILES = [
+  'orchestrator-status-queue-resume.json',
+  'orchestrator-continuity-modes.json',
+  'orchestrator-execution-review-lineage.json',
+  'orchestrator-bounded-failure-recovery.json'
+];
+
 export const EXPECTED_TASK_FILES = [
   ...PHASE1_EXPECTED_TASK_FILES,
   ...PHASE2_EXPECTED_TASK_FILES,
   ...PHASE3_EXPECTED_TASK_FILES,
-  ...PHASE4_EXPECTED_TASK_FILES
+  ...PHASE4_EXPECTED_TASK_FILES,
+  ...PHASE5_EXPECTED_TASK_FILES
 ];
 
 export const EXPECTED_METRIC_FILES = [
@@ -83,6 +91,12 @@ export const BENCHMARK_SPECS = [
     benchmarkId: 'phase4-external-surfaces',
     phase: 4,
     taskFiles: PHASE4_EXPECTED_TASK_FILES
+  },
+  {
+    benchmarkFile: 'environment/evals/benchmarks/phase5-orchestrator-mvp.benchmark.json',
+    benchmarkId: 'phase5-orchestrator-mvp',
+    phase: 5,
+    taskFiles: PHASE5_EXPECTED_TASK_FILES
   }
 ];
 

@@ -1,0 +1,394 @@
+{
+  "taskId": "orchestrator-status-queue-resume",
+  "repeatId": "2026-04-10-03",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "command": {
+    "name": "/orchestrator-status",
+    "scope": "orchestrator-status",
+    "args": []
+  },
+  "result": {
+    "summary": "Status surfaced one queued task, then the public runtime resumed it safely.",
+    "warnings": [],
+    "payload": {
+      "firstStatus": {
+        "queueTotal": 1,
+        "readyCount": 1,
+        "completedCount": 0,
+        "escalatedCount": 0,
+        "nextActionKind": "run-ready-task",
+        "activeObjective": "Export a session digest for the current workspace.",
+        "latestRecoveryFailureClass": null,
+        "latestEscalationStatus": null
+      },
+      "resumedRun": {
+        "laneRunStatus": "completed",
+        "taskStatus": "completed",
+        "artifactCount": 2,
+        "digestId": "DIGEST-ORCH-SESSION-RESUME",
+        "resumedTaskId": "ORCH-TASK-2026-04-10-14-57-11-321-ea52adcc"
+      },
+      "finalStatus": {
+        "queueTotal": 1,
+        "readyCount": 0,
+        "completedCount": 1,
+        "escalatedCount": 0,
+        "nextActionKind": "none",
+        "activeObjective": "Export a session digest for the current workspace.",
+        "latestRecoveryFailureClass": null,
+        "latestEscalationStatus": null
+      }
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+    "scope": "orchestrator-status",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-10T14:57:11.530Z",
+    "lastHeartbeatAt": "2026-04-10T14:57:11.556Z",
+    "endedAt": "2026-04-10T14:57:11.556Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "No immediate orchestrator action is required."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": null,
+    "currentStage": null,
+    "nextActions": [],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/orchestrator-status",
+    "lastAttemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+    "updatedAt": "2026-04-10T14:57:11.551Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": false,
+      "projections": {
+        "overview": false,
+        "claimHeads": false,
+        "unresolvedClaims": false,
+        "citationChecks": false
+      },
+      "advanced": {
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": [
+        "control-plane",
+        "flow-results",
+        "flow-writing",
+        "governance-core",
+        "orchestrator-core"
+      ]
+    },
+    "updatedAt": "2026-04-10T14:57:11.528Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+    ".vibe-science-environment/orchestrator/router-session.json",
+    ".vibe-science-environment/orchestrator/run-queue.jsonl",
+    ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.json",
+    ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.md"
+  ],
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+      "scope": "orchestrator-status",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-10T14:57:11.530Z",
+      "lastHeartbeatAt": "2026-04-10T14:57:11.556Z",
+      "endedAt": "2026-04-10T14:57:11.556Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "No immediate orchestrator action is required.",
+      "events": [
+        {
+          "eventId": "EVT-1775833031558-da2bdf",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.558Z"
+        },
+        {
+          "eventId": "EVT-1775833031554-620550",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.554Z"
+        },
+        {
+          "eventId": "EVT-1775833031539-715591",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.539Z"
+        },
+        {
+          "eventId": "EVT-1775833031532-055cf7",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /orchestrator-status",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.532Z"
+        }
+      ],
+      "decisions": []
+    },
+    {
+      "attemptId": "ATT-2026-04-10-14-57-11-357-024c3ce6",
+      "scope": "orchestrator-status",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-10T14:57:11.357Z",
+      "lastHeartbeatAt": "2026-04-10T14:57:11.457Z",
+      "endedAt": "2026-04-10T14:57:11.457Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Export session digest",
+      "events": [
+        {
+          "eventId": "EVT-1775833031460-7b818c",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-10-14-57-11-357-024c3ce6",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.460Z"
+        },
+        {
+          "eventId": "EVT-1775833031453-dc0656",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-10-14-57-11-357-024c3ce6",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.453Z"
+        },
+        {
+          "eventId": "EVT-1775833031383-e89298",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-04-10-14-57-11-357-024c3ce6",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.383Z"
+        },
+        {
+          "eventId": "EVT-1775833031367-64f2e3",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-10-14-57-11-357-024c3ce6",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /orchestrator-status",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:11.367Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "session-snapshot",
+      "passed": true,
+      "expected": {
+        "lastCommand": "/orchestrator-status"
+      },
+      "actual": {
+        "schemaVersion": "vibe-env.session.v1",
+        "activeFlow": null,
+        "currentStage": null,
+        "nextActions": [],
+        "blockers": [],
+        "kernel": {
+          "dbAvailable": false,
+          "degradedReason": "bridge unavailable"
+        },
+        "capabilities": {
+          "claimHeads": false,
+          "citationChecks": false,
+          "governanceProfileAtCreation": false,
+          "claimSearch": false
+        },
+        "budget": {
+          "state": "unknown",
+          "toolCalls": 0,
+          "estimatedCostUsd": 0,
+          "countingMode": "unknown"
+        },
+        "signals": {
+          "staleMemory": false,
+          "unresolvedClaims": 0,
+          "blockedExperiments": 0,
+          "exportAlerts": 0
+        },
+        "lastCommand": "/orchestrator-status",
+        "lastAttemptId": "ATT-2026-04-10-14-57-11-530-93b1fc94",
+        "updatedAt": "2026-04-10T14:57:11.551Z"
+      }
+    },
+    {
+      "name": "command-result",
+      "passed": true,
+      "expected": {
+        "payload": {
+          "firstStatus": {
+            "queueTotal": 1,
+            "readyCount": 1,
+            "nextActionKind": "run-ready-task"
+          },
+          "resumedRun": {
+            "laneRunStatus": "completed",
+            "taskStatus": "completed",
+            "artifactCount": 2,
+            "digestId": "DIGEST-ORCH-SESSION-RESUME"
+          },
+          "finalStatus": {
+            "queueTotal": 1,
+            "completedCount": 1,
+            "nextActionKind": "none"
+          }
+        }
+      },
+      "actual": {
+        "summary": "Status surfaced one queued task, then the public runtime resumed it safely.",
+        "warnings": [],
+        "payload": {
+          "firstStatus": {
+            "queueTotal": 1,
+            "readyCount": 1,
+            "completedCount": 0,
+            "escalatedCount": 0,
+            "nextActionKind": "run-ready-task",
+            "activeObjective": "Export a session digest for the current workspace.",
+            "latestRecoveryFailureClass": null,
+            "latestEscalationStatus": null
+          },
+          "resumedRun": {
+            "laneRunStatus": "completed",
+            "taskStatus": "completed",
+            "artifactCount": 2,
+            "digestId": "DIGEST-ORCH-SESSION-RESUME",
+            "resumedTaskId": "ORCH-TASK-2026-04-10-14-57-11-321-ea52adcc"
+          },
+          "finalStatus": {
+            "queueTotal": 1,
+            "readyCount": 0,
+            "completedCount": 1,
+            "escalatedCount": 0,
+            "nextActionKind": "none",
+            "activeObjective": "Export a session digest for the current workspace.",
+            "latestRecoveryFailureClass": null,
+            "latestEscalationStatus": null
+          }
+        }
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.json",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.md"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.json",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.md"
+      ]
+    }
+  ]
+}

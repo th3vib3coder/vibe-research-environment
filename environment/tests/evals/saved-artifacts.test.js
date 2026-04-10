@@ -9,6 +9,7 @@ import {
   PHASE2_EXPECTED_TASK_FILES,
   PHASE3_EXPECTED_TASK_FILES,
   PHASE4_EXPECTED_TASK_FILES,
+  PHASE5_EXPECTED_TASK_FILES,
   repoRoot,
   listSavedBenchmarkRepeats,
   readRepoJson
@@ -136,6 +137,33 @@ test('saved benchmark artifacts exist for every Phase 4 task and include the req
     assert.equal(input.repeatId, repeatId);
     assert.equal(summary.repeatId, repeatId);
     assert.equal(summary.benchmarkId, 'phase4-external-surfaces');
+    assert.equal(summary.passed, true, `Expected saved repeat ${taskId}/${repeatId} to pass`);
+    assert.ok(Array.isArray(summary.actualWrites));
+    assert.equal(typeof summary.transcriptPath, 'string');
+    await access(path.join(repoRoot, summary.transcriptPath));
+  }
+});
+
+test('saved benchmark artifacts exist for every Phase 5 task and include the required files', async () => {
+  for (const fileName of PHASE5_EXPECTED_TASK_FILES) {
+    const taskId = taskIdFromFile(fileName);
+    const repeats = await listSavedBenchmarkRepeats(taskId);
+
+    assert.ok(repeats.length >= 1, `Expected at least one saved repeat for ${taskId}`);
+
+    const repeatId = repeats.at(-1);
+    const input = await readRepeatArtifact(taskId, repeatId, 'input.json');
+    const output = await readRepeatArtifact(taskId, repeatId, 'output.json');
+    const metrics = await readRepeatArtifact(taskId, repeatId, 'metrics.json');
+    const summary = await readRepeatArtifact(taskId, repeatId, 'summary.json');
+
+    assert.equal(input.taskId, taskId);
+    assert.equal(output.taskId, taskId);
+    assert.equal(metrics.taskId, taskId);
+    assert.equal(summary.taskId, taskId);
+    assert.equal(input.repeatId, repeatId);
+    assert.equal(summary.repeatId, repeatId);
+    assert.equal(summary.benchmarkId, 'phase5-orchestrator-mvp');
     assert.equal(summary.passed, true, `Expected saved repeat ${taskId}/${repeatId} to pass`);
     assert.ok(Array.isArray(summary.actualWrites));
     assert.equal(typeof summary.transcriptPath, 'string');
@@ -415,6 +443,71 @@ test('saved Phase 4 domain-pack artifacts prove activation and fallback stay pre
   assert.match(fallbackOutput.result.domain.warnings.join('\n'), /Ignoring invalid domain config/u);
 });
 
+test('saved Phase 5 queue-resume artifact proves queued orchestrator work can be resumed safely', async () => {
+  const repeats = await listSavedBenchmarkRepeats('orchestrator-status-queue-resume');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'orchestrator-status-queue-resume',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.firstStatus.queueTotal, 1);
+  assert.equal(output.result.payload.firstStatus.nextActionKind, 'run-ready-task');
+  assert.equal(output.result.payload.resumedRun.laneRunStatus, 'completed');
+  assert.equal(output.result.payload.resumedRun.digestId, 'DIGEST-ORCH-SESSION-RESUME');
+  assert.equal(output.result.payload.finalStatus.completedCount, 1);
+});
+
+test('saved Phase 5 continuity artifact proves profile, query, and full modes remain read-only and helper-backed', async () => {
+  const repeats = await listSavedBenchmarkRepeats('orchestrator-continuity-modes');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'orchestrator-continuity-modes',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.profileMode.recallCount, 0);
+  assert.equal(output.result.payload.queryMode.firstSourceType, 'lane-run');
+  assert.equal(output.result.payload.fullMode.firstSourceType, 'lane-run');
+  assert.equal(output.result.payload.historyBeforeAssemblyCount, 2);
+  assert.equal(output.result.payload.historyAfterAssemblyCount, 2);
+  assert.equal(output.result.payload.historyChangedDuringAssembly, false);
+});
+
+test('saved Phase 5 lineage artifact proves execution and review share one execution-backed lineage', async () => {
+  const repeats = await listSavedBenchmarkRepeats('orchestrator-execution-review-lineage');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'orchestrator-execution-review-lineage',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.execution.laneRunStatus, 'completed');
+  assert.equal(output.result.payload.execution.digestId, 'DIGEST-ORCH-SESSION-REVIEW');
+  assert.equal(output.result.payload.review.verdict, 'affirmed');
+  assert.equal(output.result.payload.review.executionLineageVisible, true);
+  assert.equal(output.result.payload.status.completedCount, 2);
+});
+
+test('saved Phase 5 bounded-failure artifact proves failures stay visible through recovery and status', async () => {
+  const repeats = await listSavedBenchmarkRepeats('orchestrator-bounded-failure-recovery');
+  const latestRepeat = repeats.at(-1);
+  const output = await readRepeatArtifact(
+    'orchestrator-bounded-failure-recovery',
+    latestRepeat,
+    'output.json'
+  );
+
+  assert.equal(output.result.payload.run.laneRunStatus, 'escalated');
+  assert.equal(output.result.payload.run.failureClass, 'tool-failure');
+  assert.equal(output.result.payload.run.recoveryAction, 'escalate-to-user');
+  assert.equal(output.result.payload.status.nextActionKind, 'resolve-escalation');
+  assert.equal(output.result.payload.status.latestEscalationStatus, 'pending');
+});
+
 test('saved operator-validation artifact points to a passing flow-status resume repeat', async () => {
   const artifact = await readRepoJson(
     '.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json'
@@ -582,6 +675,58 @@ test('saved Phase 4 operator-validation artifact points to passing evidence repe
   }
 });
 
+test('saved Phase 5 operator-validation artifact points to passing evidence repeats', async () => {
+  const artifact = await readRepoJson(
+    '.vibe-science-environment/operator-validation/artifacts/phase5-operator-validation.json'
+  );
+
+  assert.equal(artifact.artifactId, 'phase5-operator-validation');
+  assert.equal(artifact.phase, 5);
+  assert.equal(artifact.benchmarkId, 'phase5-orchestrator-mvp');
+  assert.equal(artifact.passed, true);
+  assert.ok(Array.isArray(artifact.validationClaims) && artifact.validationClaims.length >= 4);
+  assert.equal(
+    artifact.decisions.continuityUpdatePolicy,
+    'Continuity profile changes remain explicit operator actions or explicit confirmed proposals; read paths do not mutate the profile.'
+  );
+  assert.equal(
+    artifact.decisions.publicResumeSurface,
+    'Phase 5 resume stays operator-visible through /orchestrator-status plus taskId-based rerun, not hidden background workers.'
+  );
+
+  for (const key of [
+    'queueResume',
+    'continuityModes',
+    'executionReview',
+    'boundedFailure',
+  ]) {
+    const evidence = artifact.evidence[key];
+    await assertRepoPathExists(evidence.sourceRepeat.inputPath);
+    await assertRepoPathExists(evidence.sourceRepeat.outputPath);
+    await assertRepoPathExists(evidence.sourceRepeat.metricsPath);
+    await assertRepoPathExists(evidence.sourceRepeat.summaryPath);
+    await assertRepoPathExists(evidence.sourceRepeat.transcriptPath);
+  }
+});
+
+test('saved Phase 5 context and cost artifact records an honest continuity and coordinator baseline', async () => {
+  const artifact = await readRepoJson(
+    '.vibe-science-environment/operator-validation/artifacts/phase5-context-and-cost-baseline.json'
+  );
+
+  assert.equal(artifact.artifactId, 'phase5-context-and-cost-baseline');
+  assert.equal(artifact.phase, 5);
+  assert.equal(artifact.passed, true);
+  assert.equal(artifact.scenario.cycleRunCommand, '/orchestrator-run');
+  assert.equal(artifact.scenario.cycleStatusCommand, '/orchestrator-status');
+  assert.ok(artifact.sources.continuity.profileMode.totalTokens > 0);
+  assert.ok(artifact.sources.continuity.fullMode.totalTokens >= artifact.sources.continuity.queryMode.totalTokens);
+  assert.equal(artifact.sources.continuity.fullMode.withinSubBudget, true);
+  assert.equal(artifact.providerObservations.executionLane.integrationKind, 'local-logic');
+  assert.equal(artifact.providerObservations.reviewLane.integrationKind, 'local-cli');
+  assert.ok(artifact.totals.coordinatorCycleElapsedSeconds >= 0);
+});
+
 test('Phase 2 closeout dossier exists and links to the saved evidence surfaces', async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase2-closeout.md';
@@ -620,4 +765,19 @@ test('Phase 4 closeout dossier exists and links to the saved evidence surfaces',
   assert.match(closeout, /flow-status-connector-failure-visibility/u);
   assert.match(closeout, /weekly-digest-reviewable-artifact/u);
   assert.match(closeout, /flow-status-domain-pack-omics/u);
+});
+
+test('Phase 5 closeout dossier exists and links to the saved evidence surfaces', async () => {
+  const closeoutPath =
+    'blueprints/definitive-spec/implementation-plan/phase5-closeout.md';
+  const closeout = await readFile(
+    path.join(repoRoot, closeoutPath),
+    'utf8'
+  );
+  await assertRepoPathExists(closeoutPath);
+  assert.match(closeout, /phase5-operator-validation\.json/u);
+  assert.match(closeout, /phase5-context-and-cost-baseline\.json/u);
+  assert.match(closeout, /orchestrator-status-queue-resume/u);
+  assert.match(closeout, /orchestrator-execution-review-lineage/u);
+  assert.match(closeout, /orchestrator-bounded-failure-recovery/u);
 });

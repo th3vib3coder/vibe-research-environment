@@ -1,0 +1,398 @@
+{
+  "taskId": "orchestrator-execution-review-lineage",
+  "repeatId": "2026-04-10-02",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "command": {
+    "name": "/orchestrator-run",
+    "scope": "orchestrator-run",
+    "args": []
+  },
+  "result": {
+    "summary": "Execution and review lanes completed one visible lineage with explicit external review evidence.",
+    "warnings": [],
+    "payload": {
+      "execution": {
+        "laneRunStatus": "completed",
+        "taskStatus": "completed",
+        "artifactCount": 2,
+        "digestId": "DIGEST-ORCH-SESSION-REVIEW",
+        "laneRunId": "ORCH-RUN-2026-04-10-14-57-12-282-06af12dc",
+        "taskId": "ORCH-TASK-2026-04-10-14-57-12-244-ac118442"
+      },
+      "review": {
+        "laneRunStatus": "completed",
+        "taskStatus": "completed",
+        "verdict": "affirmed",
+        "comparedArtifactCount": 2,
+        "executionLineageVisible": true,
+        "reviewLaneRunId": "ORCH-RUN-2026-04-10-14-57-12-382-0a51842f"
+      },
+      "status": {
+        "queueTotal": 2,
+        "readyCount": 0,
+        "completedCount": 2,
+        "escalatedCount": 0,
+        "nextActionKind": "none",
+        "activeObjective": "Run a contrarian review of the current digest.",
+        "latestRecoveryFailureClass": null,
+        "latestEscalationStatus": null
+      }
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+    "scope": "orchestrator-run",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-10T14:57:12.342Z",
+    "lastHeartbeatAt": "2026-04-10T14:57:12.411Z",
+    "endedAt": "2026-04-10T14:57:12.411Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Orchestrator handled task ORCH-TASK-2026-04-10-14-57-12-358-3d4922db."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": null,
+    "currentStage": null,
+    "nextActions": [],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/orchestrator-run",
+    "lastAttemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+    "updatedAt": "2026-04-10T14:57:12.405Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": false,
+      "projections": {
+        "overview": false,
+        "claimHeads": false,
+        "unresolvedClaims": false,
+        "citationChecks": false
+      },
+      "advanced": {
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": [
+        "control-plane",
+        "flow-results",
+        "flow-writing",
+        "governance-core",
+        "orchestrator-core"
+      ]
+    },
+    "updatedAt": "2026-04-10T14:57:12.416Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+    ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+    ".vibe-science-environment/orchestrator/router-session.json",
+    ".vibe-science-environment/orchestrator/run-queue.jsonl",
+    ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+    ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+  ],
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+      "scope": "orchestrator-run",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-10T14:57:12.342Z",
+      "lastHeartbeatAt": "2026-04-10T14:57:12.411Z",
+      "endedAt": "2026-04-10T14:57:12.411Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Orchestrator handled task ORCH-TASK-2026-04-10-14-57-12-358-3d4922db.",
+      "events": [
+        {
+          "eventId": "EVT-1775833032413-acdc85",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.413Z"
+        },
+        {
+          "eventId": "EVT-1775833032407-fe8bde",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.407Z"
+        },
+        {
+          "eventId": "EVT-1775833032348-5879a0",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.348Z"
+        },
+        {
+          "eventId": "EVT-1775833032344-2328c9",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /orchestrator-run",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.344Z"
+        }
+      ],
+      "decisions": []
+    },
+    {
+      "attemptId": "ATT-2026-04-10-14-57-12-211-f97293ad",
+      "scope": "orchestrator-run",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-10T14:57:12.211Z",
+      "lastHeartbeatAt": "2026-04-10T14:57:12.335Z",
+      "endedAt": "2026-04-10T14:57:12.335Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Orchestrator handled task ORCH-TASK-2026-04-10-14-57-12-244-ac118442.",
+      "events": [
+        {
+          "eventId": "EVT-1775833032339-dc706a",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-10-14-57-12-211-f97293ad",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.339Z"
+        },
+        {
+          "eventId": "EVT-1775833032331-99c7d5",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-10-14-57-12-211-f97293ad",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.331Z"
+        },
+        {
+          "eventId": "EVT-1775833032233-da8aa6",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-04-10-14-57-12-211-f97293ad",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.233Z"
+        },
+        {
+          "eventId": "EVT-1775833032221-b72753",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-10-14-57-12-211-f97293ad",
+          "scope": "orchestrator-run",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /orchestrator-run",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.221Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "session-snapshot",
+      "passed": true,
+      "expected": {
+        "lastCommand": "/orchestrator-run"
+      },
+      "actual": {
+        "schemaVersion": "vibe-env.session.v1",
+        "activeFlow": null,
+        "currentStage": null,
+        "nextActions": [],
+        "blockers": [],
+        "kernel": {
+          "dbAvailable": false,
+          "degradedReason": "bridge unavailable"
+        },
+        "capabilities": {
+          "claimHeads": false,
+          "citationChecks": false,
+          "governanceProfileAtCreation": false,
+          "claimSearch": false
+        },
+        "budget": {
+          "state": "unknown",
+          "toolCalls": 0,
+          "estimatedCostUsd": 0,
+          "countingMode": "unknown"
+        },
+        "signals": {
+          "staleMemory": false,
+          "unresolvedClaims": 0,
+          "blockedExperiments": 0,
+          "exportAlerts": 0
+        },
+        "lastCommand": "/orchestrator-run",
+        "lastAttemptId": "ATT-2026-04-10-14-57-12-342-b794e4aa",
+        "updatedAt": "2026-04-10T14:57:12.405Z"
+      }
+    },
+    {
+      "name": "command-result",
+      "passed": true,
+      "expected": {
+        "payload": {
+          "execution": {
+            "laneRunStatus": "completed",
+            "taskStatus": "completed",
+            "artifactCount": 2,
+            "digestId": "DIGEST-ORCH-SESSION-REVIEW"
+          },
+          "review": {
+            "laneRunStatus": "completed",
+            "taskStatus": "completed",
+            "verdict": "affirmed",
+            "comparedArtifactCount": 2,
+            "executionLineageVisible": true
+          },
+          "status": {
+            "queueTotal": 2,
+            "completedCount": 2,
+            "nextActionKind": "none"
+          }
+        }
+      },
+      "actual": {
+        "summary": "Execution and review lanes completed one visible lineage with explicit external review evidence.",
+        "warnings": [],
+        "payload": {
+          "execution": {
+            "laneRunStatus": "completed",
+            "taskStatus": "completed",
+            "artifactCount": 2,
+            "digestId": "DIGEST-ORCH-SESSION-REVIEW",
+            "laneRunId": "ORCH-RUN-2026-04-10-14-57-12-282-06af12dc",
+            "taskId": "ORCH-TASK-2026-04-10-14-57-12-244-ac118442"
+          },
+          "review": {
+            "laneRunStatus": "completed",
+            "taskStatus": "completed",
+            "verdict": "affirmed",
+            "comparedArtifactCount": 2,
+            "executionLineageVisible": true,
+            "reviewLaneRunId": "ORCH-RUN-2026-04-10-14-57-12-382-0a51842f"
+          },
+          "status": {
+            "queueTotal": 2,
+            "readyCount": 0,
+            "completedCount": 2,
+            "escalatedCount": 0,
+            "nextActionKind": "none",
+            "activeObjective": "Run a contrarian review of the current digest.",
+            "latestRecoveryFailureClass": null,
+            "latestEscalationStatus": null
+          }
+        }
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "version": "1.0.0",
+  "phase": 5,
+  "description": "Phase 5 operator-evidence benchmark for the local orchestrator MVP, including continuity assembly, queue resume, execution-review lineage, and bounded failure visibility.",
+  "taskIds": [
+    "orchestrator-status-queue-resume",
+    "orchestrator-continuity-modes",
+    "orchestrator-execution-review-lineage",
+    "orchestrator-bounded-failure-recovery"
+  ],
+  "metricIds": [
+    "resume-latency",
+    "honesty-under-degradation",
+    "state-write-scope",
+    "attempt-lifecycle-completeness",
+    "snapshot-publish-success"
+  ],
+  "repeatPolicy": {
+    "defaultRepeats": 1,
+    "preserveAllRepeats": true,
+    "overwriteExistingRepeats": false
+  },
+  "passCriteria": {
+    "requiredTaskIds": [
+      "orchestrator-status-queue-resume",
+      "orchestrator-continuity-modes",
+      "orchestrator-execution-review-lineage",
+      "orchestrator-bounded-failure-recovery"
+    ],
+    "forbidKernelWriteViolations": true,
+    "requireContinuityModes": true,
+    "requireQueueResumeVisibility": true,
+    "requireExecutionReviewLineage": true,
+    "requireBoundedFailureVisibility": true
+  }
+}

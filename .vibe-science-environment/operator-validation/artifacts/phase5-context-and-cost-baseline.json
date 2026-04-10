@@ -1,0 +1,105 @@
+{
+  "artifactId": "phase5-context-and-cost-baseline",
+  "phase": 5,
+  "createdAt": "2026-04-10T14:57:18.944Z",
+  "passed": true,
+  "validationClaim": "Phase 5 continuity assembly and one coordinator cycle now have a measured baseline instead of a guessed cost story.",
+  "measurementMethod": {
+    "continuityAssembly": "Measured from live assembleContinuityContext(...) outputs and formatted with formatContinuityForPrompt(...).",
+    "tokenCounter": "Measured with the repo token-counter helper; provider-native if configured, otherwise char_fallback.",
+    "coordinatorCycle": "Measured from one live /orchestrator-run plus /orchestrator-status cycle in a fresh eval workspace."
+  },
+  "scenario": {
+    "continuityQueryText": "lane run",
+    "cycleObjective": "Export a session digest for the current workspace.",
+    "cycleRunCommand": "/orchestrator-run",
+    "cycleStatusCommand": "/orchestrator-status"
+  },
+  "sources": {
+    "continuity": {
+      "profileMode": {
+        "totalTokens": 107,
+        "formattedTokens": 107,
+        "formattedChars": 428,
+        "retrievalHitCount": 0,
+        "sourceRefCount": 0,
+        "truncated": false,
+        "withinSubBudget": true
+      },
+      "queryMode": {
+        "totalTokens": 54,
+        "formattedTokens": 54,
+        "formattedChars": 214,
+        "retrievalHitCount": 1,
+        "sourceRefCount": 1,
+        "truncated": false,
+        "withinSubBudget": true
+      },
+      "fullMode": {
+        "totalTokens": 161,
+        "formattedTokens": 161,
+        "formattedChars": 644,
+        "retrievalHitCount": 1,
+        "sourceRefCount": 1,
+        "truncated": false,
+        "withinSubBudget": true
+      }
+    },
+    "coordinatorCycle": {
+      "runAttemptId": "ATT-2026-04-10-14-57-18-836-357d2a51",
+      "statusAttemptId": "ATT-2026-04-10-14-57-18-910-f556e309",
+      "actualWrites": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-CYCLE/session-digest.json",
+        ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-CYCLE/session-digest.md"
+      ],
+      "writeCountsByZone": {
+        "control": 4,
+        "orchestrator": 3,
+        "results": 2,
+        "other": 0
+      }
+    }
+  },
+  "totals": {
+    "continuitySubBudgetMax": 12000,
+    "profileTokens": 107,
+    "queryTokens": 54,
+    "fullTokens": 161,
+    "queryIncrementalVsProfile": -53,
+    "fullIncrementalVsProfile": 54,
+    "coordinatorRunElapsedSeconds": 0.076,
+    "coordinatorStatusElapsedSeconds": 0.026,
+    "coordinatorCycleElapsedSeconds": 0.102
+  },
+  "providerObservations": {
+    "executionLane": {
+      "providerRef": null,
+      "integrationKind": "local-logic",
+      "billingMode": "none",
+      "apiFallbackAllowed": false,
+      "observation": "The MVP execution lane is local-logic only, so this baseline observed no provider billing or external rate-limit surface."
+    },
+    "reviewLane": {
+      "providerRef": "openai/codex",
+      "integrationKind": "local-cli",
+      "billingMode": "plan-included",
+      "apiFallbackAllowed": false,
+      "observation": "The MVP review lane stays on the local CLI path in the saved baseline; no API fallback was required or observed."
+    }
+  },
+  "notes": [
+    "Continuity tokens are a sub-budget measurement for the assembler, not the total end-to-end prompt budget.",
+    "Coordinator cycle write counts include control-plane and orchestrator state plus the exported session digest."
+  ],
+  "referenceBudgets": {
+    "continuityFullModeTarget": "<= 12000 tokens",
+    "runtimeStory": "One local coordinator cycle should stay understandable in writes and cheap enough to inspect before Phase 6 expands provider scope."
+  }
+}

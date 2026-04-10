@@ -1,0 +1,314 @@
+{
+  "taskId": "orchestrator-bounded-failure-recovery",
+  "repeatId": "2026-04-10-02",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "command": {
+    "name": "/orchestrator-status",
+    "scope": "orchestrator-status",
+    "args": []
+  },
+  "result": {
+    "summary": "A bounded execution failure became explicit recovery plus pending escalation through status.",
+    "warnings": [],
+    "payload": {
+      "run": {
+        "laneRunStatus": "escalated",
+        "taskStatus": "escalated",
+        "failureClass": "tool-failure",
+        "recoveryAction": "escalate-to-user",
+        "escalationStatus": "pending"
+      },
+      "status": {
+        "queueTotal": 1,
+        "readyCount": 0,
+        "completedCount": 0,
+        "escalatedCount": 1,
+        "nextActionKind": "resolve-escalation",
+        "activeObjective": "Run an unsupported Phase 5 task class.",
+        "latestRecoveryFailureClass": "tool-failure",
+        "latestEscalationStatus": "pending"
+      }
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+    "scope": "orchestrator-status",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-10T14:57:12.799Z",
+    "lastHeartbeatAt": "2026-04-10T14:57:12.828Z",
+    "endedAt": "2026-04-10T14:57:12.828Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Resolve execution failure for ORCH-TASK-2026-04-10-14-57-12-667-d638a183: Unsupported execution task kind: null"
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": null,
+    "currentStage": null,
+    "nextActions": [],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": false,
+      "degradedReason": "bridge unavailable"
+    },
+    "capabilities": {
+      "claimHeads": false,
+      "citationChecks": false,
+      "governanceProfileAtCreation": false,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0
+    },
+    "lastCommand": "/orchestrator-status",
+    "lastAttemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+    "updatedAt": "2026-04-10T14:57:12.822Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": false,
+      "projections": {
+        "overview": false,
+        "claimHeads": false,
+        "unresolvedClaims": false,
+        "citationChecks": false
+      },
+      "advanced": {
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": [
+        "control-plane",
+        "flow-results",
+        "flow-writing",
+        "governance-core",
+        "orchestrator-core"
+      ]
+    },
+    "updatedAt": "2026-04-10T14:57:12.797Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/orchestrator/escalations.jsonl",
+    ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+    ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+    ".vibe-science-environment/orchestrator/router-session.json",
+    ".vibe-science-environment/orchestrator/run-queue.jsonl"
+  ],
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+      "scope": "orchestrator-status",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-10T14:57:12.799Z",
+      "lastHeartbeatAt": "2026-04-10T14:57:12.828Z",
+      "endedAt": "2026-04-10T14:57:12.828Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Resolve execution failure for ORCH-TASK-2026-04-10-14-57-12-667-d638a183: Unsupported execution task kind: null",
+      "events": [
+        {
+          "eventId": "EVT-1775833032831-8fb0ea",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.831Z"
+        },
+        {
+          "eventId": "EVT-1775833032824-2f3016",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.824Z"
+        },
+        {
+          "eventId": "EVT-1775833032810-d9ef01",
+          "kind": "degraded_mode_entered",
+          "attemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "warning",
+          "message": "bridge unavailable",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.810Z"
+        },
+        {
+          "eventId": "EVT-1775833032803-6f65a2",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+          "scope": "orchestrator-status",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /orchestrator-status",
+          "details": null,
+          "recordedAt": "2026-04-10T14:57:12.803Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "session-snapshot",
+      "passed": true,
+      "expected": {
+        "lastCommand": "/orchestrator-status"
+      },
+      "actual": {
+        "schemaVersion": "vibe-env.session.v1",
+        "activeFlow": null,
+        "currentStage": null,
+        "nextActions": [],
+        "blockers": [],
+        "kernel": {
+          "dbAvailable": false,
+          "degradedReason": "bridge unavailable"
+        },
+        "capabilities": {
+          "claimHeads": false,
+          "citationChecks": false,
+          "governanceProfileAtCreation": false,
+          "claimSearch": false
+        },
+        "budget": {
+          "state": "unknown",
+          "toolCalls": 0,
+          "estimatedCostUsd": 0,
+          "countingMode": "unknown"
+        },
+        "signals": {
+          "staleMemory": false,
+          "unresolvedClaims": 0,
+          "blockedExperiments": 0,
+          "exportAlerts": 0
+        },
+        "lastCommand": "/orchestrator-status",
+        "lastAttemptId": "ATT-2026-04-10-14-57-12-799-7b301e40",
+        "updatedAt": "2026-04-10T14:57:12.822Z"
+      }
+    },
+    {
+      "name": "command-result",
+      "passed": true,
+      "expected": {
+        "payload": {
+          "run": {
+            "laneRunStatus": "escalated",
+            "taskStatus": "escalated",
+            "failureClass": "tool-failure",
+            "recoveryAction": "escalate-to-user",
+            "escalationStatus": "pending"
+          },
+          "status": {
+            "queueTotal": 1,
+            "escalatedCount": 1,
+            "nextActionKind": "resolve-escalation",
+            "latestRecoveryFailureClass": "tool-failure",
+            "latestEscalationStatus": "pending"
+          }
+        }
+      },
+      "actual": {
+        "summary": "A bounded execution failure became explicit recovery plus pending escalation through status.",
+        "warnings": [],
+        "payload": {
+          "run": {
+            "laneRunStatus": "escalated",
+            "taskStatus": "escalated",
+            "failureClass": "tool-failure",
+            "recoveryAction": "escalate-to-user",
+            "escalationStatus": "pending"
+          },
+          "status": {
+            "queueTotal": 1,
+            "readyCount": 0,
+            "completedCount": 0,
+            "escalatedCount": 1,
+            "nextActionKind": "resolve-escalation",
+            "activeObjective": "Run an unsupported Phase 5 task class.",
+            "latestRecoveryFailureClass": "tool-failure",
+            "latestEscalationStatus": "pending"
+          }
+        }
+      }
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+        ".vibe-science-environment/orchestrator/escalations.jsonl"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/escalations.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/orchestrator/escalations.jsonl",
+        ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+        ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+        ".vibe-science-environment/orchestrator/router-session.json",
+        ".vibe-science-environment/orchestrator/run-queue.jsonl"
+      ]
+    }
+  ]
+}

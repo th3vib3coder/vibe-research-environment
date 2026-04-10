@@ -80,7 +80,11 @@ const activeEvalTaskFiles = [
   'stale-memory-reminder-reviewable-artifact.json',
   'export-warning-digest-reviewable-artifact.json',
   'flow-status-domain-pack-omics.json',
-  'flow-status-domain-pack-fallback.json'
+  'flow-status-domain-pack-fallback.json',
+  'orchestrator-status-queue-resume.json',
+  'orchestrator-continuity-modes.json',
+  'orchestrator-execution-review-lineage.json',
+  'orchestrator-bounded-failure-recovery.json'
 ];
 
 const activeEvalMetricFiles = [
@@ -123,6 +127,11 @@ const evalBenchmarkSpecs = [
     file: 'phase4-external-surfaces.benchmark.json',
     phase: 4,
     benchmarkId: 'phase4-external-surfaces'
+  },
+  {
+    file: 'phase5-orchestrator-mvp.benchmark.json',
+    phase: 5,
+    benchmarkId: 'phase5-orchestrator-mvp'
   }
 ];
 const activeFlowTestFiles = [
@@ -240,7 +249,12 @@ export default async function validateRuntimeContracts() {
               taskFile.startsWith('flow-status-domain-pack-omics') ||
               taskFile.startsWith('flow-status-domain-pack-fallback')
             ? 4
-            : 3;
+            : taskFile.startsWith('orchestrator-status-queue-resume') ||
+                taskFile.startsWith('orchestrator-continuity-modes') ||
+                taskFile.startsWith('orchestrator-execution-review-lineage') ||
+                taskFile.startsWith('orchestrator-bounded-failure-recovery')
+              ? 5
+              : 3;
     const expectedBenchmarkId =
       expectedPhase === 1
         ? 'phase1-core'
@@ -248,7 +262,9 @@ export default async function validateRuntimeContracts() {
           ? 'phase2-memory-packaging'
           : expectedPhase === 3
             ? 'phase3-writing-deliverables'
-            : 'phase4-external-surfaces';
+            : expectedPhase === 4
+              ? 'phase4-external-surfaces'
+              : 'phase5-orchestrator-mvp';
     assert(task.phase === expectedPhase, `Eval task ${taskFile} drifted from Phase ${expectedPhase}`);
     assert(
       Array.isArray(task.benchmarkIds) && task.benchmarkIds.includes(expectedBenchmarkId),
