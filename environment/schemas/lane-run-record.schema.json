@@ -11,6 +11,7 @@
     "taskId",
     "providerRef",
     "integrationKind",
+    "fallbackApplied",
     "supervisionCapability",
     "status",
     "attemptNumber",
@@ -50,18 +51,21 @@
         "null"
       ]
     },
-    "integrationKind": {
-      "type": "string",
-      "enum": [
-        "local-cli",
-        "sdk",
-        "api",
-        "cloud-task",
-        "local-logic"
-      ]
-    },
-    "supervisionCapability": {
-      "type": "string",
+        "integrationKind": {
+          "type": "string",
+          "enum": [
+            "local-cli",
+            "sdk",
+            "api",
+            "cloud-task",
+            "local-logic"
+          ]
+        },
+        "fallbackApplied": {
+          "type": "boolean"
+        },
+        "supervisionCapability": {
+          "type": "string",
       "enum": [
         "fire-and-forget",
         "output-only",

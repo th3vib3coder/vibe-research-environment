@@ -35,6 +35,7 @@ import {
 } from '../../orchestrator/ledgers.js';
 import { createQueueTask } from '../../orchestrator/queue.js';
 import {
+  buildDefaultContinuityProfile,
   bootstrapContinuityProfile,
   bootstrapLanePolicies,
   bootstrapOrchestratorLedgers,
@@ -181,6 +182,96 @@ test('continuity proposals stay inert until confirmed and can be rejected withou
   } finally {
     await cleanupFixtureProject(projectRoot);
   }
+});
+
+test('profile mode stays read-only and falls back to the default stable profile', async () => {
+  const projectRoot = await createFixtureProject('vre-orch-continuity-profile-');
+
+  try {
+    clearContinuityAssemblyCache();
+
+    assert.equal(await readContinuityProfile(projectRoot), null);
+    assert.deepEqual(await listContinuityProfileHistory(projectRoot), []);
+
+    const payload = await assembleContinuityContext(projectRoot, {
+      mode: 'profile',
+      maxTokens: 400,
+    });
+
+    const defaults = buildDefaultContinuityProfile();
+    defaults.updatedAt = payload.stableProfile.updatedAt;
+
+    assert.deepEqual(payload.stableProfile, defaults);
+    assert.equal(payload.dynamicContext.objective, null);
+    assert.equal(payload.dynamicContext.currentMode, null);
+    assert.equal(payload.dynamicContext.queue.total, 0);
+    assert.deepEqual(payload.retrievalHits, []);
+    assert.deepEqual(payload.sourceRefs, []);
+    assert.equal(payload.truncated, false);
+    assert.equal(await readContinuityProfile(projectRoot), null);
+    assert.deepEqual(await listContinuityProfileHistory(projectRoot), []);
+  } finally {
+    clearContinuityAssemblyCache();
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('continuity recall dedup keeps stable and dynamic context ahead of recall hits', () => {
+  const stableProfile = buildDefaultContinuityProfile({
+    updatedAt: '2026-04-10T09:00:00Z',
+  });
+  const dynamicContext = {
+    objective: 'Review the current digest.',
+    currentMode: 'review',
+    activeThreadId: null,
+    laneId: 'review',
+    queueFocusTaskId: 'ORCH-TASK-2026-04-10-DEDUP',
+    currentTarget: null,
+    session: null,
+    blockers: [],
+    queue: null,
+    escalations: null,
+    recovery: null,
+    memory: null,
+    domain: null,
+    connectors: { total: 0, degraded: 0, unavailable: 0 },
+    automations: { total: 0, blocked: 0, degraded: 0 },
+    writingSignals: null,
+    resultsSignals: null,
+    recentAttempts: [],
+    recentDecisions: [],
+  };
+  const dedup = CONTEXT_INTERNALS.deduplicateRecallHits(stableProfile, dynamicContext, [
+    {
+      sourceType: 'decision-log',
+      sourceRef: 'decision/ORCH-1',
+      title: null,
+      summary: '- Default autonomy: advisory',
+      recordedAt: '2026-04-10T09:01:00Z',
+      isStale: false,
+    },
+    {
+      sourceType: 'lane-run',
+      sourceRef: 'lane-run/ORCH-RUN-DEDUP',
+      title: null,
+      summary: '- Objective: Review the current digest.',
+      recordedAt: '2026-04-10T09:02:00Z',
+      isStale: false,
+    },
+    {
+      sourceType: 'writing-pack',
+      sourceRef: 'writing-pack/WPACK-DEDUP',
+      title: 'Advisor caveat',
+      summary: 'Highlight the unresolved export alert before shipping the digest.',
+      recordedAt: '2026-04-10T09:03:00Z',
+      isStale: false,
+    },
+  ]);
+
+  assert.equal(dedup.dedupCount, 2);
+  assert.equal(dedup.hits.length, 1);
+  assert.equal(dedup.hits[0].sourceType, 'writing-pack');
+  assert.equal(dedup.hits[0].sourceRef, 'writing-pack/WPACK-DEDUP');
 });
 
 test('assembleContinuityContext builds helper-backed full continuity payloads and formatter output', async () => {

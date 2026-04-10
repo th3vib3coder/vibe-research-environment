@@ -154,6 +154,7 @@ const activeIntegrationTestFiles = [
   'literature-register.test.js',
   'experiment-manifest-lifecycle.test.js',
   'memory-sync.test.js',
+  'orchestrator-run-status.test.js',
   'results-packaging.test.js',
   'session-digest-export.test.js',
   'writing-packs.test.js',

@@ -34,6 +34,7 @@ export async function appendLaneRun(projectPath, data = {}) {
     taskId: data.taskId ?? null,
     providerRef: data.providerRef ?? null,
     integrationKind: data.integrationKind,
+    fallbackApplied: data.fallbackApplied ?? false,
     supervisionCapability: data.supervisionCapability,
     status: data.status,
     attemptNumber: data.attemptNumber ?? 1,

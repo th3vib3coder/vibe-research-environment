@@ -32,6 +32,24 @@ function normalizeReviewOutcome(result = {}, comparedArtifactRefs = []) {
   };
 }
 
+function assertReviewableTask(task) {
+  if (task.ownerLane === 'review') {
+    if (!['ready', 'queued'].includes(task.status)) {
+      throw new Error(`Review task ${task.taskId} is not reviewable from status ${task.status}.`);
+    }
+    return;
+  }
+
+  if (task.ownerLane === 'execution') {
+    if (task.status !== 'completed') {
+      throw new Error(`Execution task ${task.taskId} is not reviewable until it reaches completed status.`);
+    }
+    return;
+  }
+
+  throw new Error(`Task ${task.taskId} owned by ${task.ownerLane} cannot be reviewed in Phase 5.`);
+}
+
 async function resolveReviewTask(projectPath, task) {
   if (Array.isArray(task.artifactRefs) && task.artifactRefs.length > 0) {
     return {
@@ -75,6 +93,18 @@ function classifyReviewFailure(outcome) {
   return 'ambiguous-user-request';
 }
 
+function classifyReviewRuntimeFailure(error) {
+  if (error?.code === 'ENOENT') {
+    return 'dependency-unavailable';
+  }
+
+  if (/schema|contract|validation/u.test(error?.message ?? '')) {
+    return 'contract-mismatch';
+  }
+
+  return 'tool-failure';
+}
+
 async function nextAttemptNumber(projectPath, taskId) {
   const records = await listLaneRuns(projectPath, {
     laneId: 'review',
@@ -88,6 +118,7 @@ export async function runReviewLane(projectPath, options = {}) {
   if (!task) {
     throw new Error(`Queue task not found: ${options.taskId}`);
   }
+  assertReviewableTask(task);
 
   const [lanePolicies, continuityProfile] = await Promise.all([
     readLanePolicies(projectPath),
@@ -102,102 +133,182 @@ export async function runReviewLane(projectPath, options = {}) {
     systemDefaultAllowApiFallback: false,
   });
   const attemptNumber = await nextAttemptNumber(projectPath, task.taskId);
+  const attemptLimit = lanePolicies?.lanes?.review?.retryPolicy?.maxAttempts ?? 1;
   const startedAt = now();
-  const reviewTask = await resolveReviewTask(projectPath, task);
-  if (reviewTask.comparedArtifactRefs.length === 0) {
-    throw new Error(`Review task ${task.taskId} has no visible artifact refs to compare.`);
-  }
 
   await appendQueueStatusTransition(projectPath, task.taskId, {
     status: 'waiting-review',
     statusReason: 'Review lane started.',
   });
 
-  const continuity = await assembleContinuityContext(projectPath, {
-    mode: 'query',
-    laneId: 'review',
-    queryText: task.objective ?? 'review current task',
-    limit: 3,
-    maxTokens: 1500,
-  });
+  try {
+    const reviewTask = await resolveReviewTask(projectPath, task);
+    if (reviewTask.comparedArtifactRefs.length === 0) {
+      throw new Error(`Review task ${task.taskId} has no visible artifact refs to compare.`);
+    }
+    if (!reviewTask.executionLaneRunId) {
+      throw new Error(
+        `Review task ${task.taskId} is missing execution lineage required by the external review contract.`,
+      );
+    }
 
-  const result = await invokeLaneBinding(binding, options.providerExecutors ?? {}, {
-    task,
-    comparedArtifactRefs: reviewTask.comparedArtifactRefs,
-    continuity,
-  });
-  const outcome = normalizeReviewOutcome(result, reviewTask.comparedArtifactRefs);
-  const laneRun = await appendLaneRun(projectPath, {
-    laneId: 'review',
-    taskId: task.taskId,
-    providerRef: binding.providerRef,
-    integrationKind: binding.integrationKind,
-    supervisionCapability: binding.supervisionCapability,
-    status: outcome.verdict === 'affirmed' ? 'completed' : 'escalated',
-    attemptNumber,
-    startedAt,
-    endedAt: now(),
-    artifactRefs: outcome.comparedArtifactRefs,
-    summary: outcome.summary,
-  });
-
-  let escalation = null;
-  let recovery = null;
-  if (outcome.verdict !== 'affirmed') {
-    const failureClass = classifyReviewFailure(outcome);
-    const recoveryPolicy = getDefaultRecoveryPolicy(failureClass);
-
-    escalation = await appendEscalationRecord(projectPath, {
-      taskId: task.taskId,
-      laneRunId: laneRun.laneRunId,
-      status: 'pending',
-      triggerKind: 'review-disagreement',
-      decisionNeeded: outcome.summary,
-      contextShown: [
-        `queue/${task.taskId}`,
-        `lane-run/${laneRun.laneRunId}`,
-      ],
+    const continuity = await assembleContinuityContext(projectPath, {
+      mode: 'query',
+      laneId: 'review',
+      queryText: task.objective ?? 'review current task',
+      limit: 3,
+      maxTokens: 1500,
     });
 
-    recovery = await appendRecoveryRecord(projectPath, {
+    const result = await invokeLaneBinding(binding, options.providerExecutors ?? {}, {
+      task,
+      comparedArtifactRefs: reviewTask.comparedArtifactRefs,
+      continuity,
+    });
+    const outcome = normalizeReviewOutcome(result, reviewTask.comparedArtifactRefs);
+    const laneRun = await appendLaneRun(projectPath, {
+      laneId: 'review',
+      taskId: task.taskId,
+      providerRef: binding.providerRef,
+      integrationKind: binding.integrationKind,
+      fallbackApplied: binding.fallbackApplied,
+      supervisionCapability: binding.supervisionCapability,
+      status: outcome.verdict === 'affirmed' ? 'completed' : 'escalated',
+      attemptNumber,
+      startedAt,
+      endedAt: now(),
+      artifactRefs: outcome.comparedArtifactRefs,
+      summary: outcome.summary,
+    });
+
+    let escalation = null;
+    let recovery = null;
+    if (outcome.verdict !== 'affirmed') {
+      const failureClass = classifyReviewFailure(outcome);
+      const recoveryPolicy = getDefaultRecoveryPolicy(failureClass);
+
+      escalation = await appendEscalationRecord(projectPath, {
+        taskId: task.taskId,
+        laneRunId: laneRun.laneRunId,
+        status: 'pending',
+        triggerKind: 'review-disagreement',
+        decisionNeeded: outcome.summary,
+        contextShown: [
+          `queue/${task.taskId}`,
+          `lane-run/${laneRun.laneRunId}`,
+        ],
+      });
+
+      recovery = await appendRecoveryRecord(projectPath, {
+        taskId: task.taskId,
+        laneRunId: laneRun.laneRunId,
+        failureClass,
+        recoveryAction: recoveryPolicy.recoveryAction,
+        attemptNumber,
+        result: 'escalated',
+        escalationId: escalation.escalationId,
+        summary: outcome.summary,
+      });
+    }
+
+    const externalReview = await appendExternalReviewRecord(projectPath, {
+      taskId: task.taskId,
+      executionLaneRunId: reviewTask.executionLaneRunId,
+      reviewLaneRunId: laneRun.laneRunId,
+      verdict: outcome.verdict,
+      materialMismatch: outcome.materialMismatch,
+      summary: outcome.summary,
+      comparedArtifactRefs: outcome.comparedArtifactRefs,
+      followUpAction: outcome.followUpAction,
+      escalationId: escalation?.escalationId ?? null,
+    });
+
+    await appendQueueStatusTransition(projectPath, task.taskId, {
+      status: outcome.verdict === 'affirmed' ? 'completed' : 'escalated',
+      eventKind: outcome.verdict === 'affirmed' ? 'closed' : 'escalation-link',
+      laneRunId: laneRun.laneRunId,
+      artifactRefs: outcome.comparedArtifactRefs,
+      statusReason: outcome.summary,
+      escalationNeeded: outcome.verdict !== 'affirmed',
+    });
+
+    return {
+      laneRun,
+      task: await getQueueTask(projectPath, task.taskId),
+      externalReview,
+      escalation,
+      recovery,
+      binding,
+    };
+  } catch (error) {
+    const failureClass = classifyReviewRuntimeFailure(error);
+    const recoveryPolicy = getDefaultRecoveryPolicy(failureClass);
+    const shouldEscalate = recoveryPolicy.escalateImmediately || attemptNumber >= attemptLimit;
+
+    const laneRun = await appendLaneRun(projectPath, {
+      laneId: 'review',
+      taskId: task.taskId,
+      providerRef: binding.providerRef,
+      integrationKind: binding.integrationKind,
+      fallbackApplied: binding.fallbackApplied,
+      supervisionCapability: binding.supervisionCapability,
+      status: shouldEscalate ? 'escalated' : 'failed',
+      attemptNumber,
+      startedAt,
+      endedAt: now(),
+      artifactRefs: [],
+      summary: error.message,
+      errorCode: failureClass,
+    });
+
+    const escalation = shouldEscalate
+      ? await appendEscalationRecord(projectPath, {
+        taskId: task.taskId,
+        laneRunId: laneRun.laneRunId,
+        status: 'pending',
+        triggerKind:
+          failureClass === 'dependency-unavailable'
+            ? 'blocked-prerequisite'
+            : failureClass === 'contract-mismatch'
+              ? 'contract-mismatch'
+              : 'review-disagreement',
+        decisionNeeded: `Resolve review failure for ${task.taskId}: ${error.message}`,
+        contextShown: [
+          `queue/${task.taskId}`,
+          `lane-run/${laneRun.laneRunId}`,
+        ],
+      })
+      : null;
+
+    const recovery = await appendRecoveryRecord(projectPath, {
       taskId: task.taskId,
       laneRunId: laneRun.laneRunId,
       failureClass,
-      recoveryAction: recoveryPolicy.recoveryAction,
+      recoveryAction: shouldEscalate ? 'escalate-to-user' : recoveryPolicy.recoveryAction,
       attemptNumber,
-      result: 'escalated',
-      escalationId: escalation.escalationId,
-      summary: outcome.summary,
+      result: shouldEscalate ? 'escalated' : 'scheduled',
+      escalationId: escalation?.escalationId ?? null,
+      summary: error.message,
     });
+
+    await appendQueueStatusTransition(projectPath, task.taskId, {
+      status: shouldEscalate ? 'escalated' : 'blocked',
+      eventKind: shouldEscalate ? 'escalation-link' : 'recovery-update',
+      laneRunId: laneRun.laneRunId,
+      statusReason: shouldEscalate
+        ? 'Review failed and requires operator intervention.'
+        : 'Review failed; bounded recovery recorded.',
+      escalationNeeded: shouldEscalate,
+    });
+
+    return {
+      laneRun,
+      task: await getQueueTask(projectPath, task.taskId),
+      externalReview: null,
+      escalation,
+      recovery,
+      binding,
+      error,
+    };
   }
-
-  const externalReview = await appendExternalReviewRecord(projectPath, {
-    taskId: task.taskId,
-    executionLaneRunId: reviewTask.executionLaneRunId ?? laneRun.laneRunId,
-    reviewLaneRunId: laneRun.laneRunId,
-    verdict: outcome.verdict,
-    materialMismatch: outcome.materialMismatch,
-    summary: outcome.summary,
-    comparedArtifactRefs: outcome.comparedArtifactRefs,
-    followUpAction: outcome.followUpAction,
-    escalationId: escalation?.escalationId ?? null,
-  });
-
-  await appendQueueStatusTransition(projectPath, task.taskId, {
-    status: outcome.verdict === 'affirmed' ? 'completed' : 'escalated',
-    eventKind: outcome.verdict === 'affirmed' ? 'closed' : 'escalation-link',
-    laneRunId: laneRun.laneRunId,
-    artifactRefs: outcome.comparedArtifactRefs,
-    statusReason: outcome.summary,
-    escalationNeeded: outcome.verdict !== 'affirmed',
-  });
-
-  return {
-    laneRun,
-    task: await getQueueTask(projectPath, task.taskId),
-    externalReview,
-    escalation,
-    recovery,
-    binding,
-  };
 }

@@ -150,11 +150,11 @@ function buildImmediateEscalation({ mode, objective, taskKind, artifactRefs, tar
     };
   }
 
-  if (mode === 'review' && (!artifactRefs?.length) && targetRef?.kind !== 'queue-task') {
+  if (mode === 'review' && targetRef?.kind !== 'queue-task') {
     return {
       triggerKind: 'review-disagreement',
-      decisionNeeded: 'Provide artifact refs or a queue-task target before review can start.',
-      summary: 'Review task needs visible evidence inputs.',
+      decisionNeeded: 'Provide a queue-task target backed by execution output before review can start.',
+      summary: 'Review task needs an execution-backed queue target.',
     };
   }
 

@@ -111,3 +111,75 @@ test('orchestrator run and status surfaces work through middleware', async () =>
     await cleanupFixtureProject(projectRoot);
   }
 });
+
+test('orchestrator status reports an empty queue before any task is routed', async () => {
+  const projectRoot = await createFixtureProject('vre-int-orchestrator-empty-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-results',
+      'flow-writing',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, {
+      lanePolicies: buildWave3LanePolicies(),
+    });
+
+    const status = await runOrchestratorStatus({
+      projectPath: projectRoot,
+    });
+
+    assert.equal(status.attempt.status, 'succeeded');
+    assert.equal(status.result.payload.queue.total, 0);
+    assert.deepEqual(status.result.payload.activeLaneRuns, []);
+    assert.equal(status.result.payload.activeObjective, null);
+    assert.equal(status.result.payload.nextRecommendedOperatorAction.kind, 'none');
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('orchestrator status shows completed and blocked tasks across multiple public runtime calls', async () => {
+  const projectRoot = await createFixtureProject('vre-int-orchestrator-multi-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-results',
+      'flow-writing',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, {
+      lanePolicies: buildWave3LanePolicies(),
+    });
+
+    const executionRun = await runOrchestratorObjective({
+      projectPath: projectRoot,
+      objective: 'Export a session digest for the current workspace.',
+    });
+    const blockedReviewRun = await runOrchestratorObjective({
+      projectPath: projectRoot,
+      objective: 'Run a contrarian review of the current digest.',
+      requestedMode: 'review',
+    });
+    const status = await runOrchestratorStatus({
+      projectPath: projectRoot,
+    });
+
+    assert.equal(executionRun.attempt.status, 'succeeded');
+    assert.equal(blockedReviewRun.attempt.status, 'succeeded');
+    assert.ok(blockedReviewRun.result.payload.coordinator.route.immediateEscalation);
+    assert.equal(status.result.payload.queue.total, 2);
+    assert.equal(status.result.payload.queue.byDerivedStatus.completed, 1);
+    assert.equal(status.result.payload.queue.byDerivedStatus.blocked, 1);
+    assert.ok(status.result.payload.latestEscalationOrBlocker);
+    assert.equal(status.result.payload.nextRecommendedOperatorAction.kind, 'resolve-escalation');
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
