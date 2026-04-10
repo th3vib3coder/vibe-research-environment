@@ -1,7 +1,5 @@
 # Vibe Research Environment
 
-## English
-
 **When you do research with AI, the work disappears into chat.**
 Analyses get lost, experiments stop being reproducible, claims become hard to
 verify, and drafts mix facts with speculation. After a few days, nobody knows
@@ -190,7 +188,7 @@ review, and recovery must remain inspectable.
 - [Orchestrator Spec](blueprints/definitive-spec/surface-orchestrator/00-index.md)
 
 ---
-
+=========================================================================================
 ## Italiano
 
 **Quando fai ricerca con l'AI, il lavoro sparisce nella chat.**
