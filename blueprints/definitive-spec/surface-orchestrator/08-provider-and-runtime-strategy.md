@@ -179,9 +179,9 @@ Phase 0 should freeze a contract roughly like this for each lane binding.
 | Field | Meaning |
 |------|---------|
 | `providerRef` | `anthropic/claude-code`, `openai/codex`, `google/gemini-cli`, or future ref |
-| `integrationKind` | `local-cli`, `sdk`, `api`, or `cloud-task` |
-| `authMode` | `subscription`, `enterprise-seat`, `api-key`, or `cloud-iam` |
-| `billingMode` | `plan-included`, `usage-based`, or `mixed` |
+| `integrationKind` | `local-cli`, `sdk`, `api`, `cloud-task`, or `local-logic` (for non-provider lanes) |
+| `authMode` | `subscription`, `enterprise-seat`, `api-key`, `cloud-iam`, or `local-only` (for non-provider lanes) |
+| `billingMode` | `plan-included`, `usage-based`, `mixed`, or `none` (for non-provider lanes) |
 | `apiFallbackAllowed` | whether this lane may cross from plan-backed local runtime into API-backed execution |
 | `supervisionCapability` | `fire-and-forget`, `output-only`, `streaming`, or `programmatic` |
 | `interactive` | whether the lane is suited to local interactive turns |
