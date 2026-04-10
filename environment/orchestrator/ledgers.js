@@ -72,6 +72,11 @@ export async function listLaneRuns(projectPath, filters = {}) {
   return sortDescending(records, 'startedAt');
 }
 
+export async function getLatestLaneRun(projectPath, filters = {}) {
+  const [latest] = await listLaneRuns(projectPath, filters);
+  return latest ?? null;
+}
+
 export async function appendRecoveryRecord(projectPath, data = {}) {
   const record = {
     schemaVersion: 'vibe-orch.recovery-record.v1',
@@ -187,6 +192,11 @@ export async function listExternalReviewRecords(projectPath, filters = {}) {
   }
 
   return sortDescending(records, 'recordedAt');
+}
+
+export async function getLatestExternalReviewRecord(projectPath, filters = {}) {
+  const [latest] = await listExternalReviewRecords(projectPath, filters);
+  return latest ?? null;
 }
 
 export async function getLatestEscalation(projectPath) {

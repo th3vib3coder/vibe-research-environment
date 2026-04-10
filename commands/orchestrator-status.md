@@ -14,16 +14,17 @@ coordinator.
 Expose the first operator-facing orchestrator summary without inventing a
 dashboard.
 
-Until the Phase 5 runtime exists, this command must **not** simulate queue or
-lane state. It should say clearly that the orchestrator runtime is not yet
-implemented.
+The Phase 5 local runtime now exists under `environment/orchestrator/`, but
+this repo still documents command surfaces as markdown contracts because there
+is no generic standalone command dispatcher yet.
 
 ## Future implementation stance
 
-Phase 5 should implement this command as a thin status shim above:
+Phase 5 implements this surface as a thin status shim above:
 - the existing `/flow-status` surface
 - shared orchestrator state under `environment/orchestrator/`
 - the orchestrator query helper once it exists
+- `runOrchestratorStatus(...)` in `environment/orchestrator/runtime.js`
 
 ## Required status fields
 

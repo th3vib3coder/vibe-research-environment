@@ -160,6 +160,10 @@ async function latestTaskRecord(projectPath, taskId) {
   return latest.find((task) => task.taskId === taskId) ?? null;
 }
 
+export async function getQueueTask(projectPath, taskId) {
+  return latestTaskRecord(projectPath, taskId);
+}
+
 export async function appendQueueStatusTransition(projectPath, taskId, patch = {}) {
   const previous = await latestTaskRecord(projectPath, taskId);
   if (!previous) {

@@ -14,16 +14,17 @@ coordinator.
 Create one explicit operator entry point for starting or continuing work
 through the orchestrator queue.
 
-Until the Phase 5 runtime exists, this command must **not** fabricate queue
-records or lane activity. It should say clearly that the orchestrator runtime
-is not yet implemented.
+The Phase 5 local runtime now exists under `environment/orchestrator/`, but
+this repo still documents command surfaces as markdown contracts because there
+is no generic standalone command dispatcher yet.
 
 ## Future implementation stance
 
-Phase 5 should implement this command as a thin run shim above:
+Phase 5 implements this surface as a thin run shim above:
 - shared orchestrator runtime under `environment/orchestrator/`
 - the append-only queue model
 - the execution and review lane contracts
+- `runOrchestratorObjective(...)` in `environment/orchestrator/runtime.js`
 
 ## Minimum contract
 
