@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-03
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1-4 closed with saved evidence
+**Status:** Phase 1-5 closed with saved evidence
 
 ---
 
@@ -59,7 +59,7 @@ The plan sets currently on disk are:
 - [implementation-plan/phase4-06-wave-5-evals-and-closeout.md](./implementation-plan/phase4-06-wave-5-evals-and-closeout.md)
 - [implementation-plan/phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 
-### Phase 5 (active planning)
+### Phase 5 (completed)
 
 - [implementation-plan/phase5-00-index.md](./implementation-plan/phase5-00-index.md)
 - [implementation-plan/phase5-01-wave-0-contract-artifacts.md](./implementation-plan/phase5-01-wave-0-contract-artifacts.md)
@@ -68,14 +68,16 @@ The plan sets currently on disk are:
 - [implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md](./implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md)
 - [implementation-plan/phase5-05-wave-4-tests-and-validators.md](./implementation-plan/phase5-05-wave-4-tests-and-validators.md)
 - [implementation-plan/phase5-06-wave-5-evals-and-closeout.md](./implementation-plan/phase5-06-wave-5-evals-and-closeout.md)
+- [implementation-plan/phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 
 ### Companion Future Overlay Specs
 
 - [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
 
-This spec set is intentionally tracked here for planning continuity. It is not
-part of the closed Phase 1-4 runtime, but it is now the active **next planning
-frontier** above VRE and below any future UI/channel surfaces.
+This spec set is intentionally tracked here for planning continuity. The local
+Phase 5 coordinator MVP is now closed; the surface-orchestrator spec remains
+the post-MVP expansion frontier above VRE and below any future UI/channel
+surfaces.
 
 ---
 
@@ -85,12 +87,11 @@ frontier** above VRE and below any future UI/channel surfaces.
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3 is closed with saved evidence: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4 is closed with saved evidence: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
+- Phase 5 is closed with saved evidence: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 - Surface orchestrator spec is now Phase 0-closed and implementation-ready:
   see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
-- Phase 5 is the active implementation-planning slice:
-  see [implementation-plan/phase5-00-index.md](./implementation-plan/phase5-00-index.md)
-- The recommended next execution move is Phase 5 Wave 0 contract artifacts, not
-  new architecture prose
+- The local coordinator MVP baseline is shipped; open a new phase only for
+  deferred post-MVP scope, not to relitigate Phase 5
 
 ---
 

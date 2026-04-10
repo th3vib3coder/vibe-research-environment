@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-09  
 **Scope:** first executable surface-orchestrator slice above VRE, grounded in `surface-orchestrator/` specs  
-**Status:** Active planning; runtime not implemented
+**Status:** Closed with runtime, saved evidence, and [phase5-closeout.md](./phase5-closeout.md)
 
 ---
 

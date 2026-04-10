@@ -6,14 +6,14 @@
 
 Build from highest researcher pain to lowest epistemic risk.
 
-## Live Status Snapshot (2026-04-04)
+## Live Status Snapshot (2026-04-10)
 
 - Phase 0: complete
 - Phase 1: closed with [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 - Phase 2: closed with [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4: closed with [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
-- Phase 5: active planning in [phase5-00-index.md](./implementation-plan/phase5-00-index.md)
+- Phase 5: closed with [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 
 The sections below preserve the original build order and gate definitions.
 Audited completion state now lives in the implementation-plan indexes and
@@ -182,10 +182,13 @@ context-assembly semantics above VRE.
 
 ---
 
-## Phase 5: Surface Orchestrator MVP (PLANNED)
+## Phase 5: Surface Orchestrator MVP (COMPLETE)
 
 **Goal:** Ship the first local coordinator runtime above VRE without turning
 the project into a general-purpose agent platform.
+
+Closeout:
+- [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 
 Planning set:
 - [implementation-plan/phase5-00-index.md](./implementation-plan/phase5-00-index.md)
@@ -202,6 +205,11 @@ Critical scope calls:
 - one execution lane plus one review lane
 - explicit continuity updates only
 - tests, validators, evals, and closeout evidence are part of the phase, not cleanup work
+
+Closed outcome:
+- local coordinator MVP shipped under `environment/orchestrator/`
+- Phase 5 saved benchmark repeats, operator-validation artifact, and measured context/cost baseline are on disk
+- public `/orchestrator-run` and `/orchestrator-status` surfaces are implemented as runtime-backed contract shims
 
 ---
 

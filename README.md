@@ -45,9 +45,7 @@ Closeout dossiers:
 
 Current design frontier:
 - [Surface Orchestrator Layer](blueprints/definitive-spec/surface-orchestrator/00-index.md)
-  — the future coordination shell above VRE
-  with the local MVP now shipped and the next frontier moved to post-MVP
-  expansion rather than first implementation
+  — the post-MVP expansion track above the shipped local coordinator baseline
 
 ## What You Can Run
 
@@ -135,7 +133,7 @@ The current benchmark set covers:
 - Phase 4 connectors, automation, and domain-pack evidence
 - Phase 5 orchestrator MVP evidence
 
-Phase 5 implementation is following the atomic wave plan under:
+Phase 5 implementation is closed through the atomic wave plan and closeout under:
 - [`blueprints/definitive-spec/implementation-plan/phase5-00-index.md`](blueprints/definitive-spec/implementation-plan/phase5-00-index.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md`](blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md`](blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md)
@@ -143,6 +141,7 @@ Phase 5 implementation is following the atomic wave plan under:
 - [`blueprints/definitive-spec/implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md`](blueprints/definitive-spec/implementation-plan/phase5-04-wave-3-local-coordinator-mvp.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-05-wave-4-tests-and-validators.md`](blueprints/definitive-spec/implementation-plan/phase5-05-wave-4-tests-and-validators.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-06-wave-5-evals-and-closeout.md`](blueprints/definitive-spec/implementation-plan/phase5-06-wave-5-evals-and-closeout.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-closeout.md`](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
 
 ## Spec Entry Points
 
