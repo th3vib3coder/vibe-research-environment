@@ -1,310 +1,180 @@
 # Vibe Research Environment
 
-Vibe Research Environment (VRE) is a **local, file-backed research operating
-system** built around the Vibe Science kernel.
+**Quando fai ricerca con l'AI, il lavoro sparisce nella chat.**
+Analisi perse, esperimenti non ripetibili, claim non verificabili, draft che
+mescolano fatti e speculazioni. Nessuno sa cosa è stato fatto, con quali dati,
+e cosa si può davvero affermare.
 
-The short version is:
+VRE risolve questo: tiene traccia di tutto il lavoro di ricerca su disco, in
+modo ispezionabile, riprendibile e sicuro da impacchettare.
 
-- the **kernel** owns scientific truth
-- **VRE** owns workflow, packaging, memory mirrors, writing handoff, and
-  orchestration
-- everything important stays **inspectable on disk**
-- the project is meant for **AI-assisted research work that must stay auditable**
+---
 
-This repository is not a chatbot wrapper and not a generic agent platform.
-It is the outer shell that makes research work resumable, reviewable, and safe
-to package without letting the shell redefine truth.
+## Cosa fa in pratica
 
-## Who This Is For
+VRE è un **guscio operativo** che metti attorno alla tua ricerca quando lavori
+con un agente AI (Claude Code, Codex, Gemini CLI, o qualsiasi altro). Il
+guscio:
 
-The first real user of this repo is:
+- **registra letteratura e esperimenti** con stato tracciabile
+- **salva risultati e artefatti** in pacchetti strutturati su disco
+- **gestisce la memoria** con mirror leggibili e sincronia esplicita
+- **produce draft e pacchetti per advisor** separando fatti verificati da
+  speculazioni
+- **coordina il lavoro** con una coda visibile, lane di esecuzione e review,
+  recovery onesti
+- **non inventa niente**: non scrive verità scientifica, non cattura preferenze
+  dalla chat, non fa lavoro nascosto
 
-- a researcher using AI to drive literature, experiment, and writing work
-- an operator who needs the work to stay resumable and auditable
-- a developer/research engineer working inside the repo, not a casual end-user
+---
 
-Today VRE is primarily a **local runtime plus command-contract layer** for an
-agentic environment such as Codex/Claude-style repo work. It is not yet a
-consumer-facing desktop app or polished standalone CLI product.
+## A chi serve
 
-## What This Project Is
+- Ricercatori che usano AI per analisi dati (bioinformatica, scRNA-seq, omics,
+  ma non solo)
+- Chi ha bisogno che il lavoro fatto con l'agente resti **auditabile e
+  riprendibile**, non perso nella cronologia chat
+- Chi vuole preparare output per advisor, co-autori, o tesi senza mescolare
+  risultati veri e allucinazioni
 
-VRE is the layer you put **around** a scientific kernel when you want to do
-real work with AI without turning the system into a black box.
+Non serve a chi vuole un chatbot generico o un dashboard punto-e-clicca.
 
-It gives you:
+---
 
-- a control plane for operator sessions
-- literature and experiment workflows
-- memory mirrors and session digests
-- result packaging and export-safe writing handoff
-- connectors, automations, and domain packs
-- a local orchestrator MVP with queue, continuity, execution, and review
+## Dove gira
 
-It does **not** own:
+VRE è codice Node.js locale. Non è un servizio cloud.
 
-- claim truth
-- citation truth
-- gate outcomes
-- governance truth
+Funziona su:
+- **Claude Code** (il primo host, nativo)
+- **Codex** (OpenAI) — il runtime è lo stesso, i command contract funzionano
+- **Qualsiasi ambiente agentico** che può leggere file e chiamare moduli JS
 
-Those remain kernel-owned.
+Il cuore del sistema (`environment/`) non dipende da nessun provider specifico.
+I comandi in `commands/` sono scritti come contratti che l'agente segue — non
+sono una CLI con un dispatcher proprio.
 
-## What Problem It Solves
+---
 
-Without a shell like this, research work done with AI tends to break in the
-same ways:
+## Come si usa oggi
 
-- the operator loses track of what was done
-- literature and experiments are hard to resume
-- writing exports blur validated and speculative content
-- important state lives only in chat
-- "automation" becomes hidden work with poor auditability
+1. Clona il repo
+2. `npm install`
+3. `npm run check` — verifica che tutto sia verde (331 test, 9 validator)
+4. Tieni anche un checkout sibling di `vibe-science` se vuoi le proiezioni
+   kernel-backed; senza, molte superfici degradano onestamente ma funzionano
+   in modalità workspace-first
+5. Apri il repo nel tuo ambiente agentico
+6. Parti da `/flow-status` per vedere lo stato
+7. Registra un paper con `/flow-literature` o un esperimento con
+   `/flow-experiment`
+8. Impacchetta i risultati con `/flow-results`
+9. Prepara un handoff di scrittura con `/flow-writing`
+10. Ispeziona cosa è stato scritto sotto `.vibe-science-environment/`
 
-VRE solves that by keeping the workflow explicit and machine-owned:
+Per l'orchestratore:
+- `/orchestrator-run` — lancia un obiettivo nella coda
+- `/orchestrator-status` — vedi coda, lane, escalation, prossima azione
 
-- session and attempt state are saved
-- experiment and writing artifacts are packaged on disk
-- memory mirrors are refreshed explicitly
-- warnings, blockers, and degraded states stay visible
-- orchestrated work goes through a queue instead of disappearing into prompt fog
+---
 
-## What You Can Do With It Today
+## Come aiuta nella ricerca data-driven
 
-As of the shipped Phase 5 baseline, the repo supports five real layers of
-behavior:
+VRE non fa statistica, non fa QC, non fa modellazione. Non è un motore
+scientifico. È il **sistema operativo attorno alla scienza**.
 
-1. **Control plane and core flows**
-   Track session state, attempts, decisions, events, literature work, and
-   experiment work.
-2. **Memory and results packaging**
-   Refresh memory mirrors, package experiment outputs, and export session
-   digests.
-3. **Writing handoff**
-   Build frozen export snapshots, claim-backed writing seeds, advisor packs,
-   rebuttal packs, and post-export warning surfaces.
-4. **Operational extensions**
-   Run connectors, automations, and domain-pack presets without changing
-   kernel truth.
-5. **Local orchestration**
-   Route one objective into a visible queue, execute bounded work, run
-   execution-backed review, assemble bounded continuity context, and expose
-   run/status runtime surfaces.
+In un progetto come scRNA-seq, il valore è:
 
-## How You Use It In Practice Today
+| Problema reale | Cosa fa VRE |
+|---------------|-------------|
+| "Quale analisi avevo fatto la settimana scorsa?" | Stato e tentativi salvati su disco |
+| "Questo risultato da dove viene?" | Ogni output è linkato a esperimento e parametri |
+| "Posso mandare questo draft all'advisor?" | Export-eligibility separa verificato da speculativo |
+| "L'agente ha fatto tutto da solo senza dirmi niente" | Coda visibile, escalation esplicite, recovery onesti |
+| "Ho perso il contesto dopo aver chiuso la chat" | Memory mirror + continuity profile riprendibili |
+| "Il reviewer mi ha chiesto i dati grezzi" | Bundle manifests con artefatti impacchettati |
 
-This is the part that usually gets lost: **you do not use VRE today as a web
-app or a CLI product with a polished dispatcher**.
+La formula giusta è:
 
-You use it in an agentic coding/research environment against the repo itself.
-The command surfaces in [`commands/`](commands/) are command contracts that the
-agent follows against the real runtime helpers under [`environment/`](environment/).
+**pipeline analitiche + kernel scientifico + VRE come guscio di coordinamento**
 
-The practical workflow today is:
+Non: VRE al posto della metodologia.
 
-1. open the repo in an agentic environment
-2. ask for status or resume through [`/flow-status`](commands/flow-status.md)
-3. register literature through [`/flow-literature`](commands/flow-literature.md)
-4. register and update experiments through [`/flow-experiment`](commands/flow-experiment.md)
-5. package outputs through [`/flow-results`](commands/flow-results.md)
-6. build writing handoff or packs through [`/flow-writing`](commands/flow-writing.md)
-7. refresh memory mirrors through [`/sync-memory`](commands/sync-memory.md)
-8. use the orchestrator runtime when you want one objective routed, queued,
-   executed, and optionally reviewed
+---
 
-There is no dashboard-first workflow, and there is no hidden background worker
-loop pretending to be "autonomy".
+## Architettura (in breve)
 
-## First Successful Use
+```
+┌──────────────────────────────────────────────────┐
+│  Agente AI (Claude Code / Codex / Gemini CLI)    │
+├──────────────────────────────────────────────────┤
+│  Orchestratore locale (Phase 5 MVP)              │
+│  coda · lane · review · recovery · continuity    │
+├──────────────────────────────────────────────────┤
+│  VRE — guscio operativo                          │
+│  flow · packaging · memory · connectors · domain │
+├──────────────────────────────────────────────────┤
+│  Kernel Vibe Science (truth, claims, gates)       │
+└──────────────────────────────────────────────────┘
+```
 
-If someone lands on the repo and wants to understand one successful path, this
-is the simplest honest story:
+- Il **kernel** possiede la verità scientifica (claim, citazioni, gate)
+- **VRE** possiede il workflow (flussi, packaging, export, memoria)
+- L'**orchestratore** coordina il lavoro (coda, lane, review, recovery)
+- L'**agente** è l'interfaccia umana
+- Nessun livello può riscrivere la verità del livello sotto
 
-1. clone `vibe-research-environment`
-2. keep a sibling checkout of `vibe-science` if you want the kernel-backed
-   projections; without it, many surfaces still work but degrade honestly
-3. run `npm install`
-4. run `npm run check` to verify the repo is healthy
-5. open the repo in an agentic environment
-6. start from [`/flow-status`](commands/flow-status.md) to see the operator
-   status surface
-7. register one paper with [`/flow-literature`](commands/flow-literature.md)
-   or one experiment with [`/flow-experiment`](commands/flow-experiment.md)
-8. package a completed experiment with [`/flow-results`](commands/flow-results.md)
-   or create a writing handoff with [`/flow-writing`](commands/flow-writing.md)
-9. inspect what was written under [`.vibe-science-environment/`](.vibe-science-environment/)
+---
 
-If that path works, you have understood the core product: VRE is a shell that
-turns research work into explicit state and inspectable artifacts.
+## Cosa c'è nel repo
 
-## What The Orchestrator Actually Does
+| Directory | Cosa contiene |
+|-----------|--------------|
+| `environment/control/` | Control plane, middleware, sessioni, tentativi, decisioni |
+| `environment/flows/` | Letteratura, esperimenti, risultati, writing, digest |
+| `environment/memory/` | Mirror leggibili, freshness, marks |
+| `environment/orchestrator/` | Coordinatore MVP Phase 5 |
+| `environment/connectors/` | Export verso filesystem, Obsidian, etc. |
+| `environment/automation/` | Automazioni reviewabili |
+| `environment/domain-packs/` | Preset per domini (omics, etc.) |
+| `environment/tests/` | 331 test: schema, runtime, integration, eval, CI |
+| `commands/` | Contratti comando per l'agente |
+| `blueprints/` | Spec, piani di implementazione, closeout |
+| `.vibe-science-environment/` | Stato macchina su disco; durante lo sviluppo contiene sia runtime state sia evidence salvata e versionata |
 
-The Phase 5 orchestrator MVP is a **local coordinator**, not a vague
-"agent framework".
+---
 
-Given one operator objective, it can:
-
-- classify the request into a mode
-- create a visible queue task
-- choose the proper lane under lane policy
-- execute bounded work
-- run execution-backed review
-- write escalation and recovery state when things go wrong
-- assemble bounded continuity context for the lane
-- report back a resumable status surface
-
-The key runtime pieces live in:
-
-- [`environment/orchestrator/router.js`](environment/orchestrator/router.js)
-- [`environment/orchestrator/queue.js`](environment/orchestrator/queue.js)
-- [`environment/orchestrator/ledgers.js`](environment/orchestrator/ledgers.js)
-- [`environment/orchestrator/execution-lane.js`](environment/orchestrator/execution-lane.js)
-- [`environment/orchestrator/review-lane.js`](environment/orchestrator/review-lane.js)
-- [`environment/orchestrator/continuity-profile.js`](environment/orchestrator/continuity-profile.js)
-- [`environment/orchestrator/context-assembly.js`](environment/orchestrator/context-assembly.js)
-- [`environment/orchestrator/runtime.js`](environment/orchestrator/runtime.js)
-
-What it **does not** do yet:
-
-- runnable reporting lane
-- runnable monitoring lane
-- runnable recover lane beyond bounded recovery records
-- dashboard UI
-- hosted supervision
-- automatic preference capture
-- invisible background autonomy
-
-## How One Request Flows
-
-One request through the orchestrator looks like this:
-
-1. the operator gives an objective
-2. VRE middleware opens an attempt and captures telemetry
-3. the router classifies the objective and writes a queue task
-4. the selected lane runs under explicit lane policy
-5. queue updates, lane runs, escalations, recovery, and external review are
-   written to disk
-6. status is rebuilt from those files, not guessed from memory
-
-That is the central design choice of the whole project:
-
-**important workflow state must survive the conversation and remain visible on
-disk.**
-
-## What Gets Written On Disk
-
-The machine-owned workspace state lives under:
-
-- [`.vibe-science-environment/`](.vibe-science-environment/)
-
-Important examples:
-
-- control-plane state under [`.vibe-science-environment/control/`](.vibe-science-environment/control/)
-- flow state under [`.vibe-science-environment/flows/`](.vibe-science-environment/flows/)
-- experiment manifests under [`.vibe-science-environment/experiments/`](.vibe-science-environment/experiments/)
-- results bundles under [`.vibe-science-environment/results/`](.vibe-science-environment/results/)
-- memory mirrors under [`.vibe-science-environment/memory/`](.vibe-science-environment/memory/)
-- orchestrator state under [`.vibe-science-environment/orchestrator/`](.vibe-science-environment/orchestrator/)
-- saved operator-validation evidence under [`.vibe-science-environment/operator-validation/`](.vibe-science-environment/operator-validation/)
-
-If you want to know whether the repo is "doing something" after use, these are
-the first places to inspect:
-
-- [`.vibe-science-environment/control/session.json`](.vibe-science-environment/control/session.json)
-- [`.vibe-science-environment/flows/`](.vibe-science-environment/flows/)
-- [`.vibe-science-environment/experiments/`](.vibe-science-environment/experiments/)
-- [`.vibe-science-environment/results/`](.vibe-science-environment/results/)
-- [`.vibe-science-environment/orchestrator/`](.vibe-science-environment/orchestrator/)
-
-The repo is intentionally built so that shell-owned artifacts remain
-operational and observational. They are not allowed to silently become a second
-truth path.
-
-## What Is In The Codebase
-
-The most important top-level folders are:
-
-- [`environment/control/`](environment/control/)
-  control plane, middleware, attempts, decisions, events, capabilities,
-  snapshots
-- [`environment/flows/`](environment/flows/)
-  literature, experiment, results, writing, packs, digests
-- [`environment/memory/`](environment/memory/)
-  mirrors, freshness tracking, marks
-- [`environment/connectors/`](environment/connectors/)
-  connector substrate and exports
-- [`environment/automation/`](environment/automation/)
-  automation substrate and built-in plans
-- [`environment/domain-packs/`](environment/domain-packs/)
-  domain-specific presets
-- [`environment/orchestrator/`](environment/orchestrator/)
-  the Phase 5 local coordinator MVP
-- [`environment/tests/`](environment/tests/)
-  runtime, schema, eval, integration, and CI validator coverage
-- [`blueprints/`](blueprints/)
-  definitive spec, implementation plans, and closeout dossiers
-
-## How To Validate The Repo
-
-Requirements:
-
-- Node `18+`
-- sibling checkout of `vibe-science` during incubation, because some eval and
-  compatibility paths read kernel-owned files from `../vibe-science`
-
-Install:
+## Come verificare che il repo funziona davvero
 
 ```bash
 npm install
+npm run check   # 331 test, 9 validator, tutto deve essere verde
 ```
 
-Main checks:
-
-```bash
-npm run validate
-npm test
-npm run check
-```
-
-## How To Inspect Proof Instead Of Trusting Claims
-
-If you want to see whether the repo really does what it says, start here:
-
+Se vuoi vedere l'evidenza concreta:
 - [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
-- [`environment/tests/evals/saved-artifacts.test.js`](environment/tests/evals/saved-artifacts.test.js)
-- [`.vibe-science-environment/operator-validation/`](.vibe-science-environment/operator-validation/)
+- [Test di evidenza salvata](environment/tests/evals/saved-artifacts.test.js)
+- [Artefatti operator-validation](.vibe-science-environment/operator-validation/)
 
-The benchmark and artifact surfaces live under:
+---
 
-- [`environment/evals/benchmarks/`](environment/evals/benchmarks/)
-- [`environment/evals/tasks/`](environment/evals/tasks/)
-- [`.vibe-science-environment/operator-validation/artifacts/`](.vibe-science-environment/operator-validation/artifacts/)
-- [`.vibe-science-environment/operator-validation/benchmarks/`](.vibe-science-environment/operator-validation/benchmarks/)
+## Cosa NON è
 
-The current saved evidence covers:
+- Non è una piattaforma agente generica
+- Non è un dashboard SaaS
+- Non è un generatore automatico di paper
+- Non è una memoria nascosta che inventa continuità dalla chat
+- Non sostituisce il kernel scientifico
+- Non sostituisce la tua metodologia
 
-- Phase 1 shell baseline
-- Phase 2 memory and results packaging
-- Phase 3 writing/export handoff
-- Phase 4 connectors, automation, and domain-pack evidence
-- Phase 5 orchestrator MVP evidence
+È un **guscio di lavoro** per ricerca seria con AI dove stato, packaging,
+review e recovery devono restare ispezionabili.
 
-## What This Repo Is Not
+---
 
-This repo is not:
+## Entry point
 
-- a generic agent platform
-- a SaaS dashboard
-- an autonomous paper generator
-- a hidden memory layer that invents continuity from chat
-- a replacement for the Vibe Science kernel
-
-It is a **workflow shell** for serious AI-assisted research where state,
-packaging, review, and recovery have to stay inspectable.
-
-## Entry Points
-
-- [Definitive Spec Index](blueprints/definitive-spec/00-INDEX.md)
-- [Implementation Plan](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
+- [Spec Index](blueprints/definitive-spec/00-INDEX.md)
+- [Piano di implementazione](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
 - [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
-- [Surface Orchestrator Layer](blueprints/definitive-spec/surface-orchestrator/00-index.md)
+- [Orchestrator Spec](blueprints/definitive-spec/surface-orchestrator/00-index.md)
