@@ -32,7 +32,8 @@ The repository is closed through **Phase 4** and **Phase 5 is now underway**.
 - **Phase 4:** connector substrate, automation substrate, domain-pack runtime,
   `omics` presets, hardening, validators, and closeout evidence
 - **Phase 5:** surface orchestrator implementation has started, with Wave 0
-  contract artifacts and Wave 1 state and queue foundations now landed in repo
+  contract artifacts, Wave 1 state and queue foundations, and Wave 2
+  continuity profile plus context assembly runtime now landed in repo
 
 Closeout dossiers:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
@@ -45,7 +46,8 @@ Current design frontier:
   — the future coordination shell above VRE
   with implementation now started on bundle ownership, orchestrator schemas,
   continuity contracts, state helpers, append-only queue replay,
-  recovery/escalation ledgers, and shared query surfaces
+  recovery/escalation ledgers, helper-backed recall adapters, and shared
+  continuity assembly surfaces
 
 ## What You Can Run
 
@@ -71,7 +73,8 @@ are **not** runnable end-user commands yet:
 - [`environment/`](environment/) runtime code, schemas, templates, evals, and
   tests
 - [`environment/orchestrator/`](environment/orchestrator/) Phase 5
-  coordinator state, queue, ledger, and query substrate
+  coordinator state, queue, ledgers, continuity profile runtime, recall
+  adapters, and context assembly substrate
 - [`commands/`](commands/) operator-facing command shims
 - [`blueprints/`](blueprints/) definitive spec, implementation plan, and
   closeout dossiers
@@ -131,6 +134,7 @@ Phase 5 implementation is following the atomic wave plan under:
 - [`blueprints/definitive-spec/implementation-plan/phase5-00-index.md`](blueprints/definitive-spec/implementation-plan/phase5-00-index.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md`](blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md)
 - [`blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md`](blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md`](blueprints/definitive-spec/implementation-plan/phase5-03-wave-2-continuity-and-context-assembly.md)
 
 ## Spec Entry Points
 

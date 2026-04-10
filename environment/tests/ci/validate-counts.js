@@ -10,7 +10,7 @@ const expectedCounts = {
   controlTests: 7,
   compatibilityTests: 4,
   flowTests: 7,
-  libTests: 13,
+  libTests: 14,
   evalTests: 2,
   installTests: 5,
   integrationTests: 10,
