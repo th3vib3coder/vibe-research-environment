@@ -21,7 +21,7 @@ The kernel remains authoritative for:
 
 ## Current Status
 
-The repository is currently closed through **Phase 4**.
+The repository is closed through **Phase 4** and **Phase 5 is now underway**.
 
 - **Phase 1:** control plane, literature flow, experiment flow, baseline evals
   and compatibility checks
@@ -31,6 +31,8 @@ The repository is currently closed through **Phase 4**.
   append-only export alerts, `/flow-writing`, advisor packs, and rebuttal packs
 - **Phase 4:** connector substrate, automation substrate, domain-pack runtime,
   `omics` presets, hardening, validators, and closeout evidence
+- **Phase 5:** surface orchestrator implementation has started, with Wave 0
+  contract artifacts and Wave 1 state and queue foundations now landed in repo
 
 Closeout dossiers:
 - [Phase 1 Closeout](blueprints/definitive-spec/implementation-plan/phase1-closeout.md)
@@ -41,8 +43,9 @@ Closeout dossiers:
 Current design frontier:
 - [Surface Orchestrator Layer](blueprints/definitive-spec/surface-orchestrator/00-index.md)
   — the future coordination shell above VRE
-  with current planning focused on continuity profiles, recall modes, and
-  explicit context assembly above VRE
+  with implementation now started on bundle ownership, orchestrator schemas,
+  continuity contracts, state helpers, append-only queue replay,
+  recovery/escalation ledgers, and shared query surfaces
 
 ## What You Can Run
 
@@ -58,10 +61,17 @@ Operator-facing command surfaces currently in repo:
 - [`/export-warning-digest`](commands/export-warning-digest.md)
 - [`/automation-status`](commands/automation-status.md)
 
+Phase 5 orchestrator entry surfaces already have frozen command contracts, but
+are **not** runnable end-user commands yet:
+- [`/orchestrator-run`](commands/orchestrator-run.md)
+- [`/orchestrator-status`](commands/orchestrator-status.md)
+
 ## Repository Layout
 
 - [`environment/`](environment/) runtime code, schemas, templates, evals, and
   tests
+- [`environment/orchestrator/`](environment/orchestrator/) Phase 5
+  coordinator state, queue, ledger, and query substrate
 - [`commands/`](commands/) operator-facing command shims
 - [`blueprints/`](blueprints/) definitive spec, implementation plan, and
   closeout dossiers
@@ -116,6 +126,11 @@ The current benchmark set covers:
 - Phase 2 memory and result packaging
 - Phase 3 writing and export-safe deliverables
 - Phase 4 connectors, automation, and domain-pack evidence
+
+Phase 5 implementation is following the atomic wave plan under:
+- [`blueprints/definitive-spec/implementation-plan/phase5-00-index.md`](blueprints/definitive-spec/implementation-plan/phase5-00-index.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md`](blueprints/definitive-spec/implementation-plan/phase5-01-wave-0-contract-artifacts.md)
+- [`blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md`](blueprints/definitive-spec/implementation-plan/phase5-02-wave-1-state-and-queue-foundation.md)
 
 ## Spec Entry Points
 
