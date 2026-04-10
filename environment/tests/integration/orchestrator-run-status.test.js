@@ -183,3 +183,45 @@ test('orchestrator status shows completed and blocked tasks across multiple publ
     await cleanupFixtureProject(projectRoot);
   }
 });
+
+test('orchestrator run and status surfaces expose escalated execution failures end-to-end', async () => {
+  const projectRoot = await createFixtureProject('vre-int-orchestrator-failure-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-results',
+      'flow-writing',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, {
+      lanePolicies: buildWave3LanePolicies(),
+    });
+
+    const run = await runOrchestratorObjective({
+      projectPath: projectRoot,
+      objective: 'Run an unsupported Phase 5 task class.',
+      requestedMode: 'execute',
+      taskKind: 'unsupported-task',
+    });
+    const status = await runOrchestratorStatus({
+      projectPath: projectRoot,
+    });
+
+    assert.equal(run.attempt.status, 'succeeded');
+    assert.equal(run.result.payload.coordinator.execution.laneRun.status, 'escalated');
+    assert.equal(run.result.payload.coordinator.execution.recovery.failureClass, 'tool-failure');
+    assert.equal(run.result.payload.coordinator.execution.recovery.recoveryAction, 'escalate-to-user');
+    assert.equal(run.result.payload.coordinator.execution.escalation.status, 'pending');
+    assert.equal(status.attempt.status, 'succeeded');
+    assert.equal(status.result.payload.queue.total, 1);
+    assert.equal(status.result.payload.queue.byDerivedStatus.escalated, 1);
+    assert.equal(status.result.payload.nextRecommendedOperatorAction.kind, 'resolve-escalation');
+    assert.ok(status.result.payload.latestEscalationOrBlocker);
+    assert.equal(status.result.payload.latestRecoveryAction.failureClass, 'tool-failure');
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
