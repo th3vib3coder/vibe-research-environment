@@ -94,6 +94,43 @@ Implementation status:
 - Wave 5 closed: regenerated Phase 3 evidence, historical closeout corrections,
   Phase 5.5 closeout, and default CI closeout-honesty enforcement landed
 
+Phase 5.6 and Phase 5.7 follow-ups (shipped on `origin/main @ 3563a48`):
+- Phase 5.6 finish-pass closed 3 P1 + 2 P2 from external review #1
+- Phase 5.7 hygiene closed 3 P2 from external review #2
+- Current state: 420/420 tests, 11/11 validators, 11 of 13 findings RESOLVED
+
+### Phase 6 (spec drafted, pending implementation)
+
+Kernel Bridge and Provider Reality. Closes the 4 block-class gaps
+(G-01..G-04) from `PHASE-6-7-MASTER-SEQUENCE-SPEC.md`: Gate 17 automation,
+Phase 5 Gate 3 real evidence, kernel bridge integration testing, real CLI
+provider binding. 5 waves, WP-149..WP-175.
+
+- [PHASE-6-7-MASTER-SEQUENCE-SPEC.md](./PHASE-6-7-MASTER-SEQUENCE-SPEC.md) (cross-phase sequence rationale)
+- [implementation-plan/phase6-00-index.md](./implementation-plan/phase6-00-index.md)
+- [implementation-plan/phase6-01-wave-0-contracts-and-scope.md](./implementation-plan/phase6-01-wave-0-contracts-and-scope.md)
+- [implementation-plan/phase6-02-wave-1-kernel-bridge-integration.md](./implementation-plan/phase6-02-wave-1-kernel-bridge-integration.md)
+- [implementation-plan/phase6-03-wave-2-real-provider-binding.md](./implementation-plan/phase6-03-wave-2-real-provider-binding.md)
+- [implementation-plan/phase6-04-wave-3-tests-and-validators.md](./implementation-plan/phase6-04-wave-3-tests-and-validators.md)
+- [implementation-plan/phase6-05-wave-4-evidence-and-closeout.md](./implementation-plan/phase6-05-wave-4-evidence-and-closeout.md)
+- phase6-closeout.md (to be written as Wave 4 WP-175 lands)
+
+### Phase 7 (spec drafted, pending Phase 6 exit gate)
+
+Capability Expansion. Closes G-05..G-15: task registry + CLI dispatcher
+expansion, three-tier writing enforcement, connector depth, automation
+scheduling, domain-pack rule engine, UX flags, honesty validator semantic
+upgrade, surface-orchestrator archive. 6 waves, WP-176..WP-220.
+
+- [implementation-plan/phase7-00-index.md](./implementation-plan/phase7-00-index.md)
+- [implementation-plan/phase7-01-wave-0-contracts-and-scope.md](./implementation-plan/phase7-01-wave-0-contracts-and-scope.md)
+- [implementation-plan/phase7-02-wave-1-execution-surface-expansion.md](./implementation-plan/phase7-02-wave-1-execution-surface-expansion.md)
+- [implementation-plan/phase7-03-wave-2-agent-surface-and-ux.md](./implementation-plan/phase7-03-wave-2-agent-surface-and-ux.md)
+- [implementation-plan/phase7-04-wave-3-three-tier-writing.md](./implementation-plan/phase7-04-wave-3-three-tier-writing.md)
+- [implementation-plan/phase7-05-wave-4-connectors-automation-domain-packs.md](./implementation-plan/phase7-05-wave-4-connectors-automation-domain-packs.md)
+- [implementation-plan/phase7-06-wave-5-tests-evidence-closeout.md](./implementation-plan/phase7-06-wave-5-tests-evidence-closeout.md)
+- phase7-closeout.md (to be written as Wave 5 WP-219 lands)
+
 ### Companion Future Overlay Specs
 
 - [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
@@ -112,11 +149,16 @@ surfaces.
 - Phase 3 is closed with regenerated saved evidence and one partial writing-boundary gate: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4 is closed with saved evidence plus explicit deferred scheduler and domain-pack enforcement work: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 - Phase 5 is closed as an MVP baseline, with its historical review-lineage gate retracted as false-positive: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
-- Phase 5.5 (Audit Hardening) implementation is closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md). Phase 6 remains blocked until the external adversarial-review follow-up in that closeout is accepted.
-- Surface orchestrator spec is now Phase 0-closed and implementation-ready:
-  see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
-- The local coordinator MVP baseline is shipped; open a new phase only for
-  deferred post-MVP scope, not to relitigate Phase 5
+- Phase 5.5 (Audit Hardening) implementation is closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md). Phase 5.6 + 5.7 follow-ups shipped on `origin/main @ 3563a48`.
+- Phase 6 (Kernel Bridge and Provider Reality) is spec-drafted and awaiting
+  implementation: see [phase6-00-index.md](./implementation-plan/phase6-00-index.md).
+  Closes F-04 FALSE-POSITIVE and G-01/G-03/G-04 from master spec.
+- Phase 7 (Capability Expansion) is spec-drafted and blocked on Phase 6 exit
+  gate: see [phase7-00-index.md](./implementation-plan/phase7-00-index.md).
+- Surface orchestrator spec will be archived in Phase 7 Wave 5 WP-216 to
+  `blueprints/definitive-spec/archive/surface-coordinator/`.
+- The local coordinator MVP baseline is shipped; do not reopen Phase 5
+  scope. New scope lands as Phase 6/7 or later.
 
 ---
 
