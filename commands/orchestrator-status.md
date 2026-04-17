@@ -1,22 +1,26 @@
 ---
-description: Show orchestrator queue, lane, escalation, and continuity status through the future Phase 5 status surface
+description: Show orchestrator queue, lane, escalation, and continuity status through the Phase 5 status surface
 allowed-tools: Read, Bash
 model: sonnet
+dispatch:
+  module: environment/orchestrator/runtime.js
+  export: runOrchestratorStatus
+  scope: orchestrator-status
+  wrappedByMiddleware: true
 ---
 
 # /orchestrator-status
 
-This command is the Phase 5 status-surface contract for the future local
-coordinator.
+This command is the Phase 5 status-surface contract for the local coordinator.
 
 ## Purpose
 
 Expose the first operator-facing orchestrator summary without inventing a
 dashboard.
 
-The Phase 5 local runtime now exists under `environment/orchestrator/`, but
-this repo still documents command surfaces as markdown contracts because there
-is no generic standalone command dispatcher yet.
+The Phase 5 local runtime exists under `environment/orchestrator/`, and this
+surface is one of the three command contracts promoted to the minimal
+`bin/vre` dispatcher in Phase 5.5.
 
 ## Future implementation stance
 

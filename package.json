@@ -4,6 +4,9 @@
   "description": "Outer-project research shell for the Vibe Science kernel.",
   "private": true,
   "type": "module",
+  "bin": {
+    "vre": "bin/vre"
+  },
   "scripts": {
     "check": "npm run validate && npm test",
     "test": "node --test",

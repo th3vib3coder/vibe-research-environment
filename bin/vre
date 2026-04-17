@@ -1,0 +1,281 @@
+#!/usr/bin/env node
+import { existsSync, readFileSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { runWithMiddleware } from '../environment/control/middleware.js';
+
+export const DISPATCH_TABLE = Object.freeze({
+  'flow-status': {
+    contract: 'commands/flow-status.md',
+    module: 'environment/control/query.js',
+    export: 'getOperatorStatus',
+    scope: 'flow-status',
+    wrappedByMiddleware: false
+  },
+  'sync-memory': {
+    contract: 'commands/sync-memory.md',
+    module: 'environment/memory/sync.js',
+    export: 'syncMemory',
+    scope: 'sync-memory',
+    wrappedByMiddleware: false
+  },
+  'orchestrator-status': {
+    contract: 'commands/orchestrator-status.md',
+    module: 'environment/orchestrator/runtime.js',
+    export: 'runOrchestratorStatus',
+    scope: 'orchestrator-status',
+    wrappedByMiddleware: true
+  }
+});
+
+const SESSION_SNAPSHOT_PATH = '.vibe-science-environment/control/session.json';
+const KNOWN_COMMANDS = Object.keys(DISPATCH_TABLE).sort();
+
+function isDirectRun(importMeta) {
+  return process.argv[1] != null && importMeta.url === pathToFileURL(process.argv[1]).href;
+}
+
+function normalizeSlashes(value) {
+  return value.split(path.sep).join('/');
+}
+
+function readPackageName(candidateRoot) {
+  try {
+    const packagePath = path.join(candidateRoot, 'package.json');
+    return JSON.parse(readFileSync(packagePath, 'utf8')).name ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveRepoRoot(startCwd = process.cwd()) {
+  let current = path.resolve(startCwd);
+
+  while (true) {
+    if (
+      readPackageName(current) === 'vibe-research-environment' &&
+      existsSync(path.join(current, 'environment', 'schemas'))
+    ) {
+      return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+export function parseCommandFrontmatter(markdown) {
+  const normalized = markdown.replace(/\r\n/gu, '\n');
+  const match = /^---\n([\s\S]*?)\n---\n/u.exec(normalized);
+  if (!match) {
+    return {};
+  }
+
+  const result = {};
+  let section = result;
+  for (const rawLine of match[1].split('\n')) {
+    if (rawLine.trim() === '') {
+      continue;
+    }
+
+    const sectionMatch = /^([a-zA-Z0-9_-]+):\s*$/u.exec(rawLine);
+    if (sectionMatch) {
+      result[sectionMatch[1]] = {};
+      section = result[sectionMatch[1]];
+      continue;
+    }
+
+    const pairMatch = /^\s*([a-zA-Z0-9_-]+):\s*(.*)$/u.exec(rawLine);
+    if (!pairMatch) {
+      throw new Error(`Unsupported frontmatter line: ${rawLine}`);
+    }
+
+    const [, key, rawValue] = pairMatch;
+    const value = rawValue === 'true'
+      ? true
+      : rawValue === 'false'
+        ? false
+        : rawValue;
+    section[key] = value;
+  }
+
+  return result;
+}
+
+async function callCoreReaderCli(cliPath, command, input = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [cliPath, command], {
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(stderr.trim() || `core-reader CLI exited ${code}`));
+        return;
+      }
+      try {
+        resolve(stdout.trim() === '' ? null : JSON.parse(stdout));
+      } catch (error) {
+        reject(new Error(`core-reader CLI returned invalid JSON: ${error.message}`));
+      }
+    });
+    child.stdin.end(`${JSON.stringify(input)}\n`);
+  });
+}
+
+export async function resolveDefaultReader(repoRoot) {
+  const kernelPath = process.env.VRE_KERNEL_PATH;
+  if (!kernelPath) {
+    return {
+      dbAvailable: false,
+      error: 'CLI default: no reader provided'
+    };
+  }
+
+  const cliPath = path.resolve(kernelPath, 'plugin', 'scripts', 'core-reader-cli.js');
+  if (!existsSync(cliPath)) {
+    return {
+      dbAvailable: false,
+      error: `core-reader CLI unavailable at ${cliPath}`
+    };
+  }
+
+  const call = (command, input) => callCoreReaderCli(cliPath, command, {
+    projectPath: repoRoot,
+    ...input
+  });
+
+  return {
+    dbAvailable: true,
+    getProjectOverview: (options = {}) => call('overview', options),
+    listClaimHeads: (options = {}) => call('claim-heads', options),
+    listUnresolvedClaims: (options = {}) => call('unresolved-claims', options),
+    listCitationChecks: (options = {}) => call('citation-checks', options)
+  };
+}
+
+function budgetFromEnv() {
+  const maxUsd = Number(process.env.VRE_BUDGET_MAX_USD);
+  const estimatedCostUsd = Number(process.env.VRE_BUDGET_ESTIMATED_COST_USD);
+  if (!Number.isFinite(maxUsd) && !Number.isFinite(estimatedCostUsd)) {
+    return {};
+  }
+  return {
+    ...(Number.isFinite(maxUsd) ? { maxUsd } : {}),
+    ...(Number.isFinite(estimatedCostUsd) ? { estimatedCostUsd } : {})
+  };
+}
+
+function summaryLine(subcommand, attempt, result, durationMs) {
+  const fields = [
+    subcommand,
+    attempt?.attemptId ?? 'ATT-unknown',
+    normalizeSlashes(SESSION_SNAPSHOT_PATH),
+    String(durationMs)
+  ];
+
+  const activeObjective = result?.result?.payload?.activeObjective
+    ?? result?.payload?.activeObjective
+    ?? null;
+  if (subcommand === 'orchestrator-status') {
+    fields.push(`objective=${activeObjective ?? 'none'}`);
+  }
+
+  return fields.join('\t');
+}
+
+function printUsage(stderr = process.stderr) {
+  stderr.write(`vre: usage: node bin/vre <${KNOWN_COMMANDS.join('|')}>\n`);
+}
+
+function printUnknown(subcommand) {
+  process.stderr.write(`vre: unknown subcommand "${subcommand}". Allowed: ${KNOWN_COMMANDS.join(', ')}\n`);
+}
+
+async function invokeEntry(repoRoot, subcommand, entry, reader) {
+  const mod = await import(pathToFileURL(path.join(repoRoot, entry.module)).href);
+  const helper = mod[entry.export];
+  if (typeof helper !== 'function') {
+    throw new Error(`${entry.module}#${entry.export} is not a function`);
+  }
+
+  if (entry.wrappedByMiddleware) {
+    return helper({ projectPath: repoRoot, reader });
+  }
+
+  return runWithMiddleware({
+    projectPath: repoRoot,
+    commandName: `/${subcommand}`,
+    scope: entry.scope,
+    reader,
+    budget: budgetFromEnv(),
+    commandFn: async (ctx) => helper(ctx.projectPath, { reader: ctx.reader })
+  });
+}
+
+export async function main(argv = process.argv) {
+  const startedAt = Date.now();
+  const [, , subcommand, ...rest] = argv;
+  if (!subcommand) {
+    printUsage();
+    return 3;
+  }
+
+  const entry = DISPATCH_TABLE[subcommand];
+  if (!entry) {
+    printUnknown(subcommand);
+    return 2;
+  }
+
+  if (rest.length > 0) {
+    process.stderr.write(`vre: ${subcommand}: unexpected arguments: ${rest.join(' ')}\n`);
+    return 3;
+  }
+
+  const repoRoot = resolveRepoRoot(process.cwd());
+  if (!repoRoot) {
+    process.stderr.write('vre: current directory is not inside a VRE repository root\n');
+    return 3;
+  }
+
+  await mkdir(path.join(repoRoot, '.vibe-science-environment'), { recursive: true });
+  const reader = await resolveDefaultReader(repoRoot);
+
+  try {
+    const result = await invokeEntry(repoRoot, subcommand, entry, reader);
+    const attempt = result?.attempt ?? { status: 'succeeded', attemptId: 'ATT-unknown' };
+    if (attempt.status === 'blocked' && attempt.errorCode === 'BUDGET_HARD_STOP') {
+      process.stderr.write(`vre: ${subcommand}: ${attempt.summary ?? 'middleware refused'}\n`);
+      return 4;
+    }
+
+    if (attempt.status !== 'succeeded') {
+      process.stderr.write(`vre: ${subcommand}: ${attempt.summary ?? attempt.status}\n`);
+      return 1;
+    }
+
+    process.stdout.write(`${summaryLine(subcommand, attempt, result, Date.now() - startedAt)}\n`);
+    return 0;
+  } catch (error) {
+    process.stderr.write(`vre: ${subcommand}: ${error.message}\n`);
+    return error.code === 'MIDDLEWARE_REFUSED' ? 4 : 1;
+  }
+}
+
+if (isDirectRun(import.meta)) {
+  process.exitCode = await main(process.argv);
+}

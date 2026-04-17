@@ -2,6 +2,11 @@
 description: Show VRE status through the control plane and canonical session snapshot
 allowed-tools: Read, Bash
 model: sonnet
+dispatch:
+  module: environment/control/query.js
+  export: getOperatorStatus
+  scope: flow-status
+  wrappedByMiddleware: false
 ---
 
 # /flow-status

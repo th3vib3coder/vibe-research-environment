@@ -14,8 +14,9 @@ const expectedCounts = {
   evalTests: 2,
   installTests: 5,
   integrationTests: 12,
+  cliTests: 3,
   schemaTests: 38,
-  ciValidators: 9
+  ciValidators: 10
 };
 
 export default async function validateCounts() {
@@ -33,6 +34,7 @@ export default async function validateCounts() {
     evalTests: (await collectFiles('environment/tests/evals', { include: (file) => file.endsWith('.test.js') })).length,
     installTests: (await collectFiles('environment/tests/install', { include: (file) => file.endsWith('.test.js') })).length,
     integrationTests: (await collectFiles('environment/tests/integration', { include: (file) => file.endsWith('.test.js') && !file.endsWith('_fixture.js') })).length,
+    cliTests: (await collectFiles('environment/tests/cli', { include: (file) => file.endsWith('.test.js') })).length,
     schemaTests: (await collectFiles('environment/tests/schemas', { include: (file) => file.endsWith('.test.js') })).length,
     ciValidators: (await collectFiles('environment/tests/ci', { include: (file) => file.endsWith('.js') && !file.endsWith('_helpers.js') && !file.endsWith('run-all.js') })).length
   };

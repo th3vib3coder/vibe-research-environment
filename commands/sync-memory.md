@@ -2,6 +2,11 @@
 description: Refresh memory mirrors from allowed kernel projections and workspace state
 allowed-tools: Read, Bash
 model: sonnet
+dispatch:
+  module: environment/memory/sync.js
+  export: syncMemory
+  scope: sync-memory
+  wrappedByMiddleware: false
 ---
 
 # /sync-memory

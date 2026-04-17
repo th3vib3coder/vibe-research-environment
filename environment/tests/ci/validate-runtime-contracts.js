@@ -169,6 +169,11 @@ const activeIntegrationTestFiles = [
   'writing-packs.test.js',
   'writing-handoff.test.js'
 ];
+const activeCliTestFiles = [
+  'bin-vre-smoke.test.js',
+  'bin-vre-errors.test.js',
+  'bin-vre-crossplatform.test.js'
+];
 
 async function importRepoModule(repoRelativePath) {
   const moduleUrl = pathToFileURL(path.join(repoRoot, repoRelativePath)).href;
@@ -320,6 +325,13 @@ export default async function validateRuntimeContracts() {
     assert(
       await pathExists(`environment/tests/integration/${testFile}`),
       `Missing active integration test: ${testFile}`
+    );
+  }
+
+  for (const testFile of activeCliTestFiles) {
+    assert(
+      await pathExists(`environment/tests/cli/${testFile}`),
+      `Missing active CLI test: ${testFile}`
     );
   }
 }
