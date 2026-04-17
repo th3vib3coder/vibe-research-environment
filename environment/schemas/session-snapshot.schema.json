@@ -158,8 +158,68 @@
         "exportAlerts": {
           "type": "integer",
           "minimum": 0
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceMode",
+            "degradedReason",
+            "lastKernelContactAt"
+          ],
+          "properties": {
+            "sourceMode": {
+              "type": "string",
+              "enum": [
+                "kernel-backed",
+                "degraded",
+                "mixed"
+              ]
+            },
+            "degradedReason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "lastKernelContactAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "provenance"
+            ],
+            "properties": {
+              "provenance": {
+                "properties": {
+                  "sourceMode": {
+                    "const": "degraded"
+                  }
+                },
+                "required": [
+                  "sourceMode"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "unresolvedClaims": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ]
     },
     "lastCommand": {
       "type": [
