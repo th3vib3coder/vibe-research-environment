@@ -222,6 +222,37 @@ State ownership:
 - degradation: if the runner is offline, GitHub's own status reflects it —
   VRE does not paper over CI outages
 
+### Audit Result — 2026-04-18 (Phase 6 Wave 0 implementation)
+
+**Status: FOUND — workflow exists and now complies with contract.**
+
+Inventory of `.github/workflows/`:
+- `ci.yml` (single workflow, 476 bytes pre-tightening)
+
+Contract compliance check:
+- ✅ triggers on `pull_request` (no branch filter — fires on any PR, which
+  inherently includes PRs to `main`)
+- ✅ triggers on `push` to `main`
+- ✅ runs on `ubuntu-latest` with Node 20 (`actions/setup-node@v4`)
+- ✅ runs `npm ci` (install phase)
+- ⚠️ PRE-TIGHTENING: ran `npm run validate` + `npm test` as two separate
+  steps — functionally equivalent to `npm run check` but the Wave 3
+  post-review tightening requires the exact `npm run check` invocation
+  for validator compatibility (WP-170 validate-ci-workflow.js will
+  enforce this).
+- ✅ POST-TIGHTENING (this Wave 0 implementation): replaced the two
+  steps with a single `Run check (validators + tests)` step invoking
+  `npm run check`. The workflow file is now the exact shape WP-170
+  expects.
+
+Windows-latest cross-platform job remains OPTIONAL per WP-154 contract;
+not added in Wave 0. Wave 3 WP-170 may decide to add it during the
+validator implementation.
+
+Decision: Wave 3 WP-170 cites the existing (now tightened) `ci.yml` as
+evidence; does NOT ship a new `check.yml`. The ABSENT branch of
+WP-154 contract is therefore not exercised.
+
 ---
 
 ## Parallelism
