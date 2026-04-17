@@ -41,13 +41,13 @@ What Phase 3 does **not** claim:
 
 ### Phase 5.5 Regenerated Repeats
 
-- [flow-writing-export-eligibility-positive / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-17-03/summary.json)
-- [flow-writing-default-mode-blocked / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-17-03/summary.json)
-- [flow-writing-snapshot-export / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-17-03/summary.json)
-- [flow-writing-advisor-pack / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-17-03/summary.json)
-- [flow-writing-rebuttal-pack / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-17-03/summary.json)
-- [flow-writing-warning-replay / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-17-03/summary.json)
-- [flow-results-export-policy / 2026-04-17-03](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-17-03/summary.json)
+- [flow-writing-export-eligibility-positive / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-17-06/summary.json)
+- [flow-writing-default-mode-blocked / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-17-06/summary.json)
+- [flow-writing-snapshot-export / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-17-06/summary.json)
+- [flow-writing-advisor-pack / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-17-06/summary.json)
+- [flow-writing-rebuttal-pack / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-17-06/summary.json)
+- [flow-writing-warning-replay / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-17-06/summary.json)
+- [flow-results-export-policy / 2026-04-17-06](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-17-06/summary.json)
 
 ### Saved Artifact
 
@@ -65,13 +65,13 @@ What Phase 3 does **not** claim:
 
 | # | Gate | Result | Evidence |
 |---|------|--------|----------|
-| 1 | export eligibility only exports claims accepted by the shared helper | PASS | [flow-writing-export-eligibility-positive summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-17-03/summary.json) |
-| 2 | zero or unverified citations block export eligibility | PASS | [flow-results-export-policy summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-17-03/summary.json), [flow-writing-default-mode-blocked summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-17-03/summary.json) |
-| 3 | export eligibility is implemented once, not duplicated | PASS | [phase3-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json), [flow-results-export-policy summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-17-03/summary.json) |
-| 4 | claim-backed writing runs against immutable export snapshots | PASS | [export-snapshot-immutability.test.js](../../../environment/tests/lib/export-snapshot-immutability.test.js), [flow-writing-snapshot-export summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-17-03/summary.json) |
-| 5 | killed or disputed claims produce visible warnings after export | PASS | [flow-writing-warning-replay summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-17-03/summary.json) |
-| 6 | advisor pack is assembleable from one command path | PASS | [flow-writing-advisor-pack summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-17-03/summary.json) |
-| 7 | rebuttal pack is assembleable from one command path | PASS | [flow-writing-rebuttal-pack summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-17-03/summary.json) |
+| 1 | export eligibility only exports claims accepted by the shared helper | PASS | [flow-writing-export-eligibility-positive summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-17-06/summary.json) |
+| 2 | zero or unverified citations block export eligibility | PASS | [flow-results-export-policy summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-17-06/summary.json), [flow-writing-default-mode-blocked summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-17-06/summary.json) |
+| 3 | export eligibility is implemented once, not duplicated | PASS | [phase3-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json), [flow-results-export-policy summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-17-06/summary.json) |
+| 4 | claim-backed writing runs against immutable export snapshots | PASS | [export-snapshot-immutability.test.js](../../../environment/tests/lib/export-snapshot-immutability.test.js), [flow-writing-snapshot-export summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-17-06/summary.json) |
+| 5 | killed or disputed claims produce visible warnings after export | PASS | [flow-writing-warning-replay summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-17-06/summary.json) |
+| 6 | advisor pack is assembleable from one command path | PASS | [flow-writing-advisor-pack summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-17-06/summary.json) |
+| 7 | rebuttal pack is assembleable from one command path | PASS | [flow-writing-rebuttal-pack summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-17-06/summary.json) |
 | 8 | three-tier writing distinction has runtime-enforced data boundaries | PARTIAL | [writing-render.js](../../../environment/flows/writing-render.js), [phase3-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json); follow-up FU-55-003 |
 
 **Result: 7 PASS, 1 PARTIAL.**

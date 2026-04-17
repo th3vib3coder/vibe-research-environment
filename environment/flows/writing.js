@@ -666,6 +666,23 @@ async function removeSeedRootIfEmpty(seedRoot) {
   }
 }
 
+async function atomicPublishSeedTemp(tempPath, targetPath) {
+  try {
+    await link(tempPath, targetPath);
+    return;
+  } catch (error) {
+    if (error?.code === 'EEXIST') {
+      throw error;
+    }
+    if (error?.code !== 'EXDEV') {
+      throw error;
+    }
+  }
+  // EXDEV fallback (see P2-B note in export-snapshot.js).
+  const contents = await readFile(tempPath);
+  await writeFile(targetPath, contents, { flag: 'wx' });
+}
+
 async function writeTextOnce(targetPath, content) {
   await mkdir(path.dirname(targetPath), { recursive: true });
   const tempPath = `${targetPath}.tmp-${process.pid}-${randomUUID()}`;
@@ -675,7 +692,7 @@ async function writeTextOnce(targetPath, content) {
       encoding: 'utf8',
       flag: 'wx',
     });
-    await link(tempPath, targetPath);
+    await atomicPublishSeedTemp(tempPath, targetPath);
   } catch (error) {
     if (error?.code === 'EEXIST') {
       throw new WritingFlowValidationError(

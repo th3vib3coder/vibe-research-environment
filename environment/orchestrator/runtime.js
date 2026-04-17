@@ -4,12 +4,46 @@ import { runExecutionLane } from './execution-lane.js';
 import { getOrchestratorStatus } from './query.js';
 import { runReviewLane } from './review-lane.js';
 import { continueRoutedTask, routeOrchestratorObjective } from './router.js';
+import { findByRouterKeyword, getTaskEntry } from './task-registry.js';
 
 function defaultReader(reader) {
   return reader ?? {
     dbAvailable: false,
     error: 'bridge unavailable',
   };
+}
+
+async function mergeTransientIntoTaskInput({ taskInput, taskKind, sourceSessionId, objective }) {
+  const base = taskInput == null ? {} : { ...taskInput };
+  if (sourceSessionId == null) {
+    return base;
+  }
+
+  // Only persist sourceSessionId into durable taskInput when the registry entry
+  // permits free-form input (null inputSchema). Strict inputSchemas with
+  // additionalProperties: false would reject an unexpected sourceSessionId key,
+  // so in that case sourceSessionId flows ONLY as a transient execution-lane
+  // option and does not survive replay-from-JSONL (P2-A).
+  let resolvedKind = taskKind ?? null;
+  if (resolvedKind == null && typeof objective === 'string' && objective.trim() !== '') {
+    const match = await findByRouterKeyword(objective);
+    if (match && !match.ambiguous) {
+      resolvedKind = match.taskKind;
+    }
+  }
+
+  if (resolvedKind == null) {
+    // Cannot determine kind → conservatively do not pollute taskInput; caller
+    // still receives sourceSessionId via transient execution-lane options.
+    return base;
+  }
+
+  const entry = await getTaskEntry(resolvedKind);
+  if (entry == null || entry.inputSchema == null) {
+    return { ...base, sourceSessionId };
+  }
+
+  return base;
 }
 
 export async function buildOrchestratorShellStatus(projectPath) {
@@ -122,10 +156,12 @@ export async function runOrchestratorObjective({
           targetRef,
           artifactRefs,
           taskKind,
-          taskInput: {
-            ...(taskInput ?? {}),
-            ...(sourceSessionId == null ? {} : { sourceSessionId }),
-          },
+          taskInput: await mergeTransientIntoTaskInput({
+            taskInput,
+            taskKind,
+            sourceSessionId,
+            objective,
+          }),
         });
       const coordinator = await executeRoutedTask(projectPath, routed, {
         requestReview,

@@ -175,6 +175,28 @@ function resolveProjectPath(projectPath) {
   return path.resolve(projectPath);
 }
 
+async function atomicPublishTemp(tempPath, targetPath) {
+  // Primary: hard link. Atomic on a single volume.
+  try {
+    await link(tempPath, targetPath);
+    return;
+  } catch (error) {
+    if (error?.code === 'EEXIST') {
+      throw error;
+    }
+    if (error?.code !== 'EXDEV') {
+      throw error;
+    }
+  }
+  // EXDEV fallback: cross-volume, link is not allowed. Use writeFile with
+  // exclusive create to keep the no-clobber invariant, then remove the temp.
+  // This is NOT as crash-safe as rename within a volume, but cross-volume
+  // is an unusual layout (WSL, NTFS mount-points, CI /tmp on a different
+  // device) and write-with-wx still rejects overwrite.
+  const contents = await readFile(tempPath);
+  await writeFile(targetPath, contents, { flag: 'wx' });
+}
+
 async function writeSnapshotOnce(targetPath, snapshot) {
   const serialized = `${JSON.stringify(snapshot, null, 2)}\n`;
   const tempPath = `${targetPath}.tmp-${process.pid}-${randomUUID()}`;
@@ -184,7 +206,7 @@ async function writeSnapshotOnce(targetPath, snapshot) {
       encoding: 'utf8',
       flag: 'wx',
     });
-    await link(tempPath, targetPath);
+    await atomicPublishTemp(tempPath, targetPath);
   } catch (error) {
     if (error?.code === 'EEXIST') {
       let existingCreatedAt = null;

@@ -225,3 +225,54 @@ test('orchestrator run and status surfaces expose escalated execution failures e
     await cleanupFixtureProject(projectRoot);
   }
 });
+
+test('P2-A: sourceSessionId persists into taskInput for null-inputSchema tasks but stays transient for strict-inputSchema tasks', async () => {
+  const projectRoot = await createFixtureProject('vre-int-orch-sourcesid-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'flow-results',
+      'flow-writing',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, {
+      lanePolicies: buildWave3LanePolicies(),
+    });
+
+    // session-digest-export has inputSchema: null → sourceSessionId MUST merge
+    // into durable taskInput so replay without re-passing still works.
+    const digestRun = await runOrchestratorObjective({
+      projectPath: projectRoot,
+      objective: 'Export a session digest for the current workspace.',
+      sourceSessionId: 'ORCH-SESSION-PROBE-A',
+    });
+    const digestTask = digestRun.result.payload.coordinator.route.task;
+    assert.equal(digestTask.taskInput?.sourceSessionId, 'ORCH-SESSION-PROBE-A',
+      'session-digest-export (null inputSchema) must persist sourceSessionId');
+
+    // literature-flow-register has additionalProperties: false in its input
+    // schema → sourceSessionId MUST NOT pollute the durable taskInput, or
+    // the register helper would reject the extra key. sourceSessionId still
+    // flows transiently via executeRoutedTask → runExecutionLane options.
+    const literatureRun = await runOrchestratorObjective({
+      projectPath: projectRoot,
+      objective: 'Register paper for Phase 5.7 hygiene test.',
+      taskKind: 'literature-flow-register',
+      taskInput: {
+        title: 'P2-A regression paper',
+        doi: '10.5555/p2a',
+      },
+      sourceSessionId: 'ORCH-SESSION-PROBE-B',
+    });
+    const litTask = literatureRun.result.payload.coordinator.route.task;
+    assert.equal(litTask.taskInput?.sourceSessionId, undefined,
+      'literature-flow-register (strict inputSchema) must NOT leak sourceSessionId');
+    assert.equal(litTask.taskInput?.title, 'P2-A regression paper');
+    assert.equal(literatureRun.result.payload.coordinator.execution.laneRun.status, 'completed');
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
