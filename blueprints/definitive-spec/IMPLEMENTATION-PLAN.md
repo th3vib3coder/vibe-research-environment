@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-03
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1-5 closed; Phase 5.5 audit hardening in progress
+**Status:** Phase 1-5 closed; Phase 5.5 audit hardening implementation closed with one external-review follow-up
 
 ---
 
@@ -70,7 +70,7 @@ The plan sets currently on disk are:
 - [implementation-plan/phase5-06-wave-5-evals-and-closeout.md](./implementation-plan/phase5-06-wave-5-evals-and-closeout.md)
 - [implementation-plan/phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 
-### Phase 5.5 (implementation in progress)
+### Phase 5.5 (implementation closed)
 
 Audit-hardening pass scoped against the 2026-04-17 forensic audit (4 P0 closeout
 overclaims, 6 P1 runtime / agent-discipline gaps, 3 P2 structural issues).
@@ -83,7 +83,7 @@ Blocks Phase 6 entry.
 - [implementation-plan/phase55-04-wave-3-agent-discipline-and-dispatcher.md](./implementation-plan/phase55-04-wave-3-agent-discipline-and-dispatcher.md)
 - [implementation-plan/phase55-05-wave-4-tests-and-validators.md](./implementation-plan/phase55-05-wave-4-tests-and-validators.md)
 - [implementation-plan/phase55-06-wave-5-evidence-regeneration-and-closeout-honesty.md](./implementation-plan/phase55-06-wave-5-evidence-regeneration-and-closeout-honesty.md)
-- phase55-closeout.md (to be written as Wave 5 WP-148 lands)
+- [implementation-plan/phase55-closeout.md](./implementation-plan/phase55-closeout.md)
 
 Implementation status:
 - Wave 0 closed: schema contracts for `signals.provenance` and task-registry entries
@@ -91,7 +91,8 @@ Implementation status:
 - Wave 2 closed: task registry, three seed task kinds, local-subprocess executor, and review-gate hardening
 - Wave 3 closed: `bin/vre` dispatcher and command/runtime drift checks
 - Wave 4 closed: closeout-honesty validator staged outside default CI
-- Wave 5 in progress: regenerated Phase 3 evidence and historical closeout corrections landed; final closeout and CI enforcement remain
+- Wave 5 closed: regenerated Phase 3 evidence, historical closeout corrections,
+  Phase 5.5 closeout, and default CI closeout-honesty enforcement landed
 
 ### Companion Future Overlay Specs
 
@@ -111,7 +112,7 @@ surfaces.
 - Phase 3 is closed with regenerated saved evidence and one partial writing-boundary gate: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4 is closed with saved evidence plus explicit deferred scheduler and domain-pack enforcement work: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 - Phase 5 is closed as an MVP baseline, with its historical review-lineage gate retracted as false-positive: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
-- Phase 5.5 (Audit Hardening) is in Wave 5. Phase 6 is blocked until `phase55-closeout.md` lands and `validate-closeout-honesty` joins default CI.
+- Phase 5.5 (Audit Hardening) implementation is closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md). Phase 6 remains blocked until the external adversarial-review follow-up in that closeout is accepted.
 - Surface orchestrator spec is now Phase 0-closed and implementation-ready:
   see [surface-orchestrator/00-index.md](./surface-orchestrator/00-index.md)
 - The local coordinator MVP baseline is shipped; open a new phase only for

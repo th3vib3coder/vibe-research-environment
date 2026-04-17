@@ -9,6 +9,7 @@ import validateCommandsToJs from './validate-commands-to-js.js';
 import validateNoKernelWrites from './validate-no-kernel-writes.js';
 import validateRoles from './validate-roles.js';
 import validateNoPersonalPaths from './validate-no-personal-paths.js';
+import validateCloseoutHonesty from './validate-closeout-honesty.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -20,7 +21,8 @@ const validators = [
   ['validate-commands-to-js', validateCommandsToJs],
   ['validate-no-kernel-writes', validateNoKernelWrites],
   ['validate-roles', validateRoles],
-  ['validate-no-personal-paths', validateNoPersonalPaths]
+  ['validate-no-personal-paths', validateNoPersonalPaths],
+  ['validate-closeout-honesty', validateCloseoutHonesty]
 ];
 
 for (const [name, validator] of validators) {

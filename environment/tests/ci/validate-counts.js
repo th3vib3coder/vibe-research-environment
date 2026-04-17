@@ -16,7 +16,7 @@ const expectedCounts = {
   integrationTests: 12,
   cliTests: 3,
   schemaTests: 39,
-  ciValidators: 10
+  ciValidators: 11
 };
 
 export default async function validateCounts() {
@@ -41,8 +41,7 @@ export default async function validateCounts() {
         file.endsWith('.js') &&
         !file.endsWith('.test.js') &&
         !file.endsWith('_helpers.js') &&
-        !file.endsWith('run-all.js') &&
-        !file.endsWith('validate-closeout-honesty.js')
+        !file.endsWith('run-all.js')
     })).length
   };
 

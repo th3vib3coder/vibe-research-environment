@@ -14,7 +14,7 @@ Build from highest researcher pain to lowest epistemic risk.
 - Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md) (`7 PASS, 1 PARTIAL` after regenerated evidence)
 - Phase 4: closed with [phase4-closeout.md](./implementation-plan/phase4-closeout.md) (`6 PASS, 1 PARTIAL, 1 DEFERRED`)
 - Phase 5: closed with [phase5-closeout.md](./implementation-plan/phase5-closeout.md) (`4 PASS, 1 FALSE-POSITIVE` on the historical review-lineage gate)
-- Phase 5.5: implementation in progress under [phase55-00-index.md](./implementation-plan/phase55-00-index.md); Phase 6 remains blocked until `phase55-closeout.md` lands
+- Phase 5.5: implementation closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md); Phase 6 remains blocked until the external adversarial-review follow-up is accepted
 
 The sections below preserve the original build order and gate definitions.
 Historical checklist boxes below are planning artifacts, not current truth. The
