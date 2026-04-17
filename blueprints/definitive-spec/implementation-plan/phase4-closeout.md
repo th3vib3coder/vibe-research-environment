@@ -50,16 +50,41 @@ What Phase 4 does **not** claim:
 
 ## Exit Gate Outcome
 
-| Gate | Result | Evidence |
-|------|--------|----------|
-| connector export failures remain visible to operators | PASS | [flow-status-connector-failure-visibility / 2026-04-04-01](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/) |
-| weekly digests are emitted as reviewable artifacts with a durable run ledger | PASS | [weekly-digest-reviewable-artifact / 2026-04-04-01](../../../.vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/) |
-| stale-memory reminders stay explicit and reviewable | PASS | [stale-memory-reminder-reviewable-artifact / 2026-04-04-01](../../../.vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/) |
-| export-warning digests summarize existing alerts without mutating the alert ledger | PASS | [export-warning-digest-reviewable-artifact / 2026-04-04-01](../../../.vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/) |
-| active domain packs surface through operator summaries with preset-only authority | PASS | [flow-status-domain-pack-omics / 2026-04-04-01](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/) |
-| invalid domain activation falls back cleanly to neutral defaults | PASS | [flow-status-domain-pack-fallback / 2026-04-04-01](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/) |
+| # | Gate | Result | Evidence |
+|---|------|--------|----------|
+| 1 | connector export failures remain visible to operators | PASS | [connector-failure summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-connector-failure-visibility/2026-04-04-01/summary.json) |
+| 2 | weekly digest command emits reviewable artifacts with a durable run ledger | PASS | [weekly-digest summary](../../../.vibe-science-environment/operator-validation/benchmarks/weekly-digest-reviewable-artifact/2026-04-04-01/summary.json) |
+| 3 | host-native recurring schedule execution is implemented | DEFERRED | [builtin-plans.js](../../../environment/automation/builtin-plans.js); follow-up FU-55-004 |
+| 4 | stale-memory reminders stay explicit and reviewable | PASS | [stale-memory-reminder summary](../../../.vibe-science-environment/operator-validation/benchmarks/stale-memory-reminder-reviewable-artifact/2026-04-04-01/summary.json) |
+| 5 | export-warning digests summarize existing alerts without mutating the alert ledger | PASS | [export-warning-digest summary](../../../.vibe-science-environment/operator-validation/benchmarks/export-warning-digest-reviewable-artifact/2026-04-04-01/summary.json) |
+| 6 | active domain packs surface through operator summaries with preset-only authority | PASS | [domain-pack-omics summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-omics/2026-04-04-01/summary.json) |
+| 7 | invalid domain activation falls back cleanly to neutral defaults | PASS | [domain-pack-fallback summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-domain-pack-fallback/2026-04-04-01/summary.json) |
+| 8 | domain-pack `forbiddenMutations` and `doesNotModify` are runtime-enforced | PARTIAL | [resolver.js](../../../environment/domain-packs/resolver.js); follow-up FU-55-005 |
 
-**Result: 6 PASS, 0 PARTIAL.**
+**Result: 6 PASS, 1 PARTIAL, 1 DEFERRED.**
+
+---
+
+## Phase 5.5 Correction Notes
+
+The Phase 4 connector and automation substrate is real, but several product
+labels were too broad:
+
+- The Obsidian connector is a vault-target markdown export adapter, not an
+  Obsidian plugin, API integration, or URI-scheme integration.
+- Zotero was discussed in planning but did not ship in Phase 4; it is deferred
+  rather than silently included in the connector roster.
+- "Weekly" automation currently means explicit invocation plus ISO-week
+  idempotency, not host-native recurring execution.
+- Domain-pack `forbiddenMutations` and `doesNotModify` remain declarative
+  policy fields until FU-55-005 adds runtime enforcement.
+
+## Declared Follow-Up
+
+- FU-55-004: add a host-native scheduler adapter or rename the automation gate
+  so cadence is never implied without an execution host.
+- FU-55-005: enforce domain-pack `forbiddenMutations` and `doesNotModify` at the
+  write boundary, or downgrade those fields to descriptive metadata.
 
 ---
 

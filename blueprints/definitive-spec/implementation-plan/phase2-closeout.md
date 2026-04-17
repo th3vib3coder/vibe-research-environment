@@ -50,17 +50,28 @@ What Phase 2 does **not** claim:
 
 ## Exit Gate Outcome
 
-| Gate | Result | Evidence |
-|------|--------|----------|
-| memory mirrors refresh only through explicit command with visible timestamp | PASS | [sync-memory-refresh / 2026-04-02-02](../../../.vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/) |
-| decision log mirror reflects control-plane decisions without becoming a second truth path | PASS | [decision-log.md](../../../.vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/output.json), [phase2-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase2-operator-validation.json) |
-| marks guide retrieval/prioritization without changing truth semantics | PASS | [sync-memory-refresh / 2026-04-02-02](../../../.vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/), project overview mirror contains mark markers only |
-| stale mirrors older than 24 hours are flagged in `/flow-status` | PASS | [flow-status-stale-memory / 2026-04-02-02](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/) |
-| experiment bundles are typed and include manifest + outputs + claim link | PASS | [flow-results-package / 2026-04-02-02](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/) |
-| experiment bundles record `sourceAttemptId` | PASS | [flow-results-package / 2026-04-02-02](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/), [phase2-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase2-operator-validation.json) |
-| researcher finds past experiment results in under 1 minute | PASS | [flow-status-results-findability / 2026-04-02-02](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/), resume latency metric <= 60 seconds |
+| # | Gate | Result | Evidence |
+|---|------|--------|----------|
+| 1 | memory mirrors refresh only through explicit command with visible timestamp | PASS | [sync-memory-refresh summary](../../../.vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/summary.json) |
+| 2 | decision log mirror reflects control-plane decisions without becoming a second truth path | PASS | [sync-memory-refresh output](../../../.vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/output.json), [phase2-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase2-operator-validation.json) |
+| 3 | marks guide retrieval/prioritization without changing truth semantics | PASS | [sync-memory-refresh output](../../../.vibe-science-environment/operator-validation/benchmarks/sync-memory-refresh/2026-04-02-02/output.json) |
+| 4 | stale mirrors older than 24 hours are flagged in `/flow-status` | PASS | [flow-status-stale-memory summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-stale-memory/2026-04-02-02/summary.json) |
+| 5 | experiment bundles are typed and include manifest + outputs + claim link | PASS | [flow-results-package summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/summary.json) |
+| 6 | experiment bundles record `sourceAttemptId` | PASS | [flow-results-package output](../../../.vibe-science-environment/operator-validation/benchmarks/flow-results-package/2026-04-02-02/output.json), [phase2-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase2-operator-validation.json) |
+| 7 | researcher finds past experiment results in under 1 minute | PASS | [flow-status-results-findability metrics](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-results-findability/2026-04-02-02/metrics.json) |
 
 **Result: 7 PASS, 0 PARTIAL.**
+
+---
+
+## Phase 5.5 Correction Note — Export-Policy Coupling
+
+The original Phase 2 statement "packaging does not backdoor Phase 3
+writing/export policy" was correct at the behavior gate level but too generous
+about code boundaries. Earlier Phase 2 packaging imported the Phase 3
+`exportEligibility()` helper for advisory annotations. Phase 5.5 WP-124 removed
+that structural coupling; result packaging now remains Phase 2-owned and exposes
+export readiness only through neutral annotations in [results.js](../../../environment/flows/results.js).
 
 ---
 

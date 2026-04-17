@@ -61,25 +61,46 @@ So the honest reading is:
 
 | # | Gate | Result | Evidence |
 |---|------|--------|----------|
-| 1 | core-reader.js has 8 tested projection functions | PASS | kernel-side: `plugin/lib/core-reader.js`, `tests/core-reader.test.mjs` (pre-existing) |
-| 2 | CLI bridge returns stable JSON envelope | PASS | kernel-side: `plugin/scripts/core-reader-cli.js` (pre-existing) |
+| 1 | core-reader.js has 8 tested projection functions | PASS | inherited kernel contract anchored in [02-kernel-contract.md](../02-kernel-contract.md) |
+| 2 | CLI bridge returns stable JSON envelope | PASS | inherited kernel contract anchored in [02-kernel-contract.md](../02-kernel-contract.md) |
 | 3 | Flow state lives outside kernel in `.vibe-science-environment/` | PASS | [flow-state.js](../../../environment/lib/flow-state.js), [flow-state.test.js](../../../environment/tests/lib/flow-state.test.js) |
 | 4 | Canonical operator snapshot in `control/session.json` | PASS | [session-snapshot.js](../../../environment/control/session-snapshot.js), [session-snapshot.test.js](../../../environment/tests/control/session-snapshot.test.js) |
 | 5 | Every `/flow-*` opens and closes an attempt | PASS | [middleware.js](../../../environment/control/middleware.js), [middleware.test.js](../../../environment/tests/control/middleware.test.js) |
 | 6 | Capability snapshot defaults unknown features to `false` | PASS | [capabilities.js](../../../environment/control/capabilities.js), [capabilities.test.js](../../../environment/tests/control/capabilities.test.js) |
-| 7 | Shared middleware chain handles lifecycle | PASS | [middleware.js](../../../environment/control/middleware.js) — 7-step chain |
+| 7 | Shared middleware chain handles lifecycle | PASS | [middleware.js](../../../environment/control/middleware.js) |
 | 8 | `/flow-status` resumes and produces summary | PASS | [flow-status.md](../../../commands/flow-status.md), [control-plane-rebuild.test.js](../../../environment/tests/integration/control-plane-rebuild.test.js) |
 | 9 | `/flow-literature` registers paper and links to claim | PASS | [literature.js](../../../environment/flows/literature.js), [literature-register.test.js](../../../environment/tests/integration/literature-register.test.js) |
 | 10 | `/flow-experiment` creates manifest and tracks outputs | PASS | [experiment.js](../../../environment/flows/experiment.js), [experiment-manifest-lifecycle.test.js](../../../environment/tests/integration/experiment-manifest-lifecycle.test.js) |
 | 11 | `/flow-experiment` lists existing manifests | PASS | [experiment.test.js](../../../environment/tests/flows/experiment.test.js) |
-| 12 | At least one flow demonstrates two-substrate rule | PASS | literature + experiment use workspace files + optional CLI bridge projections |
-| 13 | Flow state, control records, manifests validate against schemas | PASS | [validate-runtime-contracts.js](../../../environment/tests/ci/validate-runtime-contracts.js), 12 schema tests in [tests/schemas/](../../../environment/tests/schemas/) |
+| 12 | At least one flow demonstrates two-substrate rule | PASS | [literature.js](../../../environment/flows/literature.js), [experiment.js](../../../environment/flows/experiment.js) |
+| 13 | Flow state, control records, manifests validate against schemas | PASS | [validate-runtime-contracts.js](../../../environment/tests/ci/validate-runtime-contracts.js), [attempt-record.schema.test.js](../../../environment/tests/schemas/attempt-record.schema.test.js) |
 | 14 | Saved operator-validation artifact (resume ≤2 min) | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
-| 15 | Phase 1 scenarios in eval harness with saved runs | PASS | 4 repeat directories under [benchmarks/](../../../.vibe-science-environment/operator-validation/benchmarks/) |
+| 15 | Phase 1 scenarios in eval harness with saved runs | PASS | [flow-status-resume summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/summary.json) |
 | 16 | Baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
-| 17 | Kernel governance prerequisites verified | PASS | checklist below — all Phase 1 kernel prerequisites now verify against the accepted `default/strict` baseline |
+| 17 | Kernel governance prerequisites automatically verified | PARTIAL | [profiles.test.js](../../../environment/tests/compatibility/profiles.test.js), [state-machine.test.js](../../../environment/tests/compatibility/state-machine.test.js); follow-up FU-55-001 |
 
-**Result: 17 PASS, 0 PARTIAL.** Phase 1 sign-off is now green across both repos.
+**Result: 16 PASS, 1 PARTIAL.** Phase 1 VRE implementation sign-off remains green; the automated kernel-governance evidence claim is corrected below.
+
+---
+
+## Phase 5.5 Correction Note — Gate 17
+
+Gate 17 was originally marked `PASS` as though VRE had an automated runtime
+probe for every kernel governance prerequisite. That was too strong. The sibling
+kernel exists and the checklist below records real cross-repo evidence, but the
+VRE compatibility tests linked above are contract fixtures and static sequence
+checks; they do not spawn the sibling kernel or exercise a live governance
+runtime.
+
+The corrected status is therefore `PARTIAL`: Phase 1 remains usable against the
+documented kernel baseline, but the specific claim "automatically verified" is
+not closed until FU-55-001 adds a live sibling-kernel compatibility probe.
+
+## Declared Follow-Up
+
+- FU-55-001: add a VRE compatibility test that runs against the sibling
+  `vibe-science` checkout and verifies the governance envelope through the
+  kernel bridge instead of only through local compatibility fixtures.
 
 ---
 

@@ -6,18 +6,20 @@
 
 Build from highest researcher pain to lowest epistemic risk.
 
-## Live Status Snapshot (2026-04-10)
+## Live Status Snapshot (2026-04-17)
 
 - Phase 0: complete
-- Phase 1: closed with [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
+- Phase 1: closed with [phase1-closeout.md](./implementation-plan/phase1-closeout.md) (`16 PASS, 1 PARTIAL` after Phase 5.5 honesty correction)
 - Phase 2: closed with [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
-- Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
-- Phase 4: closed with [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
-- Phase 5: closed with [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
+- Phase 3: closed with [phase3-closeout.md](./implementation-plan/phase3-closeout.md) (`7 PASS, 1 PARTIAL` after regenerated evidence)
+- Phase 4: closed with [phase4-closeout.md](./implementation-plan/phase4-closeout.md) (`6 PASS, 1 PARTIAL, 1 DEFERRED`)
+- Phase 5: closed with [phase5-closeout.md](./implementation-plan/phase5-closeout.md) (`4 PASS, 1 FALSE-POSITIVE` on the historical review-lineage gate)
+- Phase 5.5: implementation in progress under [phase55-00-index.md](./implementation-plan/phase55-00-index.md); Phase 6 remains blocked until `phase55-closeout.md` lands
 
 The sections below preserve the original build order and gate definitions.
-Audited completion state now lives in the implementation-plan indexes and
-closeout dossiers instead of being backfilled into every historical checklist.
+Historical checklist boxes below are planning artifacts, not current truth. The
+audited status for each phase lives in the closeout dossier linked above, and
+Phase 5.5 corrections override older PASS language when they conflict.
 
 ---
 
@@ -44,6 +46,9 @@ Closeout:
 - [phase1-closeout.md](./implementation-plan/phase1-closeout.md)
 
 ### Deliverables
+
+Historical deliverable statuses are preserved as planning context. For the
+current audited outcome, use [phase1-closeout.md](./implementation-plan/phase1-closeout.md).
 
 | Deliverable | Status | File |
 |-------------|--------|------|
@@ -78,6 +83,10 @@ Closeout:
 | Kernel governance event table | KERNEL PREREQUISITE | append-only `governance_events` support |
 
 ### Exit Gates
+
+Historical gate checkboxes are preserved as original roadmap intent. The current
+Phase 1 gate result is [phase1-closeout.md](./implementation-plan/phase1-closeout.md),
+including the Phase 5.5 downgrade of Gate 17 to `PARTIAL`.
 
 - [x] core-reader.js has 8 tested projection functions
 - [x] CLI bridge returns stable JSON envelope
@@ -120,6 +129,11 @@ Closeout:
 
 ### Exit Gates
 
+Historical gate checkboxes are preserved as original roadmap intent. The current
+Phase 2 gate result is [phase2-closeout.md](./implementation-plan/phase2-closeout.md),
+including the Phase 5.5 note that export-policy coupling was removed after the
+original closeout.
+
 - [ ] Memory mirror updates via explicit command with visible timestamp
 - [ ] Decision log mirrors control-plane decisions without becoming a second truth path
 - [ ] Marks guide retrieval/prioritization without changing truth semantics
@@ -151,6 +165,11 @@ Closeout:
 
 ### Exit Gates
 
+Historical gate checkboxes are preserved as original roadmap intent. The current
+Phase 3 gate result is [phase3-closeout.md](./implementation-plan/phase3-closeout.md),
+including regenerated operator evidence and the `PARTIAL` status for runtime
+three-tier writing boundaries.
+
 - [ ] Export-eligibility only exports claims accepted by the shared helper (`PROMOTED` + verified citations + profile safety extension)
 - [ ] Zero tracked citations block export eligibility
 - [ ] Export-eligibility implemented once in shared helper, not duplicated
@@ -179,6 +198,10 @@ With Phase 1-4 now closed, that surface-orchestrator prerequisite is satisfied.
 The next planning frontier is the companion orchestrator Phase 0 contract-freeze
 track under `surface-orchestrator/`, including continuity-profile and
 context-assembly semantics above VRE.
+
+Phase 5.5 correction: Phase 4 is closed as an outer-project substrate, but
+host-native recurring scheduling and domain-pack mutation enforcement are not
+implemented yet; see [phase4-closeout.md](./implementation-plan/phase4-closeout.md).
 
 ---
 
@@ -210,6 +233,10 @@ Closed outcome:
 - local coordinator MVP shipped under `environment/orchestrator/`
 - Phase 5 saved benchmark repeats, operator-validation artifact, and measured context/cost baseline are on disk
 - public `/orchestrator-run` and `/orchestrator-status` surfaces are implemented as runtime-backed contract shims
+
+Phase 5.5 correction: the historical review-lineage PASS was retracted because
+the saved Phase 5 evidence used a deterministic in-repo review executor. The
+task registry and local-subprocess hardening live in Phase 5.5.
 
 ---
 
