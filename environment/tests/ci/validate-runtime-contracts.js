@@ -30,6 +30,7 @@ const activeSchemaFiles = [
   'decision-record.schema.json',
   'flow-index.schema.json',
   'literature-flow-state.schema.json',
+  'literature-register-input.schema.json',
   'experiment-flow-state.schema.json',
   'schema-validation-record.schema.json',
   'experiment-manifest.schema.json',
@@ -56,7 +57,9 @@ const activeSchemaFiles = [
   'external-review-record.schema.json',
   'continuity-profile.schema.json',
   'continuity-profile-history.schema.json',
-  'assembled-continuity-payload.schema.json'
+  'assembled-continuity-payload.schema.json',
+  'task-registry-entry.schema.json',
+  'operator-validation-artifact.schema.json'
 ];
 
 const activeEvalTaskFiles = [

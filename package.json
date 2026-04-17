@@ -13,6 +13,7 @@
     "validate": "node environment/tests/ci/run-all.js",
     "validate:closeout-honesty": "node environment/tests/ci/validate-closeout-honesty.js",
     "eval:save-phase1": "node environment/evals/save-phase1-artifacts.js",
+    "eval:save-phase3": "node environment/evals/save-phase3-operator-validation-artifact.js",
     "eval:save-operator-validation": "node environment/evals/save-operator-validation-artifact.js",
     "eval:measure-context-baseline": "node environment/evals/measure-context-baseline.js"
   },

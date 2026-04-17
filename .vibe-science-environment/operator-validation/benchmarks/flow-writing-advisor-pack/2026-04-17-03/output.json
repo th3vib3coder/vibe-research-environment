@@ -1,0 +1,229 @@
+{
+  "taskId": "flow-writing-advisor-pack",
+  "repeatId": "2026-04-17-03",
+  "benchmarkId": "phase3-writing-deliverables",
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": [
+      "--advisor-pack",
+      "2026-04-03"
+    ]
+  },
+  "result": {
+    "summary": "Advisor pack regenerated through one /flow-writing path with copied figure evidence.",
+    "warnings": [],
+    "payload": {
+      "packType": "advisor",
+      "packId": "2026-04-03",
+      "packDir": ".vibe-science-environment/writing/advisor-packs/2026-04-03",
+      "copiedFigures": [
+        {
+          "experimentId": "EXP-504",
+          "sourcePath": ".vibe-science-environment/results/experiments/EXP-504/figures/plots/advisor-504.png",
+          "packPath": ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png"
+        }
+      ],
+      "warnings": [],
+      "index": {
+        "schemaVersion": "vibe.flow.index.v1",
+        "activeFlow": "writing",
+        "currentStage": "advisor-pack",
+        "nextActions": [
+          "review advisor pack 2026-04-03"
+        ],
+        "blockers": [],
+        "lastCommand": "/flow-writing",
+        "updatedAt": "2026-04-03T11:15:00Z"
+      }
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-17-11-55-12-592-3c4a39fc",
+    "scope": "flow-writing",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-17T11:55:12.592Z",
+    "lastHeartbeatAt": "2026-04-17T11:55:12.621Z",
+    "endedAt": "2026-04-17T11:55:12.621Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Advisor pack regenerated through one /flow-writing path with copied figure evidence."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "writing",
+    "currentStage": "advisor-pack",
+    "nextActions": [
+      "review advisor pack 2026-04-03"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": true,
+      "degradedReason": null
+    },
+    "capabilities": {
+      "claimHeads": true,
+      "citationChecks": true,
+      "governanceProfileAtCreation": true,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0,
+      "provenance": {
+        "sourceMode": "kernel-backed",
+        "degradedReason": null,
+        "lastKernelContactAt": "2026-04-17T11:55:12.617Z"
+      }
+    },
+    "lastCommand": "/flow-writing",
+    "lastAttemptId": "ATT-2026-04-17-11-55-12-592-3c4a39fc",
+    "updatedAt": "2026-04-17T11:55:12.618Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": true,
+      "projections": {
+        "overview": false,
+        "claimHeads": true,
+        "unresolvedClaims": true,
+        "citationChecks": true
+      },
+      "advanced": {
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": []
+    },
+    "updatedAt": "2026-04-17T11:55:12.585Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md"
+  ],
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-04-17-11-55-12-592-3c4a39fc",
+      "scope": "flow-writing",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-17T11:55:12.592Z",
+      "lastHeartbeatAt": "2026-04-17T11:55:12.621Z",
+      "endedAt": "2026-04-17T11:55:12.621Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Advisor pack regenerated through one /flow-writing path with copied figure evidence.",
+      "events": [
+        {
+          "eventId": "EVT-1776426912623-a42a77",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-17-11-55-12-592-3c4a39fc",
+          "scope": "flow-writing",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-17T11:55:12.623Z"
+        },
+        {
+          "eventId": "EVT-1776426912619-878f1d",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-17-11-55-12-592-3c4a39fc",
+          "scope": "flow-writing",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-17T11:55:12.619Z"
+        },
+        {
+          "eventId": "EVT-1776426912599-5fcaa6",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-17-11-55-12-592-3c4a39fc",
+          "scope": "flow-writing",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /flow-writing",
+          "details": null,
+          "recordedAt": "2026-04-17T11:55:12.599Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+        ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md"
+      ]
+    }
+  ]
+}

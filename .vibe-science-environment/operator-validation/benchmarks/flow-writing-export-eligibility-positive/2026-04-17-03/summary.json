@@ -1,0 +1,202 @@
+{
+  "taskId": "flow-writing-export-eligibility-positive",
+  "repeatId": "2026-04-17-03",
+  "benchmarkId": "phase3-writing-deliverables",
+  "startedAt": "2026-04-17T11:55:12.169Z",
+  "endedAt": "2026-04-17T11:55:12.215Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-17-11-55-12-176-b145a327",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-17-03/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-501.json",
+      ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+      ".vibe-science-environment/writing/exports/export-log.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Claim-backed writing seed regenerated from strict promoted claim evidence.",
+      "warnings": [],
+      "payload": {
+        "snapshot": {
+          "snapshotId": "WEXP-2026-04-03-501",
+          "claimIds": [
+            "C-501"
+          ],
+          "claims": [
+            {
+              "claimId": "C-501",
+              "statusAtExport": "PROMOTED",
+              "confidenceAtExport": 0.94,
+              "eligible": true,
+              "reasons": [],
+              "governanceProfileAtCreation": "strict",
+              "hasFreshSchemaValidation": false
+            }
+          ],
+          "citations": [
+            {
+              "claimId": "C-501",
+              "citationId": "CIT-501",
+              "verificationStatusAtExport": "VERIFIED"
+            }
+          ],
+          "capabilities": {
+            "governanceProfileAtCreationAvailable": true,
+            "schemaValidationSurfaceAvailable": true
+          },
+          "warnings": [],
+          "schemaVersion": "vibe-env.export-snapshot.v1",
+          "createdAt": "2026-04-03T11:00:00Z"
+        },
+        "snapshotPath": ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-501.json",
+        "seeds": [
+          {
+            "claimId": "C-501",
+            "snapshotId": "WEXP-2026-04-03-501",
+            "artifactPath": ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+            "relatedExperimentIds": [],
+            "exportRecord": {
+              "claimId": "C-501",
+              "snapshotId": "WEXP-2026-04-03-501",
+              "exportedToFlow": "writing",
+              "governanceProfileAtExport": "strict",
+              "profileSafetyMode": "full",
+              "artifactPath": ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+              "notes": null,
+              "schemaVersion": "vibe-env.export-record.v1",
+              "exportedAt": "2026-04-03T11:00:00Z"
+            }
+          }
+        ],
+        "blockedClaims": [],
+        "alerts": [],
+        "warnings": [],
+        "index": {
+          "schemaVersion": "vibe.flow.index.v1",
+          "activeFlow": "writing",
+          "currentStage": "writing-handoff",
+          "nextActions": [
+            "draft prose from 1 claim-backed seed"
+          ],
+          "blockers": [],
+          "lastCommand": "/flow-writing",
+          "updatedAt": "2026-04-03T11:00:00Z"
+        },
+        "seed": {
+          "claimId": "C-501",
+          "snapshotId": "WEXP-2026-04-03-501",
+          "artifactPath": ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+          "relatedExperimentIds": [],
+          "exportRecord": {
+            "claimId": "C-501",
+            "snapshotId": "WEXP-2026-04-03-501",
+            "exportedToFlow": "writing",
+            "governanceProfileAtExport": "strict",
+            "profileSafetyMode": "full",
+            "artifactPath": ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+            "notes": null,
+            "schemaVersion": "vibe-env.export-record.v1",
+            "exportedAt": "2026-04-03T11:00:00Z"
+          }
+        },
+        "exportRecord": {
+          "claimId": "C-501",
+          "snapshotId": "WEXP-2026-04-03-501",
+          "exportedToFlow": "writing",
+          "governanceProfileAtExport": "strict",
+          "profileSafetyMode": "full",
+          "artifactPath": ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+          "notes": null,
+          "schemaVersion": "vibe-env.export-record.v1",
+          "exportedAt": "2026-04-03T11:00:00Z"
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "writing",
+      "currentStage": "writing-handoff",
+      "nextActions": [
+        "draft prose from 1 claim-backed seed"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": true,
+        "degradedReason": null
+      },
+      "capabilities": {
+        "claimHeads": true,
+        "citationChecks": true,
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0,
+        "provenance": {
+          "sourceMode": "kernel-backed",
+          "degradedReason": null,
+          "lastKernelContactAt": "2026-04-17T11:55:12.203Z"
+        }
+      },
+      "lastCommand": "/flow-writing",
+      "lastAttemptId": "ATT-2026-04-17-11-55-12-176-b145a327",
+      "updatedAt": "2026-04-17T11:55:12.203Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/exports/export-log.jsonl",
+      ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+      ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-501.json"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": null,
+    "degradedHonestyScore": null,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/exports/export-log.jsonl",
+    ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-501/C-501.md",
+    ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-501.json"
+  ]
+}

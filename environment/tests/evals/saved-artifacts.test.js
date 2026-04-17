@@ -34,6 +34,31 @@ async function externalPathExists(repoRelativePath) {
   }
 }
 
+function assertNoNullValues(value, label) {
+  if (value === null) {
+    assert.fail(`${label} must not contain null`);
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => assertNoNullValues(entry, `${label}[${index}]`));
+    return;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, entry] of Object.entries(value)) {
+      assertNoNullValues(entry, `${label}.${key}`);
+    }
+  }
+}
+
+function assertMetricValue(value, label) {
+  if (typeof value === 'number') {
+    assert.ok(Number.isFinite(value), `${label} must be finite`);
+    return;
+  }
+  assert.equal(value?.status, 'not-applicable', `${label} must be numeric or structured not-applicable`);
+  assert.equal(typeof value.reason, 'string');
+  assert.notEqual(value.reason.trim(), '');
+}
+
 const HAS_KERNEL_SIBLING = await externalPathExists('../vibe-science/CLAUDE.md');
 
 test('saved benchmark artifacts exist for every Phase 1 task and include the required files', async () => {
@@ -607,10 +632,14 @@ test('saved Phase 3 operator-validation artifact points to passing evidence repe
     '.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json'
   );
 
+  assert.equal(artifact.schemaVersion, 'vibe-env.operator-validation-artifact.v1');
   assert.equal(artifact.artifactId, 'phase3-operator-validation');
   assert.equal(artifact.phase, 3);
   assert.equal(artifact.benchmarkId, 'phase3-writing-deliverables');
   assert.equal(artifact.passed, true);
+  assert.equal(typeof artifact.generatedAt, 'string');
+  assert.match(artifact.replacesArtifact, /phase3-operator-validation\.pre-5_5\.json/u);
+  assertNoNullValues(artifact, 'phase3-operator-validation');
   assert.ok(Array.isArray(artifact.validationClaims) && artifact.validationClaims.length >= 5);
   assert.equal(
     artifact.decisions.profileSafetyDegradedMode,
@@ -631,12 +660,25 @@ test('saved Phase 3 operator-validation artifact points to passing evidence repe
     'resultsPolicy',
   ]) {
     const evidence = artifact.evidence[key];
+    assert.ok(Array.isArray(evidence.sourceRepeats));
+    assert.equal(evidence.sourceRepeats.length, 3);
+    assert.ok(Array.isArray(artifact.sourceRepeats[key]));
+    assert.equal(artifact.sourceRepeats[key].length, 3);
+    for (const [metricName, metricValue] of Object.entries(evidence.metrics)) {
+      assertMetricValue(metricValue, `${key}.${metricName}`);
+    }
     await assertRepoPathExists(evidence.sourceRepeat.inputPath);
     await assertRepoPathExists(evidence.sourceRepeat.outputPath);
     await assertRepoPathExists(evidence.sourceRepeat.metricsPath);
     await assertRepoPathExists(evidence.sourceRepeat.summaryPath);
     await assertRepoPathExists(evidence.sourceRepeat.transcriptPath);
+    for (const repeat of evidence.sourceRepeats) {
+      await assertRepoPathExists(repeat.summaryPath);
+      await assertRepoPathExists(repeat.transcriptPath);
+    }
   }
+
+  await assertRepoPathExists(artifact.replacesArtifact);
 });
 
 test('saved Phase 4 operator-validation artifact points to passing evidence repeats', async () => {

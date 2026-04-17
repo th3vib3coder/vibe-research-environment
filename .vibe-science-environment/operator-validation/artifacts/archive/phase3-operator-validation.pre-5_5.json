@@ -1,0 +1,154 @@
+{
+  "artifactId": "phase3-operator-validation",
+  "phase": 3,
+  "createdAt": "2026-04-03T12:00:00Z",
+  "benchmarkId": "phase3-writing-deliverables",
+  "passed": true,
+  "validationClaims": [
+    "Export eligibility is enforced once in the shared helper and positive strict-mode export stays traceable.",
+    "Default-mode claims remain blocked until a fresh schema-validation artifact exists.",
+    "Claim-backed writing references frozen snapshot ids through snapshot, seed, and export-log surfaces.",
+    "Advisor and rebuttal packs are each assembleable from one /flow-writing command path.",
+    "Post-export drift surfaces append-only warning records instead of mutating prose silently.",
+    "The results surface consumes the same export-policy helper as writing."
+  ],
+  "decisions": {
+    "profileSafetyDegradedMode": "Missing governanceProfileAtCreation metadata stays explicit degraded compatibility, not silent strict equivalence.",
+    "exportSnapshotAndReplay": "Claim-backed writing always references a frozen snapshot and later drift is surfaced as append-only alerts against that snapshot."
+  },
+  "evidence": {
+    "positiveExport": {
+      "claim": "Positive strict-mode export stays claim-backed and traceable.",
+      "sourceRepeat": {
+        "taskId": "flow-writing-export-eligibility-positive",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-export-eligibility-positive/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "defaultModeBlock": {
+      "claim": "Default-mode export is blocked until fresh schema validation exists.",
+      "sourceRepeat": {
+        "taskId": "flow-writing-default-mode-blocked",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-default-mode-blocked/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "snapshotTraceability": {
+      "claim": "Snapshot ids stay visible across snapshot, seed, and export record surfaces.",
+      "sourceRepeat": {
+        "taskId": "flow-writing-snapshot-export",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-snapshot-export/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "advisorPack": {
+      "claim": "Advisor packs are assembleable from one /flow-writing path.",
+      "sourceRepeat": {
+        "taskId": "flow-writing-advisor-pack",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "rebuttalPack": {
+      "claim": "Rebuttal packs are assembleable from one /flow-writing path.",
+      "sourceRepeat": {
+        "taskId": "flow-writing-rebuttal-pack",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "warningReplay": {
+      "claim": "Post-export drift surfaces append-only warning alerts tied to the frozen snapshot.",
+      "sourceRepeat": {
+        "taskId": "flow-writing-warning-replay",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-warning-replay/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    },
+    "resultsPolicy": {
+      "claim": "Results packaging surfaces the same export policy decisions as writing.",
+      "sourceRepeat": {
+        "taskId": "flow-results-export-policy",
+        "repeatId": "2026-04-03-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-03-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-03-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-03-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-03-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-results-export-policy/2026-04-03-01/transcript.md"
+      },
+      "metrics": {
+        "resumeLatencySeconds": null,
+        "degradedHonestyScore": null,
+        "stateWriteScopeViolations": 0,
+        "attemptLifecycleCompleteness": 1,
+        "snapshotPublishSuccess": 1
+      }
+    }
+  }
+}
