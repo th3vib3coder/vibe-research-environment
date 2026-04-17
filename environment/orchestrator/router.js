@@ -11,6 +11,7 @@ import {
   readRouterSession,
   writeRouterSession,
 } from './state.js';
+import { findByRouterKeyword, getTaskEntry } from './task-registry.js';
 
 export const MODE_TO_PRIMARY_LANE = Object.freeze({
   intake: 'coordination',
@@ -31,21 +32,30 @@ function normalizeObjective(objective) {
   return objective.trim();
 }
 
-function inferTaskKindFromObjective(objective) {
-  if (/\b(session digest|digest export|export digest|export a digest|digest summary)\b/iu.test(objective)) {
-    return 'session-digest-export';
+async function inferTaskKindFromObjective(objective) {
+  const match = await findByRouterKeyword(objective);
+  if (!match || match.ambiguous) {
+    return null;
   }
+  return match.taskKind;
+}
 
+async function resolveObjectiveAmbiguity(objective) {
+  const match = await findByRouterKeyword(objective);
+  if (match?.ambiguous) {
+    return match.candidates;
+  }
   return null;
 }
 
-export function classifyObjectiveMode(objective, requestedMode = null) {
+export async function classifyObjectiveMode(objective, requestedMode = null) {
   if (requestedMode) {
     return requestedMode;
   }
 
   const text = normalizeObjective(objective);
-  if (inferTaskKindFromObjective(text)) {
+  const taskKind = await inferTaskKindFromObjective(text);
+  if (taskKind) {
     return 'execute';
   }
   if (/\b(review|contrarian|adversarial|second opinion|challenge)\b/iu.test(text)) {
@@ -73,7 +83,7 @@ export function classifyObjectiveMode(objective, requestedMode = null) {
   return 'intake';
 }
 
-function buildTargetRef({ mode, taskKind, targetRef }) {
+async function buildTargetRef({ mode, taskKind, targetRef }) {
   if (targetRef && typeof targetRef === 'object') {
     return {
       kind: taskKind ?? targetRef.kind,
@@ -81,11 +91,11 @@ function buildTargetRef({ mode, taskKind, targetRef }) {
     };
   }
 
-  if (taskKind === 'session-digest-export') {
-    return {
-      kind: taskKind,
-      id: 'latest',
-    };
+  if (taskKind) {
+    const entry = await getTaskEntry(taskKind);
+    if (entry) {
+      return { kind: taskKind, id: 'latest' };
+    }
   }
 
   if (mode === 'review') {
@@ -96,6 +106,13 @@ function buildTargetRef({ mode, taskKind, targetRef }) {
   }
 
   return null;
+}
+
+function titleCaseTaskKind(taskKind) {
+  return taskKind
+    .split('-')
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
 }
 
 function buildSessionTarget(targetRef) {
@@ -110,11 +127,11 @@ function buildSessionTarget(targetRef) {
     return targetRef;
   }
 
-  if (targetRef.kind === 'session-digest-export') {
+  if (typeof targetRef.kind === 'string' && /^[a-z][a-z0-9-]*$/.test(targetRef.kind)) {
     return {
-      kind: 'session',
+      kind: 'flow',
       id: targetRef.id,
-      label: 'session-digest-export',
+      label: targetRef.kind,
     };
   }
 
@@ -125,9 +142,12 @@ function buildSessionTarget(targetRef) {
   };
 }
 
-function buildRouteTitle({ mode, objective, taskKind }) {
-  if (taskKind === 'session-digest-export') {
-    return 'Export session digest';
+async function buildRouteTitle({ mode, objective, taskKind }) {
+  if (taskKind) {
+    const entry = await getTaskEntry(taskKind);
+    if (entry) {
+      return `Run ${titleCaseTaskKind(taskKind)}`;
+    }
   }
 
   if (mode === 'review') {
@@ -141,12 +161,20 @@ function buildRouteTitle({ mode, objective, taskKind }) {
   return objective;
 }
 
-function buildImmediateEscalation({ mode, objective, taskKind, artifactRefs, targetRef }) {
+function buildImmediateEscalation({ mode, objective, taskKind, artifactRefs, targetRef, ambiguousCandidates = null }) {
   if (mode === 'intake') {
     return {
       triggerKind: 'operator-request',
       decisionNeeded: `Clarify the requested orchestrator task before execution: "${objective}"`,
       summary: 'Objective is too ambiguous for automatic routing.',
+    };
+  }
+
+  if (ambiguousCandidates && ambiguousCandidates.length > 1 && !taskKind) {
+    return {
+      triggerKind: 'operator-request',
+      decisionNeeded: `Objective matched multiple registered task kinds: ${ambiguousCandidates.join(', ')}. Pick one explicitly via options.taskKind.`,
+      summary: `Ambiguous router keyword match across ${ambiguousCandidates.length} task kinds.`,
     };
   }
 
@@ -223,15 +251,16 @@ export async function routeOrchestratorObjective(projectPath, options = {}) {
   await bootstrapOrchestratorState(projectPath);
 
   const objective = normalizeObjective(options.objective);
-  const mode = classifyObjectiveMode(objective, options.requestedMode ?? null);
+  const mode = await classifyObjectiveMode(objective, options.requestedMode ?? null);
   const primaryLane = MODE_TO_PRIMARY_LANE[mode];
-  const taskKind = options.taskKind ?? inferTaskKindFromObjective(objective);
-  const targetRef = buildTargetRef({ mode, taskKind, targetRef: options.targetRef ?? null });
+  const taskKind = options.taskKind ?? await inferTaskKindFromObjective(objective);
+  const ambiguousCandidates = options.taskKind ? null : await resolveObjectiveAmbiguity(objective);
+  const targetRef = await buildTargetRef({ mode, taskKind, targetRef: options.targetRef ?? null });
   const task = await createQueueTask(projectPath, {
     mode,
     ownerLane: primaryLane,
     status: 'queued',
-    title: buildRouteTitle({ mode, objective, taskKind }),
+    title: await buildRouteTitle({ mode, objective, taskKind }),
     objective,
     targetRef,
     artifactRefs: options.artifactRefs ?? [],
@@ -239,11 +268,14 @@ export async function routeOrchestratorObjective(projectPath, options = {}) {
   });
 
   let selectedLane = primaryLane;
-  if (taskKind === 'session-digest-export' && primaryLane !== 'execution') {
-    await appendQueueLaneReassignment(projectPath, task.taskId, 'execution', {
-      statusReason: `Phase 5 routes ${taskKind} through the execution lane.`,
-    });
-    selectedLane = 'execution';
+  if (taskKind) {
+    const entry = await getTaskEntry(taskKind);
+    if (entry?.lane && entry.lane !== primaryLane) {
+      await appendQueueLaneReassignment(projectPath, task.taskId, entry.lane, {
+        statusReason: `Phase 5 routes ${taskKind} through the ${entry.lane} lane.`,
+      });
+      selectedLane = entry.lane;
+    }
   }
 
   const immediateEscalation = buildImmediateEscalation({
@@ -252,6 +284,7 @@ export async function routeOrchestratorObjective(projectPath, options = {}) {
     taskKind,
     artifactRefs: options.artifactRefs ?? [],
     targetRef,
+    ambiguousCandidates,
   });
 
   if (immediateEscalation) {

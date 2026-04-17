@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/literature-register-input.schema.json",
+  "title": "VRE Literature Register Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title"
+  ],
+  "properties": {
+    "id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "year": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ]
+    },
+    "doi": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "relevance": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "linkedClaims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "methodologyConflicts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "registeredAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

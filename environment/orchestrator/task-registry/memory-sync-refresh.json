@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "memory-sync-refresh",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/memory/sync.js",
+  "helperExport": "syncMemory",
+  "inputSchema": null,
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["mirrorPaths"],
+    "warningCount": "integer",
+    "payload": {
+      "syncState": "memory-sync-state.v1",
+      "kernelAvailable": "boolean"
+    }
+  },
+  "routerKeywords": [
+    "sync memory",
+    "refresh memory",
+    "memory refresh",
+    "memory sync"
+  ],
+  "degradesTo": "escalate"
+}

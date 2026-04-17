@@ -1,6 +1,7 @@
 const SUPPORTED_CAPABILITIES = Object.freeze({
   'local-logic': new Set(['output-only', 'programmatic']),
   'local-cli': new Set(['fire-and-forget', 'output-only', 'streaming']),
+  'local-subprocess': new Set(['output-only', 'programmatic']),
   sdk: new Set(['output-only', 'streaming', 'programmatic']),
   api: new Set(['output-only', 'streaming', 'programmatic']),
   'cloud-task': new Set(['fire-and-forget', 'output-only']),

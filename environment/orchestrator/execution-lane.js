@@ -1,7 +1,4 @@
-import path from 'node:path';
-
 import { now } from '../control/_io.js';
-import { exportSessionDigest } from '../flows/session-digest.js';
 import {
   appendEscalationRecord,
   appendLaneRun,
@@ -12,6 +9,8 @@ import { selectLaneBinding } from './provider-gateway.js';
 import { getQueueTask, appendQueueStatusTransition } from './queue.js';
 import { getDefaultRecoveryPolicy } from './recovery.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
+import { getTaskEntry } from './task-registry.js';
+import { getTaskAdapter } from './task-adapters.js';
 
 function classifyExecutionFailure(error) {
   if (error?.code === 'ENOENT') {
@@ -33,30 +32,26 @@ async function nextAttemptNumber(projectPath, taskId) {
   return records.length + 1;
 }
 
-async function runSessionDigestExport(projectPath, input = {}) {
-  const result = await exportSessionDigest(projectPath, {
-    sourceSessionId: input.sourceSessionId ?? null,
-    warnings: input.warnings ?? [],
-  });
-
-  return {
-    summary: `Exported session digest ${result.digest.digestId}.`,
-    artifactRefs: [
-      path.relative(projectPath, result.jsonPath).replace(/\\/gu, '/'),
-      path.relative(projectPath, result.markdownPath).replace(/\\/gu, '/'),
-    ],
-    warningCount: result.digest.warnings.length,
-    payload: result,
-  };
-}
-
 async function executeTaskClass(projectPath, task, input = {}) {
   const taskKind = task.targetRef?.kind ?? null;
-  if (taskKind === 'session-digest-export') {
-    return runSessionDigestExport(projectPath, input);
+  if (!taskKind) {
+    throw new Error('Execution task requires targetRef.kind.');
   }
 
-  throw new Error(`Unsupported execution task kind: ${taskKind ?? 'null'}`);
+  const entry = await getTaskEntry(taskKind);
+  if (!entry) {
+    throw new Error(`Unsupported execution task kind: ${taskKind}`);
+  }
+  if (entry.lane !== 'execution') {
+    throw new Error(`Task kind ${taskKind} is registered for ${entry.lane} lane, not execution.`);
+  }
+
+  const adapter = getTaskAdapter(taskKind);
+  if (typeof adapter !== 'function') {
+    throw new Error(`No execution adapter registered for task kind ${taskKind}.`);
+  }
+
+  return adapter(projectPath, input);
 }
 
 export async function runExecutionLane(projectPath, options = {}) {

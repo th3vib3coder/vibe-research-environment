@@ -210,7 +210,10 @@ async function executeContinuityModesScenario(projectPath) {
   };
 }
 
-function buildReviewExecutor() {
+function buildMockReviewExecutor() {
+  // WP-131: explicitly mocked path. Evidence generated under this executor
+  // MUST be labeled `evidenceMode: "mocked-review"` and downgrades the
+  // phase5-closeout review gate to PARTIAL (see WP-146).
   return {
     'openai/codex:local-cli': async ({ comparedArtifactRefs }) => ({
       verdict: 'affirmed',
@@ -219,6 +222,69 @@ function buildReviewExecutor() {
       followUpAction: 'none',
     }),
   };
+}
+
+function buildSmokeReviewExecutor() {
+  // WP-131: smoke path. A real subprocess round-trips the envelope through
+  // `node -e`, so every CI run exercises the provider gateway spawn pipeline
+  // without requiring a Codex/Claude CLI on PATH. Evidence is labeled
+  // `evidenceMode: "smoke-real-subprocess"`.
+  const script = [
+    "let data='';",
+    "process.stdin.on('data',c=>{data+=c;});",
+    "process.stdin.on('end',()=>{",
+    "  let parsed={};",
+    "  try{parsed=JSON.parse(data);}catch(e){}",
+    "  const refs=Array.isArray(parsed.comparedArtifactRefs)?parsed.comparedArtifactRefs:[];",
+    "  const out={schemaVersion:'vibe-orch.local-subprocess.output.v1',verdict:'affirmed',materialMismatch:false,summary:`smoke review affirmed ${refs.length} refs`,followUpAction:'none'};",
+    "  process.stdout.write(JSON.stringify(out));",
+    "});",
+  ].join('');
+  return {
+    'openai/codex:local-subprocess': async (payload, binding) => {
+      const { invokeLocalSubprocess } = await import('../orchestrator/executors/local-subprocess.js');
+      return invokeLocalSubprocess({
+        command: process.execPath,
+        args: ['-e', script],
+        stdinPayload: payload,
+        timeoutMs: 15_000,
+      });
+    },
+  };
+}
+
+function resolveReviewEvidenceMode() {
+  const requested = (process.env.VRE_REVIEW_EVIDENCE_MODE ?? '').trim();
+  if (requested === 'mocked-review' || requested === 'smoke-real-subprocess' || requested === 'real-cli-binding') {
+    return requested;
+  }
+  if (process.env.VRE_CODEX_CLI || process.env.VRE_CLAUDE_CLI) {
+    return 'real-cli-binding';
+  }
+  return 'smoke-real-subprocess';
+}
+
+async function buildReviewExecutorForMode(mode) {
+  if (mode === 'mocked-review') {
+    return buildMockReviewExecutor();
+  }
+  if (mode === 'real-cli-binding') {
+    const command = process.env.VRE_CODEX_CLI ?? process.env.VRE_CLAUDE_CLI;
+    if (!command) {
+      return buildMockReviewExecutor();
+    }
+    const { invokeLocalSubprocess } = await import('../orchestrator/executors/local-subprocess.js');
+    return {
+      'openai/codex:local-subprocess': async (payload) =>
+        invokeLocalSubprocess({
+          command,
+          args: [],
+          envPassthrough: ['VRE_CODEX_CLI', 'VRE_CLAUDE_CLI'],
+          stdinPayload: payload,
+        }),
+    };
+  }
+  return buildSmokeReviewExecutor();
 }
 
 async function executeExecutionReviewLineageScenario(projectPath) {
@@ -230,6 +296,8 @@ async function executeExecutionReviewLineageScenario(projectPath) {
   });
   const executionTaskId = executionRun.result.payload.coordinator.route.task.taskId;
 
+  const evidenceMode = resolveReviewEvidenceMode();
+  const providerExecutors = await buildReviewExecutorForMode(evidenceMode);
   const reviewRun = await runOrchestratorObjective({
     projectPath,
     objective: 'Run a contrarian review of the current digest.',
@@ -238,7 +306,7 @@ async function executeExecutionReviewLineageScenario(projectPath) {
       kind: 'queue-task',
       id: executionTaskId,
     },
-    providerExecutors: buildReviewExecutor(),
+    providerExecutors,
     reader: DEFAULT_READER,
   });
   const status = await runOrchestratorStatus({
@@ -274,6 +342,7 @@ async function executeExecutionReviewLineageScenario(projectPath) {
             reviewCoordinator.externalReview.executionLaneRunId ===
             executionCoordinator.laneRun.laneRunId,
           reviewLaneRunId: reviewCoordinator.laneRun.laneRunId,
+          evidenceMode,
         },
         status: summarizeStatusResult(status),
       },

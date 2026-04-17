@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "session-digest-export",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/flows/session-digest.js",
+  "helperExport": "exportSessionDigest",
+  "inputSchema": null,
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["digestJsonPath", "digestMarkdownPath"],
+    "warningCount": "integer",
+    "payload": {
+      "digest": "session-digest.v1",
+      "jsonPath": "string",
+      "markdownPath": "string"
+    }
+  },
+  "routerKeywords": [
+    "session digest",
+    "digest export",
+    "export digest",
+    "digest summary"
+  ],
+  "degradesTo": "escalate"
+}

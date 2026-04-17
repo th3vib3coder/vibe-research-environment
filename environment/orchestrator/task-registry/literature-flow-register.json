@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "literature-flow-register",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/flows/literature.js",
+  "helperExport": "registerPaper",
+  "inputSchema": "environment/schemas/literature-register-input.schema.json",
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["litPaperJsonPath"],
+    "warningCount": "integer",
+    "payload": {
+      "paper": "lit-paper.v1",
+      "state": "literature-flow-state.v1"
+    }
+  },
+  "routerKeywords": [
+    "register paper",
+    "add paper",
+    "literature register",
+    "new citation"
+  ],
+  "degradesTo": "escalate"
+}

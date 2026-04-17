@@ -75,6 +75,7 @@
           "type": "string",
           "enum": [
             "local-cli",
+            "local-subprocess",
             "sdk",
             "api",
             "cloud-task",
