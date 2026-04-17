@@ -1,0 +1,302 @@
+{
+  "taskId": "flow-results-export-policy",
+  "repeatId": "2026-04-17-06",
+  "benchmarkId": "phase3-writing-deliverables",
+  "command": {
+    "name": "/flow-results",
+    "scope": "flow-results",
+    "args": []
+  },
+  "result": {
+    "summary": "Results packaging regenerated shared export-policy evidence without owning truth.",
+    "warnings": [
+      "No structured statistical details were provided during packaging.",
+      "Claim C-507 is not export-eligible yet: unverified_citations.",
+      "Claim C-507 is not export-eligible yet."
+    ],
+    "payload": {
+      "experimentId": "EXP-507",
+      "bundleDir": "C:\\Users\\TEST-U~1\\AppData\\Local\\Temp\\vre-eval-flow-results-export-policy-xl1TBB\\.vibe-science-environment\\results\\experiments\\EXP-507",
+      "bundleManifestPath": "C:\\Users\\TEST-U~1\\AppData\\Local\\Temp\\vre-eval-flow-results-export-policy-xl1TBB\\.vibe-science-environment\\results\\experiments\\EXP-507\\bundle-manifest.json",
+      "bundleManifest": {
+        "schemaVersion": "vibe-env.experiment-bundle.v1",
+        "experimentId": "EXP-507",
+        "bundledAt": "2026-04-03T11:30:00Z",
+        "sourceAttemptId": "ATT-EXP-507-PHASE3",
+        "artifacts": [
+          {
+            "path": "analysis-report.md",
+            "type": "report",
+            "role": "analysis-report",
+            "createdAt": "2026-04-03T11:30:00Z",
+            "size": 742
+          },
+          {
+            "path": "stats-appendix.md",
+            "type": "report",
+            "role": "stats-appendix",
+            "createdAt": "2026-04-03T11:30:00Z",
+            "size": 493
+          },
+          {
+            "path": "figure-catalog.md",
+            "type": "report",
+            "role": "figure-catalog",
+            "createdAt": "2026-04-03T11:30:00Z",
+            "size": 300
+          },
+          {
+            "path": "figures/plots/results-507.png",
+            "type": "figure",
+            "role": "main-result",
+            "createdAt": "2026-04-17T14:05:11.054Z",
+            "size": 14
+          }
+        ],
+        "relatedClaims": [
+          "C-507"
+        ],
+        "datasetHash": null
+      },
+      "warnings": [
+        "No structured statistical details were provided during packaging.",
+        "Claim C-507 is not export-eligible yet: unverified_citations.",
+        "Claim C-507 is not export-eligible yet."
+      ],
+      "claimExportStatuses": [
+        {
+          "claimId": "C-507",
+          "eligible": false,
+          "reasons": [
+            "unverified_citations"
+          ],
+          "statusAtExport": "PROMOTED",
+          "confidenceAtExport": 0.84,
+          "governanceProfileAtCreation": "strict",
+          "hasFreshSchemaValidation": false,
+          "profileSafetyMode": "full",
+          "citations": [
+            {
+              "claimId": "C-507",
+              "citationId": "CIT-507",
+              "verificationStatus": "PENDING",
+              "retractionStatus": "CLEAR"
+            }
+          ],
+          "schemaValidationRecord": null
+        }
+      ],
+      "copiedArtifacts": [
+        {
+          "sourcePath": "plots/results-507.png",
+          "bundlePath": "figures/plots/results-507.png",
+          "type": "figure",
+          "role": "main-result"
+        }
+      ],
+      "index": {
+        "schemaVersion": "vibe.flow.index.v1",
+        "activeFlow": "results",
+        "currentStage": "result-packaging",
+        "nextActions": [
+          "add complete statistical details for EXP-507",
+          "resolve export blockers for claim-linked results in EXP-507",
+          "review packaged bundle for EXP-507",
+          "check evidence linkage for EXP-507"
+        ],
+        "blockers": [],
+        "lastCommand": "/flow-results",
+        "updatedAt": "2026-04-03T11:30:00Z"
+      }
+    }
+  },
+  "attempt": {
+    "attemptId": "ATT-2026-04-17-14-05-11-060-5ce395bf",
+    "scope": "flow-results",
+    "targetId": null,
+    "status": "succeeded",
+    "startedAt": "2026-04-17T14:05:11.060Z",
+    "lastHeartbeatAt": "2026-04-17T14:05:11.098Z",
+    "endedAt": "2026-04-17T14:05:11.098Z",
+    "retryCount": 0,
+    "errorCode": null,
+    "summary": "Results packaging regenerated shared export-policy evidence without owning truth."
+  },
+  "snapshot": {
+    "schemaVersion": "vibe-env.session.v1",
+    "activeFlow": "results",
+    "currentStage": "result-packaging",
+    "nextActions": [
+      "add complete statistical details for EXP-507",
+      "resolve export blockers for claim-linked results in EXP-507",
+      "review packaged bundle for EXP-507",
+      "check evidence linkage for EXP-507"
+    ],
+    "blockers": [],
+    "kernel": {
+      "dbAvailable": true,
+      "degradedReason": null
+    },
+    "capabilities": {
+      "claimHeads": true,
+      "citationChecks": true,
+      "governanceProfileAtCreation": true,
+      "claimSearch": false
+    },
+    "budget": {
+      "state": "unknown",
+      "toolCalls": 0,
+      "estimatedCostUsd": 0,
+      "countingMode": "unknown"
+    },
+    "signals": {
+      "staleMemory": false,
+      "unresolvedClaims": 0,
+      "blockedExperiments": 0,
+      "exportAlerts": 0,
+      "provenance": {
+        "sourceMode": "kernel-backed",
+        "degradedReason": null,
+        "lastKernelContactAt": "2026-04-17T14:05:11.087Z"
+      }
+    },
+    "lastCommand": "/flow-results",
+    "lastAttemptId": "ATT-2026-04-17-14-05-11-060-5ce395bf",
+    "updatedAt": "2026-04-17T14:05:11.088Z"
+  },
+  "capabilities": {
+    "schemaVersion": "vibe-env.capabilities.v1",
+    "kernel": {
+      "dbAvailable": true,
+      "projections": {
+        "overview": false,
+        "claimHeads": true,
+        "unresolvedClaims": true,
+        "citationChecks": true
+      },
+      "advanced": {
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      }
+    },
+    "install": {
+      "bundles": []
+    },
+    "updatedAt": "2026-04-17T14:05:11.055Z"
+  },
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/results/experiments/EXP-507/analysis-report.md",
+    ".vibe-science-environment/results/experiments/EXP-507/bundle-manifest.json",
+    ".vibe-science-environment/results/experiments/EXP-507/figure-catalog.md",
+    ".vibe-science-environment/results/experiments/EXP-507/figures/plots/results-507.png",
+    ".vibe-science-environment/results/experiments/EXP-507/stats-appendix.md"
+  ],
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-2026-04-17-14-05-11-060-5ce395bf",
+      "scope": "flow-results",
+      "targetId": null,
+      "status": "succeeded",
+      "startedAt": "2026-04-17T14:05:11.060Z",
+      "lastHeartbeatAt": "2026-04-17T14:05:11.098Z",
+      "endedAt": "2026-04-17T14:05:11.098Z",
+      "retryCount": 0,
+      "errorCode": null,
+      "summary": "Results packaging regenerated shared export-policy evidence without owning truth.",
+      "events": [
+        {
+          "eventId": "EVT-1776434711100-3d9645",
+          "kind": "attempt_updated",
+          "attemptId": "ATT-2026-04-17-14-05-11-060-5ce395bf",
+          "scope": "flow-results",
+          "targetId": null,
+          "severity": "info",
+          "message": "Attempt closed: succeeded",
+          "details": null,
+          "recordedAt": "2026-04-17T14:05:11.100Z"
+        },
+        {
+          "eventId": "EVT-1776434711095-acc394",
+          "kind": "session_snapshot_published",
+          "attemptId": "ATT-2026-04-17-14-05-11-060-5ce395bf",
+          "scope": "flow-results",
+          "targetId": null,
+          "severity": "info",
+          "message": null,
+          "details": null,
+          "recordedAt": "2026-04-17T14:05:11.095Z"
+        },
+        {
+          "eventId": "EVT-1776434711068-adffb6",
+          "kind": "attempt_opened",
+          "attemptId": "ATT-2026-04-17-14-05-11-060-5ce395bf",
+          "scope": "flow-results",
+          "targetId": null,
+          "severity": "info",
+          "message": "Opened attempt for /flow-results",
+          "details": null,
+          "recordedAt": "2026-04-17T14:05:11.068Z"
+        }
+      ],
+      "decisions": []
+    }
+  ],
+  "assertions": [
+    {
+      "name": "attempt-status",
+      "passed": true,
+      "expected": "succeeded",
+      "actual": "succeeded"
+    },
+    {
+      "name": "required-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/results/experiments/EXP-507/analysis-report.md",
+        ".vibe-science-environment/results/experiments/EXP-507/bundle-manifest.json"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/results/experiments/EXP-507/analysis-report.md",
+        ".vibe-science-environment/results/experiments/EXP-507/bundle-manifest.json",
+        ".vibe-science-environment/results/experiments/EXP-507/figure-catalog.md",
+        ".vibe-science-environment/results/experiments/EXP-507/figures/plots/results-507.png",
+        ".vibe-science-environment/results/experiments/EXP-507/stats-appendix.md"
+      ]
+    },
+    {
+      "name": "forbidden-writes",
+      "passed": true,
+      "expected": [
+        ".vibe-science/",
+        "CLAIM-LEDGER.md"
+      ],
+      "actual": [
+        ".vibe-science-environment/control/attempts.jsonl",
+        ".vibe-science-environment/control/capabilities.json",
+        ".vibe-science-environment/control/events.jsonl",
+        ".vibe-science-environment/control/session.json",
+        ".vibe-science-environment/flows/index.json",
+        ".vibe-science-environment/results/experiments/EXP-507/analysis-report.md",
+        ".vibe-science-environment/results/experiments/EXP-507/bundle-manifest.json",
+        ".vibe-science-environment/results/experiments/EXP-507/figure-catalog.md",
+        ".vibe-science-environment/results/experiments/EXP-507/figures/plots/results-507.png",
+        ".vibe-science-environment/results/experiments/EXP-507/stats-appendix.md"
+      ]
+    }
+  ]
+}

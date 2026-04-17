@@ -8,6 +8,7 @@ import {
   listExecutionTaskKinds,
   listReviewTaskKinds,
   resetTaskRegistryCache,
+  validateTaskInput,
 } from '../../orchestrator/task-registry.js';
 
 describe('WP-126 task-registry', () => {
@@ -70,5 +71,17 @@ describe('WP-126 task-registry', () => {
     const first = await getTaskRegistry();
     const second = await getTaskRegistry();
     assert.equal(first.size, second.size);
+  });
+
+  it('validates taskInput against the registry input schema when declared', async () => {
+    await validateTaskInput('literature-flow-register', {
+      title: 'Registry-driven literature paper',
+      doi: '10.1000/registry',
+    });
+
+    await assert.rejects(
+      () => validateTaskInput('literature-flow-register', { doi: '10.1000/missing-title' }),
+      /taskInput for literature-flow-register failed/u,
+    );
   });
 });

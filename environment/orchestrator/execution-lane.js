@@ -12,6 +12,12 @@ import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
 import { getTaskAdapter } from './task-adapters.js';
 
+function cloneValue(value) {
+  return globalThis.structuredClone
+    ? structuredClone(value)
+    : JSON.parse(JSON.stringify(value));
+}
+
 function classifyExecutionFailure(error) {
   if (error?.code === 'ENOENT') {
     return 'dependency-unavailable';
@@ -54,6 +60,14 @@ async function executeTaskClass(projectPath, task, input = {}) {
   return adapter(projectPath, input);
 }
 
+function buildDurableExecutionInput(task, options = {}) {
+  const { taskId: _taskId, providerExecutors: _providerExecutors, ...transientInput } = options;
+  return {
+    ...(task.taskInput == null ? {} : cloneValue(task.taskInput)),
+    ...transientInput,
+  };
+}
+
 export async function runExecutionLane(projectPath, options = {}) {
   const task = await getQueueTask(projectPath, options.taskId);
   if (!task) {
@@ -86,7 +100,7 @@ export async function runExecutionLane(projectPath, options = {}) {
   });
 
   try {
-    const outcome = await executeTaskClass(projectPath, task, options);
+    const outcome = await executeTaskClass(projectPath, task, buildDurableExecutionInput(task, options));
     const laneRun = await appendLaneRun(projectPath, {
       laneId: 'execution',
       taskId: task.taskId,

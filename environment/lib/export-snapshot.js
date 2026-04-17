@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { link, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import Ajv from 'ajv';
@@ -176,12 +177,14 @@ function resolveProjectPath(projectPath) {
 
 async function writeSnapshotOnce(targetPath, snapshot) {
   const serialized = `${JSON.stringify(snapshot, null, 2)}\n`;
+  const tempPath = `${targetPath}.tmp-${process.pid}-${randomUUID()}`;
 
   try {
-    await writeFile(targetPath, serialized, {
+    await writeFile(tempPath, serialized, {
       encoding: 'utf8',
       flag: 'wx',
     });
+    await link(tempPath, targetPath);
   } catch (error) {
     if (error?.code === 'EEXIST') {
       let existingCreatedAt = null;
@@ -203,6 +206,14 @@ async function writeSnapshotOnce(targetPath, snapshot) {
     }
 
     throw error;
+  } finally {
+    try {
+      await unlink(tempPath);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') {
+        throw error;
+      }
+    }
   }
 
   const persisted = JSON.parse(await readFile(targetPath, 'utf8'));

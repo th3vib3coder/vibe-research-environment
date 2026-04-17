@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { link, mkdir, readFile, readdir, rmdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -49,32 +49,40 @@ export async function buildWritingHandoff(projectPath, options = {}) {
     now,
     requestedClaimIds,
   });
+  const seedRoot = resolveInside(projectRoot, ...SEEDS_SEGMENTS, snapshotId);
+  await createSeedRootOnce(seedRoot, snapshotId);
 
-  const snapshot = await writeExportSnapshot(projectRoot, {
-    snapshotId,
-    claimIds: projections.claimStatuses.map((entry) => entry.claimId),
-    claims: projections.claimStatuses.map((entry) => ({
-      claimId: entry.claimId,
-      statusAtExport: entry.statusAtExport,
-      confidenceAtExport: entry.confidenceAtExport,
-      eligible: entry.eligible,
-      reasons: cloneValue(entry.reasons),
-      governanceProfileAtCreation: entry.governanceProfileAtCreation,
-      hasFreshSchemaValidation: entry.hasFreshSchemaValidation,
-    })),
-    citations: projections.claimStatuses.flatMap((entry) => (
-      entry.citations.map((citation) => ({
+  let snapshot;
+  try {
+    snapshot = await writeExportSnapshot(projectRoot, {
+      snapshotId,
+      claimIds: projections.claimStatuses.map((entry) => entry.claimId),
+      claims: projections.claimStatuses.map((entry) => ({
         claimId: entry.claimId,
-        citationId: citation.citationId,
-        verificationStatusAtExport: normalizeVerificationStatusAtExport(citation),
-      }))
-    )),
-    capabilities: cloneValue(projections.capabilities),
-    warnings: cloneValue(projections.warnings),
-  }, {
-    snapshotId,
-    createdAt: now,
-  });
+        statusAtExport: entry.statusAtExport,
+        confidenceAtExport: entry.confidenceAtExport,
+        eligible: entry.eligible,
+        reasons: cloneValue(entry.reasons),
+        governanceProfileAtCreation: entry.governanceProfileAtCreation,
+        hasFreshSchemaValidation: entry.hasFreshSchemaValidation,
+      })),
+      citations: projections.claimStatuses.flatMap((entry) => (
+        entry.citations.map((citation) => ({
+          claimId: entry.claimId,
+          citationId: citation.citationId,
+          verificationStatusAtExport: normalizeVerificationStatusAtExport(citation),
+        }))
+      )),
+      capabilities: cloneValue(projections.capabilities),
+      warnings: cloneValue(projections.warnings),
+    }, {
+      snapshotId,
+      createdAt: now,
+    });
+  } catch (error) {
+    await removeSeedRootIfEmpty(seedRoot);
+    throw error;
+  }
 
   const manifests = await listManifests(projectRoot);
   const manifestsByClaim = buildManifestIndex(
@@ -84,9 +92,6 @@ export async function buildWritingHandoff(projectPath, options = {}) {
     manifests.flatMap((manifest) => manifest.experimentId),
   );
   const { bundlesByExperiment, warnings: bundleWarnings } = await discoverBundles(projectRoot, experimentIds);
-  const seedRoot = resolveInside(projectRoot, ...SEEDS_SEGMENTS, snapshot.snapshotId);
-  await createSeedRootOnce(seedRoot, snapshot.snapshotId);
-
   const claimStatusById = new Map(
     projections.claimStatuses.map((entry) => [entry.claimId, entry]),
   );
@@ -651,14 +656,26 @@ async function createSeedRootOnce(seedRoot, snapshotId) {
   }
 }
 
+async function removeSeedRootIfEmpty(seedRoot) {
+  try {
+    await rmdir(seedRoot);
+  } catch (error) {
+    if (error?.code !== 'ENOENT' && error?.code !== 'ENOTEMPTY') {
+      throw error;
+    }
+  }
+}
+
 async function writeTextOnce(targetPath, content) {
   await mkdir(path.dirname(targetPath), { recursive: true });
+  const tempPath = `${targetPath}.tmp-${process.pid}-${randomUUID()}`;
 
   try {
-    await writeFile(targetPath, `${content}\n`, {
+    await writeFile(tempPath, `${content}\n`, {
       encoding: 'utf8',
       flag: 'wx',
     });
+    await link(tempPath, targetPath);
   } catch (error) {
     if (error?.code === 'EEXIST') {
       throw new WritingFlowValidationError(
@@ -667,6 +684,14 @@ async function writeTextOnce(targetPath, content) {
     }
 
     throw error;
+  } finally {
+    try {
+      await unlink(tempPath);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') {
+        throw error;
+      }
+    }
   }
 }
 

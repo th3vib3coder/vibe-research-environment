@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -105,6 +105,52 @@ test('export snapshot helper rejects the same snapshot file on rerun', async () 
 
     assert.equal(persisted.claims[0].confidenceAtExport, 0.75);
     assert.deepEqual(persisted.warnings, ['initial snapshot']);
+  } finally {
+    await rm(projectPath, { recursive: true, force: true });
+  }
+});
+
+test('export snapshot helper ignores stale temp files and publishes one valid target', async () => {
+  const projectPath = await createTempProject();
+
+  try {
+    const targetPath = resolveExportSnapshotPath(projectPath, 'WEXP-2026-04-02-TMP');
+    await mkdir(path.dirname(targetPath), { recursive: true });
+    await writeFile(`${targetPath}.tmp-stale`, 'partial-temp-data', 'utf8');
+
+    await writeExportSnapshot(projectPath, {
+      snapshotId: 'WEXP-2026-04-02-TMP',
+      claimIds: ['C-001'],
+      claims: [
+        {
+          claimId: 'C-001',
+          statusAtExport: 'PROMOTED',
+          confidenceAtExport: 0.77,
+          eligible: true,
+          reasons: [],
+          governanceProfileAtCreation: 'strict',
+          hasFreshSchemaValidation: true,
+        },
+      ],
+      citations: [],
+      capabilities: {
+        governanceProfileAtCreationAvailable: true,
+        schemaValidationSurfaceAvailable: true,
+      },
+      warnings: [],
+    }, {
+      createdAt: '2026-04-02T13:07:00Z',
+    });
+
+    const persisted = JSON.parse(await readFile(targetPath, 'utf8'));
+    assert.equal(persisted.snapshotId, 'WEXP-2026-04-02-TMP');
+
+    const siblingFiles = await readdir(path.dirname(targetPath));
+    assert.ok(siblingFiles.includes('WEXP-2026-04-02-TMP.json.tmp-stale'));
+    assert.equal(
+      siblingFiles.filter((name) => name.startsWith('WEXP-2026-04-02-TMP.json.tmp-')).length,
+      1,
+    );
   } finally {
     await rm(projectPath, { recursive: true, force: true });
   }

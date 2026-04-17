@@ -111,6 +111,12 @@
         }
       }
     },
+    "taskInput": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
     "dependencyTaskIds": {
       "type": "array",
       "items": {

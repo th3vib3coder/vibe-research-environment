@@ -11,7 +11,7 @@ import {
   readRouterSession,
   writeRouterSession,
 } from './state.js';
-import { findByRouterKeyword, getTaskEntry } from './task-registry.js';
+import { findByRouterKeyword, getTaskEntry, validateTaskInput } from './task-registry.js';
 
 export const MODE_TO_PRIMARY_LANE = Object.freeze({
   intake: 'coordination',
@@ -256,6 +256,10 @@ export async function routeOrchestratorObjective(projectPath, options = {}) {
   const taskKind = options.taskKind ?? await inferTaskKindFromObjective(objective);
   const ambiguousCandidates = options.taskKind ? null : await resolveObjectiveAmbiguity(objective);
   const targetRef = await buildTargetRef({ mode, taskKind, targetRef: options.targetRef ?? null });
+  const taskInput = options.taskInput == null ? null : options.taskInput;
+  if (taskKind && await getTaskEntry(taskKind)) {
+    await validateTaskInput(taskKind, taskInput);
+  }
   const task = await createQueueTask(projectPath, {
     mode,
     ownerLane: primaryLane,
@@ -263,6 +267,7 @@ export async function routeOrchestratorObjective(projectPath, options = {}) {
     title: await buildRouteTitle({ mode, objective, taskKind }),
     objective,
     targetRef,
+    taskInput,
     artifactRefs: options.artifactRefs ?? [],
     statusReason: 'Task routed through Phase 5 coordinator.',
   });

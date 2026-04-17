@@ -21,6 +21,9 @@ defineSchemaFixtureTests({
       kind: 'experiment',
       id: 'EXP-001'
     },
+    taskInput: {
+      snapshotId: 'WEXP-2026-04-10-001'
+    },
     dependencyTaskIds: [],
     laneRunId: null,
     artifactRefs: [],
@@ -43,6 +46,7 @@ defineSchemaFixtureTests({
       kind: 'experiment',
       id: 'EXP-001'
     },
+    taskInput: 'not-an-object',
     dependencyTaskIds: [
       'TASK-DEP-001'
     ],
@@ -64,6 +68,7 @@ defineSchemaFixtureTests({
     title: null,
     objective: null,
     targetRef: null,
+    taskInput: null,
     dependencyTaskIds: [
       'ORCH-TASK-2026-04-10-001'
     ],

@@ -22,6 +22,7 @@ export class TaskRegistryLoadError extends Error {
 
 let cache = null;
 let loading = null;
+const inputValidatorCache = new Map();
 
 function formatSchemaErrors(errors) {
   return (errors ?? [])
@@ -34,6 +35,20 @@ async function compileSchema() {
   const ajv = new Ajv({ allErrors: true, allowUnionTypes: true, strict: false });
   addFormats(ajv);
   return ajv.compile(schema);
+}
+
+async function compileInputSchema(schemaPath) {
+  if (inputValidatorCache.has(schemaPath)) {
+    return inputValidatorCache.get(schemaPath);
+  }
+
+  const absolutePath = path.join(REPO_ROOT, schemaPath);
+  const schema = JSON.parse(await readFile(absolutePath, 'utf8'));
+  const ajv = new Ajv({ allErrors: true, allowUnionTypes: true, strict: false });
+  addFormats(ajv);
+  const validator = ajv.compile(schema);
+  inputValidatorCache.set(schemaPath, validator);
+  return validator;
 }
 
 async function verifyHelper(entry) {
@@ -184,6 +199,27 @@ export async function getTaskEntry(taskKind) {
   return entries.get(taskKind) ?? null;
 }
 
+export async function validateTaskInput(taskKind, taskInput) {
+  const entry = await getTaskEntry(taskKind);
+  if (!entry) {
+    throw new TaskRegistryLoadError(`Cannot validate taskInput for unknown task kind: ${taskKind}`);
+  }
+
+  if (entry.inputSchema == null) {
+    return;
+  }
+
+  const validate = await compileInputSchema(entry.inputSchema);
+  if (validate(taskInput)) {
+    return;
+  }
+
+  throw new TaskRegistryLoadError(
+    `taskInput for ${taskKind} failed ${entry.inputSchema}: ${formatSchemaErrors(validate.errors)}`,
+    { file: entry.__sourceFile },
+  );
+}
+
 export async function findByRouterKeyword(text) {
   if (typeof text !== 'string' || text.trim() === '') {
     return null;
@@ -224,4 +260,5 @@ export async function listReviewTaskKinds() {
 export async function resetTaskRegistryCache() {
   cache = null;
   loading = null;
+  inputValidatorCache.clear();
 }

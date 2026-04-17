@@ -116,6 +116,44 @@ test('execution lane exports a session digest through the queue model', async ()
   }
 });
 
+test('execution lane replays durable taskInput from the queue record', async () => {
+  const projectRoot = await createInstallFixture('vre-orch-task-input-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, {
+      lanePolicies: buildWave3LanePolicies(),
+    });
+
+    const routed = await routeOrchestratorObjective(projectRoot, {
+      objective: 'Register paper from durable queue input.',
+      taskKind: 'literature-flow-register',
+      taskInput: {
+        title: 'Durable queue input paper',
+        doi: '10.5555/durable-input',
+      },
+    });
+
+    assert.equal(routed.task.taskInput.title, 'Durable queue input paper');
+
+    const execution = await runExecutionLane(projectRoot, {
+      taskId: routed.task.taskId,
+    });
+
+    assert.equal(execution.laneRun.status, 'completed');
+    assert.equal(execution.task.status, 'completed');
+    assert.equal(execution.payload.paper.title, 'Durable queue input paper');
+    assert.equal(execution.payload.paper.doi, '10.5555/durable-input');
+  } finally {
+    await cleanupInstallFixture(projectRoot);
+  }
+});
+
 test('execution lane records recovery and escalation when the task kind is unsupported', async () => {
   const projectRoot = await createInstallFixture('vre-orch-execution-error-');
 

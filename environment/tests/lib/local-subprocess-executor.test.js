@@ -99,6 +99,23 @@ describe('WP-130 local-subprocess executor', () => {
     );
   });
 
+  it('rejects output without schemaVersion (contract-mismatch when missing)', async () => {
+    const script = "process.stdout.write(JSON.stringify({verdict:'ok'}));";
+
+    await assert.rejects(
+      () => invokeLocalSubprocess({
+        command: NODE,
+        args: ['-e', script],
+        timeoutMs: 10_000,
+      }),
+      (error) => {
+        assert.equal(error.code, 'contract-mismatch');
+        assert.match(error.message, /missing/u);
+        return true;
+      },
+    );
+  });
+
   it('only forwards whitelisted env vars; credentials are excluded by default', async () => {
     const script = [
       "const out={schemaVersion:'vibe-orch.local-subprocess.output.v1',",

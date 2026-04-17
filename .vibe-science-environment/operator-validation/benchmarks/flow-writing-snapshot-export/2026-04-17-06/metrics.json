@@ -1,0 +1,48 @@
+{
+  "taskId": "flow-writing-snapshot-export",
+  "repeatId": "2026-04-17-06",
+  "benchmarkId": "phase3-writing-deliverables",
+  "results": {
+    "snapshot-publish-success": {
+      "metricId": "snapshot-publish-success",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "snapshotExists": true,
+        "schemaValid": true,
+        "publishError": null
+      }
+    },
+    "state-write-scope": {
+      "metricId": "state-write-scope",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "actualWrites": [
+          ".vibe-science-environment/control/attempts.jsonl",
+          ".vibe-science-environment/control/capabilities.json",
+          ".vibe-science-environment/control/events.jsonl",
+          ".vibe-science-environment/control/session.json",
+          ".vibe-science-environment/flows/index.json",
+          ".vibe-science-environment/writing/exports/export-log.jsonl",
+          ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-503/C-503.md",
+          ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-503.json"
+        ],
+        "violations": []
+      }
+    },
+    "attempt-lifecycle-completeness": {
+      "metricId": "attempt-lifecycle-completeness",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "statuses": [
+          "preparing",
+          "running",
+          "succeeded"
+        ],
+        "terminalStatus": "succeeded"
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "taskId": "flow-writing-advisor-pack",
+  "repeatId": "2026-04-17-04",
+  "benchmarkId": "phase3-writing-deliverables",
+  "taskVersion": "1.0.0",
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": [
+      "--advisor-pack",
+      "2026-04-03"
+    ]
+  },
+  "goal": "Assemble one advisor pack from the single /flow-writing command path without inventing claim truth.",
+  "setup": {
+    "kernelReader": {
+      "dbAvailable": true
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  }
+}

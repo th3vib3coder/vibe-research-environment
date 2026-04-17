@@ -142,6 +142,7 @@ export async function createQueueTask(projectPath, input = {}) {
     title: input.title ?? null,
     objective: input.objective ?? null,
     targetRef: input.targetRef ?? null,
+    taskInput: input.taskInput == null ? null : cloneValue(input.taskInput),
     dependencyTaskIds: cloneValue(input.dependencyTaskIds ?? []),
     laneRunId: input.laneRunId ?? null,
     artifactRefs: cloneValue(input.artifactRefs ?? []),

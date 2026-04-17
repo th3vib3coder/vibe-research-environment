@@ -271,7 +271,9 @@ async function buildReviewExecutorForMode(mode) {
   if (mode === 'real-cli-binding') {
     const command = process.env.VRE_CODEX_CLI ?? process.env.VRE_CLAUDE_CLI;
     if (!command) {
-      return buildMockReviewExecutor();
+      throw new Error(
+        'real-cli-binding evidence mode requires VRE_CODEX_CLI or VRE_CLAUDE_CLI; refusing to relabel mock review as real evidence.',
+      );
     }
     const { invokeLocalSubprocess } = await import('../orchestrator/executors/local-subprocess.js');
     return {
@@ -519,4 +521,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 }
 
-export { main as savePhase5Artifacts };
+export {
+  buildReviewExecutorForMode,
+  main as savePhase5Artifacts,
+};

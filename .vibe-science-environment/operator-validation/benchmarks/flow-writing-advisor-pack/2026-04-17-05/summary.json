@@ -1,0 +1,145 @@
+{
+  "taskId": "flow-writing-advisor-pack",
+  "repeatId": "2026-04-17-05",
+  "benchmarkId": "phase3-writing-deliverables",
+  "startedAt": "2026-04-17T14:05:09.463Z",
+  "endedAt": "2026-04-17T14:05:09.513Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": [
+      "--advisor-pack",
+      "2026-04-03"
+    ]
+  },
+  "attemptId": "ATT-2026-04-17-14-05-09-470-2fbd312a",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-advisor-pack/2026-04-17-05/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Advisor pack regenerated through one /flow-writing path with copied figure evidence.",
+      "warnings": [],
+      "payload": {
+        "packType": "advisor",
+        "packId": "2026-04-03",
+        "packDir": ".vibe-science-environment/writing/advisor-packs/2026-04-03",
+        "copiedFigures": [
+          {
+            "experimentId": "EXP-504",
+            "sourcePath": ".vibe-science-environment/results/experiments/EXP-504/figures/plots/advisor-504.png",
+            "packPath": ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png"
+          }
+        ],
+        "warnings": [],
+        "index": {
+          "schemaVersion": "vibe.flow.index.v1",
+          "activeFlow": "writing",
+          "currentStage": "advisor-pack",
+          "nextActions": [
+            "review advisor pack 2026-04-03"
+          ],
+          "blockers": [],
+          "lastCommand": "/flow-writing",
+          "updatedAt": "2026-04-03T11:15:00Z"
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "writing",
+      "currentStage": "advisor-pack",
+      "nextActions": [
+        "review advisor pack 2026-04-03"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": true,
+        "degradedReason": null
+      },
+      "capabilities": {
+        "claimHeads": true,
+        "citationChecks": true,
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0,
+        "provenance": {
+          "sourceMode": "kernel-backed",
+          "degradedReason": null,
+          "lastKernelContactAt": "2026-04-17T14:05:09.502Z"
+        }
+      },
+      "lastCommand": "/flow-writing",
+      "lastAttemptId": "ATT-2026-04-17-14-05-09-470-2fbd312a",
+      "updatedAt": "2026-04-17T14:05:09.503Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+      ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": {
+      "status": "not-applicable",
+      "reason": "Metric resume-latency is not part of this eval task definition."
+    },
+    "degradedHonestyScore": {
+      "status": "not-applicable",
+      "reason": "Metric honesty-under-degradation is not part of this eval task definition."
+    },
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/experiment-progress.md",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/figures/EXP-504/figures/plots/advisor-504.png",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/next-steps.md",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/open-questions.md",
+    ".vibe-science-environment/writing/advisor-packs/2026-04-03/status-summary.md"
+  ]
+}

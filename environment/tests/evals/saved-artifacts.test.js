@@ -14,6 +14,7 @@ import {
   listSavedBenchmarkRepeats,
   readRepoJson
 } from './_helpers.js';
+import { buildReviewExecutorForMode } from '../../evals/save-phase5-artifacts.js';
 
 function taskIdFromFile(fileName) {
   return fileName.replace(/\.json$/u, '');
@@ -675,10 +676,37 @@ test('saved Phase 3 operator-validation artifact points to passing evidence repe
     for (const repeat of evidence.sourceRepeats) {
       await assertRepoPathExists(repeat.summaryPath);
       await assertRepoPathExists(repeat.transcriptPath);
+      const summary = await readRepoJson(repeat.summaryPath);
+      assertNoNullValues(summary.metrics, `${key}.${repeat.repeatId}.summary.metrics`);
     }
   }
 
   await assertRepoPathExists(artifact.replacesArtifact);
+});
+
+test('Phase 5 real-cli-binding evidence mode fails closed when no CLI is configured', async () => {
+  const previousCodex = process.env.VRE_CODEX_CLI;
+  const previousClaude = process.env.VRE_CLAUDE_CLI;
+  delete process.env.VRE_CODEX_CLI;
+  delete process.env.VRE_CLAUDE_CLI;
+
+  try {
+    await assert.rejects(
+      () => buildReviewExecutorForMode('real-cli-binding'),
+      /requires VRE_CODEX_CLI or VRE_CLAUDE_CLI/u,
+    );
+  } finally {
+    if (previousCodex === undefined) {
+      delete process.env.VRE_CODEX_CLI;
+    } else {
+      process.env.VRE_CODEX_CLI = previousCodex;
+    }
+    if (previousClaude === undefined) {
+      delete process.env.VRE_CLAUDE_CLI;
+    } else {
+      process.env.VRE_CLAUDE_CLI = previousClaude;
+    }
+  }
 });
 
 test('saved Phase 4 operator-validation artifact points to passing evidence repeats', async () => {

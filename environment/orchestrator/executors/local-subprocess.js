@@ -168,9 +168,17 @@ export async function invokeLocalSubprocess({
         return;
       }
 
-      if (parsed?.schemaVersion && parsed.schemaVersion !== stdoutSchema) {
+      if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
         reject(new LocalSubprocessError(
-          `local-subprocess output schemaVersion "${parsed.schemaVersion}" does not match "${stdoutSchema}".`,
+          'local-subprocess stdout must be a JSON object with a schemaVersion field.',
+          { code: 'contract-mismatch', stderr: stderrText },
+        ));
+        return;
+      }
+
+      if (parsed.schemaVersion !== stdoutSchema) {
+        reject(new LocalSubprocessError(
+          `local-subprocess output schemaVersion "${parsed.schemaVersion ?? 'missing'}" does not match "${stdoutSchema}".`,
           { code: 'contract-mismatch', stderr: stderrText },
         ));
         return;

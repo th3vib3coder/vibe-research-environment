@@ -66,6 +66,22 @@ What Phase 5.5 does **not** claim:
 
 ---
 
+## Validator Scope Note
+
+`validate-closeout-honesty.js` is a structural honesty guard, not a semantic
+proof engine. It verifies that closeout rows use allowed result grades, cite
+real files, avoid duplicate evidence links, reject known null-metric and
+pass-stamp patterns, and attach follow-up IDs to non-PASS outcomes. It cannot
+prove by itself that an arbitrary PASS row is fully supported by the cited
+artifact. External adversarial review remains required before unblocking the
+next phase.
+
+Phase 5.6 adds this note because the external review found that PASS rows could
+still cite an unrelated existing artifact unless a human reviewer checks the
+claim-to-evidence match.
+
+---
+
 ## Exit Gate Outcome
 
 | # | Gate | Result | Evidence |
@@ -89,13 +105,13 @@ process, not a hidden runtime PASS.
 |----|--------|------------|
 | F-01 | PARTIAL | Phase 1 Gate 17 was downgraded in [phase1-closeout.md](phase1-closeout.md); FU-55-001 tracks a live sibling-kernel probe. |
 | F-02 | RESOLVED | Snapshot and writing-seed immutability are guarded by [export-snapshot-immutability.test.js](../../../environment/tests/lib/export-snapshot-immutability.test.js) and [writing-seeds-immutable.test.js](../../../environment/tests/flows/writing-seeds-immutable.test.js). |
-| F-03 | RESOLVED | Phase 3 evidence was regenerated in [phase3-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json) with non-null metrics and archived prior evidence. |
+| F-03 | RESOLVED | Phase 3 evidence was regenerated in [phase3-operator-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase3-operator-validation.json) with non-null aggregate and cited-repeat metrics and archived prior evidence. |
 | F-04 | PARTIAL | Provider subprocess runtime exists in [local-subprocess-executor.test.js](../../../environment/tests/lib/local-subprocess-executor.test.js), but the historical Phase 5 saved review gate remains retracted in [phase5-closeout.md](phase5-closeout.md). |
 | F-05 | RESOLVED | Budget advisory behavior is tested in [budget-advisory.test.js](../../../environment/tests/control/budget-advisory.test.js). |
 | F-06 | RESOLVED | Phase 2/3 import coupling is guarded by [phase2-boundary.test.js](../../../environment/tests/integration/phase2-boundary.test.js). |
 | F-07 | RESOLVED | `signals.provenance` is guarded by [session-snapshot-provenance.test.js](../../../environment/tests/control/session-snapshot-provenance.test.js). |
-| F-08 | RESOLVED | Execution task selection moved to registry-backed entries guarded by [task-registry.test.js](../../../environment/tests/lib/task-registry.test.js). |
-| F-09 | RESOLVED | Local subprocess execution is implemented and tested in [local-subprocess-executor.test.js](../../../environment/tests/lib/local-subprocess-executor.test.js). |
+| F-08 | RESOLVED | Execution task selection moved to registry-backed entries with durable `taskInput` replay guarded by [task-registry.test.js](../../../environment/tests/lib/task-registry.test.js) and [orchestrator-lanes.test.js](../../../environment/tests/lib/orchestrator-lanes.test.js). |
+| F-09 | RESOLVED | Local subprocess execution is implemented and fail-closed on missing or mismatched output schema versions in [local-subprocess-executor.test.js](../../../environment/tests/lib/local-subprocess-executor.test.js). |
 | F-10 | RESOLVED | `bin/vre` gives agents a middleware-wrapped entry path and is covered by [bin-vre-smoke.test.js](../../../environment/tests/cli/bin-vre-smoke.test.js). |
 | F-11 | RESOLVED | Zotero is explicitly deferred in [phase4-closeout.md](phase4-closeout.md). |
 | F-12 | RESOLVED | Obsidian is described as vault-target markdown export, not plugin/API integration, in [phase4-closeout.md](phase4-closeout.md). |
@@ -110,6 +126,24 @@ process, not a hidden runtime PASS.
 - Phase 3: immutability and regenerated metrics are upgraded with evidence, while three-tier writing is downgraded to `PARTIAL` in [phase3-closeout.md](phase3-closeout.md).
 - Phase 4: Zotero, Obsidian scope, scheduling reality, and domain-pack enforcement limits are explicit in [phase4-closeout.md](phase4-closeout.md).
 - Phase 5: the review-lineage gate is retracted as `FALSE-POSITIVE` for historical evidence in [phase5-closeout.md](phase5-closeout.md).
+
+---
+
+## Phase 5.6 Finish-Pass Addendum
+
+The external adversarial review for FU-55-007 found real finalization gaps. The
+finish-pass resolved the runtime/evidence defects without pushing:
+
+- durable queue `taskInput` is now persisted and replayed for registry-backed
+  tasks.
+- Phase 3 operator-validation evidence was regenerated again so the cited
+  repeat `summary.json` files no longer contain null metrics.
+- `real-cli-binding` evidence mode now fails closed when no Codex/Claude CLI is
+  configured, instead of silently falling back to mock review evidence.
+- `local-subprocess` output must include the expected `schemaVersion`.
+- export snapshots and writing seed files use create-only atomic publish
+  semantics instead of direct final-path writes.
+- the validator limitation above is documented explicitly rather than implied.
 
 ---
 

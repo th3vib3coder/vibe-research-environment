@@ -105,6 +105,7 @@ export async function runOrchestratorObjective({
   requestReview = false,
   providerExecutors = {},
   sourceSessionId = null,
+  taskInput = null,
   reader = null,
 }) {
   return runWithMiddleware({
@@ -121,6 +122,10 @@ export async function runOrchestratorObjective({
           targetRef,
           artifactRefs,
           taskKind,
+          taskInput: {
+            ...(taskInput ?? {}),
+            ...(sourceSessionId == null ? {} : { sourceSessionId }),
+          },
         });
       const coordinator = await executeRoutedTask(projectPath, routed, {
         requestReview,

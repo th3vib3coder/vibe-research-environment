@@ -299,15 +299,42 @@ export async function evaluateMetrics(task, context, metricModules) {
   return results;
 }
 
+function notApplicableMetric(metricId, reason = null) {
+  return {
+    status: 'not-applicable',
+    reason: reason ?? `Metric ${metricId} is not part of this eval task definition.`,
+  };
+}
+
+function metricValue(metricResults, metricId) {
+  if (!Object.hasOwn(metricResults, metricId)) {
+    return notApplicableMetric(metricId);
+  }
+
+  const value = metricResults[metricId]?.value;
+  return value ?? notApplicableMetric(metricId, `Metric ${metricId} did not produce a numeric value for this repeat.`);
+}
+
+function metricDetailValue(metricResults, metricId, readValue) {
+  if (!Object.hasOwn(metricResults, metricId)) {
+    return notApplicableMetric(metricId);
+  }
+
+  const value = readValue(metricResults[metricId]);
+  return value ?? notApplicableMetric(metricId, `Metric ${metricId} did not produce the requested summary detail.`);
+}
+
 export function buildSummaryMetrics(metricResults) {
   return {
-    resumeLatencySeconds: metricResults['resume-latency']?.value ?? null,
-    degradedHonestyScore: metricResults['honesty-under-degradation']?.value ?? null,
-    stateWriteScopeViolations:
-      metricResults['state-write-scope']?.details?.violations?.length ?? null,
-    attemptLifecycleCompleteness:
-      metricResults['attempt-lifecycle-completeness']?.value ?? null,
-    snapshotPublishSuccess: metricResults['snapshot-publish-success']?.value ?? null,
+    resumeLatencySeconds: metricValue(metricResults, 'resume-latency'),
+    degradedHonestyScore: metricValue(metricResults, 'honesty-under-degradation'),
+    stateWriteScopeViolations: metricDetailValue(
+      metricResults,
+      'state-write-scope',
+      (metric) => metric?.details?.violations?.length,
+    ),
+    attemptLifecycleCompleteness: metricValue(metricResults, 'attempt-lifecycle-completeness'),
+    snapshotPublishSuccess: metricValue(metricResults, 'snapshot-publish-success'),
   };
 }
 

@@ -1,0 +1,147 @@
+{
+  "taskId": "flow-writing-rebuttal-pack",
+  "repeatId": "2026-04-17-04",
+  "benchmarkId": "phase3-writing-deliverables",
+  "startedAt": "2026-04-17T14:05:08.329Z",
+  "endedAt": "2026-04-17T14:05:08.421Z",
+  "passed": true,
+  "command": {
+    "name": "/flow-writing",
+    "scope": "flow-writing",
+    "args": [
+      "--rebuttal-pack",
+      "submission-504"
+    ]
+  },
+  "attemptId": "ATT-2026-04-17-14-05-08-355-95f57689",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/flow-writing-rebuttal-pack/2026-04-17-04/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/rebuttal/submission-504/reviewer-comments.md",
+      ".vibe-science-environment/writing/rebuttal/submission-504/claim-status.md",
+      ".vibe-science-environment/writing/rebuttal/submission-504/experiment-plan.md",
+      ".vibe-science-environment/writing/rebuttal/submission-504/response-draft.md"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Rebuttal pack regenerated without inventing resolved answers.",
+      "warnings": [],
+      "payload": {
+        "packType": "rebuttal",
+        "packId": "submission-504",
+        "packDir": ".vibe-science-environment/writing/rebuttal/submission-504",
+        "warnings": [],
+        "claimIds": [
+          "C-504"
+        ],
+        "index": {
+          "schemaVersion": "vibe.flow.index.v1",
+          "activeFlow": "writing",
+          "currentStage": "rebuttal-pack",
+          "nextActions": [
+            "review rebuttal pack submission-504",
+            "validate response evidence for C-504"
+          ],
+          "blockers": [],
+          "lastCommand": "/flow-writing",
+          "updatedAt": "2026-04-03T11:20:00Z"
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": "writing",
+      "currentStage": "rebuttal-pack",
+      "nextActions": [
+        "review rebuttal pack submission-504",
+        "validate response evidence for C-504"
+      ],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": true,
+        "degradedReason": null
+      },
+      "capabilities": {
+        "claimHeads": true,
+        "citationChecks": true,
+        "governanceProfileAtCreation": true,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0,
+        "provenance": {
+          "sourceMode": "kernel-backed",
+          "degradedReason": null,
+          "lastKernelContactAt": "2026-04-17T14:05:08.400Z"
+        }
+      },
+      "lastCommand": "/flow-writing",
+      "lastAttemptId": "ATT-2026-04-17-14-05-08-355-95f57689",
+      "updatedAt": "2026-04-17T14:05:08.400Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/writing/exports/export-log.jsonl",
+      ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-505/C-504.md",
+      ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505.json",
+      ".vibe-science-environment/writing/rebuttal/submission-504/claim-status.md",
+      ".vibe-science-environment/writing/rebuttal/submission-504/experiment-plan.md",
+      ".vibe-science-environment/writing/rebuttal/submission-504/response-draft.md",
+      ".vibe-science-environment/writing/rebuttal/submission-504/reviewer-comments.md"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": {
+      "status": "not-applicable",
+      "reason": "Metric resume-latency is not part of this eval task definition."
+    },
+    "degradedHonestyScore": {
+      "status": "not-applicable",
+      "reason": "Metric honesty-under-degradation is not part of this eval task definition."
+    },
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 3,
+  "checksTotal": 3,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/writing/exports/export-log.jsonl",
+    ".vibe-science-environment/writing/exports/seeds/WEXP-2026-04-03-505/C-504.md",
+    ".vibe-science-environment/writing/exports/snapshots/WEXP-2026-04-03-505.json",
+    ".vibe-science-environment/writing/rebuttal/submission-504/claim-status.md",
+    ".vibe-science-environment/writing/rebuttal/submission-504/experiment-plan.md",
+    ".vibe-science-environment/writing/rebuttal/submission-504/response-draft.md",
+    ".vibe-science-environment/writing/rebuttal/submission-504/reviewer-comments.md"
+  ]
+}
