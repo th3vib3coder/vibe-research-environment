@@ -19,6 +19,7 @@
         "attempt_updated",
         "session_snapshot_published",
         "degraded_mode_entered",
+        "budget_advisory_entered",
         "budget_stop_triggered",
         "operator_override",
         "export_started",

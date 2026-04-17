@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import Ajv from 'ajv';
@@ -37,6 +36,16 @@ export class ExportSnapshotError extends Error {
 }
 
 export class ExportSnapshotValidationError extends ExportSnapshotError {}
+
+export class ExportSnapshotAlreadyExistsError extends ExportSnapshotError {
+  constructor(message, details = {}) {
+    super(message);
+    this.code = 'EXPORT_SNAPSHOT_ALREADY_EXISTS';
+    this.snapshotId = details.snapshotId ?? null;
+    this.existingCreatedAt = details.existingCreatedAt ?? null;
+    this.attemptedAt = details.attemptedAt ?? null;
+  }
+}
 
 export async function buildExportSnapshot(data, options = {}) {
   if (data == null || typeof data !== 'object' || Array.isArray(data)) {
@@ -86,7 +95,7 @@ export async function writeExportSnapshot(projectPath, data, options = {}) {
   const targetPath = resolveExportSnapshotPath(projectRoot, snapshot.snapshotId);
 
   await mkdir(path.dirname(targetPath), { recursive: true });
-  await atomicWriteJson(targetPath, snapshot);
+  await writeSnapshotOnce(targetPath, snapshot);
 
   return cloneValue(snapshot);
 }
@@ -165,17 +174,41 @@ function resolveProjectPath(projectPath) {
   return path.resolve(projectPath);
 }
 
-async function atomicWriteJson(targetPath, value) {
-  const temporaryPath = `${targetPath}.${process.pid}.${randomUUID()}.tmp`;
-  const serialized = `${JSON.stringify(value, null, 2)}\n`;
+async function writeSnapshotOnce(targetPath, snapshot) {
+  const serialized = `${JSON.stringify(snapshot, null, 2)}\n`;
 
   try {
-    await writeFile(temporaryPath, serialized, 'utf8');
-    await rename(temporaryPath, targetPath);
+    await writeFile(targetPath, serialized, {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
   } catch (error) {
-    await rm(temporaryPath, { force: true }).catch(() => {});
+    if (error?.code === 'EEXIST') {
+      let existingCreatedAt = null;
+      try {
+        const existing = JSON.parse(await readFile(targetPath, 'utf8'));
+        existingCreatedAt = existing?.createdAt ?? null;
+      } catch {
+        existingCreatedAt = null;
+      }
+
+      throw new ExportSnapshotAlreadyExistsError(
+        `Export snapshot ${snapshot.snapshotId} already exists (createdAt=${existingCreatedAt ?? 'unknown'}); refusing to overwrite.`,
+        {
+          snapshotId: snapshot.snapshotId,
+          existingCreatedAt,
+          attemptedAt: snapshot.createdAt,
+        },
+      );
+    }
+
     throw error;
   }
+
+  const persisted = JSON.parse(await readFile(targetPath, 'utf8'));
+  validateExportSnapshot(persisted, {
+    context: `Export snapshot ${snapshot.snapshotId}`,
+  });
 }
 
 function cloneValue(value) {

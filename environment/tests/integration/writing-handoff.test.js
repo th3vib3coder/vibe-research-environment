@@ -8,6 +8,7 @@ import { runWithMiddleware } from '../../control/middleware.js';
 import { registerExperiment, updateExperiment } from '../../flows/experiment.js';
 import { packageExperimentResults } from '../../flows/results.js';
 import { buildWritingHandoff } from '../../flows/writing.js';
+import { exportEligibility } from '../../lib/export-eligibility.js';
 
 function buildExperiment() {
   return {
@@ -79,7 +80,10 @@ test('flow-writing handoff through middleware stays blocked for default-mode cla
           interpretation: 'The figure remains available even when export policy is still blocked.',
         },
       },
-      reader: defaultReader,
+      claimExportStatuses: [await exportEligibility('C-401', defaultReader, {
+        projectPath: projectRoot,
+        requiredValidatedAfter: '2026-04-03T09:10:00Z',
+      })],
     });
 
     assert.equal(packagedBeforeValidation.claimExportStatuses[0].eligible, false);
@@ -150,7 +154,10 @@ test('flow-writing handoff through middleware stays blocked for default-mode cla
           interpretation: 'Fresh validation now makes the claim export-safe.',
         },
       },
-      reader: defaultReader,
+      claimExportStatuses: [await exportEligibility('C-401', defaultReader, {
+        projectPath: projectRoot,
+        requiredValidatedAfter: '2026-04-03T09:30:00Z',
+      })],
     });
 
     assert.equal(packagedAfterValidation.claimExportStatuses[0].eligible, true);

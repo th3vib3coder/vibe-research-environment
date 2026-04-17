@@ -132,6 +132,18 @@ export function buildWarnings(manifest, copiedArtifacts, options = {}) {
     );
   }
 
+  if (
+    Array.isArray(manifest.relatedClaims)
+    && manifest.relatedClaims.length > 0
+    && (!Array.isArray(options.claimExportStatuses) || options.claimExportStatuses.length === 0)
+  ) {
+    warnings.push('Claim eligibility unavailable at packaging time - run /flow-writing to validate.');
+  }
+
+  for (const warning of options.claimExportStatusWarnings ?? []) {
+    warnings.push(warning);
+  }
+
   return uniqueStrings(warnings);
 }
 

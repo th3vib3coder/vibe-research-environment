@@ -5,6 +5,7 @@ import test from 'node:test';
 
 import { registerExperiment, updateExperiment } from '../../flows/experiment.js';
 import { packageExperimentResults } from '../../flows/results.js';
+import { exportEligibility } from '../../lib/export-eligibility.js';
 import { readFlowIndex } from '../../lib/flow-state.js';
 import { createFixtureProject, cleanupFixtureProject } from '../integration/_fixture.js';
 
@@ -62,6 +63,11 @@ test('packageExperimentResults writes a deterministic bundle and updates flow in
       statistics: ['Mean delta = -0.42; 95% CI [-0.55, -0.30]; Welch t-test p=0.003.'],
       environment: ['Python: 3.11.8', 'Key packages: scanpy 1.10.1', 'GPU: none'],
       comparisonQuestion: 'Batch corrected vs uncorrected baseline on the primary metric.',
+      claimExportStatuses: [{
+        claimId: 'C-014',
+        eligible: true,
+        reasons: [],
+      }],
       artifactMetadata: {
         'plots/volcano.png': {
           type: 'figure',
@@ -177,7 +183,7 @@ test('packageExperimentResults surfaces shared export eligibility for claim-link
           interpretation: 'The effect remains visible, but export policy is still blocked.',
         },
       },
-      reader: {
+      claimExportStatuses: [await exportEligibility('C-041', {
         async listClaimHeads() {
           return [{
             claimId: 'C-041',
@@ -198,9 +204,12 @@ test('packageExperimentResults surfaces shared export eligibility for claim-link
 
           return options.claimId == null
             ? citations
-            : citations.filter((entry) => entry.claimId === options.claimId);
+              : citations.filter((entry) => entry.claimId === options.claimId);
         },
-      },
+      }, {
+        projectPath: projectRoot,
+        requiredValidatedAfter: '2026-04-02T12:50:00Z',
+      })],
     });
 
     const analysisReport = await readFile(

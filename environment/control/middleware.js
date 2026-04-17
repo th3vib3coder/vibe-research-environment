@@ -16,6 +16,7 @@ const FINAL_ATTEMPT_STATUSES = new Set([
   'unresponsive',
   'abandoned'
 ]);
+const BUDGET_ADVISORY_RATIO = 0.8;
 
 function normalizeScope(commandName, explicitScope) {
   const source = explicitScope ?? commandName;
@@ -40,12 +41,27 @@ function normalizeFlowName(scope) {
 
 function buildBudgetSnapshot(metricsAccumulator, explicitBudget = {}) {
   const metrics = metricsAccumulator?.snapshot?.() ?? {};
-  const state = explicitBudget.state ?? metrics.budgetState ?? metrics.state ?? 'unknown';
+  const estimatedCostUsd = explicitBudget.estimatedCostUsd ?? metrics.estimatedCostUsd ?? 0;
+  const maxUsd = explicitBudget.maxUsd ?? null;
+  let state = explicitBudget.state ?? null;
+
+  if (state == null && Number.isFinite(estimatedCostUsd) && Number.isFinite(maxUsd) && maxUsd > 0) {
+    const ratio = estimatedCostUsd / maxUsd;
+    if (ratio >= 1) {
+      state = 'hard_stop';
+    } else if (ratio >= BUDGET_ADVISORY_RATIO) {
+      state = 'advisory';
+    } else {
+      state = 'ok';
+    }
+  }
+
+  state ??= metrics.budgetState ?? metrics.state ?? 'unknown';
 
   return {
     state,
     toolCalls: explicitBudget.toolCalls ?? metrics.toolCalls ?? 0,
-    estimatedCostUsd: explicitBudget.estimatedCostUsd ?? metrics.estimatedCostUsd ?? 0,
+    estimatedCostUsd,
     countingMode: explicitBudget.countingMode ?? metrics.countingMode ?? 'unknown'
   };
 }
@@ -116,11 +132,28 @@ async function deriveSignals(projectPath, reader, explicitSignals = {}) {
     explicitSignals.exportAlerts === undefined
       ? await getWritingSignalSummary(projectPath)
       : null;
-  const unresolvedClaims =
-    explicitSignals.unresolvedClaims ??
-    (reader?.dbAvailable && typeof reader.listUnresolvedClaims === 'function'
-      ? (await reader.listUnresolvedClaims())?.length ?? 0
-      : 0);
+  let unresolvedClaims = explicitSignals.unresolvedClaims;
+  let kernelSignalProvenance = unresolvedClaims === undefined ? 'fallback' : 'explicit';
+  let provenanceReason = null;
+  let lastKernelContactAt = null;
+
+  if (unresolvedClaims === undefined) {
+    if (reader?.dbAvailable && typeof reader.listUnresolvedClaims === 'function') {
+      try {
+        unresolvedClaims = (await reader.listUnresolvedClaims())?.length ?? 0;
+        kernelSignalProvenance = 'kernel';
+        lastKernelContactAt = new Date().toISOString();
+      } catch (error) {
+        unresolvedClaims = 0;
+        kernelSignalProvenance = 'mixed';
+        provenanceReason = error.message;
+      }
+    } else {
+      unresolvedClaims = 0;
+      kernelSignalProvenance = 'fallback';
+      provenanceReason = reader?.error ?? 'kernel DB unavailable';
+    }
+  }
 
   const blockedExperiments =
     explicitSignals.blockedExperiments ??
@@ -129,12 +162,34 @@ async function deriveSignals(projectPath, reader, explicitSignals = {}) {
   const exportAlerts =
     explicitSignals.exportAlerts ?? writingSignals?.totalAlerts ?? 0;
 
+  const sourceMode = explicitSignals.provenance?.sourceMode
+    ?? resolveSignalSourceMode(kernelSignalProvenance);
+
   return {
     staleMemory: explicitSignals.staleMemory ?? memoryFreshness?.isStale ?? false,
     unresolvedClaims,
     blockedExperiments,
-    exportAlerts
+    exportAlerts,
+    provenance: explicitSignals.provenance ?? {
+      sourceMode,
+      degradedReason: sourceMode === 'kernel-backed'
+        ? null
+        : provenanceReason ?? reader?.error ?? 'kernel DB unavailable',
+      lastKernelContactAt,
+    }
   };
+}
+
+function resolveSignalSourceMode(kernelSignalProvenance) {
+  if (kernelSignalProvenance === 'kernel') {
+    return 'kernel-backed';
+  }
+
+  if (kernelSignalProvenance === 'mixed' || kernelSignalProvenance === 'explicit') {
+    return 'mixed';
+  }
+
+  return 'degraded';
 }
 
 export async function runWithMiddleware({
@@ -188,6 +243,17 @@ export async function runWithMiddleware({
   }
 
   const budgetBefore = buildBudgetSnapshot(metricsAccumulator, budget);
+  if (budgetBefore.state === 'advisory') {
+    await appendEvent(projectPath, {
+      kind: 'budget_advisory_entered',
+      attemptId: runningAttempt.attemptId,
+      scope: normalizedScope,
+      targetId,
+      severity: 'warning',
+      message: 'Budget advisory threshold reached.'
+    });
+  }
+
   if (budgetBefore.state === 'hard_stop') {
     const reason = 'Budget exceeded. R2 review required.';
 

@@ -1,7 +1,6 @@
 import { copyFile, mkdir, rename, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { exportEligibility } from '../lib/export-eligibility.js';
 import { writeBundleManifest } from '../lib/bundle-manifest.js';
 import { readFlowIndex, writeFlowIndex } from '../lib/flow-state.js';
 import { readManifest } from '../lib/manifest.js';
@@ -52,13 +51,12 @@ export async function packageExperimentResults(projectPath, experimentId, option
   const plannedCopies = await planCopiedArtifacts(projectRoot, manifest, bundleDir, {
     artifactMetadata: options.artifactMetadata,
   });
-  const claimExportStatuses = await collectClaimExportStatuses(projectRoot, manifest, {
-    now: timestamp,
-    reader: options.reader,
-  });
+  const claimExportStatuses = normalizeClaimExportStatuses(options.claimExportStatuses);
+  const claimExportStatusWarnings = normalizeStringArray(options.claimExportStatusWarnings);
   const warnings = buildWarnings(manifest, plannedCopies, {
     ...options,
     claimExportStatuses,
+    claimExportStatusWarnings,
   });
   const bundleFiles = buildBundleFiles(manifest, plannedCopies, {
     timestamp,
@@ -353,31 +351,14 @@ function cloneValue(value) {
     : JSON.parse(JSON.stringify(value));
 }
 
-async function collectClaimExportStatuses(projectRoot, manifest, options = {}) {
-  if (
-    !Array.isArray(manifest.relatedClaims) ||
-    manifest.relatedClaims.length === 0 ||
-    !hasExportEligibilityReader(options.reader)
-  ) {
+function normalizeClaimExportStatuses(value) {
+  return Array.isArray(value) ? cloneValue(value) : [];
+}
+
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
     return [];
   }
 
-  const claimHeads = await options.reader.listClaimHeads().catch(() => []);
-  const unresolvedClaims = await options.reader.listUnresolvedClaims().catch(() => []);
-
-  return Promise.all(
-    manifest.relatedClaims.map((claimId) => exportEligibility(claimId, options.reader, {
-      projectPath: projectRoot,
-      claimHeads,
-      unresolvedClaims,
-      requiredValidatedAfter: options.now,
-    })),
-  );
-}
-
-function hasExportEligibilityReader(reader) {
-  return reader != null
-    && typeof reader.listClaimHeads === 'function'
-    && typeof reader.listUnresolvedClaims === 'function'
-    && typeof reader.listCitationChecks === 'function';
+  return value.filter((entry) => typeof entry === 'string' && entry.trim() !== '');
 }

@@ -82,7 +82,10 @@ export async function rebuildSessionSnapshot(projectPath, inputs = {}) {
       staleMemory: Boolean(signals.staleMemory),
       unresolvedClaims: signals.unresolvedClaims ?? 0,
       blockedExperiments: signals.blockedExperiments ?? 0,
-      exportAlerts: signals.exportAlerts ?? 0
+      exportAlerts: signals.exportAlerts ?? 0,
+      ...(signals.provenance == null
+        ? {}
+        : { provenance: signals.provenance })
     },
     lastCommand: inputs.lastCommand ?? null,
     lastAttemptId: inputs.lastAttemptId ?? null,

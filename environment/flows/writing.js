@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, rename, rm, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -85,8 +85,7 @@ export async function buildWritingHandoff(projectPath, options = {}) {
   );
   const { bundlesByExperiment, warnings: bundleWarnings } = await discoverBundles(projectRoot, experimentIds);
   const seedRoot = resolveInside(projectRoot, ...SEEDS_SEGMENTS, snapshot.snapshotId);
-  await rm(seedRoot, { recursive: true, force: true });
-  await mkdir(seedRoot, { recursive: true });
+  await createSeedRootOnce(seedRoot, snapshot.snapshotId);
 
   const claimStatusById = new Map(
     projections.claimStatuses.map((entry) => [entry.claimId, entry]),
@@ -119,7 +118,7 @@ export async function buildWritingHandoff(projectPath, options = {}) {
       notes: buildExportNotes(liveStatus),
     });
 
-    await atomicWriteText(absoluteArtifactPath, content);
+    await writeTextOnce(absoluteArtifactPath, content);
     const exportRecord = await appendExportRecord(projectRoot, {
       claimId: claim.claimId,
       snapshotId: snapshot.snapshotId,
@@ -636,15 +635,37 @@ async function safeReaderArray(reader, methodName, argument, label, warnings) {
   }
 }
 
-async function atomicWriteText(targetPath, content) {
-  const temporaryPath = `${targetPath}.${process.pid}.${Date.now()}.tmp`;
-  await mkdir(path.dirname(targetPath), { recursive: true });
-  await writeFile(temporaryPath, `${content}\n`, 'utf8');
+async function createSeedRootOnce(seedRoot, snapshotId) {
+  await mkdir(path.dirname(seedRoot), { recursive: true });
 
   try {
-    await rename(temporaryPath, targetPath);
+    await mkdir(seedRoot);
   } catch (error) {
-    await unlink(temporaryPath).catch(() => {});
+    if (error?.code === 'EEXIST') {
+      throw new WritingFlowValidationError(
+        `Writing seed directory for snapshot ${snapshotId} already exists; refusing to overwrite.`,
+      );
+    }
+
+    throw error;
+  }
+}
+
+async function writeTextOnce(targetPath, content) {
+  await mkdir(path.dirname(targetPath), { recursive: true });
+
+  try {
+    await writeFile(targetPath, `${content}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
+  } catch (error) {
+    if (error?.code === 'EEXIST') {
+      throw new WritingFlowValidationError(
+        `Writing seed already exists at ${targetPath}; refusing to overwrite.`,
+      );
+    }
+
     throw error;
   }
 }

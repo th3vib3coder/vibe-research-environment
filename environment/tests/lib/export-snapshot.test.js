@@ -6,6 +6,7 @@ import test from 'node:test';
 
 import {
   buildExportSnapshot,
+  ExportSnapshotAlreadyExistsError,
   ExportSnapshotValidationError,
   resolveExportSnapshotPath,
   writeExportSnapshot,
@@ -53,7 +54,7 @@ test('export snapshot helper writes a schema-valid snapshot to the machine-owned
   }
 });
 
-test('export snapshot helper overwrites the same snapshot file on rerun', async () => {
+test('export snapshot helper rejects the same snapshot file on rerun', async () => {
   const projectPath = await createTempProject();
 
   try {
@@ -81,26 +82,29 @@ test('export snapshot helper overwrites the same snapshot file on rerun', async 
     await writeExportSnapshot(projectPath, basePayload, {
       createdAt: '2026-04-02T13:00:00Z',
     });
-    await writeExportSnapshot(projectPath, {
-      ...basePayload,
-      claims: [
-        {
-          ...basePayload.claims[0],
-          confidenceAtExport: 0.82,
-        },
-      ],
-      warnings: ['updated snapshot'],
-    }, {
-      createdAt: '2026-04-02T13:05:00Z',
-    });
+    await assert.rejects(
+      () => writeExportSnapshot(projectPath, {
+        ...basePayload,
+        claims: [
+          {
+            ...basePayload.claims[0],
+            confidenceAtExport: 0.82,
+          },
+        ],
+        warnings: ['updated snapshot'],
+      }, {
+        createdAt: '2026-04-02T13:05:00Z',
+      }),
+      ExportSnapshotAlreadyExistsError,
+    );
 
     const persisted = JSON.parse(await readFile(
       resolveExportSnapshotPath(projectPath, 'WEXP-2026-04-02-002'),
       'utf8',
     ));
 
-    assert.equal(persisted.claims[0].confidenceAtExport, 0.82);
-    assert.deepEqual(persisted.warnings, ['updated snapshot']);
+    assert.equal(persisted.claims[0].confidenceAtExport, 0.75);
+    assert.deepEqual(persisted.warnings, ['initial snapshot']);
   } finally {
     await rm(projectPath, { recursive: true, force: true });
   }
