@@ -36,7 +36,14 @@ export default async function validateCounts() {
     integrationTests: (await collectFiles('environment/tests/integration', { include: (file) => file.endsWith('.test.js') && !file.endsWith('_fixture.js') })).length,
     cliTests: (await collectFiles('environment/tests/cli', { include: (file) => file.endsWith('.test.js') })).length,
     schemaTests: (await collectFiles('environment/tests/schemas', { include: (file) => file.endsWith('.test.js') })).length,
-    ciValidators: (await collectFiles('environment/tests/ci', { include: (file) => file.endsWith('.js') && !file.endsWith('_helpers.js') && !file.endsWith('run-all.js') })).length
+    ciValidators: (await collectFiles('environment/tests/ci', {
+      include: (file) =>
+        file.endsWith('.js') &&
+        !file.endsWith('.test.js') &&
+        !file.endsWith('_helpers.js') &&
+        !file.endsWith('run-all.js') &&
+        !file.endsWith('validate-closeout-honesty.js')
+    })).length
   };
 
   for (const [key, expected] of Object.entries(expectedCounts)) {
