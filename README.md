@@ -61,8 +61,9 @@ agent to follow; they are **not** a polished standalone CLI dispatcher.
 
 1. Clone the repo
 2. Run `npm install`
-3. Run `npm run check` and make sure everything is green (`331` tests, `9`
-   validators)
+3. Run `npm run check` and make sure everything is green (`507/508` tests,
+   `12` validators — one declared skip for the live-kernel probe, activated by
+   `VRE_KERNEL_PATH` pointing at a sibling `vibe-science` checkout)
 4. Keep a sibling checkout of `vibe-science` if you want kernel-backed
    projections; without it, many surfaces still work but degrade honestly in
    workspace-first mode
@@ -130,6 +131,13 @@ Not: VRE instead of scientific methodology.
 - The **orchestrator** coordinates work through queue/lane/review/recovery
 - The **agent** is the human-facing interface
 - No layer is allowed to redefine the truth owned by the layer below it
+- The **kernel bridge** (Phase 6+) serves live projections from the kernel
+  with explicit `dbAvailable` / `sourceMode` / `degradedReason` metadata, so
+  a degraded read can never masquerade as "verified zero"
+- **Real provider CLI bindings** (Codex, Claude) produce adversarial review
+  evidence marked with provider-specific `evidenceMode` contracts
+  (`real-cli-binding-codex`, `real-cli-binding-claude`) that can be
+  distinguished from mocked or smoke runs at the artifact level
 
 ---
 
@@ -160,8 +168,22 @@ npm run check
 
 If you want concrete proof instead of claims, start here:
 
+- [Implementation plan index](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
+  — current phase state at a glance
 - [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
+  — local orchestrator MVP (queue, lanes, review lineage with real provider
+  evidence)
+- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md)
+  — kernel bridge + real provider CLI waves + historical Outcome B
+- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md)
+  — Gate 17 hook-runtime probe (no synthetic hook arrays) + `dbAvailable` /
+  `sourceMode` honesty + real Codex `cwd: projectPath` contract
+- [Kernel governance probe test](environment/tests/compatibility/kernel-governance-probe.test.js)
+  — run with `VRE_KERNEL_PATH=<path to vibe-science>` for a live bidirectional
+  probe against the sibling kernel
 - [Saved-artifact eval tests](environment/tests/evals/saved-artifacts.test.js)
+  — enforces `evidenceMode: "real-cli-binding-codex"` + durable
+  `externalReview` record for the Phase 5 Gate 3 lineage artifact
 - [Operator-validation artifacts](.vibe-science-environment/operator-validation/)
 
 ---
@@ -185,6 +207,9 @@ review, and recovery must remain inspectable.
 - [Spec Index](blueprints/definitive-spec/00-INDEX.md)
 - [Implementation Plan](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
 - [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
+- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md) — kernel bridge + real provider CLI
+- [Phase 6.1 Closeout](blueprints/definitive-spec/implementation-plan/phase6_1-closeout.md) — follow-up closure
+- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md) — hook runtime verification + envelope honesty
 - [Orchestrator Spec](blueprints/definitive-spec/surface-orchestrator/00-index.md)
 
 ---
@@ -252,8 +277,9 @@ comando che l'agente segue; **non** sono una CLI standalone rifinita.
 
 1. Clona il repo
 2. Esegui `npm install`
-3. Esegui `npm run check` e verifica che tutto sia verde (`331` test, `9`
-   validator)
+3. Esegui `npm run check` e verifica che tutto sia verde (`507/508` test,
+   `12` validator — uno skip dichiarato per il probe live-kernel, attivato
+   con `VRE_KERNEL_PATH` puntato a un checkout sibling di `vibe-science`)
 4. Tieni un checkout sibling di `vibe-science` se vuoi le proiezioni
    kernel-backed; senza, molte superfici funzionano lo stesso ma degradano
    onestamente in modalità workspace-first
@@ -321,6 +347,13 @@ Non: VRE al posto della metodologia scientifica.
 - L'**orchestratore** coordina il lavoro tramite coda/lane/review/recovery
 - L'**agente** è l'interfaccia verso l'operatore
 - Nessun livello può ridefinire la verità posseduta dal livello sottostante
+- Il **kernel bridge** (Phase 6+) serve proiezioni live dal kernel con
+  metadata espliciti `dbAvailable` / `sourceMode` / `degradedReason`, quindi
+  una lettura degradata non può mai spacciarsi per "verified zero"
+- I **binding reali dei provider CLI** (Codex, Claude) producono evidenza di
+  review avversaria marcata con contratti `evidenceMode` provider-specifici
+  (`real-cli-binding-codex`, `real-cli-binding-claude`), distinguibili da
+  esecuzioni mock o smoke a livello di artefatto
 
 ---
 
@@ -351,8 +384,23 @@ npm run check
 
 Se vuoi prova concreta invece di promesse, parti da qui:
 
+- [Indice del piano di implementazione](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
+  — stato delle fasi correnti a colpo d'occhio
 - [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
+  — MVP dell'orchestratore locale (coda, lane, review lineage con evidenza
+  real-provider)
+- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md)
+  — wave kernel bridge + provider CLI reali + Outcome B storico
+- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md)
+  — probe runtime degli hook per Gate 17 (niente più array sintetici) +
+  onestà `dbAvailable` / `sourceMode` + contratto Codex reale
+  `cwd: projectPath`
+- [Test probe governance kernel](environment/tests/compatibility/kernel-governance-probe.test.js)
+  — eseguibile con `VRE_KERNEL_PATH=<percorso a vibe-science>` per un probe
+  bidirezionale live contro il kernel sibling
 - [Test eval degli artifact salvati](environment/tests/evals/saved-artifacts.test.js)
+  — impone `evidenceMode: "real-cli-binding-codex"` + record durable
+  `externalReview` per l'artifact di lineage del Phase 5 Gate 3
 - [Artifact operator-validation](.vibe-science-environment/operator-validation/)
 
 ---
@@ -376,4 +424,7 @@ review e recovery devono restare ispezionabili.
 - [Spec Index](blueprints/definitive-spec/00-INDEX.md)
 - [Piano di implementazione](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
 - [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
+- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md) — kernel bridge + provider CLI reali
+- [Phase 6.1 Closeout](blueprints/definitive-spec/implementation-plan/phase6_1-closeout.md) — chiusura follow-up
+- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md) — verifica runtime hook + onestà dell'envelope
 - [Orchestrator Spec](blueprints/definitive-spec/surface-orchestrator/00-index.md)
