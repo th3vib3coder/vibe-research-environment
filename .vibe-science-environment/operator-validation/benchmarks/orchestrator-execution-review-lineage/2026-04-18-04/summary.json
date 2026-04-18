@@ -1,0 +1,190 @@
+{
+  "taskId": "orchestrator-execution-review-lineage",
+  "repeatId": "2026-04-18-04",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "startedAt": "2026-04-18T12:19:25.614Z",
+  "endedAt": "2026-04-18T12:20:16.079Z",
+  "passed": true,
+  "command": {
+    "name": "/orchestrator-run",
+    "scope": "orchestrator-run",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-18-12-19-25-729-2076f72f",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-04/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/orchestrator-run"
+    },
+    "resultAssertions": {
+      "payload": {
+        "execution": {
+          "laneRunStatus": "completed",
+          "taskStatus": "completed",
+          "artifactCount": 2,
+          "digestId": "DIGEST-ORCH-SESSION-REVIEW"
+        },
+        "review": {
+          "comparedArtifactCount": 2,
+          "executionLineageVisible": true
+        },
+        "status": {
+          "queueTotal": 2
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+      ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "Execution and review lanes completed one visible lineage with explicit external review evidence.",
+      "warnings": [],
+      "payload": {
+        "execution": {
+          "laneRunStatus": "completed",
+          "taskStatus": "completed",
+          "artifactCount": 2,
+          "digestId": "DIGEST-ORCH-SESSION-REVIEW",
+          "laneRunId": "ORCH-RUN-2026-04-18-12-19-25-681-4b7c4b9a",
+          "taskId": "ORCH-TASK-2026-04-18-12-19-25-648-9aa6f56b"
+        },
+        "review": {
+          "laneRunStatus": "escalated",
+          "taskStatus": "escalated",
+          "verdict": "inconclusive",
+          "materialMismatch": false,
+          "followUpAction": "accept-with-warning",
+          "comparedArtifactCount": 2,
+          "comparedArtifactRefs": [
+            ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+            ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+          ],
+          "externalReviewId": "ORCH-REVIEW-2026-04-18-12-20-16-023-06fda58e",
+          "externalReview": {
+            "schemaVersion": "vibe-orch.external-review-record.v1",
+            "externalReviewId": "ORCH-REVIEW-2026-04-18-12-20-16-023-06fda58e",
+            "taskId": "ORCH-TASK-2026-04-18-12-19-25-744-ff4e3c71",
+            "executionLaneRunId": "ORCH-RUN-2026-04-18-12-19-25-681-4b7c4b9a",
+            "reviewLaneRunId": "ORCH-RUN-2026-04-18-12-20-16-013-6b738fb0",
+            "verdict": "inconclusive",
+            "materialMismatch": false,
+            "summary": "The digest artifacts are internally consistent but explicitly warn that the session snapshot, attempt lineage, decision lineage, and metrics were unavailable, so they provide only partial evidence for the session state.",
+            "comparedArtifactRefs": [
+              ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+              ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+            ],
+            "followUpAction": "accept-with-warning",
+            "escalationId": "ORCH-ESC-2026-04-18-12-20-16-017-619d28b4",
+            "recordedAt": "2026-04-18T12:20:16.023Z"
+          },
+          "executionLineageVisible": true,
+          "reviewLaneRunId": "ORCH-RUN-2026-04-18-12-20-16-013-6b738fb0",
+          "providerRef": "openai/codex",
+          "integrationKind": "provider-cli",
+          "evidenceMode": "real-cli-binding-codex"
+        },
+        "status": {
+          "queueTotal": 2,
+          "readyCount": 0,
+          "completedCount": 1,
+          "escalatedCount": 1,
+          "nextActionKind": "resolve-escalation",
+          "activeObjective": "Run a contrarian review of the current digest.",
+          "latestRecoveryFailureClass": "ambiguous-user-request",
+          "latestEscalationStatus": "pending"
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": null,
+      "currentStage": null,
+      "nextActions": [],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0,
+        "provenance": {
+          "sourceMode": "degraded",
+          "degradedReason": "bridge unavailable",
+          "lastKernelContactAt": null
+        }
+      },
+      "lastCommand": "/orchestrator-run",
+      "lastAttemptId": "ATT-2026-04-18-12-19-25-729-2076f72f",
+      "updatedAt": "2026-04-18T12:20:16.047Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/escalations.jsonl",
+      ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+      ".vibe-science-environment/orchestrator/router-session.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl",
+      ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+      ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": 50.465,
+    "degradedHonestyScore": 1,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 5,
+  "checksTotal": 5,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/orchestrator/escalations.jsonl",
+    ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+    ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+    ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+    ".vibe-science-environment/orchestrator/router-session.json",
+    ".vibe-science-environment/orchestrator/run-queue.jsonl",
+    ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json",
+    ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.md"
+  ]
+}

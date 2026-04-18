@@ -513,25 +513,38 @@ test('saved Phase 5 lineage artifact proves execution and review share one execu
 
   assert.equal(output.result.payload.execution.laneRunStatus, 'completed');
   assert.equal(output.result.payload.execution.digestId, 'DIGEST-ORCH-SESSION-REVIEW');
-  // Phase 6.1 FU-6-002 + adversarial-review P1-5 tightening:
-  // verdict must be a real enum value AND evidenceMode must be declared
-  // (not null or missing) AND if it claims real-cli-binding, the
-  // integrationKind must be provider-cli (lane-run-record schema WP-169
-  // cross-check. We validate both end of the contract here so a real-CLI
-  // regression that silently loses evidenceMode fails the test.
+  // Phase 6.2 FU-6-007 tightening:
+  // This saved evidence backs the Phase 5 Gate 3 real-Codex claim, so the
+  // artifact must prove provider-specific real evidence, not just "some"
+  // review mode. A mock or smoke repeat is useful evidence for other gates,
+  // but it must not satisfy this one.
   const review = output.result.payload.review;
   assert.ok(
     ['affirmed', 'challenged', 'inconclusive'].includes(review.verdict),
     `review verdict must be a valid enum value; got "${review.verdict}"`,
   );
   assert.equal(review.executionLineageVisible, true);
+  assert.equal(review.providerRef, 'openai/codex');
+  assert.equal(review.integrationKind, 'provider-cli');
+  assert.equal(review.evidenceMode, 'real-cli-binding-codex');
+  assert.match(review.externalReviewId, /^ORCH-REVIEW-/u);
+  assert.equal(review.externalReview?.externalReviewId, review.externalReviewId);
+  assert.equal(review.externalReview?.reviewLaneRunId, review.reviewLaneRunId);
+  assert.equal(review.externalReview?.verdict, review.verdict);
+  assert.equal(review.externalReview?.followUpAction, review.followUpAction);
   assert.ok(
-    typeof review.evidenceMode === 'string' && review.evidenceMode.length > 0,
-    `review.evidenceMode must be declared as a non-empty string; got ${JSON.stringify(review.evidenceMode)}`,
+    Array.isArray(review.externalReview?.comparedArtifactRefs)
+      && review.externalReview.comparedArtifactRefs.length >= 1,
+    'saved evidence must include the durable external-review-log record, not only the lane-run summary',
   );
   assert.ok(
-    ['real-cli-binding', 'smoke-real-subprocess', 'mocked-review'].includes(review.evidenceMode),
-    `review.evidenceMode must be a known mode; got "${review.evidenceMode}"`,
+    Array.isArray(review.comparedArtifactRefs) && review.comparedArtifactRefs.length >= 1,
+    'real-Codex lineage evidence must expose at least one compared artifact ref',
+  );
+  assert.equal(typeof review.materialMismatch, 'boolean');
+  assert.ok(
+    ['none', 'reroute', 'escalate', 'revise', 'accept-with-warning'].includes(review.followUpAction),
+    `review.followUpAction must be a valid enum value; got "${review.followUpAction}"`,
   );
   // status.completedCount varies with verdict (challenged triggers escalation).
   // Assert queue total instead — lineage is what we're testing.

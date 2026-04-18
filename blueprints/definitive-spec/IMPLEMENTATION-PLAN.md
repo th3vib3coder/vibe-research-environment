@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-03
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1-5 closed; Phase 5.5 audit hardening closed; Phase 6 Outcome B; Phase 6.1 conditionally closed (Gate 17 upgrade retracted); Phase 6.2 open — Phase 7 blocked pending Phase 6.2 closure
+**Status:** Phase 1-5 closed; Phase 5.5 audit hardening closed; Phase 6 Outcome C after Phase 6.1 + 6.2 corrections; Phase 7 unblocked
 
 ---
 
@@ -114,21 +114,20 @@ provider binding. 5 waves, WP-149..WP-175.
 - [implementation-plan/phase6-04-wave-3-tests-and-validators.md](./implementation-plan/phase6-04-wave-3-tests-and-validators.md)
 - [implementation-plan/phase6-05-wave-4-evidence-and-closeout.md](./implementation-plan/phase6-05-wave-4-evidence-and-closeout.md)
 - [implementation-plan/phase6-closeout.md](./implementation-plan/phase6-closeout.md)
-- [implementation-plan/phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md) (follow-up closure, CONDITIONALLY closed — Gate 17 upgrade retracted in Phase 6.2-A)
-- [implementation-plan/phase6_2-closeout.md](./implementation-plan/phase6_2-closeout.md) (OPEN — honesty correction + hook runtime verification)
+- [implementation-plan/phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md) (follow-up closure, corrected by Phase 6.2)
+- [implementation-plan/phase6_2-closeout.md](./implementation-plan/phase6_2-closeout.md) (CLOSED — honesty correction + hook runtime verification + evidence regeneration)
 
 Phase 6 implementation status:
 - Wave 0 closed: CI workflow audit FOUND + tighten
 - Waves 1+2 closed: kernel-bridge + Codex/Claude CLI executors + session-digest-review review-lineage task kind (+71 tests)
 - Wave 3 closed: bin/vre kernel-bridge wiring + probe bidirectional + WP-168 adversarial findings + evidenceMode cross-check + validate-ci-workflow (+12 tests, +1 validator)
 - Wave 4 closed: Gate 17 + Gate 3 upgraded to PARTIAL with honest follow-ups (FU-6-001 host provisioning, FU-6-002 codex CLI envelope adapter); Phase 6 closeout dossier shipped
-- Phase 6.1 (conditionally closed): FU-6-001/002/003 retired, but second adversarial review re-opened Gate 17 upgrade — retracted in Phase 6.2-A
-- Phase 6.2 (OPEN): corrective sub-phase with FU-6-004/005/006/007
+- Phase 6.1 closed: FU-6-001/002/003 retired; Phase 6.2 preserved the retraction history and closed the follow-up findings.
+- Phase 6.2 closed: FU-6-004/005/006/007 retired; Gate 17 and Gate 3 are re-upgraded on regenerated evidence.
 
-Phase 6 Outcome: B — Phase 7 remains blocked on Gate 3 PASS upgrade
-AND Phase 6.2 closure.
+Phase 6 Outcome: C — Phase 7 is unblocked after Phase 6.2 closure.
 
-### Phase 7 (spec drafted, pending Phase 6 exit gate)
+### Phase 7 (spec drafted, unblocked after Phase 6.2)
 
 Capability Expansion. Closes G-05..G-15: task registry + CLI dispatcher
 expansion, three-tier writing enforcement, connector depth, automation
@@ -164,12 +163,9 @@ surfaces.
 - Phase 5 is closed as an MVP baseline; Gate 3 upgraded FALSE-POSITIVE → PARTIAL in Phase 6 Wave 4: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 - Phase 5.5 (Audit Hardening) implementation is closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md). Phase 5.6 + 5.7 follow-ups shipped on `origin/main @ 3563a48`.
 - Phase 6 (Kernel Bridge and Provider Reality) is closed with Outcome B: see [phase6-closeout.md](./implementation-plan/phase6-closeout.md).
-- Phase 6.1 (Follow-Up Closure) CONDITIONALLY CLOSED: FU-6-001/002/003 retired with real code on disk, but a second fresh-eyes adversarial review surfaced that Gate 17 PASS rested on a synthetic hook array. Gate 17 retracted to PARTIAL in Phase 6.2-A. See [phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md).
-- Phase 6.2 (Honesty Correction + Hook Runtime Verification) OPEN: Phase 6.2-A ledger patch committed; Phase 6.2-B code fixes pending (FU-6-004/005/006/007); Phase 6.2-C evidence regen + re-upgrade pending. See [phase6_2-closeout.md](./implementation-plan/phase6_2-closeout.md). Phase 7 blocked pending Phase 6.2 closure.
-- Phase 6 (Kernel Bridge and Provider Reality) is spec-drafted and awaiting
-  implementation: see [phase6-00-index.md](./implementation-plan/phase6-00-index.md).
-  Closes F-04 FALSE-POSITIVE and G-01/G-03/G-04 from master spec.
-- Phase 7 (Capability Expansion) is spec-drafted and blocked on Phase 6 exit
+- Phase 6.1 (Follow-Up Closure) is closed after Phase 6.2 correction: FU-6-001/002/003 retired with real code on disk; the synthetic hook-array overclaim was retracted, fixed, and re-upgraded through Phase 6.2. See [phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md).
+- Phase 6.2 (Honesty Correction + Hook Runtime Verification) is closed: Phase 6.2-A corrected the ledger; Phase 6.2-B shipped cross-repo fixes; Phase 6.2-C regenerated evidence and re-upgraded Gate 17/Gate 3. See [phase6_2-closeout.md](./implementation-plan/phase6_2-closeout.md).
+- Phase 7 (Capability Expansion) is spec-drafted and unblocked after Phase 6.2 exit
   gate: see [phase7-00-index.md](./implementation-plan/phase7-00-index.md).
 - Surface orchestrator spec will be archived in Phase 7 Wave 5 WP-216 to
   `blueprints/definitive-spec/archive/surface-coordinator/`.

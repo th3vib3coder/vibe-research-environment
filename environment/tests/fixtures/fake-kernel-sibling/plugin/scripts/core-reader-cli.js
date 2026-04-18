@@ -12,6 +12,7 @@
  *   __bridge_test_bad_envelope__   → writes non-JSON to stdout
  *   __bridge_test_kernel_error__   → writes {ok:false, error, projection}
  *   __bridge_test_mismatch__       → writes envelope whose projection field disagrees
+ *   __bridge_test_degraded__       → writes ok:true but degraded metadata
  *
  * Any other projection name returns canned deterministic data.
  *
@@ -84,11 +85,28 @@ process.stdin.on('end', () => {
     return;
   }
 
+  if (projection === '__bridge_test_degraded__') {
+    process.stdout.write(JSON.stringify({
+      ok: true,
+      projection,
+      projectPath,
+      dbAvailable: false,
+      sourceMode: 'degraded',
+      degradedReason: 'fake kernel DB unavailable for bridge regression coverage',
+      data: [],
+    }));
+    process.exit(0);
+    return;
+  }
+
   const data = buildCannedData(projection);
   const envelope = {
     ok: true,
     projection,
     projectPath,
+    dbAvailable: true,
+    sourceMode: 'kernel-backed',
+    degradedReason: null,
     data,
   };
   process.stdout.write(JSON.stringify(envelope));
@@ -124,15 +142,27 @@ function buildCannedData(name) {
         hook: 'schema_file_protection',
         status: 'ok',
         description: 'Non-negotiable: protects kernel schema files.',
+        synthetic: false,
+        configuredIn: ['.claude/settings.json'],
+        scriptPath: 'plugin/scripts/pre-tool-use.js',
       }, {
         hook: 'confounder_check',
         status: 'ok',
+        synthetic: false,
+        configuredIn: ['.claude/settings.json'],
+        scriptPath: 'plugin/scripts/pre-tool-use.js',
       }, {
         hook: 'stop_blocking',
         status: 'ok',
+        synthetic: false,
+        configuredIn: ['.claude/settings.json'],
+        scriptPath: 'plugin/scripts/stop.js',
       }, {
         hook: 'integrity_degradation_tracking',
         status: 'ok',
+        synthetic: false,
+        configuredIn: ['.claude/settings.json'],
+        scriptPath: 'plugin/scripts/post-tool-use.js',
       }];
     case 'getStateSnapshot':
       return {

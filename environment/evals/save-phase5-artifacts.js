@@ -354,13 +354,20 @@ async function executeExecutionReviewLineageScenario(projectPath) {
           laneRunStatus: reviewCoordinator.laneRun.status,
           taskStatus: reviewCoordinator.task.status,
           verdict: reviewCoordinator.externalReview.verdict,
+          materialMismatch: reviewCoordinator.externalReview.materialMismatch,
+          followUpAction: reviewCoordinator.externalReview.followUpAction,
           comparedArtifactCount:
             reviewCoordinator.externalReview.comparedArtifactRefs.length,
+          comparedArtifactRefs: reviewCoordinator.externalReview.comparedArtifactRefs,
+          externalReviewId: reviewCoordinator.externalReview.externalReviewId,
+          externalReview: reviewCoordinator.externalReview,
           executionLineageVisible:
             reviewCoordinator.externalReview.executionLaneRunId ===
             executionCoordinator.laneRun.laneRunId,
           reviewLaneRunId: reviewCoordinator.laneRun.laneRunId,
-          evidenceMode,
+          providerRef: reviewCoordinator.laneRun.providerRef,
+          integrationKind: reviewCoordinator.laneRun.integrationKind,
+          evidenceMode: reviewCoordinator.laneRun.evidenceMode ?? evidenceMode,
         },
         status: summarizeStatusResult(status),
       },

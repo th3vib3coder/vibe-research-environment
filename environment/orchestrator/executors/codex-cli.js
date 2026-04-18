@@ -341,14 +341,28 @@ export function buildCodexCliExecutor({
 
 const REAL_CODEX_RAW_TRUNCATE_BYTES = 4 * 1024;
 
-function buildCodexReviewPrompt(envelope) {
+function resolveProjectRootFromPayload(stdinPayload) {
+  const raw = stdinPayload?.projectPath;
+  if (typeof raw !== 'string' || raw.trim() === '') {
+    throw new CodexCliExecutorError(
+      'codex-cli real binding requires stdinPayload.projectPath so artifact refs resolve from the intended project root.',
+      { code: 'contract-mismatch' },
+    );
+  }
+  return path.resolve(raw);
+}
+
+function buildCodexReviewPrompt(envelope, projectRoot) {
   const envelopeJson = JSON.stringify(envelope, null, 2);
   return [
     'You are the review executor for a VRE session-digest-review task.',
     '',
     'Below is the input envelope the orchestrator handed you. Inspect the',
-    'artifacts referenced in `payload.comparedArtifactRefs` (paths are relative',
-    'to the project root) and produce an adversarial review verdict.',
+    'artifacts referenced in `payload.comparedArtifactRefs` and produce an',
+    'adversarial review verdict.',
+    '',
+    `Project root (absolute): ${projectRoot}`,
+    'All relative artifact paths MUST be resolved from that project root.',
     '',
     '```json',
     envelopeJson,
@@ -415,6 +429,7 @@ export async function invokeRealCodexCli({
   signal = null,
 } = {}) {
   const command = resolveCommand(overrideEnv);
+  const projectRoot = resolveProjectRootFromPayload(stdinPayload);
   const env = sanitizeEnv(envPassthrough, overrideEnv);
   const useShell = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(command);
 
@@ -423,7 +438,7 @@ export async function invokeRealCodexCli({
     task: stdinPayload?.task ?? null,
     payload: stdinPayload ?? {},
   };
-  const prompt = buildCodexReviewPrompt(envelope);
+  const prompt = buildCodexReviewPrompt(envelope, projectRoot);
 
   return withTmpDir(async (dir) => {
     const lastMessagePath = path.join(dir, 'last-message.txt');
@@ -433,6 +448,7 @@ export async function invokeRealCodexCli({
       let child;
       try {
         child = spawn(command, subprocArgs, {
+          cwd: projectRoot,
           stdio: ['pipe', 'pipe', 'pipe'],
           env,
           shell: useShell,

@@ -13,6 +13,8 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,6 +30,35 @@ import {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fakeKernelRoot = path.resolve(here, '..', 'fixtures', 'fake-kernel-sibling');
+
+async function createDegradedKernelFixture() {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'vre-kernel-degraded-'));
+  const scriptDir = path.join(root, 'plugin', 'scripts');
+  await mkdir(scriptDir, { recursive: true });
+  await writeFile(
+    path.join(scriptDir, 'core-reader-cli.js'),
+    [
+      "const projection = process.argv[2] ?? 'getProjectOverview';",
+      "let stdin='';",
+      "process.stdin.on('data', (chunk) => { stdin += chunk.toString('utf8'); });",
+      "process.stdin.on('end', () => {",
+      "  const input = stdin.trim() ? JSON.parse(stdin) : {};",
+      "  process.stdout.write(JSON.stringify({",
+      "    ok: true,",
+      "    projection,",
+      "    projectPath: input.projectPath ?? '/fake/degraded',",
+      "    dbAvailable: false,",
+      "    sourceMode: 'degraded',",
+      "    degradedReason: 'fixture DB missing',",
+      "    data: projection === 'getProjectOverview' ? { profile: 'default' } : []",
+      "  }));",
+      "});",
+      "",
+    ].join('\n'),
+    'utf8',
+  );
+  return root;
+}
 
 describe('WP-155 kernel-bridge: degraded sentinel', () => {
   it('returns degraded sentinel when kernelRoot is undefined', async () => {
@@ -46,6 +77,17 @@ describe('WP-155 kernel-bridge: degraded sentinel', () => {
     const reader = await resolveKernelReader({ kernelRoot: '/no/such/kernel/root' });
     assert.equal(reader.dbAvailable, false);
     assert.match(reader.error, /core-reader CLI unavailable/u);
+  });
+
+  it('returns degraded sentinel when CLI exists but initial probe reports degraded kernel data', async () => {
+    const kernelRoot = await createDegradedKernelFixture();
+    try {
+      const reader = await resolveKernelReader({ kernelRoot });
+      assert.equal(reader.dbAvailable, false);
+      assert.match(reader.error, /fixture DB missing/u);
+    } finally {
+      await rm(kernelRoot, { recursive: true, force: true });
+    }
   });
 });
 
@@ -168,6 +210,21 @@ describe('WP-155 kernel-bridge: error taxonomy via trigger projections', () => {
     }
     assert.ok(err instanceof KernelBridgeContractMismatchError, `got ${err?.name}: ${err?.message}`);
     assert.match(err.message, /missing data field/u);
+  });
+
+  it('ok:true degraded envelope raises KernelBridgeUnavailableError instead of returning silent-zero data', async () => {
+    let err = null;
+    try {
+      await __spawnProjectionForTest({
+        kernelRoot: fakeKernelRoot,
+        projection: '__bridge_test_degraded__',
+      });
+    } catch (e) {
+      err = e;
+    }
+    assert.ok(err instanceof KernelBridgeUnavailableError, `got ${err?.name}: ${err?.message}`);
+    assert.equal(err.sourceMode, 'degraded');
+    assert.match(err.degradedReason, /fake kernel DB unavailable/u);
   });
 
   it('ENOENT on CLI path yields KernelBridgeUnavailableError via the test helper', async () => {

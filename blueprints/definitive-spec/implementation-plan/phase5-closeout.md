@@ -62,7 +62,7 @@ What Phase 5 does **not** claim:
 **Result: 5 PASS, 0 PARTIAL.** Gate 3 upgraded FALSE-POSITIVE → PARTIAL in
 Phase 6 Wave 4, then PARTIAL → PASS in Phase 6.1 after the real Codex CLI
 envelope adapter shipped and produced real adversarial review evidence
-(verdict `"challenged"`, benchmark `2026-04-18-02`).
+(provider-specific `real-cli-binding-codex`, benchmark `2026-04-18-04`).
 
 ---
 
@@ -122,39 +122,42 @@ review fixture was also corrected to `integrationKind: 'provider-cli'`
 so the lane-run-record's `evidenceMode: 'real-cli-binding-codex'` passes
 the WP-169 cross-check.
 
-Saved benchmark `2026-04-18-02` contains real Codex output (verdict
-`"challenged"` with materialMismatch=true for a synthetic test digest).
+Saved benchmark `2026-04-18-04` contains real Codex output with
+`evidenceMode: "real-cli-binding-codex"` and a durable external-review
+record embedded in the saved artifact payload.
 The upgrade from PARTIAL to PASS is backed by: integration tests, schema
 cross-check, real-codex evidence artifact, and the tightened
-`saved-artifacts.test.js` assertion that evidenceMode must be a declared
-non-empty mode string (prevents future regressions where real codex
-invocation silently returns but the evidenceMode field gets lost).
+`saved-artifacts.test.js` assertion that requires providerRef
+`openai/codex`, integrationKind `provider-cli`, evidenceMode
+`real-cli-binding-codex`, and a durable `externalReview` record.
 
 FU-6-002 is retired. Adversarial review (Phase 6.1 FU-6-003) surfaced
 one P1 (integrationKind lie between fixture and executor) which was
 corrected before the Phase 6.1 commit.
 
-## Phase 6.2-A Correction Note — Gate 3 Loose-Contract Limit
+## Phase 6.2 Correction Note — Gate 3 `projectPath` Contract Closed
 
 A second adversarial review after Phase 6.1 found that the real Codex
 adapter in `environment/orchestrator/executors/codex-cli.js` spawns
 without setting `cwd: projectPath` and the review payload does not
-carry `projectPath`. The `2026-04-18-02` benchmark evidence is
+carry `projectPath`. The `2026-04-18-02` benchmark evidence was
 authentic — a real Codex CLI produced a real `"challenged"` verdict —
 but it worked accidentally from the repo root. From a nested
 directory the adapter would silently fail to produce valid output.
 
-Gate 3 stays PASS because the evidence on disk is real, but a
-loose-contract honest limit is recorded here and tracked as FU-6-006.
-This is a hardening task, not a gate downgrade. Phase 6.2-B will add
-the `cwd`/`projectPath` contract plus a regression test invoked from
-a nested directory. See [phase6_2-closeout.md](./phase6_2-closeout.md).
+Gate 3 stayed PASS because the evidence on disk was real, but a
+loose-contract honest limit was recorded as FU-6-006. Phase 6.2-B
+closed it: `review-lane.js` now includes `projectPath` in provider
+payloads, `invokeRealCodexCli` rejects calls without `projectPath`,
+spawns from `cwd: projectPath`, and `codex-cli-executor.test.js`
+covers the nested-directory case. Phase 6.2-C regenerated the evidence
+at `2026-04-18-04`. See [phase6_2-closeout.md](./phase6_2-closeout.md).
 
 ## Declared Follow-Ups
 
-- FU-6-006 (hardening, not blocker): Codex adapter must spawn with
-  `cwd: projectPath`; payload must carry `projectPath`; regression test
-  from nested dir — opened in Phase 6.2-A.
+- FU-6-006: CLOSED in Phase 6.2-B/C. Codex adapter now spawns with
+  `cwd: projectPath`; payload carries `projectPath`; regression test
+  from nested dir is present; evidence regenerated at `2026-04-18-04`.
 
 ---
 

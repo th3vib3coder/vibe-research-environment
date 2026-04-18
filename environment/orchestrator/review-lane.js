@@ -226,6 +226,7 @@ export async function runReviewLane(projectPath, options = {}) {
     });
 
     const result = await invokeLaneBinding(binding, options.providerExecutors ?? {}, {
+      projectPath,
       task,
       comparedArtifactRefs: reviewTask.comparedArtifactRefs,
       continuity,

@@ -1,7 +1,7 @@
 {
   "artifactId": "phase5-operator-validation",
   "phase": 5,
-  "createdAt": "2026-04-10T14:57:23.901Z",
+  "createdAt": "2026-04-18T12:20:16.502Z",
   "benchmarkId": "phase5-orchestrator-mvp",
   "passed": true,
   "validationClaims": [
@@ -20,15 +20,15 @@
       "claim": "Queued orchestrator work can be inspected first and resumed later through the public runtime surface.",
       "sourceRepeat": {
         "taskId": "orchestrator-status-queue-resume",
-        "repeatId": "2026-04-10-03",
-        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/input.json",
-        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/output.json",
-        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/metrics.json",
-        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/summary.json",
-        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/transcript.md"
+        "repeatId": "2026-04-18-10",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-18-10/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-18-10/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-18-10/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-18-10/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-18-10/transcript.md"
       },
       "metrics": {
-        "resumeLatencySeconds": 0.246,
+        "resumeLatencySeconds": 0.242,
         "degradedHonestyScore": 1,
         "stateWriteScopeViolations": 0,
         "attemptLifecycleCompleteness": 1,
@@ -39,15 +39,15 @@
       "claim": "Profile, query, and full continuity modes all assemble from the real runtime without hidden profile mutation.",
       "sourceRepeat": {
         "taskId": "orchestrator-continuity-modes",
-        "repeatId": "2026-04-10-02",
-        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/input.json",
-        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/output.json",
-        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/metrics.json",
-        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/summary.json",
-        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/transcript.md"
+        "repeatId": "2026-04-18-10",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-18-10/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-18-10/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-18-10/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-18-10/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-18-10/transcript.md"
       },
       "metrics": {
-        "resumeLatencySeconds": 0.231,
+        "resumeLatencySeconds": 0.197,
         "degradedHonestyScore": 1,
         "stateWriteScopeViolations": 0,
         "attemptLifecycleCompleteness": 1,
@@ -58,15 +58,15 @@
       "claim": "One execution result can flow into an execution-backed review lineage with durable external review evidence.",
       "sourceRepeat": {
         "taskId": "orchestrator-execution-review-lineage",
-        "repeatId": "2026-04-10-02",
-        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/input.json",
-        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/output.json",
-        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/metrics.json",
-        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/summary.json",
-        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/transcript.md"
+        "repeatId": "2026-04-18-01",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-01/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-01/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-01/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-01/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-01/transcript.md"
       },
       "metrics": {
-        "resumeLatencySeconds": 0.242,
+        "resumeLatencySeconds": 0.358,
         "degradedHonestyScore": 1,
         "stateWriteScopeViolations": 0,
         "attemptLifecycleCompleteness": 1,
@@ -77,15 +77,15 @@
       "claim": "A bounded execution failure becomes explicit recovery and escalation state that the operator can inspect from status.",
       "sourceRepeat": {
         "taskId": "orchestrator-bounded-failure-recovery",
-        "repeatId": "2026-04-10-02",
-        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/input.json",
-        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/output.json",
-        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/metrics.json",
-        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/summary.json",
-        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/transcript.md"
+        "repeatId": "2026-04-18-06",
+        "inputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-18-06/input.json",
+        "outputPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-18-06/output.json",
+        "metricsPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-18-06/metrics.json",
+        "summaryPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-18-06/summary.json",
+        "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-18-06/transcript.md"
       },
       "metrics": {
-        "resumeLatencySeconds": 0.213,
+        "resumeLatencySeconds": 0.153,
         "degradedHonestyScore": 1,
         "stateWriteScopeViolations": 0,
         "attemptLifecycleCompleteness": 1,

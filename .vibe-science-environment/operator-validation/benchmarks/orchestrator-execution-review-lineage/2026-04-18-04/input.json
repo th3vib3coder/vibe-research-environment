@@ -1,0 +1,56 @@
+{
+  "taskId": "orchestrator-execution-review-lineage",
+  "repeatId": "2026-04-18-04",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "taskVersion": "1.0.0",
+  "command": {
+    "name": "/orchestrator-run",
+    "scope": "orchestrator-run",
+    "args": []
+  },
+  "goal": "Prove that one execution task can produce reviewable artifacts and then flow into one execution-backed review lineage with explicit external review evidence.",
+  "setup": {
+    "workspaceFixtures": [],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/orchestrator-run"
+    },
+    "resultAssertions": {
+      "payload": {
+        "execution": {
+          "laneRunStatus": "completed",
+          "taskStatus": "completed",
+          "artifactCount": 2,
+          "digestId": "DIGEST-ORCH-SESSION-REVIEW"
+        },
+        "review": {
+          "comparedArtifactCount": 2,
+          "executionLineageVisible": true
+        },
+        "status": {
+          "queueTotal": 2
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/orchestrator/external-review-log.jsonl",
+      ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-REVIEW/session-digest.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  }
+}

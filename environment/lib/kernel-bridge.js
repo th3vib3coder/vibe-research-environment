@@ -53,6 +53,8 @@ const PROJECTION_NAMES = Object.freeze([
   'getStateSnapshot',
 ]);
 
+const KERNEL_BRIDGE_META = Symbol('vreKernelBridgeMeta');
+
 export class KernelBridgeError extends Error {
   constructor(message, options = {}) {
     super(message, options);
@@ -60,6 +62,8 @@ export class KernelBridgeError extends Error {
     if (options.projection) this.projection = options.projection;
     if (options.stderr) this.stderr = options.stderr;
     if (typeof options.exitCode === 'number') this.exitCode = options.exitCode;
+    if (options.sourceMode) this.sourceMode = options.sourceMode;
+    if (options.degradedReason) this.degradedReason = options.degradedReason;
   }
 }
 
@@ -108,6 +112,38 @@ function truncateStderr(buffers) {
   );
 }
 
+function attachKernelBridgeMeta(value, meta) {
+  if (value != null && (typeof value === 'object' || typeof value === 'function')) {
+    Object.defineProperty(value, KERNEL_BRIDGE_META, {
+      value: Object.freeze({ ...meta }),
+      enumerable: false,
+      configurable: false,
+    });
+  }
+  return value;
+}
+
+export function getKernelBridgeMeta(value) {
+  return value?.[KERNEL_BRIDGE_META] ?? {
+    dbAvailable: true,
+    sourceMode: 'kernel-backed',
+    degradedReason: null,
+  };
+}
+
+function normalizeEnvelopeMeta(envelope) {
+  const dbAvailable = envelope.dbAvailable !== false;
+  const sourceMode =
+    typeof envelope.sourceMode === 'string' && envelope.sourceMode.length > 0
+      ? envelope.sourceMode
+      : (dbAvailable ? 'kernel-backed' : 'degraded');
+  const degradedReason =
+    typeof envelope.degradedReason === 'string' && envelope.degradedReason.length > 0
+      ? envelope.degradedReason
+      : null;
+  return { dbAvailable, sourceMode, degradedReason };
+}
+
 /**
  * Spawn the kernel CLI for a single projection call.
  *
@@ -118,6 +154,7 @@ function truncateStderr(buffers) {
  * @param {object} args.stdinPayload  JSON payload written to child stdin
  * @param {number} args.timeoutMs  Per-projection timeout in ms
  * @param {string[]} args.envPassthrough  Extra env keys to forward
+ * @param {boolean} [args.allowDegraded=false]  Permit ok:true degraded envelopes
  * @returns {Promise<object>} The envelope's `data` field on success
  */
 function invokeCoreReaderCli({
@@ -127,6 +164,7 @@ function invokeCoreReaderCli({
   stdinPayload,
   timeoutMs,
   envPassthrough,
+  allowDegraded = false,
 }) {
   return new Promise((resolve, reject) => {
     const env = sanitizeEnv(envPassthrough);
@@ -322,7 +360,23 @@ function invokeCoreReaderCli({
         return;
       }
 
-      resolve(envelope.data);
+      const meta = normalizeEnvelopeMeta(envelope);
+      if (!allowDegraded && (meta.sourceMode !== 'kernel-backed' || !meta.dbAvailable)) {
+        reject(
+          new KernelBridgeUnavailableError(
+            `kernel-bridge: projection "${projection}" returned ${meta.sourceMode} kernel data: ${meta.degradedReason ?? 'kernel data unavailable'}.`,
+            {
+              projection,
+              stderr: stderrText,
+              sourceMode: meta.sourceMode,
+              degradedReason: meta.degradedReason ?? 'kernel data unavailable',
+            },
+          ),
+        );
+        return;
+      }
+
+      resolve(attachKernelBridgeMeta(envelope.data, meta));
     });
 
     try {
@@ -382,12 +436,37 @@ export async function resolveKernelReader({
       ? projectPath
       : resolvedKernelRoot;
 
-  const callProjection = (projection, options = {}) => {
+  let readerDbAvailable = true;
+  let readerError = null;
+
+  try {
+    const probe = await invokeCoreReaderCli({
+      cliPath,
+      kernelRoot: resolvedKernelRoot,
+      projection: 'getProjectOverview',
+      stdinPayload: { projectPath: defaultProjectPath },
+      timeoutMs,
+      envPassthrough,
+      allowDegraded: true,
+    });
+    const meta = getKernelBridgeMeta(probe);
+    readerDbAvailable = meta.dbAvailable && meta.sourceMode === 'kernel-backed';
+    readerError = readerDbAvailable
+      ? null
+      : (meta.degradedReason ?? `kernel reader sourceMode=${meta.sourceMode}`);
+  } catch (error) {
+    return {
+      dbAvailable: false,
+      error: error?.message ?? String(error),
+    };
+  }
+
+  const callProjection = async (projection, options = {}) => {
     const payload = {
       projectPath: options.projectPath ?? defaultProjectPath,
       ...options,
     };
-    return invokeCoreReaderCli({
+    const data = await invokeCoreReaderCli({
       cliPath,
       kernelRoot: resolvedKernelRoot,
       projection,
@@ -395,10 +474,17 @@ export async function resolveKernelReader({
       timeoutMs,
       envPassthrough,
     });
+    const meta = getKernelBridgeMeta(data);
+    reader.dbAvailable = meta.dbAvailable && meta.sourceMode === 'kernel-backed';
+    reader.error = reader.dbAvailable
+      ? null
+      : (meta.degradedReason ?? `kernel reader sourceMode=${meta.sourceMode}`);
+    return data;
   };
 
   const reader = {
-    dbAvailable: true,
+    dbAvailable: readerDbAvailable,
+    error: readerError,
     close() {
       // WP-155 rule: close is a no-op; bridge is stateless, each call re-spawns.
     },
@@ -438,6 +524,7 @@ export async function __spawnProjectionForTest({
     stdinPayload,
     timeoutMs,
     envPassthrough,
+    allowDegraded: false,
   });
 }
 
@@ -445,4 +532,5 @@ export async function __spawnProjectionForTest({
 export const __testables = Object.freeze({
   PROJECTION_NAMES,
   DEFAULT_ENV_WHITELIST,
+  getKernelBridgeMeta,
 });

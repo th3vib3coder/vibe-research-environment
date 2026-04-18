@@ -1,15 +1,59 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 import {
   CodexCliExecutorError,
   INPUT_SCHEMA_VERSION,
   OUTPUT_SCHEMA_VERSION,
   buildCodexCliExecutor,
+  invokeRealCodexCli,
   invokeCodexCli,
 } from '../../orchestrator/executors/codex-cli.js';
 
 const NODE = process.execPath;
+
+async function createFakeRealCodexCli() {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'vre-fake-real-codex-'));
+  const jsPath = path.join(dir, 'fake-codex.js');
+  const js = [
+    '#!/usr/bin/env node',
+    "import { writeFileSync } from 'node:fs';",
+    "const outIndex = process.argv.indexOf('--output-last-message');",
+    "const outPath = outIndex >= 0 ? process.argv[outIndex + 1] : null;",
+    "let prompt = '';",
+    "process.stdin.on('data', (chunk) => { prompt += chunk.toString('utf8'); });",
+    "process.stdin.on('end', () => {",
+    "  if (!outPath) { process.stderr.write('missing --output-last-message'); process.exit(3); return; }",
+    "  writeFileSync(outPath, JSON.stringify({",
+    `    schemaVersion: '${OUTPUT_SCHEMA_VERSION}',`,
+    "    verdict: 'affirmed',",
+    "    materialMismatch: false,",
+    "    summary: `cwd=${process.cwd()}` ,",
+    "    followUpAction: 'none',",
+    "    evidenceRefs: ['artifact.json'],",
+    "    promptIncludedProjectRoot: prompt.includes('Project root (absolute):')",
+    "  }));",
+    "});",
+    "",
+  ].join('\n');
+  await writeFile(jsPath, js, 'utf8');
+  await chmod(jsPath, 0o755);
+
+  if (process.platform !== 'win32') {
+    return { dir, command: jsPath };
+  }
+
+  const cmdPath = path.join(dir, 'fake-codex.cmd');
+  await writeFile(
+    cmdPath,
+    ['@echo off', `node "%~dp0fake-codex.js" %*`, ''].join('\r\n'),
+    'utf8',
+  );
+  return { dir, command: cmdPath };
+}
 
 // Fake Codex CLI implemented via `node -e` scripts. Stdin is the WP-151
 // input envelope; stdout must be the WP-151 output envelope.
@@ -243,5 +287,50 @@ describe('WP-160 codex-cli executor', () => {
     });
     assert.equal(result.verdict, 'affirmed');
     assert.equal(result.summary, 'factory ok');
+  });
+
+  it('real Codex adapter rejects calls without stdinPayload.projectPath', async () => {
+    await assert.rejects(
+      () => invokeRealCodexCli({
+        stdinPayload: { task: { taskKind: 'session-digest-review' } },
+        timeoutMs: 5_000,
+        overrideEnv: {
+          PATH: process.env.PATH ?? '',
+          VRE_CODEX_CLI: NODE,
+        },
+      }),
+      (error) => {
+        assert.ok(error instanceof CodexCliExecutorError);
+        assert.equal(error.code, 'contract-mismatch');
+        assert.match(error.message, /projectPath/u);
+        return true;
+      },
+    );
+  });
+
+  it('real Codex adapter spawns from stdinPayload.projectPath even when caller cwd differs', async () => {
+    const fake = await createFakeRealCodexCli();
+    const projectRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-codex-project-root-'));
+    try {
+      const result = await invokeRealCodexCli({
+        stdinPayload: {
+          projectPath: projectRoot,
+          task: { taskKind: 'session-digest-review', taskId: 'ORCH-TASK-ROOT' },
+          comparedArtifactRefs: ['artifact.json'],
+        },
+        timeoutMs: 10_000,
+        overrideEnv: {
+          PATH: process.env.PATH ?? '',
+          VRE_CODEX_CLI: fake.command,
+        },
+      });
+
+      assert.equal(result.schemaVersion, OUTPUT_SCHEMA_VERSION);
+      assert.equal(path.resolve(result.summary.replace(/^cwd=/u, '')), path.resolve(projectRoot));
+      assert.equal(result.promptIncludedProjectRoot, true);
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+      await rm(fake.dir, { recursive: true, force: true });
+    }
   });
 });

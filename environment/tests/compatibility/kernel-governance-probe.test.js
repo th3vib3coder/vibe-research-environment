@@ -110,6 +110,19 @@ describe('WP-157 kernel-governance-probe (Gate 17 real probe)', () => {
         `config-protection.test.js requires this hook. ` +
         `Kernel exposed: [${[...hooks].join(', ')}].`,
     );
+    const schemaHook = gates.find((g) => g.hook === 'schema_file_protection');
+    assert.equal(
+      schemaHook.synthetic,
+      false,
+      'schema_file_protection must come from runtime hook configuration, not a synthetic allowlist',
+    );
+    assert.equal(schemaHook.status, 'ok');
+    assert.ok(
+      Array.isArray(schemaHook.configuredIn) && schemaHook.configuredIn.length > 0,
+      'schema_file_protection must identify at least one hook config file that installs it',
+    );
+    assert.equal(typeof schemaHook.scriptPath, 'string');
+    assert.ok(schemaHook.scriptPath.length > 0);
   });
 
   it('bidirectional: kernel-reported governance profile outside Phase 1 enum fails test', async () => {
@@ -158,6 +171,13 @@ describe('WP-157 kernel-governance-probe (Gate 17 real probe)', () => {
       assert.ok(
         hooks.has(required),
         `kernel did not expose required non-negotiable hook "${required}"`,
+      );
+      const gate = gates.find((entry) => entry.hook === required);
+      assert.equal(gate.synthetic, false, `${required} must not be synthetic`);
+      assert.equal(gate.status, 'ok', `${required} must be installed/configured`);
+      assert.ok(
+        Array.isArray(gate.configuredIn) && gate.configuredIn.length > 0,
+        `${required} must report concrete hook config provenance`,
       );
     }
   });

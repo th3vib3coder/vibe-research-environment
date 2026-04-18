@@ -7,6 +7,22 @@
 
 ---
 
+## Supersession Note
+
+This file records the **historical Phase 6 Wave 4 closeout**: Outcome B,
+with Gate 17 and Gate 3 held at PARTIAL and follow-ups FU-6-001/002/003
+opened. That was the correct state at the time.
+
+The current final state is recorded in:
+- [phase6_1-closeout.md](./phase6_1-closeout.md)
+- [phase6_2-closeout.md](./phase6_2-closeout.md)
+
+After Phase 6.2, those follow-ups are closed, Gate 17 and Gate 3 are
+re-upgraded to PASS, and Phase 7 is unblocked. Do not treat the exit gate
+table below as the current ledger; it is preserved for retraction history.
+
+---
+
 ## Verdict
 
 **Phase 6 is implementation-complete with honest Outcome B on both
@@ -217,8 +233,7 @@ What we should NOT overclaim:
 - Phase 7 is NOT unblocked by this closeout — Gate 3 must upgrade to
   PASS first, and that upgrade lives in Phase 6.1
 
-Recommended next action: open **Phase 6.1** with exactly two work items
-(FU-6-001 host provisioning, FU-6-002 codex CLI adapter). Phase 6.1 is
-small and defensive: it does not reopen Phase 6 scope, only unblocks the
-two disclosed follow-ups. Phase 7 implementation begins after Phase 6.1
-exits.
+Recommended next action (historical): open **Phase 6.1** with exactly two
+work items. This has since been completed and corrected through Phase 6.2.
+Current next action is Phase 7 implementation or a fresh external review
+on the Phase 6.2 diff before pushing.
