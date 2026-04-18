@@ -33,7 +33,37 @@ export const DISPATCH_TABLE = Object.freeze({
 });
 
 const SESSION_SNAPSHOT_PATH = '.vibe-science-environment/control/session.json';
-const KNOWN_COMMANDS = Object.keys(DISPATCH_TABLE).sort();
+const KNOWN_COMMANDS = [...Object.keys(DISPATCH_TABLE), 'init'].sort();
+
+// Sibling kernel auto-discovery: if VRE_KERNEL_PATH is not set, look for a
+// common layout where vibe-science lives beside vibe-research-environment in
+// the same parent directory. Keeps the env var as the authoritative override.
+function autoDiscoverSiblingKernel(repoRoot) {
+  const parent = path.dirname(repoRoot);
+  const candidates = [
+    path.join(parent, 'vibe-science'),
+    path.join(parent, 'vibe-science-plugin'),
+  ];
+  for (const candidate of candidates) {
+    const cli = path.join(candidate, 'plugin', 'scripts', 'core-reader-cli.js');
+    if (existsSync(cli)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+export function resolveKernelRoot(repoRoot) {
+  const explicit = process.env.VRE_KERNEL_PATH;
+  if (typeof explicit === 'string' && explicit.trim() !== '') {
+    return { kernelRoot: explicit, source: 'env' };
+  }
+  const discovered = autoDiscoverSiblingKernel(repoRoot);
+  if (discovered) {
+    return { kernelRoot: discovered, source: 'sibling-auto-discovery' };
+  }
+  return { kernelRoot: null, source: 'not-found' };
+}
 
 function isDirectRun(importMeta) {
   return process.argv[1] != null && importMeta.url === pathToFileURL(process.argv[1]).href;
@@ -138,17 +168,32 @@ async function callCoreReaderCli(cliPath, command, input = {}) {
   });
 }
 
-export async function resolveDefaultReader(repoRoot) {
+export async function resolveDefaultReader(repoRoot, { announce = false } = {}) {
   // WP-166 (Phase 6 Wave 3): delegate to the unified kernel-bridge helper.
   // The bridge handles VRE_KERNEL_PATH detection, degraded sentinel shape,
   // envelope validation, typed error taxonomy, and env sanitization — all
-  // centrally. Removes the duplicated CLI-reader wiring that previously
-  // lived here. `repoRoot` is no longer passed into the reader because the
-  // bridge computes projectPath per-call from the spawn cwd; all existing
-  // callers tolerate this (they pass options through to the reader methods
-  // which forward to the spawn envelope).
-  const kernelRoot = process.env.VRE_KERNEL_PATH ?? null;
-  return resolveKernelReader({ kernelRoot });
+  // centrally.
+  //
+  // Dogfood pass 2026-04-18: accept a repoRoot-relative sibling auto-discovery
+  // so a fresh checkout with `vibe-science/` parallel to `vibe-research-environment/`
+  // works without the user having to set VRE_KERNEL_PATH explicitly.
+  const { kernelRoot, source } = resolveKernelRoot(repoRoot);
+  const reader = await resolveKernelReader({ kernelRoot });
+  if (announce) {
+    if (reader.dbAvailable) {
+      process.stderr.write(
+        `vre: kernel-bridge active (${source}: ${kernelRoot})\n`,
+      );
+    } else {
+      const hint = source === 'env'
+        ? `VRE_KERNEL_PATH="${kernelRoot}" points at a missing or unreadable kernel`
+        : 'set VRE_KERNEL_PATH=<path-to-vibe-science-checkout> to enable kernel-backed projections';
+      process.stderr.write(
+        `vre: kernel-bridge degraded (${reader.error ?? 'unknown'}); ${hint}\n`,
+      );
+    }
+  }
+  return reader;
 }
 
 function budgetFromEnv() {
@@ -210,12 +255,62 @@ async function invokeEntry(repoRoot, subcommand, entry, reader) {
   });
 }
 
+async function runInit(repoRoot) {
+  const stateRoot = path.join(repoRoot, '.vibe-science-environment');
+  const existedBefore = existsSync(stateRoot);
+  await mkdir(stateRoot, { recursive: true });
+  await mkdir(path.join(stateRoot, 'control'), { recursive: true });
+  await mkdir(path.join(stateRoot, 'orchestrator'), { recursive: true });
+  await mkdir(path.join(stateRoot, 'operator-validation'), { recursive: true });
+
+  const { kernelRoot, source } = resolveKernelRoot(repoRoot);
+  const reader = await resolveKernelReader({ kernelRoot });
+
+  const lines = [];
+  lines.push('vre init:');
+  lines.push(`  project root: ${repoRoot}`);
+  lines.push(`  state root:   .vibe-science-environment/ ${existedBefore ? '(already existed)' : '(created)'}`);
+  if (reader.dbAvailable) {
+    lines.push(`  kernel:       OK — ${source} at ${kernelRoot}`);
+  } else {
+    lines.push(`  kernel:       degraded — ${reader.error ?? 'unknown'}`);
+    if (source !== 'env') {
+      lines.push('  hint:         export VRE_KERNEL_PATH=<path-to-vibe-science> to enable kernel-backed projections');
+    }
+  }
+  lines.push('');
+  lines.push('next steps:');
+  lines.push('  vre flow-status             # show current operator state');
+  lines.push('  vre orchestrator-status     # show queue / lane state');
+  lines.push('  vre sync-memory             # refresh markdown mirrors from kernel');
+  lines.push('');
+  lines.push('agent-only commands (follow the markdown contracts in commands/ via Claude Code):');
+  lines.push('  /flow-literature /flow-experiment /flow-results /flow-writing /orchestrator-run');
+  lines.push('  /automation-status /export-warning-digest /stale-memory-reminder /weekly-digest');
+
+  process.stdout.write(`${lines.join('\n')}\n`);
+  return 0;
+}
+
 export async function main(argv = process.argv) {
   const startedAt = Date.now();
   const [, , subcommand, ...rest] = argv;
   if (!subcommand) {
     printUsage();
     return 3;
+  }
+
+  if (subcommand === 'init') {
+    if (rest.length > 0) {
+      process.stderr.write(`vre: init: unexpected arguments: ${rest.join(' ')}\n`);
+      return 3;
+    }
+    const repoRoot = resolveRepoRoot(process.cwd());
+    if (!repoRoot) {
+      process.stderr.write('vre: current directory is not inside a VRE repository root\n');
+      return 3;
+    }
+    return runInit(repoRoot);
   }
 
   const entry = DISPATCH_TABLE[subcommand];
@@ -236,7 +331,11 @@ export async function main(argv = process.argv) {
   }
 
   await mkdir(path.join(repoRoot, '.vibe-science-environment'), { recursive: true });
-  const reader = await resolveDefaultReader(repoRoot);
+  // Default commands stay quiet on stderr; `vre init` is the dedicated
+  // surface for kernel-state announcements. Set VRE_VERBOSE=1 to opt in to
+  // per-command kernel state on stderr.
+  const announceKernel = process.env.VRE_VERBOSE === '1';
+  const reader = await resolveDefaultReader(repoRoot, { announce: announceKernel });
 
   try {
     const result = await invokeEntry(repoRoot, subcommand, entry, reader);
