@@ -129,66 +129,190 @@ you run with `VRE_KERNEL_PATH=../vibe-science` set.
 
 ## Using VRE Day to Day
 
-VRE has two surfaces: a small **CLI dispatcher** for read-only state queries
-and a larger set of **agent-driven flows** that a Claude Code (or other
-agent) session executes by reading the command contracts in `commands/`.
+VRE has two surfaces:
 
-### CLI commands (runnable directly)
+- **4 CLI commands** (runnable directly from the terminal) — diagnostics
+  and housekeeping. They don't create scientific content.
+- **9 agent-driven commands** (invoked inside Claude Code as `/flow-*`,
+  `/orchestrator-*`, etc.) — the research work itself. An agent reads the
+  markdown contract in `commands/<name>.md` and executes the helper in
+  `environment/flows/`.
+
+### All 4 CLI commands
 
 ```bash
-vre init                  # create state tree, verify kernel wiring, print next steps
-vre flow-status           # show current session/flow state + blockers
-vre orchestrator-status   # queue / lane / escalation / next recommended action
-vre sync-memory           # refresh .vibe-science-environment/memory/ mirrors from kernel
+node bin/vre init                 # bootstrap: state tree + kernel wiring + next-steps
+node bin/vre flow-status          # current session, active flow, blockers, budget, kernel state
+node bin/vre orchestrator-status  # queue, lane runs, escalations, next recommended action
+node bin/vre sync-memory          # regenerate .vibe-science-environment/memory/*.md mirrors from kernel
 ```
 
-Set `VRE_VERBOSE=1` to get a per-command `kernel-bridge active|degraded` line
-on stderr.
+`VRE_VERBOSE=1` opts in to a per-command `kernel-bridge active|degraded`
+line on stderr.
 
-### Agent-driven flows (Claude Code + the vibe-science plugin)
+### All 9 agent-driven commands (with subcommands)
 
-Open the project in Claude Code with the `vibe-science` plugin active. Then
-invoke the `/flow-*` commands — the agent reads the markdown contract in
-`commands/<name>.md` and executes the helper in `environment/flows/`.
-
-Typical research loop:
-
-1. `/flow-status` — understand current state
-2. `/flow-literature --register` — register a paper you've read, link to an
-   existing claim or file a new one
-3. `/flow-experiment --register` — create a manifest for an analysis you're
-   about to run (parameters, code ref, related claims)
-4. Run the actual analysis (whatever pipeline you use — VRE does not do the
-   science; it tracks that the science happened)
-5. `/flow-results --package EXP-042` — package the output bundle against
-   the manifest
-6. `/flow-writing --handoff C-017` — prepare an advisor-ready export
-   separating claim-backed from speculative content
-7. `/orchestrator-run` / `/orchestrator-status` — route work through a
-   visible queue + lane + review + recovery model
-8. `/sync-memory` at the end of the session — refresh the readable markdown
-   mirrors against the latest kernel state
+| Command | Subcommand | What it does |
+|---------|------------|--------------|
+| `/flow-literature` | `--register` | Register a paper (title, DOI, authors), optionally link to a claim |
+| `/flow-literature` | `--list` | List registered papers |
+| `/flow-literature` | `--link-claim` | Connect an existing paper to an existing claim |
+| `/flow-experiment` | `--register` | Create an experiment manifest (title, objective, parameters, codeRef) |
+| `/flow-experiment` | `--update <EXP-id>` | Update an existing manifest (e.g. add outputArtifacts) |
+| `/flow-experiment` | `--blockers` | Show current blockers for open experiments |
+| `/flow-results` | `--package <EXP-id>` | Package an experiment's outputs into a bundle with manifest |
+| `/flow-results` | `--list` | List existing result bundles |
+| `/flow-writing` | `--handoff <C-id>` | Generate an export separating claim-backed content from speculation |
+| `/flow-writing` | `--advisor-pack` | Advisor-oriented export variant |
+| `/flow-writing` | `--rebuttal-pack` | Reviewer-rebuttal export variant |
+| `/orchestrator-run` | `<objective>` | Route an objective into the queue → execution lane → review lane |
+| `/automation-status` | — | State of scheduled automations |
+| `/export-warning-digest` | — | Aggregate export alerts (claims promoted/demoted after export) |
+| `/stale-memory-reminder` | — | Flag markdown mirrors that drifted from kernel |
+| `/weekly-digest` | — | Weekly summary of research state |
 
 ---
 
 ## Coexistence With the Vibe Science Plugin
 
-VRE and the `vibe-science` Claude Code plugin run **side by side, in the
-same Claude Code session**, without stepping on each other.
+### The mental model
 
-| Component | State directory | Who owns it |
-|-----------|-----------------|-------------|
-| `vibe-science` plugin | Kernel DB + claim ledger + R2 reports (inside the plugin install) | The plugin's hooks (SessionStart, PreToolUse, PostToolUse, Stop, etc.) |
-| VRE | `.vibe-science-environment/` under the VRE repo | VRE middleware, flows, orchestrator |
+VRE and the vibe-science plugin **run side by side in the same Claude Code
+session**:
 
-The plugin's hooks enforce scientific discipline (claim promotion gates,
-governance events, R2 adversarial review, serendipity scanning). VRE
-middleware enforces workflow discipline (attempt lifecycle, snapshot
-publication, budget advisories, export eligibility). They share no writes.
+- **`vibe-science` plugin** = Claude Code lifecycle hooks (SessionStart,
+  PreToolUse, PostToolUse, Stop, …). While active, it watches every tool
+  call the agent makes and enforces governance gates — e.g. a claim
+  cannot be written to the ledger without a `confounder_status` field,
+  a session cannot close with unreviewed claims. It writes to the
+  **kernel SQLite DB** (claims, citations, gate checks, governance
+  events).
+- **VRE** = local Node.js tool. Its own middleware manages workflow state
+  (attempts, snapshots, budget). It writes to
+  **`.vibe-science-environment/`** (flow state, experiment manifests,
+  result bundles, writing exports). It reads from the kernel through
+  `environment/lib/kernel-bridge.js` — **read-only**, never writes kernel
+  truth.
 
-VRE reads kernel truth through the bridge (`plugin/scripts/core-reader-cli.js`
-on the kernel side, `environment/lib/kernel-bridge.js` on the VRE side), which
-exposes 8 projections and honest degraded-mode metadata.
+They don't collide because they write to disjoint directories.
+
+### Concrete 10-step research loop
+
+**1. Activate the plugin in Claude Code.** If you installed `vibe-science`
+from the plugin marketplace, it should already be active. To verify: in a
+Claude Code session, type `/vibe` and check you get a response.
+
+**2. Open the project folder in Claude Code.** Open the
+`vibe-research-environment` checkout as the project. The plugin
+SessionStart hook bootstraps the kernel DB automatically if it's missing.
+
+**3. First action: see current state.**
+
+In Claude Code chat:
+```
+/flow-status
+```
+
+The agent executes VRE's `getOperatorStatus` helper, also reading kernel
+state through the bridge. You get session info, active flow (none yet),
+promoted claims (probably zero), budget spent, any blockers.
+
+**4. Register the first paper from your bibliography.**
+
+```
+/flow-literature --register
+```
+
+The agent asks for title / DOI / authors, creates a paper with an ID
+(`PAP-001`), then asks whether to link it to an existing claim or file a
+new one (`C-001`). The paper lands in
+`.vibe-science-environment/flows/literature.json`. The claim lands in the
+kernel DB via the plugin.
+
+**5. Register a real experiment.**
+
+```
+/flow-experiment --register
+```
+
+The agent asks: title, objective, parameters
+(e.g. `{minCellsPerGene: 3, minGenesPerCell: 200}`), `codeRef` (path to
+your Python/R script), `relatedClaims` (the `C-001` from step 4). Creates
+`EXP-001` at
+`.vibe-science-environment/experiments/manifests/EXP-001.json`.
+
+**6. Run the actual analysis outside VRE.** VRE does not execute your
+scanpy/Seurat/DESeq2 pipeline. You run it yourself (or the agent runs
+your `.py` via the Bash tool). Outputs go wherever you decide — you link
+them to the manifest.
+
+**7. Package the results.**
+
+```
+/flow-results --package EXP-001
+```
+
+VRE collects `outputArtifacts` from the manifest and creates a bundle
+under `.vibe-science-environment/results/bundles/EXP-001/`.
+
+**8. During all this, the plugin acts as a brake.** If you try to
+promote a claim without an R2 review, the plugin's PreToolUse hook
+blocks the write. If you try to close the session with unreviewed
+claims, the Stop hook blocks. These are not VRE errors — they are the
+kernel's discipline protecting you.
+
+**9. Prepare an advisor handoff.**
+
+```
+/flow-writing --handoff C-001
+```
+
+VRE generates a markdown export with claim-backed content (only promoted
+claims with verified citations) kept explicitly separate from
+speculation.
+
+**10. End of session: refresh memory.**
+
+```
+/sync-memory
+```
+
+or from the terminal:
+
+```bash
+node bin/vre sync-memory
+```
+
+Regenerates readable markdown mirrors of kernel state at
+`.vibe-science-environment/memory/*.md`. Useful for opening a new
+session later with continuity.
+
+### Debug checklist
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| `kernel: degraded` in `vre init` | sibling `vibe-science` moved / renamed | `set VRE_KERNEL_PATH=<absolute-path-to-vibe-science>` (Windows: `set`; Linux/macOS: `export`) |
+| `/flow-*` not recognized in Claude Code | `vibe-science` plugin not installed OR VRE not opened as the project | Check with `/help` in Claude Code that the vibe commands are listed |
+| Claim won't promote | Plugin PreToolUse blocks for missing `confounder_status` | Add confounder_status to the claim ledger entry before retrying |
+| `vre flow-status` warns about budget | `VRE_BUDGET_MAX_USD` exceeded | Clear the env var or close the active flow |
+| Session won't close | Stop hook blocks on unreviewed claims | Run an R2 review, or mark the claim DISPUTED explicitly |
+| Kernel DB looks empty | Plugin SessionStart hook didn't run (fresh project) | Run any plugin command once; or rerun `vre init` and check `kernel:` line |
+
+### Why this exists
+
+The plugin and VRE together give you this: **every time the agent does
+something scientific, the system forces you to make it explicit,
+verifiable, and reproducible.** It is not magic. It is not even
+comfortable. It is a **structural brake** that exists because, without
+it, an enthusiastic agent gets you to declare results that don't hold up
+to review.
+
+The real point of dogfooding: take a real paper from your bibliography,
+register it with `/flow-literature`, then take an analysis you **want**
+to run (not one already done), register it as a manifest, run it, and
+see where the system forces you to slow down. Where it slows you down
+usefully, keep it. Where it slows you down for no reason, come back and
+say so.
 
 ---
 
@@ -480,67 +604,191 @@ eseguendo con `VRE_KERNEL_PATH=../vibe-science` impostata.
 
 ## Usare VRE giorno per giorno
 
-VRE ha due superfici: un piccolo **dispatcher CLI** per query di stato
-read-only, e un set più ampio di **flow agent-driven** che una sessione
-Claude Code (o altro agente) esegue leggendo i contratti comando in
-`commands/`.
+VRE ha due superfici:
 
-### Comandi CLI (eseguibili direttamente)
+- **4 comandi CLI** (eseguibili direttamente dal terminale) — diagnostici
+  e housekeeping. Non creano contenuto scientifico.
+- **9 comandi agent-driven** (invocati dentro Claude Code come `/flow-*`,
+  `/orchestrator-*`, etc.) — il lavoro di ricerca vero. Un agente legge il
+  contratto markdown in `commands/<nome>.md` ed esegue l'helper in
+  `environment/flows/`.
+
+### Tutti i 4 comandi CLI
 
 ```bash
-vre init                  # crea state tree, verifica kernel wiring, stampa prossimi passi
-vre flow-status           # stato sessione/flow corrente + blocker
-vre orchestrator-status   # coda / lane / escalation / prossima azione consigliata
-vre sync-memory           # refresh dei mirror .vibe-science-environment/memory/ dal kernel
+node bin/vre init                 # bootstrap: state tree + kernel wiring + prossimi passi
+node bin/vre flow-status          # sessione corrente, flow attivo, blocker, budget, stato kernel
+node bin/vre orchestrator-status  # coda, lane run, escalation, prossima azione consigliata
+node bin/vre sync-memory          # rigenera mirror .vibe-science-environment/memory/*.md dal kernel
 ```
 
-Imposta `VRE_VERBOSE=1` per avere una riga `kernel-bridge active|degraded`
-su stderr per comando.
+`VRE_VERBOSE=1` attiva una riga `kernel-bridge active|degraded` su stderr
+per comando.
 
-### Flow agent-driven (Claude Code + plugin vibe-science)
+### Tutti i 9 comandi agent-driven (con subcommand)
 
-Apri il progetto in Claude Code con il plugin `vibe-science` attivo. Poi
-invoca i comandi `/flow-*` — l'agente legge il contratto markdown in
-`commands/<name>.md` ed esegue l'helper in `environment/flows/`.
-
-Loop di ricerca tipico:
-
-1. `/flow-status` — capire lo stato corrente
-2. `/flow-literature --register` — registra un paper che hai letto, link a
-   un claim esistente o apri un claim nuovo
-3. `/flow-experiment --register` — crea un manifest per un'analisi che stai
-   per lanciare (parametri, code ref, claim collegati)
-4. Lancia l'analisi vera (qualunque pipeline usi — VRE non fa la scienza;
-   traccia che la scienza è stata fatta)
-5. `/flow-results --package EXP-042` — impacchetta l'output bundle contro
-   il manifest
-6. `/flow-writing --handoff C-017` — prepara un export advisor-ready
-   separando contenuto claim-backed da speculativo
-7. `/orchestrator-run` / `/orchestrator-status` — ruota il lavoro attraverso
-   un modello coda + lane + review + recovery visibile
-8. `/sync-memory` a fine sessione — refresha i mirror markdown leggibili
-   contro l'ultimo stato kernel
+| Comando | Subcommand | Cosa fa |
+|---------|------------|---------|
+| `/flow-literature` | `--register` | Registra un paper (titolo, DOI, autori), opzionalmente linkato a un claim |
+| `/flow-literature` | `--list` | Lista paper registrati |
+| `/flow-literature` | `--link-claim` | Collega un paper esistente a un claim esistente |
+| `/flow-experiment` | `--register` | Crea un manifest di esperimento (titolo, objective, parametri, codeRef) |
+| `/flow-experiment` | `--update <EXP-id>` | Aggiorna un manifest esistente (es. aggiungere outputArtifacts) |
+| `/flow-experiment` | `--blockers` | Mostra blocker correnti per esperimenti aperti |
+| `/flow-results` | `--package <EXP-id>` | Impacchetta output di un esperimento in un bundle con manifest |
+| `/flow-results` | `--list` | Lista bundle risultati esistenti |
+| `/flow-writing` | `--handoff <C-id>` | Genera export separando contenuto claim-backed da speculazione |
+| `/flow-writing` | `--advisor-pack` | Variante export per advisor |
+| `/flow-writing` | `--rebuttal-pack` | Variante export per rebuttal reviewer |
+| `/orchestrator-run` | `<objective>` | Ruota un objective nella coda → execution lane → review lane |
+| `/automation-status` | — | Stato automazioni schedulate |
+| `/export-warning-digest` | — | Aggrega alert di export (claim promossi/demossi dopo export) |
+| `/stale-memory-reminder` | — | Segnala mirror markdown stantii vs kernel |
+| `/weekly-digest` | — | Digest settimanale dello stato ricerca |
 
 ---
 
 ## Coesistenza con il plugin Vibe Science
 
-VRE e il plugin Claude Code `vibe-science` girano **affiancati, nella stessa
-sessione Claude Code**, senza pestarsi i piedi.
+### Il modello mentale
 
-| Componente | Directory stato | Chi la possiede |
-|-----------|-----------------|-------------|
-| Plugin `vibe-science` | DB kernel + claim ledger + report R2 (dentro l'install del plugin) | Gli hook del plugin (SessionStart, PreToolUse, PostToolUse, Stop, etc.) |
-| VRE | `.vibe-science-environment/` sotto il repo VRE | Middleware VRE, flow, orchestratore |
+VRE e il plugin `vibe-science` **girano affiancati nella stessa sessione
+Claude Code**:
 
-Gli hook del plugin impongono disciplina scientifica (gate promozione
-claim, governance events, review avversaria R2, serendipity scanner). Il
-middleware VRE impone disciplina workflow (lifecycle attempt, snapshot
-publication, budget advisory, export eligibility). Non condividono scrittura.
+- **Plugin `vibe-science`** = hook lifecycle Claude Code (SessionStart,
+  PreToolUse, PostToolUse, Stop, …). Quando attivo, monitora ogni tool
+  call dell'agente e impone gate di governance — es. un claim non può
+  essere scritto nel ledger senza un campo `confounder_status`, una
+  sessione non può chiudere con claim non reviewati. Scrive sul
+  **DB SQLite kernel** (claim, citazioni, gate checks, governance
+  events).
+- **VRE** = tool Node.js locale. Il suo middleware gestisce stato
+  workflow (attempt, snapshot, budget). Scrive in
+  **`.vibe-science-environment/`** (stato flow, manifest esperimenti,
+  bundle risultati, export writing). Legge dal kernel tramite
+  `environment/lib/kernel-bridge.js` — **sola lettura**, mai scrive
+  verità kernel.
 
-VRE legge verità kernel tramite il bridge (`plugin/scripts/core-reader-cli.js`
-lato kernel, `environment/lib/kernel-bridge.js` lato VRE), che espone 8
-proiezioni e metadata onesti di modalità degraded.
+Non si pestano i piedi perché scrivono in directory disgiunte.
+
+### Loop concreto di ricerca in 10 step
+
+**1. Attiva il plugin in Claude Code.** Se hai installato `vibe-science`
+dal marketplace plugin, dovrebbe essere già attivo. Per verificare: in
+una sessione Claude Code digita `/vibe` e controlla di ricevere una
+risposta.
+
+**2. Apri la cartella progetto in Claude Code.** Apri il checkout
+`vibe-research-environment` come progetto. L'hook SessionStart del
+plugin bootstrappa il DB kernel automaticamente se manca.
+
+**3. Prima azione: stato corrente.**
+
+In chat Claude Code:
+```
+/flow-status
+```
+
+L'agente esegue l'helper VRE `getOperatorStatus`, leggendo anche lo
+stato kernel via bridge. Ricevi info sessione, flow attivo (nessuno
+ancora), claim promossi (probabilmente zero), budget speso, blocker
+eventuali.
+
+**4. Registra il primo paper della tua bibliografia.**
+
+```
+/flow-literature --register
+```
+
+L'agente chiede titolo / DOI / autori, crea un paper con ID
+(`PAP-001`), poi chiede se linkarlo a un claim esistente o apre uno
+nuovo (`C-001`). Il paper finisce in
+`.vibe-science-environment/flows/literature.json`. Il claim finisce
+nel DB kernel via plugin.
+
+**5. Registra un esperimento reale.**
+
+```
+/flow-experiment --register
+```
+
+L'agente chiede: titolo, objective, parametri
+(es. `{minCellsPerGene: 3, minGenesPerCell: 200}`), `codeRef` (path
+al tuo script Python/R), `relatedClaims` (il `C-001` dello step 4).
+Crea `EXP-001` in
+`.vibe-science-environment/experiments/manifests/EXP-001.json`.
+
+**6. Lancia l'analisi vera fuori da VRE.** VRE non esegue la tua
+pipeline scanpy/Seurat/DESeq2. La lanci tu (o l'agente lancia il tuo
+`.py` via Bash tool). Gli output vanno dove decidi tu — tu li linki
+al manifest.
+
+**7. Impacchetta i risultati.**
+
+```
+/flow-results --package EXP-001
+```
+
+VRE raccoglie `outputArtifacts` dal manifest e crea un bundle sotto
+`.vibe-science-environment/results/bundles/EXP-001/`.
+
+**8. Durante tutto questo, il plugin fa da freno.** Se provi a
+promuovere un claim senza R2 review, l'hook PreToolUse del plugin
+blocca la scrittura. Se provi a chiudere sessione con claim non
+reviewati, l'hook Stop blocca. Non sono errori VRE — è la disciplina
+del kernel che ti protegge.
+
+**9. Prepara un handoff per advisor.**
+
+```
+/flow-writing --handoff C-001
+```
+
+VRE genera un export markdown con contenuto claim-backed (solo
+claim promossi con citazioni verificate) tenuto esplicitamente
+separato dalla speculazione.
+
+**10. Fine sessione: refresh memoria.**
+
+```
+/sync-memory
+```
+
+oppure da terminale:
+
+```bash
+node bin/vre sync-memory
+```
+
+Rigenera mirror markdown leggibili dello stato kernel in
+`.vibe-science-environment/memory/*.md`. Utile per aprire una nuova
+sessione più tardi con continuità.
+
+### Debug checklist
+
+| Sintomo | Causa probabile | Fix |
+|---------|-----------------|-----|
+| `kernel: degraded` in `vre init` | sibling `vibe-science` spostato / rinominato | `set VRE_KERNEL_PATH=<path-assoluto-a-vibe-science>` (Windows: `set`; Linux/macOS: `export`) |
+| `/flow-*` non riconosciuto in Claude Code | Plugin `vibe-science` non installato OPPURE VRE non aperto come progetto | Verifica con `/help` in Claude Code che i comandi vibe siano listati |
+| Claim non promuove | Hook PreToolUse del plugin blocca per `confounder_status` mancante | Aggiungi confounder_status alla entry del claim ledger prima di riprovare |
+| `vre flow-status` avvisa su budget | `VRE_BUDGET_MAX_USD` superato | Cancella la env var o chiudi il flow attivo |
+| Sessione non si chiude | Hook Stop blocca su claim non reviewati | Fai una R2 review, o marca il claim DISPUTED esplicitamente |
+| DB kernel sembra vuoto | Hook SessionStart del plugin non è partito (progetto fresco) | Esegui un comando plugin qualsiasi una volta; oppure rilancia `vre init` e controlla la riga `kernel:` |
+
+### Perché esiste
+
+Il plugin e VRE insieme ti danno questo: **ogni volta che l'agente fa
+qualcosa di scientifico, il sistema ti costringe a renderlo esplicito,
+verificabile e ripetibile.** Non è magia. Non è nemmeno comodo. È un
+**freno strutturale** che esiste perché, senza, un agente entusiasta ti
+fa dichiarare risultati che non reggono alla review.
+
+Il punto vero del dogfooding: prendi un paper reale della tua
+bibliografia, registralo con `/flow-literature`, poi prendi un'analisi
+che **vuoi** fare (non una già fatta), registrala come manifest,
+lanciala, e guarda dove il sistema ti costringe a rallentare. Dove
+rallenta in modo utile, mantieni. Dove rallenta senza motivo, torna e
+dimmelo.
 
 ---
 
