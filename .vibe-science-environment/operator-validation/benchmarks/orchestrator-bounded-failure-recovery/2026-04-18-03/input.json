@@ -1,0 +1,57 @@
+{
+  "taskId": "orchestrator-bounded-failure-recovery",
+  "repeatId": "2026-04-18-03",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "taskVersion": "1.0.0",
+  "command": {
+    "name": "/orchestrator-status",
+    "scope": "orchestrator-status",
+    "args": []
+  },
+  "goal": "Prove that a bounded Phase 5 execution failure becomes explicit recovery plus escalation state and stays visible through the public status surface.",
+  "setup": {
+    "workspaceFixtures": [],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/orchestrator-status"
+    },
+    "resultAssertions": {
+      "payload": {
+        "run": {
+          "laneRunStatus": "escalated",
+          "taskStatus": "escalated",
+          "failureClass": "tool-failure",
+          "recoveryAction": "escalate-to-user",
+          "escalationStatus": "pending"
+        },
+        "status": {
+          "queueTotal": 1,
+          "escalatedCount": 1,
+          "nextActionKind": "resolve-escalation",
+          "latestRecoveryFailureClass": "tool-failure",
+          "latestEscalationStatus": "pending"
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+      ".vibe-science-environment/orchestrator/escalations.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  }
+}

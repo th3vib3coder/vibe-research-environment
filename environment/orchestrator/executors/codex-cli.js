@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 // WP-160 Phase 6 Wave 2 — Codex CLI executor.
 //
@@ -318,6 +321,272 @@ export function buildCodexCliExecutor({
       envPassthrough,
       overrideEnv,
       args,
+    });
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Phase 6.1 FU-6-002 — real Codex CLI envelope adapter.
+//
+// The Wave 2 invokeCodexCli above assumed the Codex CLI reads a v1 JSON
+// envelope on stdin and emits a single v1 JSON envelope on stdout. Real
+// codex emits a JSONL event STREAM on stdout and writes the final assistant
+// message to a separate file via --output-last-message.
+//
+// invokeRealCodexCli bridges the gap: it embeds the v1 input envelope into a
+// prompt, spawns codex with the --output-last-message tmpfile flag, and then
+// reads the tmpfile. Legacy invokeCodexCli stays intact for Wave 2 fake-CLI
+// regression tests.
+// ----------------------------------------------------------------------------
+
+const REAL_CODEX_RAW_TRUNCATE_BYTES = 4 * 1024;
+
+function buildCodexReviewPrompt(envelope) {
+  const envelopeJson = JSON.stringify(envelope, null, 2);
+  return [
+    'You are the review executor for a VRE session-digest-review task.',
+    '',
+    'Below is the input envelope the orchestrator handed you. Inspect the',
+    'artifacts referenced in `payload.comparedArtifactRefs` (paths are relative',
+    'to the project root) and produce an adversarial review verdict.',
+    '',
+    '```json',
+    envelopeJson,
+    '```',
+    '',
+    'Return ONLY a JSON object matching this exact shape (no markdown fences,',
+    'no preamble, no trailing text):',
+    '',
+    '{',
+    `  "schemaVersion": "${OUTPUT_SCHEMA_VERSION}",`,
+    '  "verdict": "affirmed" | "challenged" | "inconclusive",',
+    '  "materialMismatch": true | false,',
+    '  "summary": "<one-sentence verdict rationale>",',
+    '  "followUpAction": "none" | "reroute" | "escalate" | "revise" | "accept-with-warning",',
+    '  "evidenceRefs": ["<path or lane-run id>", ...]',
+    '}',
+    '',
+    'Rules:',
+    '- `verdict`: "affirmed" if the artifacts substantiate the execution claim,',
+    '  "challenged" if they contradict it, "inconclusive" if evidence is partial.',
+    '- `materialMismatch`: true only if you found a concrete discrepancy.',
+    '- `summary`: plain text, single sentence, no newlines.',
+    '- `followUpAction`: "none" only when verdict is "affirmed".',
+    '- `evidenceRefs`: list of refs from the input envelope you actually used.',
+    '',
+    'No explanatory prose before or after the JSON.',
+  ].join('\n');
+}
+
+async function withTmpDir(fn) {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'vre-codex-cli-'));
+  try {
+    return await fn(dir);
+  } finally {
+    try {
+      await rm(dir, { recursive: true, force: true });
+    } catch {
+      // best-effort cleanup; do not mask the caller's error
+    }
+  }
+}
+
+function truncateRaw(raw) {
+  if (raw.length <= REAL_CODEX_RAW_TRUNCATE_BYTES) return raw;
+  return (
+    raw.slice(0, REAL_CODEX_RAW_TRUNCATE_BYTES) +
+    `\n...[truncated ${raw.length - REAL_CODEX_RAW_TRUNCATE_BYTES} chars]`
+  );
+}
+
+function stripCodeFences(text) {
+  // Some models wrap JSON in ```json ... ``` despite being told not to.
+  // Strip the outermost fence if present.
+  const fenced = /^\s*```(?:json)?\s*\n([\s\S]*?)\n\s*```\s*$/mu.exec(text);
+  if (fenced) return fenced[1];
+  return text;
+}
+
+export async function invokeRealCodexCli({
+  stdinPayload = null,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  envPassthrough = [],
+  overrideEnv = null,
+  signal = null,
+} = {}) {
+  const command = resolveCommand(overrideEnv);
+  const env = sanitizeEnv(envPassthrough, overrideEnv);
+  const useShell = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(command);
+
+  const envelope = {
+    schemaVersion: INPUT_SCHEMA_VERSION,
+    task: stdinPayload?.task ?? null,
+    payload: stdinPayload ?? {},
+  };
+  const prompt = buildCodexReviewPrompt(envelope);
+
+  return withTmpDir(async (dir) => {
+    const lastMessagePath = path.join(dir, 'last-message.txt');
+    const subprocArgs = ['exec', '--output-last-message', lastMessagePath, '--skip-git-repo-check', '-'];
+
+    return new Promise((resolve, reject) => {
+      let child;
+      try {
+        child = spawn(command, subprocArgs, {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          env,
+          shell: useShell,
+        });
+      } catch (error) {
+        reject(new CodexCliExecutorError(
+          `codex-cli spawn failed: ${error.message}`,
+          { code: error.code === 'ENOENT' ? 'dependency-unavailable' : 'tool-failure' },
+        ));
+        return;
+      }
+
+      const stderrChunks = [];
+      let timeoutPhase = null;
+      let timedOut = false;
+      let killTimer = null;
+      let aborted = false;
+
+      const onAbort = () => {
+        aborted = true;
+        try { child.kill('SIGTERM'); } catch { /* ignore */ }
+      };
+      if (signal && typeof signal.addEventListener === 'function') {
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
+
+      const sigtermTimer = setTimeout(() => {
+        timedOut = true;
+        timeoutPhase = 'sigterm';
+        try { child.kill('SIGTERM'); } catch { /* ignore */ }
+        killTimer = setTimeout(() => {
+          timeoutPhase = 'sigkill';
+          try { child.kill('SIGKILL'); } catch { /* ignore */ }
+        }, SIGKILL_GRACE_MS);
+      }, timeoutMs);
+
+      const clearTimers = () => {
+        clearTimeout(sigtermTimer);
+        if (killTimer) clearTimeout(killTimer);
+        if (signal && typeof signal.removeEventListener === 'function') {
+          signal.removeEventListener('abort', onAbort);
+        }
+      };
+
+      child.on('error', (error) => {
+        clearTimers();
+        const code = error.code === 'ENOENT' ? 'dependency-unavailable' : 'tool-failure';
+        reject(new CodexCliExecutorError(
+          `codex-cli error: ${error.message}`,
+          { code, stderr: truncateStderr(stderrChunks) },
+        ));
+      });
+
+      // codex JSONL event stream is discarded; final message arrives via
+      // lastMessagePath. stderr captured for diagnostics.
+      child.stdout.on('data', () => { /* discard event stream */ });
+      child.stderr.on('data', (chunk) => stderrChunks.push(chunk));
+
+      child.on('close', async (exitCode, closeSignal) => {
+        clearTimers();
+        const stderrText = truncateStderr(stderrChunks);
+
+        if (aborted) {
+          reject(new CodexCliExecutorError(
+            'codex-cli aborted by parent signal.',
+            { code: 'tool-failure', stderr: stderrText },
+          ));
+          return;
+        }
+        if (timedOut) {
+          reject(new CodexCliExecutorError(
+            `codex-cli timed out after ${timeoutMs}ms (${timeoutPhase}).`,
+            { code: 'tool-failure', stderr: stderrText, timeoutPhase },
+          ));
+          return;
+        }
+        if (typeof exitCode === 'number' && exitCode !== 0) {
+          reject(new CodexCliExecutorError(
+            `codex-cli exited with code ${exitCode}.`,
+            { code: 'tool-failure', stderr: stderrText, exitCode },
+          ));
+          return;
+        }
+        if (closeSignal) {
+          reject(new CodexCliExecutorError(
+            `codex-cli terminated by signal ${closeSignal}.`,
+            { code: 'tool-failure', stderr: stderrText },
+          ));
+          return;
+        }
+
+        let raw;
+        try {
+          raw = (await readFile(lastMessagePath, 'utf8')).trim();
+        } catch (error) {
+          reject(new CodexCliExecutorError(
+            `codex-cli did not produce a last-message file: ${error.message}`,
+            { code: 'contract-mismatch', stderr: stderrText },
+          ));
+          return;
+        }
+
+        if (!raw) {
+          reject(new CodexCliExecutorError(
+            'codex-cli last-message file was empty.',
+            { code: 'contract-mismatch', stderr: stderrText },
+          ));
+          return;
+        }
+
+        const unfenced = stripCodeFences(raw);
+        let parsed;
+        try {
+          parsed = JSON.parse(unfenced);
+        } catch (error) {
+          reject(new CodexCliExecutorError(
+            `codex-cli last message is not valid JSON: ${error.message}. Raw output (truncated): ${truncateRaw(raw)}`,
+            { code: 'contract-mismatch', stderr: stderrText },
+          ));
+          return;
+        }
+
+        try {
+          resolve(validateOutputEnvelope(parsed));
+        } catch (error) {
+          error.stderr = stderrText;
+          reject(error);
+        }
+      });
+
+      try {
+        child.stdin.end(prompt);
+      } catch (error) {
+        clearTimers();
+        reject(new CodexCliExecutorError(
+          `codex-cli stdin write failed: ${error.message}`,
+          { code: 'tool-failure' },
+        ));
+      }
+    });
+  });
+}
+
+export function buildRealCodexCliExecutor({
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  envPassthrough = [],
+  overrideEnv = null,
+} = {}) {
+  return async function realCodexCliExecutor(payload = {}, _binding) {
+    return invokeRealCodexCli({
+      stdinPayload: payload,
+      timeoutMs,
+      envPassthrough,
+      overrideEnv,
     });
   };
 }

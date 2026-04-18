@@ -1,0 +1,149 @@
+{
+  "taskId": "orchestrator-bounded-failure-recovery",
+  "repeatId": "2026-04-18-03",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "startedAt": "2026-04-18T10:43:40.603Z",
+  "endedAt": "2026-04-18T10:43:40.811Z",
+  "passed": true,
+  "command": {
+    "name": "/orchestrator-status",
+    "scope": "orchestrator-status",
+    "args": []
+  },
+  "attemptId": "ATT-2026-04-18-10-43-40-773-69dc4d2b",
+  "attemptStatus": "succeeded",
+  "transcriptPath": ".vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-18-03/transcript.md",
+  "expectedResult": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/orchestrator-status"
+    },
+    "resultAssertions": {
+      "payload": {
+        "run": {
+          "laneRunStatus": "escalated",
+          "taskStatus": "escalated",
+          "failureClass": "tool-failure",
+          "recoveryAction": "escalate-to-user",
+          "escalationStatus": "pending"
+        },
+        "status": {
+          "queueTotal": 1,
+          "escalatedCount": 1,
+          "nextActionKind": "resolve-escalation",
+          "latestRecoveryFailureClass": "tool-failure",
+          "latestEscalationStatus": "pending"
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+      ".vibe-science-environment/orchestrator/escalations.jsonl"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  },
+  "actualResult": {
+    "result": {
+      "summary": "A bounded execution failure became explicit recovery plus pending escalation through status.",
+      "warnings": [],
+      "payload": {
+        "run": {
+          "laneRunStatus": "escalated",
+          "taskStatus": "escalated",
+          "failureClass": "tool-failure",
+          "recoveryAction": "escalate-to-user",
+          "escalationStatus": "pending"
+        },
+        "status": {
+          "queueTotal": 1,
+          "readyCount": 0,
+          "completedCount": 0,
+          "escalatedCount": 1,
+          "nextActionKind": "resolve-escalation",
+          "activeObjective": "Run an unsupported Phase 5 task class.",
+          "latestRecoveryFailureClass": "tool-failure",
+          "latestEscalationStatus": "pending"
+        }
+      }
+    },
+    "snapshot": {
+      "schemaVersion": "vibe-env.session.v1",
+      "activeFlow": null,
+      "currentStage": null,
+      "nextActions": [],
+      "blockers": [],
+      "kernel": {
+        "dbAvailable": false,
+        "degradedReason": "bridge unavailable"
+      },
+      "capabilities": {
+        "claimHeads": false,
+        "citationChecks": false,
+        "governanceProfileAtCreation": false,
+        "claimSearch": false
+      },
+      "budget": {
+        "state": "unknown",
+        "toolCalls": 0,
+        "estimatedCostUsd": 0,
+        "countingMode": "unknown"
+      },
+      "signals": {
+        "staleMemory": false,
+        "unresolvedClaims": 0,
+        "blockedExperiments": 0,
+        "exportAlerts": 0,
+        "provenance": {
+          "sourceMode": "degraded",
+          "degradedReason": "bridge unavailable",
+          "lastKernelContactAt": null
+        }
+      },
+      "lastCommand": "/orchestrator-status",
+      "lastAttemptId": "ATT-2026-04-18-10-43-40-773-69dc4d2b",
+      "updatedAt": "2026-04-18T10:43:40.795Z"
+    },
+    "actualWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/capabilities.json",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/escalations.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+      ".vibe-science-environment/orchestrator/router-session.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl"
+    ]
+  },
+  "metrics": {
+    "resumeLatencySeconds": 0.208,
+    "degradedHonestyScore": 1,
+    "stateWriteScopeViolations": 0,
+    "attemptLifecycleCompleteness": 1,
+    "snapshotPublishSuccess": 1
+  },
+  "checksPassed": 5,
+  "checksTotal": 5,
+  "actualWrites": [
+    ".vibe-science-environment/control/attempts.jsonl",
+    ".vibe-science-environment/control/capabilities.json",
+    ".vibe-science-environment/control/events.jsonl",
+    ".vibe-science-environment/control/session.json",
+    ".vibe-science-environment/flows/index.json",
+    ".vibe-science-environment/orchestrator/escalations.jsonl",
+    ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+    ".vibe-science-environment/orchestrator/recovery-log.jsonl",
+    ".vibe-science-environment/orchestrator/router-session.json",
+    ".vibe-science-environment/orchestrator/run-queue.jsonl"
+  ]
+}

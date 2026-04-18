@@ -114,6 +114,7 @@ provider binding. 5 waves, WP-149..WP-175.
 - [implementation-plan/phase6-04-wave-3-tests-and-validators.md](./implementation-plan/phase6-04-wave-3-tests-and-validators.md)
 - [implementation-plan/phase6-05-wave-4-evidence-and-closeout.md](./implementation-plan/phase6-05-wave-4-evidence-and-closeout.md)
 - [implementation-plan/phase6-closeout.md](./implementation-plan/phase6-closeout.md)
+- [implementation-plan/phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md) (follow-up closure)
 
 Phase 6 implementation status:
 - Wave 0 closed: CI workflow audit FOUND + tighten
@@ -159,7 +160,8 @@ surfaces.
 - Phase 4 is closed with saved evidence plus explicit deferred scheduler and domain-pack enforcement work: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
 - Phase 5 is closed as an MVP baseline; Gate 3 upgraded FALSE-POSITIVE → PARTIAL in Phase 6 Wave 4: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 - Phase 5.5 (Audit Hardening) implementation is closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md). Phase 5.6 + 5.7 follow-ups shipped on `origin/main @ 3563a48`.
-- Phase 6 (Kernel Bridge and Provider Reality) is closed with Outcome B: see [phase6-closeout.md](./implementation-plan/phase6-closeout.md). Gate 17 PARTIAL (FU-6-001), Gate 3 PARTIAL (FU-6-002). Phase 7 blocked pending Phase 6.1.
+- Phase 6 (Kernel Bridge and Provider Reality) is closed with Outcome B: see [phase6-closeout.md](./implementation-plan/phase6-closeout.md).
+- Phase 6.1 (Follow-Up Closure) closed all three Phase 6 follow-ups with real evidence: see [phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md). Phase 1 Gate 17 and Phase 5 Gate 3 both upgraded to PASS. Phase 7 is unblocked.
 - Phase 6 (Kernel Bridge and Provider Reality) is spec-drafted and awaiting
   implementation: see [phase6-00-index.md](./implementation-plan/phase6-00-index.md).
   Closes F-04 FALSE-POSITIVE and G-01/G-03/G-04 from master spec.

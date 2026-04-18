@@ -1,8 +1,8 @@
 {
   "taskId": "orchestrator-execution-review-lineage",
-  "version": "1.0.0",
-  "phase": 5,
-  "benchmarkIds": ["phase5-orchestrator-mvp"],
+  "repeatId": "2026-04-18-02",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "taskVersion": "1.0.0",
   "command": {
     "name": "/orchestrator-run",
     "scope": "orchestrator-run",
@@ -52,16 +52,5 @@
       ".vibe-science/",
       "CLAIM-LEDGER.md"
     ]
-  },
-  "metrics": [
-    "resume-latency",
-    "honesty-under-degradation",
-    "state-write-scope",
-    "attempt-lifecycle-completeness",
-    "snapshot-publish-success"
-  ],
-  "sourceTests": [
-    "environment/tests/lib/orchestrator-lanes.test.js",
-    "environment/tests/integration/orchestrator-run-status.test.js"
-  ]
+  }
 }

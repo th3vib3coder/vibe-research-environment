@@ -1,0 +1,58 @@
+{
+  "taskId": "orchestrator-status-queue-resume",
+  "repeatId": "2026-04-18-04",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "taskVersion": "1.0.0",
+  "command": {
+    "name": "/orchestrator-status",
+    "scope": "orchestrator-status",
+    "args": []
+  },
+  "goal": "Prove that a queued orchestrator objective remains visible on disk, can be inspected safely through status, and can then be resumed through the public runtime.",
+  "setup": {
+    "workspaceFixtures": [],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/orchestrator-status"
+    },
+    "resultAssertions": {
+      "payload": {
+        "firstStatus": {
+          "queueTotal": 1,
+          "readyCount": 1,
+          "nextActionKind": "run-ready-task"
+        },
+        "resumedRun": {
+          "laneRunStatus": "completed",
+          "taskStatus": "completed",
+          "artifactCount": 2,
+          "digestId": "DIGEST-ORCH-SESSION-RESUME"
+        },
+        "finalStatus": {
+          "queueTotal": 1,
+          "completedCount": 1,
+          "nextActionKind": "none"
+        }
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/run-queue.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-RESUME/session-digest.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  }
+}

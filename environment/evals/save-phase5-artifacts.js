@@ -225,10 +225,11 @@ function buildMockReviewExecutor() {
 }
 
 function buildSmokeReviewExecutor() {
-  // WP-131: smoke path. A real subprocess round-trips the envelope through
-  // `node -e`, so every CI run exercises the provider gateway spawn pipeline
-  // without requiring a Codex/Claude CLI on PATH. Evidence is labeled
-  // `evidenceMode: "smoke-real-subprocess"`.
+  // WP-131 + Phase 6.1 P1-1 fix: smoke path registered under the same
+  // 'openai/codex:provider-cli' key the real adapter uses, so the lane-run
+  // record's evidenceMode and integrationKind stay consistent. The envelope
+  // shape is v1 (not the local-subprocess envelope) since the review lane
+  // binds to provider-cli.
   const script = [
     "let data='';",
     "process.stdin.on('data',c=>{data+=c;});",
@@ -236,18 +237,19 @@ function buildSmokeReviewExecutor() {
     "  let parsed={};",
     "  try{parsed=JSON.parse(data);}catch(e){}",
     "  const refs=Array.isArray(parsed.comparedArtifactRefs)?parsed.comparedArtifactRefs:[];",
-    "  const out={schemaVersion:'vibe-orch.local-subprocess.output.v1',verdict:'affirmed',materialMismatch:false,summary:`smoke review affirmed ${refs.length} refs`,followUpAction:'none'};",
+    "  const out={schemaVersion:'vibe-orch.provider-cli.output.v1',verdict:'affirmed',materialMismatch:false,summary:`smoke review affirmed ${refs.length} refs`,followUpAction:'none',evidenceRefs:refs};",
     "  process.stdout.write(JSON.stringify(out));",
     "});",
   ].join('');
   return {
-    'openai/codex:local-subprocess': async (payload, binding) => {
+    'openai/codex:provider-cli': async (payload, binding) => {
       const { invokeLocalSubprocess } = await import('../orchestrator/executors/local-subprocess.js');
       return invokeLocalSubprocess({
         command: process.execPath,
         args: ['-e', script],
         stdinPayload: payload,
         timeoutMs: 15_000,
+        stdoutSchema: 'vibe-orch.provider-cli.output.v1',
       });
     },
   };
@@ -269,22 +271,36 @@ async function buildReviewExecutorForMode(mode) {
     return buildMockReviewExecutor();
   }
   if (mode === 'real-cli-binding') {
-    const command = process.env.VRE_CODEX_CLI ?? process.env.VRE_CLAUDE_CLI;
-    if (!command) {
+    // Phase 6.1 FU-6-002: when VRE_CODEX_CLI is set, use the real Codex CLI
+    // adapter (tmpfile + prompt-engineered JSON output). When VRE_CLAUDE_CLI
+    // is set and no Codex, fall through to a Claude-equivalent path (not
+    // shipped yet — throw with a clear message). Fail closed if neither env
+    // var is set so we never relabel a mock as real evidence.
+    const codexCommand = process.env.VRE_CODEX_CLI;
+    const claudeCommand = process.env.VRE_CLAUDE_CLI;
+    if (!codexCommand && !claudeCommand) {
       throw new Error(
         'real-cli-binding evidence mode requires VRE_CODEX_CLI or VRE_CLAUDE_CLI; refusing to relabel mock review as real evidence.',
       );
     }
-    const { invokeLocalSubprocess } = await import('../orchestrator/executors/local-subprocess.js');
-    return {
-      'openai/codex:local-subprocess': async (payload) =>
-        invokeLocalSubprocess({
-          command,
-          args: [],
-          envPassthrough: ['VRE_CODEX_CLI', 'VRE_CLAUDE_CLI'],
-          stdinPayload: payload,
-        }),
-    };
+    if (codexCommand) {
+      const { buildRealCodexCliExecutor } = await import(
+        '../orchestrator/executors/codex-cli.js'
+      );
+      const realCodex = buildRealCodexCliExecutor({ timeoutMs: 180_000 });
+      // Lane policy binds review to integrationKind: 'provider-cli' +
+      // providerRef: 'openai/codex' (post-Phase-6.1 adversarial fix). The
+      // provider-gateway resolves first by 'providerRef:integrationKind'.
+      return {
+        'openai/codex:provider-cli': realCodex,
+      };
+    }
+    // Claude CLI path — Wave 2 shipped the executor stub but the real
+    // invocation shape is not yet adapted. Surface explicitly rather than
+    // pretending to work.
+    throw new Error(
+      'real-cli-binding with VRE_CLAUDE_CLI is deferred to a future Phase 6.1 sub-task; set VRE_CODEX_CLI instead.',
+    );
   }
   return buildSmokeReviewExecutor();
 }

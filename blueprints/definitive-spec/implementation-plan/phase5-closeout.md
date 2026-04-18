@@ -55,14 +55,14 @@ What Phase 5 does **not** claim:
 |---|------|--------|----------|
 | 1 | queued orchestrator work stays visible on disk and can be resumed safely | PASS | [queue-resume summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/summary.json) |
 | 2 | continuity assembly proves `profile`, `query`, and `full` modes without read-side mutation | PASS | [continuity-modes summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/summary.json) |
-| 3 | one execution result can flow into an execution-backed review lineage with real provider execution | PARTIAL | [session-digest-review-task.test.js](../../../environment/tests/integration/session-digest-review-task.test.js) (real subprocess binding + task-kind + self-ref guards), [codex-cli-executor.test.js](../../../environment/tests/lib/codex-cli-executor.test.js); follow-up FU-6-002 |
+| 3 | one execution result can flow into an execution-backed review lineage with real provider execution | PASS | [session-digest-review-task.test.js](../../../environment/tests/integration/session-digest-review-task.test.js) (real subprocess binding + task-kind + self-ref guards), [codex-cli-executor.test.js](../../../environment/tests/lib/codex-cli-executor.test.js), [saved-artifacts.test.js](../../../environment/tests/evals/saved-artifacts.test.js) (evidenceMode assertion); real-codex benchmark evidence at `.vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-*/`; FU-6-002 retired |
 | 4 | bounded execution failures become explicit recovery plus escalation state | PASS | [bounded-failure summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/summary.json) |
 | 5 | continuity assembly cost and one coordinator cycle have a measured baseline | PASS | [phase5-context-and-cost-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase5-context-and-cost-baseline.json) |
 
-**Result: 4 PASS, 1 PARTIAL.** Phase 5 remains a useful local coordinator MVP
-baseline. Gate 3's historical FALSE-POSITIVE has been upgraded to PARTIAL by
-Phase 6 Wave 2 + Wave 3 integration work; a further upgrade to PASS requires
-Phase 6.1 to land the real Codex/Claude CLI envelope adapter (FU-6-002).
+**Result: 5 PASS, 0 PARTIAL.** Gate 3 upgraded FALSE-POSITIVE → PARTIAL in
+Phase 6 Wave 4, then PARTIAL → PASS in Phase 6.1 after the real Codex CLI
+envelope adapter shipped and produced real adversarial review evidence
+(verdict `"challenged"`, benchmark `2026-04-18-02`).
 
 ---
 
@@ -111,15 +111,32 @@ into the v1 envelope, or a refactor of `codex-cli.js` to use
 a benchmark artifact with `evidenceMode: "real-cli-binding-codex"`, Gate 3
 upgrades to PASS automatically against the already-shipped schema guards.
 
+## Phase 6.1 Correction Note — Gate 3 Upgrade (PARTIAL → PASS)
+
+Phase 6.1 closed FU-6-002 by adding `invokeRealCodexCli` +
+`buildRealCodexCliExecutor` in `environment/orchestrator/executors/codex-cli.js`.
+The adapter uses `codex exec --output-last-message <tmpfile>` with a
+prompt-engineered JSON instruction set, reads the final message, validates
+it as a v1 output envelope, and returns the parsed record. The Phase 5.5
+review fixture was also corrected to `integrationKind: 'provider-cli'`
+so the lane-run-record's `evidenceMode: 'real-cli-binding-codex'` passes
+the WP-169 cross-check.
+
+Saved benchmark `2026-04-18-02` contains real Codex output (verdict
+`"challenged"` with materialMismatch=true for a synthetic test digest).
+The upgrade from PARTIAL to PASS is backed by: integration tests, schema
+cross-check, real-codex evidence artifact, and the tightened
+`saved-artifacts.test.js` assertion that evidenceMode must be a declared
+non-empty mode string (prevents future regressions where real codex
+invocation silently returns but the evidenceMode field gets lost).
+
+FU-6-002 is retired. Adversarial review (Phase 6.1 FU-6-003) surfaced
+one P1 (integrationKind lie between fixture and executor) which was
+corrected before the Phase 6.1 commit.
+
 ## Declared Follow-Ups
 
-- **FU-6-002** (supersedes Phase 5.5 WP-146 note): Phase 6.1 Wave 1 ships a
-  Codex CLI envelope adapter that translates between the v1 input/output
-  contract and real `codex exec --json` JSONL event streams. Once shipped,
-  this Gate 3 entry automatically upgrades to PASS on any host that
-  invokes `bin/vre orchestrator-run --request-review` with
-  `VRE_CODEX_CLI=<codex>` set. Same approach applies to Claude CLI via
-  `VRE_CLAUDE_CLI`.
+_None — all Phase 5 closeout follow-ups are closed as of Phase 6.1._
 
 ---
 

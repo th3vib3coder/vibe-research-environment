@@ -1,0 +1,60 @@
+{
+  "taskId": "orchestrator-continuity-modes",
+  "repeatId": "2026-04-18-06",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "taskVersion": "1.0.0",
+  "command": {
+    "name": "/orchestrator-status",
+    "scope": "orchestrator-status",
+    "args": []
+  },
+  "goal": "Prove that the continuity assembler produces usable profile, query, and full modes without auto-capture, and that query/full recall is helper-backed.",
+  "setup": {
+    "workspaceFixtures": [],
+    "kernelReader": {
+      "dbAvailable": false,
+      "error": "bridge unavailable"
+    }
+  },
+  "expected": {
+    "attemptStatus": "succeeded",
+    "snapshotAssertions": {
+      "lastCommand": "/orchestrator-status"
+    },
+    "resultAssertions": {
+      "payload": {
+        "profileMode": {
+          "hasStableProfile": true,
+          "hasDynamicContext": true,
+          "recallCount": 0
+        },
+        "queryMode": {
+          "hasStableProfile": false,
+          "recallCount": 1,
+          "firstSourceType": "lane-run"
+        },
+        "fullMode": {
+          "hasStableProfile": true,
+          "hasDynamicContext": true,
+          "recallCount": 1,
+          "firstSourceType": "lane-run"
+        },
+        "historyAfterAssemblyCount": 2
+      }
+    },
+    "requiredWrites": [
+      ".vibe-science-environment/control/attempts.jsonl",
+      ".vibe-science-environment/control/events.jsonl",
+      ".vibe-science-environment/control/session.json",
+      ".vibe-science-environment/flows/index.json",
+      ".vibe-science-environment/orchestrator/continuity-profile.json",
+      ".vibe-science-environment/orchestrator/continuity-profile-history.jsonl",
+      ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+      ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-CONTEXT/session-digest.json"
+    ],
+    "forbiddenPathPrefixes": [
+      ".vibe-science/",
+      "CLAIM-LEDGER.md"
+    ]
+  }
+}

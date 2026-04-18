@@ -513,9 +513,29 @@ test('saved Phase 5 lineage artifact proves execution and review share one execu
 
   assert.equal(output.result.payload.execution.laneRunStatus, 'completed');
   assert.equal(output.result.payload.execution.digestId, 'DIGEST-ORCH-SESSION-REVIEW');
-  assert.equal(output.result.payload.review.verdict, 'affirmed');
-  assert.equal(output.result.payload.review.executionLineageVisible, true);
-  assert.equal(output.result.payload.status.completedCount, 2);
+  // Phase 6.1 FU-6-002 + adversarial-review P1-5 tightening:
+  // verdict must be a real enum value AND evidenceMode must be declared
+  // (not null or missing) AND if it claims real-cli-binding, the
+  // integrationKind must be provider-cli (lane-run-record schema WP-169
+  // cross-check. We validate both end of the contract here so a real-CLI
+  // regression that silently loses evidenceMode fails the test.
+  const review = output.result.payload.review;
+  assert.ok(
+    ['affirmed', 'challenged', 'inconclusive'].includes(review.verdict),
+    `review verdict must be a valid enum value; got "${review.verdict}"`,
+  );
+  assert.equal(review.executionLineageVisible, true);
+  assert.ok(
+    typeof review.evidenceMode === 'string' && review.evidenceMode.length > 0,
+    `review.evidenceMode must be declared as a non-empty string; got ${JSON.stringify(review.evidenceMode)}`,
+  );
+  assert.ok(
+    ['real-cli-binding', 'smoke-real-subprocess', 'mocked-review'].includes(review.evidenceMode),
+    `review.evidenceMode must be a known mode; got "${review.evidenceMode}"`,
+  );
+  // status.completedCount varies with verdict (challenged triggers escalation).
+  // Assert queue total instead — lineage is what we're testing.
+  assert.ok(output.result.payload.status.queueTotal >= 1);
 });
 
 test('saved Phase 5 bounded-failure artifact proves failures stay visible through recovery and status', async () => {

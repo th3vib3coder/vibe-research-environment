@@ -57,7 +57,13 @@ export function buildPhase5LanePolicies(overrides = {}) {
       review: {
         enabled: true,
         providerRef: 'openai/codex',
-        integrationKind: 'local-cli',
+        // Phase 6.1 (post-adversarial-review fix): use 'provider-cli' so the
+        // lane-run-record's evidenceMode cross-check (Wave 3 WP-169 allOf
+        // rule) accepts 'real-cli-binding-codex'. Both the real-codex
+        // adapter and the smoke fallback register under 'openai/codex:
+        // provider-cli'. This avoids the earlier "integrationKind lie" where
+        // the lane said local-subprocess but the executor was provider-cli.
+        integrationKind: 'provider-cli',
         authMode: 'subscription',
         billingMode: 'plan-included',
         apiFallbackAllowed: false,

@@ -1,0 +1,68 @@
+{
+  "taskId": "orchestrator-continuity-modes",
+  "repeatId": "2026-04-18-08",
+  "benchmarkId": "phase5-orchestrator-mvp",
+  "results": {
+    "resume-latency": {
+      "metricId": "resume-latency",
+      "passed": true,
+      "value": 0.288,
+      "thresholdSeconds": 120
+    },
+    "honesty-under-degradation": {
+      "metricId": "honesty-under-degradation",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "reasonVisible": true,
+        "messageVisible": true,
+        "fabricatedSignals": []
+      }
+    },
+    "state-write-scope": {
+      "metricId": "state-write-scope",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "actualWrites": [
+          ".vibe-science-environment/control/attempts.jsonl",
+          ".vibe-science-environment/control/capabilities.json",
+          ".vibe-science-environment/control/events.jsonl",
+          ".vibe-science-environment/control/session.json",
+          ".vibe-science-environment/flows/index.json",
+          ".vibe-science-environment/orchestrator/continuity-profile-history.jsonl",
+          ".vibe-science-environment/orchestrator/continuity-profile.json",
+          ".vibe-science-environment/orchestrator/lane-runs.jsonl",
+          ".vibe-science-environment/orchestrator/router-session.json",
+          ".vibe-science-environment/orchestrator/run-queue.jsonl",
+          ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-CONTEXT/session-digest.json",
+          ".vibe-science-environment/results/summaries/DIGEST-ORCH-SESSION-CONTEXT/session-digest.md"
+        ],
+        "violations": []
+      }
+    },
+    "attempt-lifecycle-completeness": {
+      "metricId": "attempt-lifecycle-completeness",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "statuses": [
+          "preparing",
+          "running",
+          "succeeded"
+        ],
+        "terminalStatus": "succeeded"
+      }
+    },
+    "snapshot-publish-success": {
+      "metricId": "snapshot-publish-success",
+      "passed": true,
+      "value": 1,
+      "details": {
+        "snapshotExists": true,
+        "schemaValid": true,
+        "publishError": null
+      }
+    }
+  }
+}
