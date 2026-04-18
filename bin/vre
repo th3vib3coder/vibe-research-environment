@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runWithMiddleware } from '../environment/control/middleware.js';
+import { resolveKernelReader } from '../environment/lib/kernel-bridge.js';
 
 export const DISPATCH_TABLE = Object.freeze({
   'flow-status': {
@@ -138,34 +139,16 @@ async function callCoreReaderCli(cliPath, command, input = {}) {
 }
 
 export async function resolveDefaultReader(repoRoot) {
-  const kernelPath = process.env.VRE_KERNEL_PATH;
-  if (!kernelPath) {
-    return {
-      dbAvailable: false,
-      error: 'CLI default: no reader provided'
-    };
-  }
-
-  const cliPath = path.resolve(kernelPath, 'plugin', 'scripts', 'core-reader-cli.js');
-  if (!existsSync(cliPath)) {
-    return {
-      dbAvailable: false,
-      error: `core-reader CLI unavailable at ${cliPath}`
-    };
-  }
-
-  const call = (command, input) => callCoreReaderCli(cliPath, command, {
-    projectPath: repoRoot,
-    ...input
-  });
-
-  return {
-    dbAvailable: true,
-    getProjectOverview: (options = {}) => call('overview', options),
-    listClaimHeads: (options = {}) => call('claim-heads', options),
-    listUnresolvedClaims: (options = {}) => call('unresolved-claims', options),
-    listCitationChecks: (options = {}) => call('citation-checks', options)
-  };
+  // WP-166 (Phase 6 Wave 3): delegate to the unified kernel-bridge helper.
+  // The bridge handles VRE_KERNEL_PATH detection, degraded sentinel shape,
+  // envelope validation, typed error taxonomy, and env sanitization — all
+  // centrally. Removes the duplicated CLI-reader wiring that previously
+  // lived here. `repoRoot` is no longer passed into the reader because the
+  // bridge computes projectPath per-call from the spawn cwd; all existing
+  // callers tolerate this (they pass options through to the reader methods
+  // which forward to the spawn envelope).
+  const kernelRoot = process.env.VRE_KERNEL_PATH ?? null;
+  return resolveKernelReader({ kernelRoot });
 }
 
 function budgetFromEnv() {

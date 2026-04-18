@@ -1,4 +1,5 @@
 import { getLatestLaneRun, listLaneRuns } from '../orchestrator/ledgers.js';
+import { getQueueTask } from '../orchestrator/queue.js';
 
 // WP-163 Phase 6 Wave 2 — session-digest-review helper.
 //
@@ -62,12 +63,27 @@ export async function reviewSessionDigest(projectPath, input = {}) {
     );
   }
 
+  // WP-168 (Phase 6 Wave 3, adversarial finding 5): self-reference guard via
+  // laneId mismatch. Look across ALL lanes — if the referenced lane-run is
+  // actually a review run (or any non-execution lane), reject as contract
+  // mismatch with a precise message, instead of surfacing as the vague
+  // "not found in execution lane-runs" error.
+  const allLaneRuns = await listLaneRuns(projectPath, {});
+  const anyRun = allLaneRuns.find((record) => record.laneRunId === executionLaneRunId);
+  if (anyRun && anyRun.laneId !== 'execution') {
+    throw new SessionDigestReviewError(
+      `session-digest-review: executionLaneRunId ${executionLaneRunId} belongs to lane "${anyRun.laneId}", not "execution". A review task cannot reference a non-execution lane run (including its own review lane run).`,
+      { code: 'contract-mismatch' },
+    );
+  }
+
   // WP-163: verify the referenced lane-run exists in THIS project's
   // lane-runs.jsonl. Cross-session review is deferred to Phase 7+ per
   // "Provider Binding Decisions Frozen For Wave 4" §2 — we refuse to
   // resolve refs against another session's ledger.
-  const executionRuns = await listLaneRuns(projectPath, { laneId: 'execution' });
-  const executionRun = executionRuns.find((record) => record.laneRunId === executionLaneRunId);
+  const executionRun = allLaneRuns.find(
+    (record) => record.laneRunId === executionLaneRunId && record.laneId === 'execution',
+  );
   if (!executionRun) {
     throw new SessionDigestReviewError(
       `session-digest-review: executionLaneRunId ${executionLaneRunId} did not resolve in the current project's lane-runs.jsonl. Cross-session review is not supported in Phase 6.`,
@@ -80,6 +96,21 @@ export async function reviewSessionDigest(projectPath, input = {}) {
       `session-digest-review: lane run ${executionLaneRunId} has status "${executionRun.status}"; only completed execution runs may be reviewed.`,
       { code: 'contract-mismatch' },
     );
+  }
+
+  // WP-168 (adversarial finding 4): tighten to require the referenced lane-run
+  // comes from a `session-digest-export` task. Without this, any completed
+  // execution lane-run with artifactRefs (e.g., memory-sync-refresh,
+  // literature-flow-register) would be silently accepted as a digest subject.
+  if (executionRun.taskId) {
+    const queueTask = await getQueueTask(projectPath, executionRun.taskId);
+    const taskKind = queueTask?.targetRef?.kind ?? null;
+    if (taskKind !== 'session-digest-export') {
+      throw new SessionDigestReviewError(
+        `session-digest-review: lane run ${executionLaneRunId} was produced by task kind "${taskKind ?? 'unknown'}", not "session-digest-export". Review requires a digest-producing execution run.`,
+        { code: 'contract-mismatch' },
+      );
+    }
   }
 
   // Intersect vs expand: never let the reviewer reach outside the producer's

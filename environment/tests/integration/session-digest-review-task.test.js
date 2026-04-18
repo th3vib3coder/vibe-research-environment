@@ -282,3 +282,89 @@ test('session-digest-review preserves manual-review path when taskKind is not re
     await cleanupInstallFixture(projectRoot);
   }
 });
+
+test('WP-168 finding 4: session-digest-review rejects execution lane-runs from non-digest task kinds', async () => {
+  const { reviewSessionDigest } = await import('../../flows/session-digest-review.js');
+  const projectRoot = await createInstallFixture('vre-int-digest-review-taskkind-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, { lanePolicies: buildPolicies() });
+
+    // Route + run a memory-sync-refresh execution task (NOT session-digest-export)
+    const routed = await routeOrchestratorObjective(projectRoot, {
+      objective: 'Sync memory mirrors for the project.',
+      taskKind: 'memory-sync-refresh',
+    });
+    const execution = await runExecutionLane(projectRoot, {
+      taskId: routed.task.taskId,
+    });
+    assert.equal(execution.laneRun.status, 'completed');
+
+    await assert.rejects(
+      () => reviewSessionDigest(projectRoot, {
+        executionLaneRunId: execution.laneRun.laneRunId,
+      }),
+      (error) => {
+        assert.match(error.message, /not "session-digest-export"/u);
+        assert.equal(error.code, 'contract-mismatch');
+        return true;
+      },
+    );
+  } finally {
+    await cleanupInstallFixture(projectRoot);
+  }
+});
+
+test('WP-168 finding 5: session-digest-review rejects self-referential (review-lane) laneRunId', async () => {
+  const { reviewSessionDigest } = await import('../../flows/session-digest-review.js');
+  const { appendLaneRun } = await import('../../orchestrator/ledgers.js');
+  const projectRoot = await createInstallFixture('vre-int-digest-review-selfref-');
+
+  try {
+    await writeInstallStateFixture(projectRoot, [
+      'governance-core',
+      'control-plane',
+      'orchestrator-core',
+    ]);
+    await bootstrapCoreInstall(projectRoot);
+    await bootstrapOrchestratorState(projectRoot, { lanePolicies: buildPolicies() });
+
+    // Manually inject a review lane-run record (as if created by a prior review invocation).
+    const reviewRun = await appendLaneRun(projectRoot, {
+      laneId: 'review',
+      taskId: 'ORCH-TASK-2026-04-18-selfref',
+      providerRef: 'openai/codex',
+      integrationKind: 'provider-cli',
+      fallbackApplied: false,
+      supervisionCapability: 'output-only',
+      status: 'completed',
+      attemptNumber: 1,
+      startedAt: '2026-04-18T10:00:00Z',
+      endedAt: '2026-04-18T10:00:01Z',
+      artifactRefs: [],
+      summary: 'Injected review lane-run for self-ref regression test.',
+      warningCount: 0,
+    });
+
+    // Pass the review lane-run's OWN id as executionLaneRunId → should reject
+    // with a precise cross-lane message, not generic not-found.
+    await assert.rejects(
+      () => reviewSessionDigest(projectRoot, {
+        executionLaneRunId: reviewRun.laneRunId,
+      }),
+      (error) => {
+        assert.match(error.message, /belongs to lane "review"/u);
+        assert.equal(error.code, 'contract-mismatch');
+        return true;
+      },
+    );
+  } finally {
+    await cleanupInstallFixture(projectRoot);
+  }
+});

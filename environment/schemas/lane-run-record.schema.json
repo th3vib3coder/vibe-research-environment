@@ -143,5 +143,27 @@
         "mocked-review"
       ]
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidenceMode": {
+            "type": "string",
+            "pattern": "^real-cli-binding-"
+          }
+        },
+        "required": [
+          "evidenceMode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "integrationKind": {
+            "const": "provider-cli"
+          }
+        }
+      }
+    }
+  ]
 }

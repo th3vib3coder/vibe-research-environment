@@ -113,14 +113,53 @@ describe('WP-157 kernel-governance-probe (Gate 17 real probe)', () => {
   });
 
   it('bidirectional: kernel-reported governance profile outside Phase 1 enum fails test', async () => {
-    // This is the negative assertion explicitly required by WP-157:
-    // "if fake kernel reports a governance profile outside the Phase 1 Gate 17
-    // declared set, test must fail". We exercise it by confirming that an
-    // illegal profile would fail the claim-1 guard above. The guard uses
-    // VALID_PROFILES.has() — we assert the set itself is correct here.
-    assert.equal(VALID_PROFILES.has('bogus'), false);
-    assert.equal(VALID_PROFILES.has('default'), true);
-    assert.equal(VALID_PROFILES.has('strict'), true);
+    // WP-167 adversarial extension — execute the negative path, don't just
+    // verify the set. Use a stub reader that returns an illegal profile and
+    // confirm the same VALID_PROFILES.has() guard used in claim 1 trips.
+    const stubReader = {
+      dbAvailable: true,
+      async getProjectOverview() {
+        return {
+          projectId: 'stub-project-id',
+          profile: 'lenient', // NOT in VRE_PROFILES — kernel drift scenario
+          updatedAt: '2026-04-18T00:00:00.000Z',
+          claimCounts: { created: 0, reviewed: 0, promoted: 0 },
+        };
+      },
+    };
+    const overview = await stubReader.getProjectOverview();
+    assert.equal(
+      VALID_PROFILES.has(overview.profile),
+      false,
+      'probe must reject kernel-reported profile "lenient" (not in Phase 1 enum)',
+    );
+
+    // And confirm the set-equality wording of WP-167: the VRE enum must
+    // exactly match what Phase 1 Gate 17 declared. A future kernel that adds
+    // a NEW valid profile value requires updating VRE_PROFILES before the
+    // probe accepts it. We pin the exact set here as a stability guard.
+    assert.deepEqual(
+      [...VALID_PROFILES].sort(),
+      ['default', 'strict'],
+      'VALID_PROFILES set drifted — Gate 17 requires explicit enum update',
+    );
+  });
+
+  it('bidirectional: listGateChecks hooks must exactly equal the required non-negotiable set', async () => {
+    // WP-167 set-equality coverage: the probe in claim 3 checks membership
+    // (schema_file_protection must be present). This test strengthens to
+    // assert that the REQUIRED_NON_NEGOTIABLE_HOOKS constant is exactly the
+    // set Phase 1 Gate 17 declared, and that the fake sibling's listGateChecks
+    // returns every required hook (not just the schema_file_protection one).
+    const reader = await resolveKernelReader({ kernelRoot });
+    const gates = await reader.listGateChecks();
+    const hooks = new Set(gates.map((g) => g.hook));
+    for (const required of REQUIRED_NON_NEGOTIABLE_HOOKS) {
+      assert.ok(
+        hooks.has(required),
+        `kernel did not expose required non-negotiable hook "${required}"`,
+      );
+    }
   });
 
   it('negative path: bad-envelope trigger on fake sibling throws KernelBridgeContractMismatchError', async () => {
