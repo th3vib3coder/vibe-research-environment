@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-03
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1-5 closed; Phase 5.5 audit hardening closed; Phase 6 Outcome C after Phase 6.1 + 6.2 corrections; Phase 7 OPEN — Wave 0 spec-freeze closed, Wave 1 (execution surface expansion) in progress
+**Status:** Phase 1-5 closed; Phase 5.5 audit hardening closed; Phase 6 Outcome C after Phase 6.1 + 6.2 corrections; Phase 7 OPEN — Wave 0 spec-freeze closed; Wave 1A (execution surface expansion partial — WP-183/184/185/188) shipped locally; Wave 1B (review kinds WP-186/187) deferred pending FU-7-001 (review-lane generalization); Dogfood Sprint 0 precedes Wave 2
 
 ---
 
@@ -165,7 +165,12 @@ surfaces.
 - Phase 6 (Kernel Bridge and Provider Reality) is closed with Outcome B: see [phase6-closeout.md](./implementation-plan/phase6-closeout.md).
 - Phase 6.1 (Follow-Up Closure) is closed after Phase 6.2 correction: FU-6-001/002/003 retired with real code on disk; the synthetic hook-array overclaim was retracted, fixed, and re-upgraded through Phase 6.2. See [phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md).
 - Phase 6.2 (Honesty Correction + Hook Runtime Verification) is closed: Phase 6.2-A corrected the ledger; Phase 6.2-B shipped cross-repo fixes; Phase 6.2-C regenerated evidence and re-upgraded Gate 17/Gate 3. See [phase6_2-closeout.md](./implementation-plan/phase6_2-closeout.md).
-- Phase 7 (Capability Expansion) OPEN 2026-04-18: Wave 0 spec-freeze closed inside the doc set (WP-176..182 — 5 new task kinds, CLI v2 12-command dispatcher + `--help`/`--dry-run`/`--json`, three-tier writing schema, Obsidian Contract B rename, Zotero Option B deferral, scheduling GitHub Actions, generic rule engine). Wave 1 (execution surface expansion, WP-183..188) in progress. See [phase7-00-index.md](./implementation-plan/phase7-00-index.md).
+- Phase 7 (Capability Expansion) OPEN 2026-04-18: Wave 0 spec-freeze closed inside the doc set (WP-176..182 — 5 new task kinds, CLI v2 12-command dispatcher + `--help`/`--dry-run`/`--json`, three-tier writing schema, Obsidian Contract B rename, Zotero Option B deferral, scheduling GitHub Actions, generic rule engine).
+  - **Wave 1A** (execution surface expansion, WP-183/184/185/188, G-05 partial) SHIPPED LOCALLY as commit `e7312e6`: 3 execution-lane task kinds + adapter extension. 523 tests, 12/12 validators. NOT pushed pending Dogfood Sprint 0.
+  - **Wave 1B** (review kinds WP-186/187) DEFERRED: blocked on FU-7-001 (review-lane.js generalization to accept non-execution-lineage review tasks). Wave 1 is not CLOSED until 1A + 1B ship.
+  - **Dogfood Sprint 0** (no WP, no wave-closeout, user-driven): use VRE on a real scRNA-seq workflow for 3-5 days before opening Wave 1B or Wave 2. Expected output: mini-dossier with dataset, question, claim, evidence, limits, confounder, adversarial review. Purpose: confirm the machine bites real science before building more machine.
+  - Wave 2 / 1B / beyond: scope re-validated after Dogfood Sprint 0 reveals what the workflow actually needs.
+  - See [phase7-00-index.md](./implementation-plan/phase7-00-index.md).
 - Surface orchestrator spec will be archived in Phase 7 Wave 5 WP-216 to
   `blueprints/definitive-spec/archive/surface-coordinator/`.
 - The local coordinator MVP baseline is shipped; do not reopen Phase 5

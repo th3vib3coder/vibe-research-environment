@@ -1,7 +1,25 @@
 # Phase 7 Wave 1 — Execution Surface Expansion
 
-**Goal:** Land the five new task kinds frozen in WP-177 — three
-execution-lane kinds (`experiment-flow-register`,
+**Wave 1 is SPLIT** after the 2026-04-18 scope correction:
+
+- **Wave 1A (shipped locally, commit `e7312e6`)** — three execution-lane
+  kinds: `experiment-flow-register` (WP-183), `writing-export-finalize`
+  (WP-184), `results-bundle-discover` (WP-185) + `task-adapters.js`
+  extension (WP-188 partial). Registry load, schema validation, helper
+  contract, and fail-closed idempotency for `finalizeExportDeliverable`
+  all tested. 523 total tests, 522 pass, 1 declared live-kernel skip,
+  12/12 validators.
+- **Wave 1B (deferred, depends on FU-7-001)** — two review-lane kinds:
+  `contrarian-claim-review` (WP-186) and `citation-verification-review`
+  (WP-187). Blocked on review-lane.js generalization: the current
+  contract requires a non-empty `executionLaneRunId` which claim/
+  citation-based review kinds don't naturally produce. Wave 1B opens
+  after FU-7-001 lands the generalization.
+
+Wave 1 is **NOT CLOSED** until both 1A and 1B are shipped.
+
+**Goal (original, preserved for context):** Land the five new task kinds
+frozen in WP-177 — three execution-lane kinds (`experiment-flow-register`,
 `writing-export-finalize`, `results-bundle-discover`) and two review-lane
 kinds (`contrarian-claim-review`, `citation-verification-review`). No
 change to the registry loader, lane dispatchers, or router (all frozen by
@@ -9,11 +27,12 @@ Phase 5.5 Wave 2 + Phase 6 Wave 1). Wave 1 only adds registry entries,
 input schemas, helpers, and adapters.
 
 Addresses **G-05** (task registry narrow beyond Phase 6's
-`session-digest-review`).
+`session-digest-review`). G-05 is closed partially in 1A (execution
+surface widened); full G-05 closure requires 1B.
 
 ---
 
-## Scope Correction 2026-04-18 — Review Kinds Deferred to Wave 1.5
+## Scope Correction 2026-04-18 — Wave 1 Split into 1A + 1B
 
 During Wave 1 implementation, a scope mismatch surfaced between the
 spec's WP-186/187 pseudocode and the existing `review-lane.js`
