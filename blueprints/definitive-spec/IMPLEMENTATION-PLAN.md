@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-03
 **Scope:** phase-scoped execution entrypoint
-**Status:** Phase 1-5 closed; Phase 5.5 audit hardening closed; Phase 6 Outcome C after Phase 6.1 + 6.2 corrections; Phase 7 unblocked
+**Status:** Phase 1-5 closed; Phase 5.5 audit hardening closed; Phase 6 Outcome C after Phase 6.1 + 6.2 corrections; Phase 7 OPEN — Wave 0 spec-freeze closed, Wave 1 (execution surface expansion) in progress
 
 ---
 
@@ -165,8 +165,7 @@ surfaces.
 - Phase 6 (Kernel Bridge and Provider Reality) is closed with Outcome B: see [phase6-closeout.md](./implementation-plan/phase6-closeout.md).
 - Phase 6.1 (Follow-Up Closure) is closed after Phase 6.2 correction: FU-6-001/002/003 retired with real code on disk; the synthetic hook-array overclaim was retracted, fixed, and re-upgraded through Phase 6.2. See [phase6_1-closeout.md](./implementation-plan/phase6_1-closeout.md).
 - Phase 6.2 (Honesty Correction + Hook Runtime Verification) is closed: Phase 6.2-A corrected the ledger; Phase 6.2-B shipped cross-repo fixes; Phase 6.2-C regenerated evidence and re-upgraded Gate 17/Gate 3. See [phase6_2-closeout.md](./implementation-plan/phase6_2-closeout.md).
-- Phase 7 (Capability Expansion) is spec-drafted and unblocked after Phase 6.2 exit
-  gate: see [phase7-00-index.md](./implementation-plan/phase7-00-index.md).
+- Phase 7 (Capability Expansion) OPEN 2026-04-18: Wave 0 spec-freeze closed inside the doc set (WP-176..182 — 5 new task kinds, CLI v2 12-command dispatcher + `--help`/`--dry-run`/`--json`, three-tier writing schema, Obsidian Contract B rename, Zotero Option B deferral, scheduling GitHub Actions, generic rule engine). Wave 1 (execution surface expansion, WP-183..188) in progress. See [phase7-00-index.md](./implementation-plan/phase7-00-index.md).
 - Surface orchestrator spec will be archived in Phase 7 Wave 5 WP-216 to
   `blueprints/definitive-spec/archive/surface-coordinator/`.
 - The local coordinator MVP baseline is shipped; do not reopen Phase 5

@@ -1,9 +1,9 @@
 # Phase 7 — Capability Expansion
 
-**Date:** 2026-04-17
+**Date:** 2026-04-17 (opened 2026-04-18)
 **Scope:** close the capability-class + quality-class gaps (G-05..G-15)
-**Status:** Draft — awaiting Phase 6 exit gate before implementation begins
-**Prerequisite:** `PHASE-6-7-MASTER-SEQUENCE-SPEC.md` + Phase 6 closeout
+**Status:** OPEN — Phase 6.2 cleared 2026-04-18 (Gate 17 + Gate 3 both PASS on real evidence). Wave 0 spec-freeze closed inside this doc set. Wave 1 implementation in progress.
+**Prerequisite:** `PHASE-6-7-MASTER-SEQUENCE-SPEC.md` + Phase 6 closeout + Phase 6.2 closeout
 
 ---
 
