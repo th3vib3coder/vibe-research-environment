@@ -9,9 +9,21 @@ FU-6-002, FU-6-003), plus one stale-fixture bug surfaced during closeout
 
 ## Verdict
 
-**Phase 6.1 is CLOSED.** All three Phase 6 follow-ups retired. Both block-
-class gates (Gate 17, Gate 3) upgraded from PARTIAL to PASS with real
-evidence. Phase 7 is **unblocked**.
+**Phase 6.1 is CONDITIONALLY CLOSED.** All three declared Phase 6 follow-ups
+(FU-6-001, FU-6-002, FU-6-003) were retired, but a second fresh-eyes
+adversarial review on the pushed state surfaced three additional P1
+findings + one P2 that were NOT closed by Phase 6.1. The most serious:
+Gate 17's "PASS" rested on a synthetic (hardcoded) non-negotiable-hooks
+array in the new kernel `core-reader.js` — a fixture, not a runtime
+probe.
+
+**Phase 6.2 is REQUIRED** before Phase 6.1 can be declared unconditionally
+closed. Phase 7 is **blocked** pending Phase 6.2. See
+[phase6_2-closeout.md](./phase6_2-closeout.md) for the corrective plan.
+
+Phase 6.2-A (documentary, this commit) retracts the Gate 17 upgrade back
+to PARTIAL and opens FU-6-004/005/006/007. Phase 6.2-B ships the code
+fixes. Phase 6.2-C regenerates evidence and re-grades.
 
 What is closed with code on disk:
 - `vibe-science/plugin/lib/core-reader.js` (NEW): 8 projections over the
@@ -72,12 +84,14 @@ What is closed with code on disk:
 | 1 | FU-6-001 closed: kernel sibling ships real `core-reader-cli.js` probe-testable | PASS | [plugin/lib/core-reader.js](../../../../vibe-science/plugin/lib/core-reader.js), [kernel-governance-probe.test.js](../../../environment/tests/compatibility/kernel-governance-probe.test.js) (probe passes against real kernel) |
 | 2 | FU-6-002 closed: Codex CLI envelope adapter ships + produces real v1 evidence | PASS | [codex-cli.js](../../../environment/orchestrator/executors/codex-cli.js) `invokeRealCodexCli`, benchmark [2026-04-18-02/summary.json](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-18-02/summary.json) |
 | 3 | FU-6-003 closed: external adversarial review surfaced findings; all closed before commit | PASS | [phase6_1-closeout.md](./phase6_1-closeout.md) "Adversarial Review Findings Closed" section below |
-| 4 | Phase 1 Gate 17 upgraded PARTIAL → PASS | PASS | [phase1-closeout.md](./phase1-closeout.md) updated with Phase 6.1 correction note |
-| 5 | Phase 5 Gate 3 upgraded PARTIAL → PASS | PASS | [phase5-closeout.md](./phase5-closeout.md) updated with Phase 6.1 correction note |
+| 4 | Phase 1 Gate 17 upgraded PARTIAL → PASS | RETRACTED | Upgrade retracted in Phase 6.2-A after fresh-eyes review found `listGateChecks` returns synthetic hook-status array, not real runtime probe. See [phase1-closeout.md](./phase1-closeout.md) Phase 6.2-A correction note. FU-6-004 + FU-6-005 block re-upgrade. |
+| 5 | Phase 5 Gate 3 upgraded PARTIAL → PASS | PASS (with limit) | Evidence remains real-codex benchmark `2026-04-18-02`. Phase 6.2-A records loose-contract limit (FU-6-006: no `cwd`/`projectPath` contract); hardening not downgrade. See [phase5-closeout.md](./phase5-closeout.md) Phase 6.2-A note. |
 | 6 | `npm run check` passes with tightened assertions | PASS | [ci.yml](../../../.github/workflows/ci.yml); local run confirms 503/504 |
 
-**Result: 6 PASS.** Phase 6.1 closes without outstanding PARTIAL or
-FALSE-POSITIVE gates.
+**Result: 3 PASS, 1 PASS-with-limit, 1 RETRACTED, 0 PARTIAL.** The
+Phase 6.1 commits ARE on disk and working, but the narrative "Phase 6.1
+closes all Phase 6 gaps" is too strong. Phase 6.2 exists to correct the
+overclaim, ship the missing code, and re-grade honestly.
 
 ---
 
@@ -114,7 +128,13 @@ All P0s and the two critical P1s (P1-1, P1-5) were fixed before commit.
   **Fixed**: test now asserts `review.evidenceMode` is declared + in
   known mode set. A regression that loses evidenceMode fails the test.
 
-### P1 — deferred (documented, not blocker)
+### P1 — deferred (documented, not blocker AT THE TIME)
+
+**Note (Phase 6.2-A):** P1-3 was documented here as an accepted limit.
+The second fresh-eyes review correctly rejected this framing: a
+hardcoded `status: 'ok'` in a PASS gate IS the Phase 5.5 silent-zero
+pathology, not a "known limit". P1-3 is re-opened as **FU-6-004** and
+blocks Gate 17 re-upgrade.
 
 - **P1-2** — Kernel governance profile reads from `meta['governance.profile']`
   key that no kernel code currently writes; projection defaults to
@@ -122,11 +142,10 @@ All P0s and the two critical P1s (P1-1, P1-5) were fixed before commit.
   Kernel-side work to persist profile changes is a future task (Phase 7+
   or kernel milestone); not required for Gate 17 because the probe
   validates the enum, not dynamic profile changes.
-- **P1-3** — Synthetic non-negotiable hooks are always `status: 'ok'`; if
-  runtime hook crashes, synthesis would lie. **Honest limit documented**
-  in `core-reader.js`. A future kernel-side self-check surface (e.g.
-  `hook_health` table or hook ping endpoint) would close this; scope
-  exceeds Phase 6.1.
+- **P1-3 (RE-OPENED as FU-6-004)** — Synthetic non-negotiable hooks are
+  always `status: 'ok'`; if runtime hook crashes, synthesis would lie.
+  Documenting this as a "limit" while Gate 17 reads PASS was the
+  overclaim. Phase 6.2-B ships the real runtime probe.
 - **P1-4** — Zero unit-test coverage for `invokeRealCodexCli` itself.
   **Deferred**: integration test via saved-artifacts covers the success
   path; unit-level coverage of error branches (tmpfile cleanup, missing
@@ -135,6 +154,27 @@ All P0s and the two critical P1s (P1-1, P1-5) were fixed before commit.
   (operator-trusted input); backtick/fence escaping in JSON.stringify
   limits but does not eliminate. **Deferred**: hardening is Phase 7
   scope when the dispatcher broadens.
+
+### P1 Second-Review Findings (Opened as Phase 6.2 FUs)
+
+- **FU-6-004** (blocker for Gate 17 re-upgrade) — Kernel hook runtime
+  verification: `core-reader.js` `listGateChecks` must read
+  `hooks/hooks.json` and `.claude/settings.json`, check script
+  existence and executability, and optionally reuse
+  `tests/governance-hooks.test.mjs` as probe evidence. No more
+  synthetic hook arrays.
+- **FU-6-005** (blocker for Gate 17 re-upgrade) — DB/schema honesty:
+  `withDb` currently swallows SQL errors and returns `ok:true`
+  fallback. Envelope must expose `dbAvailable`/`sourceMode` so the
+  VRE bridge degrades explicitly instead of conflating "verified
+  zero" with "DB missing".
+- **FU-6-006** (Gate 3 hardening, not downgrade) — Codex adapter
+  spawn must set `cwd: projectPath`; payload must include
+  `projectPath`; regression test invoked from a nested directory.
+- **FU-6-007** (P2 evidence) — `saved-artifacts.test.js` must require
+  `evidenceMode === 'real-cli-binding-codex'` (not generic
+  `real-cli-binding`) and assert ≥1 record in
+  `external-review-log.jsonl`.
 
 ---
 
@@ -181,8 +221,9 @@ then vibe-research-environment.
 
 ## Phase 7 Entry
 
-Phase 7 is unblocked. All Phase 6 / 6.1 findings are resolved.
-Phase 7's exit gate blocking condition (Phase 6 Gate 3 PASS) is
-satisfied.
+Phase 7 is **BLOCKED** pending Phase 6.2 closure.
 
-No Phase 6.2 or further sub-phase is required.
+Phase 6.1 declared Phase 7 unblocked prematurely. The second
+adversarial review correctly flagged that Gate 17 PASS is not
+defensible while `listGateChecks` returns synthetic hook data. Phase 6.2
+exists to close that gap. See [phase6_2-closeout.md](./phase6_2-closeout.md).

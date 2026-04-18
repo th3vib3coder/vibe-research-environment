@@ -134,9 +134,27 @@ FU-6-002 is retired. Adversarial review (Phase 6.1 FU-6-003) surfaced
 one P1 (integrationKind lie between fixture and executor) which was
 corrected before the Phase 6.1 commit.
 
+## Phase 6.2-A Correction Note — Gate 3 Loose-Contract Limit
+
+A second adversarial review after Phase 6.1 found that the real Codex
+adapter in `environment/orchestrator/executors/codex-cli.js` spawns
+without setting `cwd: projectPath` and the review payload does not
+carry `projectPath`. The `2026-04-18-02` benchmark evidence is
+authentic — a real Codex CLI produced a real `"challenged"` verdict —
+but it worked accidentally from the repo root. From a nested
+directory the adapter would silently fail to produce valid output.
+
+Gate 3 stays PASS because the evidence on disk is real, but a
+loose-contract honest limit is recorded here and tracked as FU-6-006.
+This is a hardening task, not a gate downgrade. Phase 6.2-B will add
+the `cwd`/`projectPath` contract plus a regression test invoked from
+a nested directory. See [phase6_2-closeout.md](./phase6_2-closeout.md).
+
 ## Declared Follow-Ups
 
-_None — all Phase 5 closeout follow-ups are closed as of Phase 6.1._
+- FU-6-006 (hardening, not blocker): Codex adapter must spawn with
+  `cwd: projectPath`; payload must carry `projectPath`; regression test
+  from nested dir — opened in Phase 6.2-A.
 
 ---
 

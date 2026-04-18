@@ -77,9 +77,9 @@ So the honest reading is:
 | 14 | Saved operator-validation artifact (resume ≤2 min) | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
 | 15 | Phase 1 scenarios in eval harness with saved runs | PASS | [flow-status-resume summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/summary.json) |
 | 16 | Baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
-| 17 | Kernel governance prerequisites automatically verified | PASS | [kernel-governance-probe.test.js](../../../environment/tests/compatibility/kernel-governance-probe.test.js) (real probe against the sibling kernel's `plugin/scripts/core-reader-cli.js` shipped in Phase 6.1), [kernel-bridge.js](../../../environment/lib/kernel-bridge.js); FU-6-001 retired |
+| 17 | Kernel governance prerequisites automatically verified | PARTIAL | [kernel-governance-probe.test.js](../../../environment/tests/compatibility/kernel-governance-probe.test.js) validates against a real kernel `core-reader-cli.js` (shipped in Phase 6.1), BUT the `listGateChecks` projection returns a hardcoded synthetic hook-status array — not a runtime probe of hook installation. Retracted in Phase 6.2-A. FU-6-004 (hook runtime verification) and FU-6-005 (DB/schema honesty in envelope) block re-upgrade. |
 
-**Result: 17 PASS, 0 PARTIAL.** Gate 17 upgraded to PASS in Phase 6.1 after the sibling kernel began shipping a real `core-reader-cli.js` and the VRE probe validated governance prerequisites against real kernel data.
+**Result: 16 PASS, 1 PARTIAL.** Gate 17 was marked PASS in Phase 6.1 but retracted in Phase 6.2-A after a fresh-eyes review found the non-negotiable-hooks check was synthetic (hardcoded `status: 'ok'`), not a real runtime probe. See [phase6_2-closeout.md](./phase6_2-closeout.md) for the corrective sub-phase plan. Re-upgrade requires FU-6-004 (real hook verification) and FU-6-005 (core-reader envelope exposes `dbAvailable`/`sourceMode` so silent SQL fallback stops masquerading as verified zero).
 
 ---
 
@@ -133,6 +133,27 @@ mismatches in the initial core-reader implementation (column names
 commit. The `withDb` fallback pattern is preserved but the correct
 columns are now used so real data surfaces rather than being silently
 swallowed.
+
+## Phase 6.2-A Correction Note — Gate 17 Retracted (PASS → PARTIAL)
+
+A second fresh-eyes review after the Phase 6.1 push found that the
+Gate 17 PASS still rested on synthetic evidence. Specifically:
+- `vibe-science/plugin/lib/core-reader.js` `listGateChecks` builds a
+  synthetic array of non-negotiable hooks, all with hardcoded
+  `status: 'ok'` and `synthetic: true`. No file check, no script
+  probe, no runtime ping.
+- The Gate 17 probe reads this payload and treats it as proof. It is
+  not proof — it is a fixture.
+- Separately, `withDb` catches every SQL error and returns
+  `{ok: true}` with empty data. "DB missing" and "verified zero" look
+  identical to the VRE bridge — the same silent-zero pathology we killed
+  in Phase 5.5, reintroduced at the bridge boundary.
+
+Phase 6.2-A (documentary only) retracts Gate 17 back to PARTIAL and
+opens FU-6-004 (real hook verification) + FU-6-005 (envelope honesty).
+Phase 6.2-B will ship the code fixes. Phase 6.2-C will regenerate
+evidence and re-upgrade Gate 17 only after a third adversarial review.
+See [phase6_2-closeout.md](./phase6_2-closeout.md).
 
 ---
 
@@ -196,6 +217,22 @@ Checklist conclusion:
 - the kernel prerequisite check is **green for Phase 1**
 - there are now **0 hard gaps** and **0 patchable partials**
 - richer multi-profile governance remains a future design choice, not an unmet prerequisite
+
+---
+
+## Declared Follow-Ups
+
+- **FU-6-004** (blocks Gate 17 re-upgrade): Kernel hook runtime verification
+  in `vibe-science/plugin/lib/core-reader.js` `listGateChecks` — must read
+  `hooks/hooks.json` and `.claude/settings.json`, check script existence
+  and executability, and optionally reuse
+  `vibe-science/tests/governance-hooks.test.mjs` as probe evidence. Opened
+  in Phase 6.2-A. See [phase6_2-closeout.md](./phase6_2-closeout.md).
+- **FU-6-005** (blocks Gate 17 re-upgrade): DB/schema honesty in
+  `core-reader.js` envelope — `withDb` must expose `dbAvailable` and
+  `sourceMode` fields so silent SQL fallback (currently swallowed as
+  `{ok:true}` with empty data) stops masquerading as verified zero.
+  Opened in Phase 6.2-A. See [phase6_2-closeout.md](./phase6_2-closeout.md).
 
 ---
 
