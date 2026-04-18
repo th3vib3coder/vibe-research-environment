@@ -55,28 +55,71 @@ What Phase 5 does **not** claim:
 |---|------|--------|----------|
 | 1 | queued orchestrator work stays visible on disk and can be resumed safely | PASS | [queue-resume summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-status-queue-resume/2026-04-10-03/summary.json) |
 | 2 | continuity assembly proves `profile`, `query`, and `full` modes without read-side mutation | PASS | [continuity-modes summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-continuity-modes/2026-04-10-02/summary.json) |
-| 3 | one execution result can flow into an execution-backed review lineage with real provider execution | FALSE-POSITIVE | [lineage summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/summary.json) |
+| 3 | one execution result can flow into an execution-backed review lineage with real provider execution | PARTIAL | [session-digest-review-task.test.js](../../../environment/tests/integration/session-digest-review-task.test.js) (real subprocess binding + task-kind + self-ref guards), [codex-cli-executor.test.js](../../../environment/tests/lib/codex-cli-executor.test.js); follow-up FU-6-002 |
 | 4 | bounded execution failures become explicit recovery plus escalation state | PASS | [bounded-failure summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-bounded-failure-recovery/2026-04-10-02/summary.json) |
 | 5 | continuity assembly cost and one coordinator cycle have a measured baseline | PASS | [phase5-context-and-cost-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase5-context-and-cost-baseline.json) |
 
-**Result: 4 PASS, 1 FALSE-POSITIVE.** Phase 5 remains a useful local coordinator
-MVP baseline, but Gate 3's original evidence did not prove real-provider review.
+**Result: 4 PASS, 1 PARTIAL.** Phase 5 remains a useful local coordinator MVP
+baseline. Gate 3's historical FALSE-POSITIVE has been upgraded to PARTIAL by
+Phase 6 Wave 2 + Wave 3 integration work; a further upgrade to PASS requires
+Phase 6.1 to land the real Codex/Claude CLI envelope adapter (FU-6-002).
 
 ---
 
 ## Phase 5.5 Correction Note — Review Lineage Gate
 
-Gate 3 is retracted as a Phase 5 closeout `PASS`. The saved
+Gate 3 was retracted as a Phase 5 closeout `PASS`. The saved
 [lineage summary](../../../.vibe-science-environment/operator-validation/benchmarks/orchestrator-execution-review-lineage/2026-04-10-02/summary.json)
 shows execution-backed lineage on disk, but the review verdict was produced by a
 deterministic in-repo executor rather than a real local provider process. That is
 valuable schema and lineage coverage, not proof of provider-backed adversarial
 review.
 
-Phase 5.5 closes the missing runtime surface separately by adding a task
+Phase 5.5 closed the missing runtime surface separately by adding a task
 registry, a `local-subprocess` executor, and a smoke-real review mode. The
 corrected Phase 5.5 evidence is reported in `phase55-closeout.md`, not folded
 back into this historical Phase 5 gate.
+
+## Phase 6 Wave 4 Correction Note — Gate 3 Regrade (FALSE-POSITIVE → PARTIAL)
+
+Phase 6 shipped:
+1. The `session-digest-review` review-lane task kind ([registry entry](../../../environment/orchestrator/task-registry/session-digest-review.json),
+   [helper](../../../environment/flows/session-digest-review.js)) chains off a
+   completed session-digest-export lane-run, validates the input contract,
+   guards against cross-session refs, against non-digest task kinds (WP-168
+   finding 4), and against self-loop references (WP-168 finding 5).
+2. Real provider bindings: [codex-cli.js](../../../environment/orchestrator/executors/codex-cli.js)
+   and [claude-cli.js](../../../environment/orchestrator/executors/claude-cli.js)
+   spawn real subprocess with the v1 envelope; integration tests exercise
+   the full chain route → execute → review with fake-but-real subprocesses.
+3. Schema cross-validation: [lane-run-record.schema.json](../../../environment/schemas/lane-run-record.schema.json)
+   now rejects `evidenceMode: "real-cli-binding-*"` without
+   `integrationKind: "provider-cli"` (WP-169).
+
+What remains out of reach for PASS: the real Codex CLI (`codex exec --json`)
+emits a JSONL **event stream** via stdout and writes the final message to a
+separate file via `--output-last-message`. Wave 2's `codex-cli.js` assumed
+stdout returns a single v1 envelope. The mismatch means real-CLI evidence
+cannot be generated against the current `codex-cli.js` without a small
+adapter script. The same applies to Claude CLI's `{type:"result",result:...}`
+unwrapping (Wave 2 handled that but has no production run on record).
+
+Upgrade path (PARTIAL → PASS) is mechanical: Phase 6.1 Wave 1 ships a thin
+envelope adapter — either a shell/Node wrapper that parses Codex JSONL events
+into the v1 envelope, or a refactor of `codex-cli.js` to use
+`--output-last-message <tmp>` + parse the file. Once a real-CLI run produces
+a benchmark artifact with `evidenceMode: "real-cli-binding-codex"`, Gate 3
+upgrades to PASS automatically against the already-shipped schema guards.
+
+## Declared Follow-Ups
+
+- **FU-6-002** (supersedes Phase 5.5 WP-146 note): Phase 6.1 Wave 1 ships a
+  Codex CLI envelope adapter that translates between the v1 input/output
+  contract and real `codex exec --json` JSONL event streams. Once shipped,
+  this Gate 3 entry automatically upgrades to PASS on any host that
+  invokes `bin/vre orchestrator-run --request-review` with
+  `VRE_CODEX_CLI=<codex>` set. Same approach applies to Claude CLI via
+  `VRE_CLAUDE_CLI`.
 
 ---
 

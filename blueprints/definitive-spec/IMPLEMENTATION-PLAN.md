@@ -113,7 +113,16 @@ provider binding. 5 waves, WP-149..WP-175.
 - [implementation-plan/phase6-03-wave-2-real-provider-binding.md](./implementation-plan/phase6-03-wave-2-real-provider-binding.md)
 - [implementation-plan/phase6-04-wave-3-tests-and-validators.md](./implementation-plan/phase6-04-wave-3-tests-and-validators.md)
 - [implementation-plan/phase6-05-wave-4-evidence-and-closeout.md](./implementation-plan/phase6-05-wave-4-evidence-and-closeout.md)
-- phase6-closeout.md (to be written as Wave 4 WP-175 lands)
+- [implementation-plan/phase6-closeout.md](./implementation-plan/phase6-closeout.md)
+
+Phase 6 implementation status:
+- Wave 0 closed: CI workflow audit FOUND + tighten
+- Waves 1+2 closed: kernel-bridge + Codex/Claude CLI executors + session-digest-review review-lineage task kind (+71 tests)
+- Wave 3 closed: bin/vre kernel-bridge wiring + probe bidirectional + WP-168 adversarial findings + evidenceMode cross-check + validate-ci-workflow (+12 tests, +1 validator)
+- Wave 4 closed: Gate 17 + Gate 3 upgraded to PARTIAL with honest follow-ups (FU-6-001 host provisioning, FU-6-002 codex CLI envelope adapter); Phase 6 closeout dossier shipped
+
+Phase 6 Outcome: B — Phase 7 remains blocked on Gate 3 PASS upgrade.
+Phase 6.1 owns the two follow-ups (FU-6-001 + FU-6-002).
 
 ### Phase 7 (spec drafted, pending Phase 6 exit gate)
 
@@ -148,8 +157,9 @@ surfaces.
 - Phase 2 is closed with saved evidence: see [phase2-closeout.md](./implementation-plan/phase2-closeout.md)
 - Phase 3 is closed with regenerated saved evidence and one partial writing-boundary gate: see [phase3-closeout.md](./implementation-plan/phase3-closeout.md)
 - Phase 4 is closed with saved evidence plus explicit deferred scheduler and domain-pack enforcement work: see [phase4-closeout.md](./implementation-plan/phase4-closeout.md)
-- Phase 5 is closed as an MVP baseline, with its historical review-lineage gate retracted as false-positive: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
+- Phase 5 is closed as an MVP baseline; Gate 3 upgraded FALSE-POSITIVE → PARTIAL in Phase 6 Wave 4: see [phase5-closeout.md](./implementation-plan/phase5-closeout.md)
 - Phase 5.5 (Audit Hardening) implementation is closed with [phase55-closeout.md](./implementation-plan/phase55-closeout.md). Phase 5.6 + 5.7 follow-ups shipped on `origin/main @ 3563a48`.
+- Phase 6 (Kernel Bridge and Provider Reality) is closed with Outcome B: see [phase6-closeout.md](./implementation-plan/phase6-closeout.md). Gate 17 PARTIAL (FU-6-001), Gate 3 PARTIAL (FU-6-002). Phase 7 blocked pending Phase 6.1.
 - Phase 6 (Kernel Bridge and Provider Reality) is spec-drafted and awaiting
   implementation: see [phase6-00-index.md](./implementation-plan/phase6-00-index.md).
   Closes F-04 FALSE-POSITIVE and G-01/G-03/G-04 from master spec.

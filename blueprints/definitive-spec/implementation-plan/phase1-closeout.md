@@ -77,7 +77,7 @@ So the honest reading is:
 | 14 | Saved operator-validation artifact (resume ≤2 min) | PASS | [phase1-resume-validation.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-resume-validation.json) |
 | 15 | Phase 1 scenarios in eval harness with saved runs | PASS | [flow-status-resume summary](../../../.vibe-science-environment/operator-validation/benchmarks/flow-status-resume/2026-03-31-02/summary.json) |
 | 16 | Baseline context cost measured | PASS | [phase1-context-baseline.json](../../../.vibe-science-environment/operator-validation/artifacts/phase1-context-baseline.json) |
-| 17 | Kernel governance prerequisites automatically verified | PARTIAL | [profiles.test.js](../../../environment/tests/compatibility/profiles.test.js), [state-machine.test.js](../../../environment/tests/compatibility/state-machine.test.js); follow-up FU-55-001 |
+| 17 | Kernel governance prerequisites automatically verified | PARTIAL | [kernel-governance-probe.test.js](../../../environment/tests/compatibility/kernel-governance-probe.test.js) (real probe against fake sibling fixture), [kernel-bridge.js](../../../environment/lib/kernel-bridge.js); follow-up FU-6-001 |
 
 **Result: 16 PASS, 1 PARTIAL.** Phase 1 VRE implementation sign-off remains green; the automated kernel-governance evidence claim is corrected below.
 
@@ -96,11 +96,29 @@ The corrected status is therefore `PARTIAL`: Phase 1 remains usable against the
 documented kernel baseline, but the specific claim "automatically verified" is
 not closed until FU-55-001 adds a live sibling-kernel compatibility probe.
 
-## Declared Follow-Up
+## Phase 6 Wave 4 Correction Note — Gate 17
 
-- FU-55-001: add a VRE compatibility test that runs against the sibling
-  `vibe-science` checkout and verifies the governance envelope through the
-  kernel bridge instead of only through local compatibility fixtures.
+Phase 6 Wave 1 (WP-155, WP-157) shipped [kernel-bridge.js](../../../environment/lib/kernel-bridge.js)
+and [kernel-governance-probe.test.js](../../../environment/tests/compatibility/kernel-governance-probe.test.js).
+The probe exercises a real `child_process.spawn` against a fake sibling
+fixture, asserts on real envelope shape, validates the profile enum set,
+and covers a negative path (kernel-reported profile outside the Phase 1
+enum triggers test failure — actually executed, not just documented).
+
+However, `vibe-science/plugin/scripts/core-reader-cli.js` does not exist
+in the sibling checkout used by this repo. Gate 17 therefore cannot be
+upgraded to PASS on hosts without the real kernel CLI present. FU-55-001
+is retired and replaced by FU-6-001 below.
+
+## Declared Follow-Ups
+
+- **FU-6-001** (supersedes FU-55-001): provision a CI runner (or operator
+  host) with `VRE_KERNEL_PATH` pointing at a real `vibe-science` sibling
+  checkout that ships `plugin/scripts/core-reader-cli.js`. Once available,
+  the existing [kernel-governance-probe.test.js](../../../environment/tests/compatibility/kernel-governance-probe.test.js)
+  automatically exercises the live kernel instead of the fake fixture (see
+  `resolveKernelRootForProbe()` in the test file), and Gate 17 upgrades to
+  PASS without further code changes.
 
 ---
 
