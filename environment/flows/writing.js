@@ -850,3 +850,149 @@ function cloneValue(value) {
     ? structuredClone(value)
     : JSON.parse(JSON.stringify(value));
 }
+
+// WP-184 Phase 7 Wave 1 — finalizeExportDeliverable.
+//
+// Reads a persisted export snapshot under
+// `.vibe-science-environment/writing/exports/snapshots/<snapshotId>.json`
+// (written by buildWritingHandoff / writeExportSnapshot) and emits a single
+// markdown deliverable file at
+// `.vibe-science-environment/writing/deliverables/<snapshotId>/<type>/deliverable.md`.
+//
+// Idempotency: fail-closed on re-invocation (`{flag:'wx'}` via writeTextOnce).
+// The helper never touches the snapshot file itself (Phase 5.6 append-once
+// immutability preserved).
+export async function finalizeExportDeliverable(projectPath, input = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+
+  if (input == null || typeof input !== 'object') {
+    throw new WritingFlowValidationError(
+      'finalizeExportDeliverable: input must be an object matching writing-export-finalize-input.schema.json.',
+    );
+  }
+  const snapshotId = input.exportSnapshotId;
+  const deliverableType = input.deliverableType;
+  if (typeof snapshotId !== 'string' || !/^WEXP-.+$/u.test(snapshotId)) {
+    throw new WritingFlowValidationError(
+      `finalizeExportDeliverable: exportSnapshotId "${snapshotId}" is missing or does not match WEXP-*.`,
+    );
+  }
+  const VALID_TYPES = new Set(['draft', 'advisor-pack', 'rebuttal-pack']);
+  if (!VALID_TYPES.has(deliverableType)) {
+    throw new WritingFlowValidationError(
+      `finalizeExportDeliverable: deliverableType "${deliverableType}" is not one of draft|advisor-pack|rebuttal-pack.`,
+    );
+  }
+
+  const snapshotPath = resolveInside(
+    projectRoot,
+    ...SNAPSHOTS_SEGMENTS,
+    `${snapshotId}.json`,
+  );
+  let snapshot;
+  try {
+    const raw = await readFile(snapshotPath, 'utf8');
+    snapshot = JSON.parse(raw);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      throw new WritingFlowValidationError(
+        `finalizeExportDeliverable: export snapshot ${snapshotId} not found at ${toProjectRelativePath(...SNAPSHOTS_SEGMENTS, `${snapshotId}.json`)}.`,
+      );
+    }
+    throw error;
+  }
+  validateExportSnapshot(snapshot, { snapshotId });
+
+  const claimRefs = Array.isArray(snapshot.claimIds) ? [...snapshot.claimIds] : [];
+  const eligibleClaims = Array.isArray(snapshot.claims)
+    ? snapshot.claims.filter((claim) => claim?.eligible)
+    : [];
+
+  const deliverableRelative = toProjectRelativePath(
+    '.vibe-science-environment',
+    'writing',
+    'deliverables',
+    snapshotId,
+    deliverableType,
+    'deliverable.md',
+  );
+  const deliverableAbsolute = resolveInside(
+    projectRoot,
+    ...deliverableRelative.split('/'),
+  );
+
+  const generatedAt = normalizeTimestamp(
+    input.generatedAt ?? new Date().toISOString(),
+    'generatedAt',
+  );
+  const content = renderDeliverableMarkdown({
+    snapshotId,
+    deliverableType,
+    generatedAt,
+    claimRefs,
+    eligibleClaims,
+  });
+
+  try {
+    await writeTextOnce(deliverableAbsolute, content);
+  } catch (error) {
+    if (error instanceof WritingFlowValidationError) {
+      throw new WritingFlowValidationError(
+        `finalizeExportDeliverable: deliverable already exists at ${deliverableRelative}; refusing to overwrite (fail-closed policy).`,
+      );
+    }
+    throw error;
+  }
+
+  return {
+    deliverableType,
+    deliverablePath: deliverableRelative,
+    snapshotId,
+    claimRefs,
+    warnings: [],
+  };
+}
+
+function renderDeliverableMarkdown({
+  snapshotId,
+  deliverableType,
+  generatedAt,
+  claimRefs,
+  eligibleClaims,
+}) {
+  const frontmatter = [
+    '---',
+    `snapshotId: ${snapshotId}`,
+    `deliverableType: ${deliverableType}`,
+    `generatedAt: ${generatedAt}`,
+    `claimRefs: [${claimRefs.map((id) => `"${id}"`).join(', ')}]`,
+    '---',
+  ].join('\n');
+
+  const body = [
+    `# ${deliverableType} deliverable for ${snapshotId}`,
+    '',
+    `Generated at ${generatedAt}.`,
+    '',
+    `This deliverable was assembled from export snapshot \`${snapshotId}\`.`,
+    `It references ${claimRefs.length} claim(s): ${claimRefs.join(', ') || '(none)'}.`,
+    '',
+    '## Eligible claim-backed content',
+    '',
+  ];
+
+  if (eligibleClaims.length === 0) {
+    body.push('_No eligible claim-backed blocks in this snapshot._');
+  } else {
+    for (const claim of eligibleClaims) {
+      body.push(`### ${claim.claimId}`);
+      body.push('');
+      body.push(`- statusAtExport: \`${claim.statusAtExport}\``);
+      body.push(`- confidenceAtExport: \`${claim.confidenceAtExport ?? 'null'}\``);
+      body.push(`- governanceProfileAtCreation: \`${claim.governanceProfileAtCreation ?? 'null'}\``);
+      body.push('');
+    }
+  }
+
+  return [frontmatter, '', ...body].join('\n');
+}

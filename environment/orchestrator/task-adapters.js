@@ -3,6 +3,9 @@ import path from 'node:path';
 import { exportSessionDigest } from '../flows/session-digest.js';
 import { registerPaper } from '../flows/literature.js';
 import { reviewSessionDigest } from '../flows/session-digest-review.js';
+import { registerExperiment } from '../flows/experiment.js';
+import { discoverBundlesByExperiment } from '../flows/results-discovery.js';
+import { finalizeExportDeliverable } from '../flows/writing.js';
 import { syncMemory } from '../memory/sync.js';
 
 function relativeUnder(projectPath, absolutePath) {
@@ -88,11 +91,92 @@ async function runSessionDigestReviewAdapter(projectPath, input = {}) {
   return reviewSessionDigest(projectPath, input);
 }
 
+// WP-183 Phase 7 Wave 1 — experiment-flow-register adapter.
+async function runExperimentFlowRegister(projectPath, input = {}) {
+  if (input == null || typeof input !== 'object') {
+    throw new Error('experiment-flow-register input must be an object matching experiment-register-input schema.');
+  }
+  if (typeof input.title !== 'string' || input.title.trim() === '') {
+    throw new Error('experiment-flow-register requires input.title');
+  }
+  if (typeof input.objective !== 'string' || input.objective.trim() === '') {
+    throw new Error('experiment-flow-register requires input.objective');
+  }
+
+  const result = await registerExperiment(projectPath, input);
+  const experimentId = result.manifest?.experimentId ?? 'UNKNOWN';
+  const artifactRef = `.vibe-science-environment/experiments/manifests/${experimentId}.json`;
+
+  return {
+    summary: `Registered experiment ${experimentId} (${result.manifest?.title ?? 'untitled'}).`,
+    artifactRefs: [artifactRef],
+    warningCount: 0,
+    payload: {
+      manifest: result.manifest,
+      domain: result.domain,
+      index: result.index,
+    },
+  };
+}
+
+// WP-184 Phase 7 Wave 1 — writing-export-finalize adapter.
+async function runWritingExportFinalize(projectPath, input = {}) {
+  const result = await finalizeExportDeliverable(projectPath, input);
+  return {
+    summary: `Finalized ${input.deliverableType} deliverable from ${input.exportSnapshotId}.`,
+    artifactRefs: [result.deliverablePath],
+    warningCount: Array.isArray(result.warnings) ? result.warnings.length : 0,
+    payload: {
+      deliverableType: result.deliverableType,
+      deliverablePath: result.deliverablePath,
+      snapshotId: result.snapshotId,
+    },
+  };
+}
+
+// WP-185 Phase 7 Wave 1 — results-bundle-discover adapter.
+async function runResultsBundleDiscover(projectPath, input = {}) {
+  const normalizedInput = input && typeof input === 'object' ? input : {};
+  const experimentIds = normalizedInput.experimentId ? [normalizedInput.experimentId] : [];
+  const overview = await discoverBundlesByExperiment(projectPath, experimentIds);
+
+  const allBundles = [...overview.bundlesByExperiment.values()].filter(Boolean);
+  const filtered = allBundles.filter((bundle) => {
+    if (
+      normalizedInput.claimId
+      && !(Array.isArray(bundle.relatedClaims) && bundle.relatedClaims.includes(normalizedInput.claimId))
+    ) {
+      return false;
+    }
+    if (normalizedInput.sinceDate) {
+      const since = new Date(normalizedInput.sinceDate);
+      const created = bundle.createdAt ? new Date(bundle.createdAt) : null;
+      if (!created || created < since) return false;
+    }
+    return true;
+  });
+
+  return {
+    summary: `Discovered ${filtered.length} result bundle(s).`,
+    artifactRefs: [],
+    warningCount: Array.isArray(overview.warnings) ? overview.warnings.length : 0,
+    payload: {
+      bundles: filtered,
+      experimentIds: filtered
+        .map((bundle) => bundle.experimentId)
+        .filter((id) => typeof id === 'string' && id.length > 0),
+    },
+  };
+}
+
 const ADAPTERS = Object.freeze({
   'session-digest-export': runSessionDigestExport,
   'literature-flow-register': runLiteratureFlowRegister,
   'memory-sync-refresh': runMemorySyncRefresh,
   'session-digest-review': runSessionDigestReviewAdapter,
+  'experiment-flow-register': runExperimentFlowRegister,
+  'writing-export-finalize': runWritingExportFinalize,
+  'results-bundle-discover': runResultsBundleDiscover,
 });
 
 export function getTaskAdapter(taskKind) {

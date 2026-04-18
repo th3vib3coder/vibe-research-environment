@@ -16,15 +16,18 @@ describe('WP-126 task-registry', () => {
     await resetTaskRegistryCache();
   });
 
-  it('loads the four seed entries at cold boot (Phase 6 Wave 2 adds session-digest-review)', async () => {
+  it('loads the seed + Phase 7 Wave 1 expansion entries at cold boot', async () => {
     const registry = await getTaskRegistry();
-    assert.equal(registry.size, 4);
+    assert.equal(registry.size, 7);
     const kinds = [...registry.keys()].sort();
     assert.deepEqual(kinds, [
+      'experiment-flow-register',
       'literature-flow-register',
       'memory-sync-refresh',
+      'results-bundle-discover',
       'session-digest-export',
       'session-digest-review',
+      'writing-export-finalize',
     ]);
   });
 
@@ -54,12 +57,15 @@ describe('WP-126 task-registry', () => {
     assert.equal(match, null);
   });
 
-  it('listExecutionTaskKinds returns all three execution kinds sorted', async () => {
+  it('listExecutionTaskKinds returns all execution kinds sorted (Phase 7 Wave 1 expansion)', async () => {
     const kinds = await listExecutionTaskKinds();
     assert.deepEqual(kinds, [
+      'experiment-flow-register',
       'literature-flow-register',
       'memory-sync-refresh',
+      'results-bundle-discover',
       'session-digest-export',
+      'writing-export-finalize',
     ]);
   });
 

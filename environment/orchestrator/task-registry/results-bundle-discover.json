@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "results-bundle-discover",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/flows/results-discovery.js",
+  "helperExport": "discoverBundlesByExperiment",
+  "inputSchema": "environment/schemas/results-bundle-discover-input.schema.json",
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": [],
+    "warningCount": "integer",
+    "payload": {
+      "bundles": "array",
+      "experimentIds": "array"
+    }
+  },
+  "routerKeywords": ["discover bundles", "find results", "list bundles"],
+  "degradesTo": "noop"
+}

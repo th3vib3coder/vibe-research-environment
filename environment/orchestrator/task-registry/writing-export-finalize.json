@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "writing-export-finalize",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/flows/writing.js",
+  "helperExport": "finalizeExportDeliverable",
+  "inputSchema": "environment/schemas/writing-export-finalize-input.schema.json",
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["deliverableMarkdownPath"],
+    "warningCount": "integer",
+    "payload": {
+      "deliverableType": "string",
+      "deliverablePath": "string",
+      "snapshotId": "string"
+    }
+  },
+  "routerKeywords": ["finalize writing export", "finalize export", "finalize draft"],
+  "degradesTo": "escalate"
+}

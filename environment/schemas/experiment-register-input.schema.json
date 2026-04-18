@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/experiment-register-input.schema.json",
+  "title": "VRE Experiment Register Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "objective"],
+  "properties": {
+    "experimentId": { "type": ["string", "null"], "pattern": "^EXP-[0-9]{3}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "objective": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["planned"] },
+    "parameters": { "type": "object" },
+    "codeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entrypoint": { "type": ["string", "null"] },
+        "gitCommit": { "type": ["string", "null"] }
+      }
+    },
+    "inputArtifacts": { "type": "array", "items": { "type": "string" } },
+    "relatedClaims": { "type": "array", "items": { "type": "string", "pattern": "^C-[0-9]{3}$" } },
+    "notes": { "type": "string" }
+  }
+}

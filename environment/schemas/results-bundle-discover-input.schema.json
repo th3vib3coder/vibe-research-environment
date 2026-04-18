@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/results-bundle-discover-input.schema.json",
+  "title": "VRE Results Bundle Discover Input",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "experimentId": { "type": "string", "pattern": "^EXP-[0-9]{3}$" },
+    "claimId": { "type": "string", "pattern": "^C-[0-9]{3}$" },
+    "sinceDate": { "type": "string", "format": "date-time" }
+  }
+}

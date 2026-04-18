@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "experiment-flow-register",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/flows/experiment.js",
+  "helperExport": "registerExperiment",
+  "inputSchema": "environment/schemas/experiment-register-input.schema.json",
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["experimentManifestJsonPath"],
+    "warningCount": "integer",
+    "payload": {
+      "manifest": "vibe.experiment.manifest.v1",
+      "domain": "experiment-domain-preset.v1",
+      "index": "flow-index.v1"
+    }
+  },
+  "routerKeywords": ["register experiment", "new experiment", "create experiment manifest"],
+  "degradesTo": "escalate"
+}

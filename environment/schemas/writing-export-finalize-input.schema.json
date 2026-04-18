@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/writing-export-finalize-input.schema.json",
+  "title": "VRE Writing Export Finalize Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["exportSnapshotId", "deliverableType"],
+  "properties": {
+    "exportSnapshotId": { "type": "string", "pattern": "^WEXP-.+$" },
+    "deliverableType": { "type": "string", "enum": ["draft", "advisor-pack", "rebuttal-pack"] }
+  }
+}

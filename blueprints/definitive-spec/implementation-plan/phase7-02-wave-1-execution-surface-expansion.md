@@ -13,6 +13,53 @@ Addresses **G-05** (task registry narrow beyond Phase 6's
 
 ---
 
+## Scope Correction 2026-04-18 — Review Kinds Deferred to Wave 1.5
+
+During Wave 1 implementation, a scope mismatch surfaced between the
+spec's WP-186/187 pseudocode and the existing `review-lane.js`
+contract:
+
+- `review-lane.js:165-173` requires the review adapter to return
+  `{comparedArtifactRefs, executionLaneRunId: string}` — `executionLaneRunId`
+  MUST be a non-empty string pointing at a completed execution lane-run
+  (session-digest-review pattern).
+- Claim-based and citation-based review kinds (WP-186 / WP-187) don't
+  naturally produce an `executionLaneRunId` because they reference kernel
+  truth (a claim head, a citation verification status) rather than a
+  prior lane-run artifact chain.
+- Shipping WP-186/WP-187 as specified would either require extending
+  `review-lane.js` to accept a non-execution-lineage branch (~50 lines +
+  tests), or would produce half-working registry entries that throw at
+  runtime.
+
+**Decision (Phase 6.2 discipline — no silent half-ships):** ship WP-183,
+WP-184, WP-185, WP-188 in Wave 1. Defer WP-186 and WP-187 to **Phase 7
+Wave 1.5** (new sub-wave) which first generalizes `review-lane.js` to
+support claim/citation-based review lineage (pseudo-lineage id or null
+executionLaneRunId with alternate `comparedArtifactRefs` source), then
+lands the two deferred review kinds.
+
+This is the same closeout-honesty pattern used for Phase 6.2: don't
+overclaim that a wave is complete when part of the spec needs
+architectural work that exceeds the declared scope. Open follow-up
+**FU-7-001** tracks the review-lane generalization prerequisite.
+
+Wave 1 shipped scope:
+- 3 execution-lane task kinds (WP-183, WP-184, WP-185)
+- `task-adapters.js` extension from 4 → 7 kinds (WP-188 partial)
+- 3 input schema files + 3 schema fixture tests
+- 1 integration test covering registry load, input validation, helper
+  contract, and fail-closed idempotency for `finalizeExportDeliverable`
+
+Wave 1.5 (new, opens after Wave 1 commits):
+- **FU-7-001**: generalize `review-lane.js` to accept review task kinds
+  whose `comparedArtifactRefs` source is kernel-truth (claim head,
+  citation record) rather than a prior execution lane-run
+- **WP-186**: `contrarian-claim-review` registry + helper + adapter
+- **WP-187**: `citation-verification-review` registry + helper + adapter
+
+---
+
 ## Scope Rule
 
 Wave 1 changes only:
