@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/session-digest-review-input.schema.json",
+  "title": "Session Digest Review Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "executionLaneRunId"
+  ],
+  "properties": {
+    "executionLaneRunId": {
+      "type": "string",
+      "pattern": "^ORCH-RUN-.+$"
+    },
+    "comparedArtifactRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

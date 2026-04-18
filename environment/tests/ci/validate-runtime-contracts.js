@@ -59,7 +59,8 @@ const activeSchemaFiles = [
   'continuity-profile-history.schema.json',
   'assembled-continuity-payload.schema.json',
   'task-registry-entry.schema.json',
-  'operator-validation-artifact.schema.json'
+  'operator-validation-artifact.schema.json',
+  'session-digest-review-input.schema.json'
 ];
 
 const activeEvalTaskFiles = [
@@ -169,6 +170,7 @@ const activeIntegrationTestFiles = [
   'orchestrator-run-status.test.js',
   'results-packaging.test.js',
   'session-digest-export.test.js',
+  'session-digest-review-task.test.js',
   'writing-packs.test.js',
   'writing-handoff.test.js'
 ];

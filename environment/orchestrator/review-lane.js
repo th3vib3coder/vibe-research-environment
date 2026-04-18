@@ -12,6 +12,26 @@ import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { getQueueTask, appendQueueStatusTransition } from './queue.js';
 import { getDefaultRecoveryPolicy } from './recovery.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
+import { getTaskAdapter } from './task-adapters.js';
+import { getTaskEntry, validateTaskInput } from './task-registry.js';
+
+const EVIDENCE_MODE_BY_BINDING = Object.freeze({
+  'provider-cli:openai/codex': 'real-cli-binding-codex',
+  'provider-cli:anthropic/claude': 'real-cli-binding-claude',
+  'local-subprocess:*': 'smoke-real-subprocess',
+});
+
+function deriveEvidenceMode(binding) {
+  if (!binding) return null;
+  const key = `${binding.integrationKind}:${binding.providerRef ?? '*'}`;
+  if (EVIDENCE_MODE_BY_BINDING[key]) {
+    return EVIDENCE_MODE_BY_BINDING[key];
+  }
+  if (binding.integrationKind === 'local-subprocess') {
+    return 'smoke-real-subprocess';
+  }
+  return null;
+}
 
 function normalizeReviewOutcome(result = {}, comparedArtifactRefs = []) {
   const verdict = ['affirmed', 'challenged', 'inconclusive'].includes(result.verdict)
@@ -98,6 +118,14 @@ function classifyReviewRuntimeFailure(error) {
     return 'dependency-unavailable';
   }
 
+  // WP-164: typed executors (LocalSubprocessError, CodexCliExecutorError,
+  // ClaudeCliExecutorError, SessionDigestReviewError) already classify
+  // themselves. Honor the tagged failure class before falling back to
+  // regex heuristics.
+  if (error?.code === 'dependency-unavailable' || error?.code === 'contract-mismatch' || error?.code === 'tool-failure') {
+    return error.code;
+  }
+
   if (/schema|contract|validation/u.test(error?.message ?? '')) {
     return 'contract-mismatch';
   }
@@ -111,6 +139,39 @@ async function nextAttemptNumber(projectPath, taskId) {
     taskId,
   });
   return records.length + 1;
+}
+
+async function resolveRegisteredReviewTask(projectPath, task) {
+  // WP-164: if the queue task references a registered review task kind
+  // via `targetRef.kind`, dispatch through the registry adapter to produce
+  // `{comparedArtifactRefs, executionLaneRunId}` exactly like
+  // `resolveReviewTask` does for the manual path.
+  const candidateKind = task.targetRef?.kind ?? null;
+  if (!candidateKind) {
+    return null;
+  }
+  const entry = await getTaskEntry(candidateKind);
+  if (!entry || entry.lane !== 'review') {
+    return null;
+  }
+  await validateTaskInput(candidateKind, task.taskInput ?? null);
+  const adapter = getTaskAdapter(candidateKind);
+  if (typeof adapter !== 'function') {
+    throw new Error(
+      `No review adapter registered for task kind ${candidateKind}; expected a function in task-adapters.js.`,
+    );
+  }
+  const resolved = await adapter(projectPath, task.taskInput ?? {});
+  if (
+    !resolved
+    || !Array.isArray(resolved.comparedArtifactRefs)
+    || typeof resolved.executionLaneRunId !== 'string'
+  ) {
+    throw new Error(
+      `Review adapter for ${candidateKind} did not return {comparedArtifactRefs, executionLaneRunId}.`,
+    );
+  }
+  return resolved;
 }
 
 export async function runReviewLane(projectPath, options = {}) {
@@ -142,7 +203,11 @@ export async function runReviewLane(projectPath, options = {}) {
   });
 
   try {
-    const reviewTask = await resolveReviewTask(projectPath, task);
+    // WP-164: registered review kind → registry adapter; unregistered →
+    // existing manual-review path (preserved unchanged below).
+    const reviewTask =
+      (await resolveRegisteredReviewTask(projectPath, task))
+      ?? (await resolveReviewTask(projectPath, task));
     if (reviewTask.comparedArtifactRefs.length === 0) {
       throw new Error(`Review task ${task.taskId} has no visible artifact refs to compare.`);
     }
@@ -166,6 +231,7 @@ export async function runReviewLane(projectPath, options = {}) {
       continuity,
     });
     const outcome = normalizeReviewOutcome(result, reviewTask.comparedArtifactRefs);
+    const evidenceMode = deriveEvidenceMode(binding);
     const laneRun = await appendLaneRun(projectPath, {
       laneId: 'review',
       taskId: task.taskId,
@@ -179,6 +245,7 @@ export async function runReviewLane(projectPath, options = {}) {
       endedAt: now(),
       artifactRefs: outcome.comparedArtifactRefs,
       summary: outcome.summary,
+      ...(evidenceMode != null ? { evidenceMode } : {}),
     });
 
     let escalation = null;
@@ -245,6 +312,7 @@ export async function runReviewLane(projectPath, options = {}) {
     const recoveryPolicy = getDefaultRecoveryPolicy(failureClass);
     const shouldEscalate = recoveryPolicy.escalateImmediately || attemptNumber >= attemptLimit;
 
+    const evidenceMode = deriveEvidenceMode(binding);
     const laneRun = await appendLaneRun(projectPath, {
       laneId: 'review',
       taskId: task.taskId,
@@ -259,6 +327,7 @@ export async function runReviewLane(projectPath, options = {}) {
       artifactRefs: [],
       summary: error.message,
       errorCode: failureClass,
+      ...(evidenceMode != null ? { evidenceMode } : {}),
     });
 
     const escalation = shouldEscalate

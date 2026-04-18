@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { exportSessionDigest } from '../flows/session-digest.js';
 import { registerPaper } from '../flows/literature.js';
+import { reviewSessionDigest } from '../flows/session-digest-review.js';
 import { syncMemory } from '../memory/sync.js';
 
 function relativeUnder(projectPath, absolutePath) {
@@ -77,10 +78,21 @@ async function runMemorySyncRefresh(projectPath, input = {}) {
   };
 }
 
+// WP-164 Phase 6 Wave 2: session-digest-review is a review-lane adapter.
+// Unlike the execution-lane adapters above, it does NOT produce a lane-run
+// summary/artifactRefs shape; review-lane.js consumes the
+// `{comparedArtifactRefs, executionLaneRunId}` output to replace its default
+// `resolveReviewTask` branch and then drives `invokeLaneBinding`
+// unchanged. See `environment/flows/session-digest-review.js` for details.
+async function runSessionDigestReviewAdapter(projectPath, input = {}) {
+  return reviewSessionDigest(projectPath, input);
+}
+
 const ADAPTERS = Object.freeze({
   'session-digest-export': runSessionDigestExport,
   'literature-flow-register': runLiteratureFlowRegister,
   'memory-sync-refresh': runMemorySyncRefresh,
+  'session-digest-review': runSessionDigestReviewAdapter,
 });
 
 export function getTaskAdapter(taskKind) {

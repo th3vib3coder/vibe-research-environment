@@ -47,6 +47,12 @@ export async function appendLaneRun(projectPath, data = {}) {
     warningCount: data.warningCount ?? 0,
   };
 
+  // WP-162 strict widening: persist `evidenceMode` only when the caller
+  // supplied one. Existing records without the field remain valid.
+  if (data.evidenceMode !== undefined) {
+    record.evidenceMode = data.evidenceMode;
+  }
+
   await appendOrchestratorJsonl(projectPath, ORCHESTRATOR_FILES.laneRuns, record, {
     schemaFile: LANE_RUN_SCHEMA,
     label: 'lane run record',

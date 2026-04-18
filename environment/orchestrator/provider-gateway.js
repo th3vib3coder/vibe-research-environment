@@ -2,6 +2,12 @@ const SUPPORTED_CAPABILITIES = Object.freeze({
   'local-logic': new Set(['output-only', 'programmatic']),
   'local-cli': new Set(['fire-and-forget', 'output-only', 'streaming']),
   'local-subprocess': new Set(['output-only', 'programmatic']),
+  // WP-162: provider-cli supports only output-only + programmatic. No
+  // streaming (single JSON response, not SSE) and no fire-and-forget
+  // (review needs a verdict). The existing local-cli → api fallback is
+  // intentionally NOT extended to provider-cli; per WP-162 that would be
+  // silent substitution (the anti-pattern Phase 5.5 Wave 3 rejected).
+  'provider-cli': new Set(['output-only', 'programmatic']),
   sdk: new Set(['output-only', 'streaming', 'programmatic']),
   api: new Set(['output-only', 'streaming', 'programmatic']),
   'cloud-task': new Set(['fire-and-forget', 'output-only']),

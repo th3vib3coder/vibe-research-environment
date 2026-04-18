@@ -16,14 +16,15 @@ describe('WP-126 task-registry', () => {
     await resetTaskRegistryCache();
   });
 
-  it('loads the three seed entries at cold boot', async () => {
+  it('loads the four seed entries at cold boot (Phase 6 Wave 2 adds session-digest-review)', async () => {
     const registry = await getTaskRegistry();
-    assert.equal(registry.size, 3);
+    assert.equal(registry.size, 4);
     const kinds = [...registry.keys()].sort();
     assert.deepEqual(kinds, [
       'literature-flow-register',
       'memory-sync-refresh',
       'session-digest-export',
+      'session-digest-review',
     ]);
   });
 
@@ -62,9 +63,9 @@ describe('WP-126 task-registry', () => {
     ]);
   });
 
-  it('listReviewTaskKinds is empty in Phase 5.5 Wave 2 scope', async () => {
+  it('listReviewTaskKinds includes session-digest-review after Phase 6 Wave 2', async () => {
     const kinds = await listReviewTaskKinds();
-    assert.deepEqual(kinds, []);
+    assert.deepEqual(kinds, ['session-digest-review']);
   });
 
   it('cache is reused across calls (second call does not re-scan)', async () => {

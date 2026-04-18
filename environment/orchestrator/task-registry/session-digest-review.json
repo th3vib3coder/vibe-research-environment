@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "session-digest-review",
+  "lane": "review",
+  "requiredCapability": "output-only",
+  "helperModule": "environment/flows/session-digest-review.js",
+  "helperExport": "reviewSessionDigest",
+  "inputSchema": "environment/schemas/session-digest-review-input.schema.json",
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["comparedArtifactRef"],
+    "warningCount": "integer",
+    "payload": {
+      "verdict": "string",
+      "materialMismatch": "boolean",
+      "followUpAction": "string",
+      "evidenceMode": "string"
+    }
+  },
+  "routerKeywords": [
+    "review digest",
+    "contrarian digest",
+    "review exported digest"
+  ],
+  "degradesTo": "escalate"
+}
