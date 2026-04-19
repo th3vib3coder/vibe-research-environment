@@ -433,14 +433,11 @@ and `schema_file_protection must not be synthetic`.
 
 Concrete evidence to inspect:
 
-- [Implementation plan index](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md) — current phase state at a glance
-- [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md) — local orchestrator MVP baseline
-- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md) — kernel bridge + real provider CLI waves
-- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md) — hook runtime probe + envelope honesty
-- [Phase 7 Wave 1 spec](blueprints/definitive-spec/implementation-plan/phase7-02-wave-1-execution-surface-expansion.md) — Wave 1A shipped / Wave 1B deferred split
-- [Kernel governance probe test](environment/tests/compatibility/kernel-governance-probe.test.js)
+- [Kernel governance probe test](environment/tests/compatibility/kernel-governance-probe.test.js) — 8 bidirectional probes against the real sibling kernel
 - [Saved-artifact eval tests](environment/tests/evals/saved-artifacts.test.js) — enforces `real-cli-binding-codex` + durable `externalReview` record
-- [Operator-validation artifacts](.vibe-science-environment/operator-validation/)
+- [Operator-validation artifacts](.vibe-science-environment/operator-validation/) — saved benchmark repeats and context baselines
+
+*Internal planning artifacts (phase closeouts, implementation plan, spec index) are not published to the public repo. They drive development locally but contain design context that's not open-source yet.*
 
 ---
 
@@ -460,14 +457,13 @@ packaging, review, and recovery must remain inspectable.
 
 ## Entry Points
 
-- [Spec Index](blueprints/definitive-spec/00-INDEX.md)
-- [Implementation Plan](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
-- [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
-- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md) — kernel bridge + real provider CLI
-- [Phase 6.1 Closeout](blueprints/definitive-spec/implementation-plan/phase6_1-closeout.md) — follow-up closure
-- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md) — hook runtime verification + envelope honesty
-- [Phase 7 Wave 1 spec (1A shipped / 1B deferred)](blueprints/definitive-spec/implementation-plan/phase7-02-wave-1-execution-surface-expansion.md)
-- [Orchestrator Spec](blueprints/definitive-spec/surface-orchestrator/00-index.md)
+- [Research Agent Protocol](.claude/skills/vibe-research-agent/SKILL.md) — the skill an agent loads when doing research in this project (paper registration, claim ledger, manifest discipline, R2 review)
+- [CLAUDE.md](CLAUDE.md) — auto-loaded project context for Claude Code
+- [Runtime flow helpers](environment/flows/) — `literature.js`, `experiment.js`, `writing.js`, `results-discovery.js`, `session-digest.js`
+- [Orchestrator](environment/orchestrator/) — queue, execution lane, review lane, task registry
+- [Kernel bridge](environment/lib/kernel-bridge.js) — read-only bridge to the `vibe-science` kernel sibling
+
+*Detailed phase closeouts, implementation plans, and spec indexes are kept in local planning docs not published here.*
 
 ---
 =========================================================================================
@@ -911,14 +907,11 @@ e `schema_file_protection must not be synthetic`.
 
 Evidenza concreta da ispezionare:
 
-- [Indice del piano di implementazione](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md) — stato delle fasi correnti a colpo d'occhio
-- [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md) — baseline MVP orchestratore locale
-- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md) — wave kernel bridge + provider CLI reali
-- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md) — probe runtime hook + onestà envelope
-- [Phase 7 Wave 1 spec](blueprints/definitive-spec/implementation-plan/phase7-02-wave-1-execution-surface-expansion.md) — split Wave 1A shipped / Wave 1B deferita
-- [Test probe governance kernel](environment/tests/compatibility/kernel-governance-probe.test.js)
+- [Test probe governance kernel](environment/tests/compatibility/kernel-governance-probe.test.js) — 8 probe bidirezionali contro il kernel sibling reale
 - [Test eval degli artifact salvati](environment/tests/evals/saved-artifacts.test.js) — impone `real-cli-binding-codex` + record durable `externalReview`
-- [Artifact operator-validation](.vibe-science-environment/operator-validation/)
+- [Artifact operator-validation](.vibe-science-environment/operator-validation/) — benchmark repeat salvati e baseline di contesto
+
+*Gli artefatti interni di planning (closeout delle fasi, piano di implementazione, indice spec) non sono pubblicati sul repo pubblico. Guidano lo sviluppo in locale ma contengono contesto di design non ancora open-source.*
 
 ---
 
@@ -938,11 +931,10 @@ review e recovery devono restare ispezionabili.
 
 ## Entry point
 
-- [Spec Index](blueprints/definitive-spec/00-INDEX.md)
-- [Piano di implementazione](blueprints/definitive-spec/IMPLEMENTATION-PLAN.md)
-- [Phase 5 Closeout](blueprints/definitive-spec/implementation-plan/phase5-closeout.md)
-- [Phase 6 Closeout](blueprints/definitive-spec/implementation-plan/phase6-closeout.md) — kernel bridge + provider CLI reali
-- [Phase 6.1 Closeout](blueprints/definitive-spec/implementation-plan/phase6_1-closeout.md) — chiusura follow-up
-- [Phase 6.2 Closeout](blueprints/definitive-spec/implementation-plan/phase6_2-closeout.md) — verifica runtime hook + onestà dell'envelope
-- [Phase 7 Wave 1 spec (1A shipped / 1B deferita)](blueprints/definitive-spec/implementation-plan/phase7-02-wave-1-execution-surface-expansion.md)
-- [Orchestrator Spec](blueprints/definitive-spec/surface-orchestrator/00-index.md)
+- [Protocollo agente di ricerca](.claude/skills/vibe-research-agent/SKILL.md) — la skill che un agente carica quando fa ricerca in questo progetto (registrazione paper, claim ledger, disciplina manifest, R2 review)
+- [CLAUDE.md](CLAUDE.md) — contesto di progetto auto-caricato per Claude Code
+- [Helper flow runtime](environment/flows/) — `literature.js`, `experiment.js`, `writing.js`, `results-discovery.js`, `session-digest.js`
+- [Orchestratore](environment/orchestrator/) — coda, execution lane, review lane, task registry
+- [Kernel bridge](environment/lib/kernel-bridge.js) — bridge read-only al kernel sibling `vibe-science`
+
+*I closeout dettagliati delle fasi, i piani di implementazione e gli indici spec sono tenuti in doc di planning locali non pubblicati qui.*

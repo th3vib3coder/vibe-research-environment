@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import {
@@ -15,6 +16,18 @@ import {
   readRepoJson
 } from './_helpers.js';
 import { buildReviewExecutorForMode } from '../../evals/save-phase5-artifacts.js';
+
+// Blueprint planning docs are kept private and not published to the public
+// repo. Tests that assert on closeout dossier content skip when the
+// directory is absent — the dossier tests are useful for local dev loops,
+// but they cannot run in a fresh public checkout.
+const BLUEPRINTS_ROOT = path.join(
+  repoRoot,
+  'blueprints',
+  'definitive-spec',
+  'implementation-plan',
+);
+const BLUEPRINTS_PRESENT = existsSync(BLUEPRINTS_ROOT);
 
 function taskIdFromFile(fileName) {
   return fileName.replace(/\.json$/u, '');
@@ -830,7 +843,7 @@ test('saved Phase 5 context and cost artifact records an honest continuity and c
   assert.ok(artifact.totals.coordinatorCycleElapsedSeconds >= 0);
 });
 
-test('Phase 2 closeout dossier exists and links to the saved evidence surfaces', async () => {
+test('Phase 2 closeout dossier exists and links to the saved evidence surfaces', { skip: !BLUEPRINTS_PRESENT && 'blueprints/ not present on this checkout' }, async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase2-closeout.md';
   const closeout = await readFile(
@@ -842,7 +855,7 @@ test('Phase 2 closeout dossier exists and links to the saved evidence surfaces',
   assert.match(closeout, /flow-status-results-findability/u);
 });
 
-test('Phase 3 closeout dossier exists and links to the saved evidence surfaces', async () => {
+test('Phase 3 closeout dossier exists and links to the saved evidence surfaces', { skip: !BLUEPRINTS_PRESENT && 'blueprints/ not present on this checkout' }, async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase3-closeout.md';
   const closeout = await readFile(
@@ -856,7 +869,7 @@ test('Phase 3 closeout dossier exists and links to the saved evidence surfaces',
   assert.match(closeout, /flow-writing-rebuttal-pack/u);
 });
 
-test('Phase 4 closeout dossier exists and links to the saved evidence surfaces', async () => {
+test('Phase 4 closeout dossier exists and links to the saved evidence surfaces', { skip: !BLUEPRINTS_PRESENT && 'blueprints/ not present on this checkout' }, async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase4-closeout.md';
   const closeout = await readFile(
@@ -870,7 +883,7 @@ test('Phase 4 closeout dossier exists and links to the saved evidence surfaces',
   assert.match(closeout, /flow-status-domain-pack-omics/u);
 });
 
-test('Phase 5 closeout dossier exists and links to the saved evidence surfaces', async () => {
+test('Phase 5 closeout dossier exists and links to the saved evidence surfaces', { skip: !BLUEPRINTS_PRESENT && 'blueprints/ not present on this checkout' }, async () => {
   const closeoutPath =
     'blueprints/definitive-spec/implementation-plan/phase5-closeout.md';
   const closeout = await readFile(

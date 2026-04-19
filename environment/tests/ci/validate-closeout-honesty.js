@@ -213,10 +213,26 @@ export async function validateCloseoutText(closeoutPath, markdown, options = {})
 }
 
 export default async function validateCloseoutHonesty(options = {}) {
-  const closeoutPaths = options.closeoutPaths ?? (await collectFiles(
-    'blueprints/definitive-spec/implementation-plan',
-    { include: (file) => /^blueprints\/definitive-spec\/implementation-plan\/phase(?:\d+|55)-closeout\.md$/u.test(file) }
-  ));
+  let closeoutPaths;
+  if (options.closeoutPaths) {
+    closeoutPaths = options.closeoutPaths;
+  } else {
+    try {
+      closeoutPaths = await collectFiles(
+        'blueprints/definitive-spec/implementation-plan',
+        { include: (file) => /^blueprints\/definitive-spec\/implementation-plan\/phase(?:\d+|55)-closeout\.md$/u.test(file) }
+      );
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        // Blueprint planning directory not present on this checkout (kept
+        // private / not published to the public repo). No closeouts to
+        // validate — treat as vacuous pass.
+        closeoutPaths = [];
+      } else {
+        throw error;
+      }
+    }
+  }
   const violations = [];
 
   for (const closeoutPath of closeoutPaths) {
