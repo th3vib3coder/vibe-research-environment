@@ -15,6 +15,13 @@ The skill lives at `.claude/skills/vibe-research-agent/SKILL.md` and
 contains the 7 non-negotiable rules for using VRE correctly. Read it,
 then execute.
 
+For the **complete public surface** (every helper, command, schema,
+task kind, kernel projection, automation, connector, domain pack, env
+var), the skill points to
+`.claude/skills/vibe-research-agent/references/vre-capabilities.md`.
+Load that reference whenever the core 7 rules don't cover what you're
+trying to do.
+
 **Short version:**
 - User makes SCIENTIFIC decisions (promote claims, accept R2 verdicts, pick directions)
 - You handle CLERICAL persistence (register papers, build manifests, package results, refresh mirrors)

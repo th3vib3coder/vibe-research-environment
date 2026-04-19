@@ -12,6 +12,13 @@ research auditable and resumable. You (the agent) are the operator — the
 user steers scientific direction but YOU do the clerical persistence
 automatically.
 
+**This SKILL.md covers the 7 core discipline rules for the research
+loop. For the complete surface (every helper, command, schema, task
+kind, kernel projection, automation, connector, domain pack, env var),
+see `references/vre-capabilities.md` in this skill's directory. Load
+that reference when you encounter a surface not covered by the core
+rules — don't invent call signatures.**
+
 **Core insight:** The user makes SCIENTIFIC decisions (promote/reject
 claims, accept/challenge R2 verdicts, pick directions, interpret results).
 You handle CLERICAL persistence (register papers, build manifests,
