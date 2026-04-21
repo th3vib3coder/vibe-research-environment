@@ -457,15 +457,43 @@ export default async function checkPhase9Ledger(options = {}) {
 
   const ledgerExists = await pathExists(localRepoRoot, PATHS.vreLedger);
   if (ledgerExists) {
-    const [specReviewLog, planReviewLog] = await Promise.all([
-      readText(localRepoRoot, PATHS.specReviewLog),
-      readText(localRepoRoot, PATHS.planReviewLog)
+    const [specReviewLogExists, planReviewLogExists] = await Promise.all([
+      pathExists(localRepoRoot, PATHS.specReviewLog),
+      pathExists(localRepoRoot, PATHS.planReviewLog)
     ]);
 
-    if (!hasGoEntry(specReviewLog) || !hasGoEntry(planReviewLog)) {
-      violations.push(
-        'E_PHASE9_LEDGER_GO_MISSING phase9-vre-feature-ledger.md exists but Round 15 / T0.1a GO entry is missing in one or both review logs'
+    // Round 25: the two Phase 9 review logs live under
+    // vibe-science/blueprints/private/ which is gitignored in the host
+    // repo and is therefore absent from a vibe-research-environment-only
+    // CI checkout (GitHub Actions runs `check-phase9-ledger` against the
+    // VRE repo alone). When either log cannot be read from the sibling,
+    // emit a loud stderr diagnostic and skip the GO-entry check instead
+    // of throwing ENOENT. Strict enforcement still applies whenever both
+    // sibling files are present (local dev, combined workspace CI).
+    if (!specReviewLogExists || !planReviewLogExists) {
+      const missing = [
+        !specReviewLogExists ? PATHS.specReviewLog : null,
+        !planReviewLogExists ? PATHS.planReviewLog : null
+      ].filter(Boolean);
+      process.stderr.write(
+        `[check-phase9-ledger] NOTE: Phase 9 review log(s) absent: ${missing.join(', ')}. ` +
+        `Phase 9 v1 keeps these logs under vibe-science/blueprints/private/ by design ` +
+        `(gitignored). In CI runs of vibe-research-environment alone the sibling repo ` +
+        `is not checked out, so the Round 15 / T0.1a GO entry cannot be verified here. ` +
+        `Strict enforcement still applies when both sibling review logs are present ` +
+        `(local dev with sibling checkout, or combined-workspace CI).\n`
       );
+    } else {
+      const [specReviewLog, planReviewLog] = await Promise.all([
+        readText(localRepoRoot, PATHS.specReviewLog),
+        readText(localRepoRoot, PATHS.planReviewLog)
+      ]);
+
+      if (!hasGoEntry(specReviewLog) || !hasGoEntry(planReviewLog)) {
+        violations.push(
+          'E_PHASE9_LEDGER_GO_MISSING phase9-vre-feature-ledger.md exists but Round 15 / T0.1a GO entry is missing in one or both review logs'
+        );
+      }
     }
   }
 
@@ -489,7 +517,26 @@ export default async function checkPhase9Ledger(options = {}) {
   if ((coveredVreChanges.length > 0 || coveredVibeChanges.length > 0) && !changedSet.has(PATHS.specLedger)) {
     let skipDueToGitignore = false;
     if (mode === 'discovered') {
-      if (await isSpecLedgerInGitignoredTree(localRepoRoot, PATHS.specLedger)) {
+      // Round 25: three cases where discovered mode cannot verify the
+      // spec-side ledger update via git, all emit a loud stderr diagnostic
+      // and skip the requirement. Strict enforcement still applies in
+      // explicit mode (CI --changed-file=... or combined-workspace CI).
+      //   (1) sibling vibe-science repo absent entirely — happens on a
+      //       vibe-research-environment-only CI checkout (GitHub Actions);
+      //   (2) sibling present but the spec ledger file is gitignored
+      //       there (Round 17 refinement);
+      //   (3) neither — fall through to strict enforcement.
+      const specLedgerExists = await pathExists(localRepoRoot, PATHS.specLedger);
+      if (!specLedgerExists) {
+        skipDueToGitignore = true;
+        process.stderr.write(
+          `[check-phase9-ledger] NOTE: ${PATHS.specLedger} does not exist in the sibling workspace. ` +
+          `Phase 9 v1 keeps the spec-side ledger under vibe-science/blueprints/private/ (gitignored). ` +
+          `In CI runs of vibe-research-environment alone the sibling repo is not checked out, so ` +
+          `this requirement cannot be verified here. Strict enforcement still applies in explicit ` +
+          `mode (CI --changed-file=... or combined-workspace CI with both repos present).\n`
+        );
+      } else if (await isSpecLedgerInGitignoredTree(localRepoRoot, PATHS.specLedger)) {
         skipDueToGitignore = true;
         process.stderr.write(
           `[check-phase9-ledger] NOTE: ${PATHS.specLedger} is gitignored in its host repo. Discovered mode cannot verify its update via git. ` +

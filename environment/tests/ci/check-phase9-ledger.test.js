@@ -624,3 +624,89 @@ test('phase9-ledger check requires featureId match for live surfaces that share 
     );
   });
 });
+
+test('phase9-ledger check fails-open when the sibling vibe-science spec ledger file is absent and covered VRE paths changed in discovered mode (Round 25 CI-scenario closure)', async () => {
+  // Round 25 regression: in CI of vibe-research-environment alone, the
+  // sibling vibe-science spec ledger path resolves to a non-existent file.
+  // Before Round 25 the discovered-mode spec-ledger requirement fired
+  // E_SPEC_LEDGER_UPDATE_REQUIRED because isSpecLedgerInGitignoredTree()
+  // walked up, found the VRE host repo .git, and git check-ignore against
+  // a path outside that repo returned non-zero. After Round 25 an explicit
+  // "sibling absent" branch emits a diagnostic and skips the requirement.
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-phase9-no-sibling-spec-'));
+  const vreRoot = path.join(workspaceRoot, 'vibe-research-environment');
+  try {
+    await mkdir(path.join(vreRoot, 'environment', 'tests', 'ci'), { recursive: true });
+    await writeFile(path.join(vreRoot, PATHS.vreLedger), '# bootstrap\n', 'utf8');
+    // No sibling vibe-science/ directory: this is the CI-only checkout scenario.
+
+    const originalWrite = process.stderr.write.bind(process.stderr);
+    let captured = '';
+    process.stderr.write = (chunk, ...rest) => {
+      captured += typeof chunk === 'string' ? chunk : String(chunk);
+      return true;
+    };
+
+    try {
+      await assert.doesNotReject(() =>
+        checkPhase9Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          // Force discovered mode with a covered VRE change so the
+          // spec-ledger branch is exercised but the spec ledger file
+          // is absent.
+          discoveryOverride: [
+            'environment/control/time-provider.js',
+            PATHS.vreLedger
+          ]
+        })
+      );
+      assert.match(captured, /does not exist in the sibling workspace/u);
+      assert.match(captured, /16-implementation-status-ledger\.md/u);
+    } finally {
+      process.stderr.write = originalWrite;
+    }
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('phase9-ledger check fails-open with stderr diagnostic when the sibling vibe-science review logs are absent (Round 25 CI-scenario closure)', async () => {
+  // Round 25 regression: in CI runs of vibe-research-environment alone,
+  // the sibling vibe-science repo is not checked out, so
+  // PATHS.specReviewLog and PATHS.planReviewLog cannot be read. Before
+  // Round 25 the checker threw ENOENT and failed the CI step. After
+  // Round 25 it must emit a loud stderr diagnostic and proceed.
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-phase9-no-sibling-'));
+  const vreRoot = path.join(workspaceRoot, 'vibe-research-environment');
+  try {
+    await mkdir(path.join(vreRoot, 'environment', 'tests', 'ci'), { recursive: true });
+    // Live VRE ledger is present but the sibling vibe-science/ directory
+    // is intentionally NOT created — this mirrors a VRE-only CI checkout.
+    await writeFile(path.join(vreRoot, PATHS.vreLedger), '# bootstrap\n', 'utf8');
+
+    const originalWrite = process.stderr.write.bind(process.stderr);
+    let captured = '';
+    process.stderr.write = (chunk, ...rest) => {
+      captured += typeof chunk === 'string' ? chunk : String(chunk);
+      return true;
+    };
+
+    try {
+      await assert.doesNotReject(() =>
+        checkPhase9Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: []
+        })
+      );
+      assert.match(captured, /Phase 9 review log\(s\) absent/u);
+      assert.match(captured, /12-spec-self-review-log\.md/u);
+      assert.match(captured, /11-plan-self-review-log\.md/u);
+    } finally {
+      process.stderr.write = originalWrite;
+    }
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
