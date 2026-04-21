@@ -286,9 +286,33 @@ test('phase9-ledger check raises E_LEDGER_ORPHAN_ROW when an implemented ledger 
   await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
     await seedSurfaceTrackingFixture(vreRoot, {
       ledgerMarkdown: buildLedgerMarkdown([
-        '| 006 | 2026-04-21 | 0 | W0-ORPHAN-SURFACE | Orphaned Phase 9 surface | `environment/orchestrator/autonomy-runtime.js` | none | none | implemented | fixture row |'
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Phase 9 ledger CI enforcement runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Machine-generated Phase 9 surface inventory and CI cross-check | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row |',
+        '| 099 | 2026-04-21 | 0 | W0-ORPHAN-SURFACE | Orphaned Phase 9 surface | `environment/orchestrator/autonomy-runtime.js` | none | none | implemented | fixture row |'
       ]),
-      surfaceIndex: []
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['package.json', 'environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['package.json', 'environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'orchestrator-surface',
+          name: 'stale-orphan-surface',
+          paths: ['environment/orchestrator/autonomy-runtime.js'],
+          featureId: 'W0-ORPHAN-SURFACE',
+          introducedAt: '2026-04-21'
+        }
+      ]
     });
 
     await assert.rejects(
@@ -430,6 +454,95 @@ test('phase9-ledger check raises E_LEDGER_INDEX_INCONSISTENT when an archived le
           changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
         }),
       /E_LEDGER_INDEX_INCONSISTENT.*missing a closed date/u
+    );
+  });
+});
+
+test('phase9-ledger check skips cross-check for rows whose paths are library code (environment/lib, environment/tests/lib) and therefore not inventory-eligible', async () => {
+  // Round 22 refinement: the Round 21 fix used a post-hoc pre-filter to
+  // exempt rows that did not match any surface. That opened a silent-skip
+  // for genuinely broken rows. Round 22 tightens isInventoryTrackablePath
+  // to match isCoveredVrePath so non-surface library rows (T0.2 kernel-
+  // bridge fix lives under environment/lib/) are naturally ineligible and
+  // never reach the orphan check, while rows on covered surface paths
+  // keep the strict orphan rule.
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Phase 9 ledger CI enforcement runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Machine-generated Phase 9 surface inventory and CI cross-check | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row |',
+        '| 009 | 2026-04-22 | 0 | W0-PROJECTION-COUNT-DRIFT-FIX | Bridge contract count fix | `environment/lib/kernel-bridge.js`, `environment/tests/lib/kernel-bridge.test.js` | none | none | verified | non-surface ledger row |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['package.json', 'environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['package.json', 'environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        }
+      ]
+    });
+
+    await assert.doesNotReject(() =>
+      checkPhase9Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+      })
+    );
+  });
+});
+
+test('phase9-ledger check STILL fires E_LEDGER_ORPHAN_ROW for rows on covered surface paths with no matching surface (Round 22 silent-skip closure)', async () => {
+  // Round 22 regression: closes the silent-skip introduced by the Round 21
+  // surfaceBackedLedgerRows pre-filter. Under that filter, a row that did
+  // NOT match any live or persisted surface was quietly excluded from the
+  // orphan check — the exact scenario "implemented row on a covered Phase 9
+  // surface path (e.g. environment/orchestrator/**), but the code was never
+  // actually landed OR the generator was never extended" slipped through.
+  // This test asserts that such a row still fires orphan after the Round 22
+  // isInventoryTrackablePath tightening and the revert of the pre-filter.
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Phase 9 ledger CI enforcement runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Machine-generated Phase 9 surface inventory and CI cross-check | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row |',
+        '| 050 | 2026-04-22 | 0 | W0-GENUINELY-ORPHANED | Ledger row for code the operator never actually landed | `environment/orchestrator/never-landed-aggregator.js` | none | none | verified | fixture row: covered surface path (environment/orchestrator/) but NO matching live or persisted surface. This is the scenario the Round 21 pre-filter silently suppressed. |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['package.json', 'environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['package.json', 'environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        }
+      ]
+    });
+
+    await assert.rejects(
+      () =>
+        checkPhase9Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+        }),
+      /E_LEDGER_ORPHAN_ROW.*seq 050.*W0-GENUINELY-ORPHANED/u
     );
   });
 });

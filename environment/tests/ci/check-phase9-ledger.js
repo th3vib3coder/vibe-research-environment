@@ -372,10 +372,21 @@ function parseSeqRange(seqRange) {
 }
 
 function isInventoryTrackablePath(pathValue) {
-  return pathValue === 'package.json'
-    || pathValue === PATHS.surfaceIndex
-    || pathValue.startsWith('bin/')
-    || pathValue.startsWith('environment/');
+  // Round 22: tightened to align with isCoveredVrePath. The previous rule
+  // (any path under environment/**) was too loose: it made every
+  // implemented/verified ledger row touching library code (e.g.
+  // environment/lib/, environment/tests/lib/, environment/tests/integration/)
+  // look "inventory-eligible", even when the row is a bridge-contract or
+  // library-test fix that legitimately does not introduce a
+  // machine-discoverable surface. That in turn forced the Round 21
+  // surfaceBackedLedgerRows pre-filter, which silently skipped orphan
+  // detection for ANY row that failed to match a surface — including
+  // rows that were actually broken (code deleted, row left behind).
+  //
+  // By tightening the eligibility set to exactly the Phase 9 covered
+  // VRE prefixes, non-surface library rows become naturally ineligible
+  // and the strict orphan check can be restored without false reds.
+  return pathValue === PATHS.surfaceIndex || isCoveredVrePath(pathValue);
 }
 
 function isInventoryEligibleLedgerRow(row) {
@@ -556,6 +567,15 @@ export default async function checkPhase9Ledger(options = {}) {
     // the same live surface as the originating row. Tightening this rule
     // needs a "parent seq" field in the ledger schema and is deferred as
     // a known followup beyond T0.4a-ter scope (see Round 20 log entries).
+    //
+    // Round 22: the orphan check iterates every eligible ledger row again.
+    // The Round 21 surfaceBackedLedgerRows pre-filter was reverted because
+    // it silently skipped orphan detection for any row that did not match
+    // a live or persisted surface — the exact scenario "code deleted, row
+    // stays behind" would never fire. Eligibility is now correctly scoped
+    // by isInventoryTrackablePath (aligned with isCoveredVrePath) so that
+    // non-surface library rows never become eligible in the first place,
+    // and the strict orphan rule holds for genuinely covered surfaces.
     for (const surface of liveInventory) {
       const hasLedgerMatch = eligibleLedgerRows.some((row) => surfaceMatchesLedgerRow(surface, row));
       if (!hasLedgerMatch) {

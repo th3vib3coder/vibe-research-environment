@@ -41,7 +41,9 @@ const DEFAULT_ENV_WHITELIST = Object.freeze([
   'LC_CTYPE',
 ]);
 
-// The nine projections frozen in WP-150's typed-duck contract.
+export const WP150_TYPED_DUCK_PROJECTION_COUNT = 8;
+
+// The eight projections frozen in WP-150's typed-duck contract.
 const PROJECTION_NAMES = Object.freeze([
   'listClaimHeads',
   'listUnresolvedClaims',

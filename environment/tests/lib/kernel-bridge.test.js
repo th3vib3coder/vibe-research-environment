@@ -26,6 +26,7 @@ import {
   KernelBridgeTimeoutError,
   __spawnProjectionForTest,
   __testables,
+  WP150_TYPED_DUCK_PROJECTION_COUNT,
 } from '../../lib/kernel-bridge.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -92,13 +93,17 @@ describe('WP-155 kernel-bridge: degraded sentinel', () => {
 });
 
 describe('WP-155 kernel-bridge: happy path against fake sibling', () => {
-  it('returns typed-duck reader exposing all nine projection methods and close()', async () => {
+  it('returns typed-duck reader exposing all eight projection methods and close()', async () => {
     const reader = await resolveKernelReader({ kernelRoot: fakeKernelRoot });
     assert.equal(reader.dbAvailable, true);
     for (const projection of __testables.PROJECTION_NAMES) {
       assert.equal(typeof reader[projection], 'function', `missing ${projection}`);
     }
     assert.equal(typeof reader.close, 'function');
+  });
+
+  it('declared WP-150 projection count matches the typed-duck list length', () => {
+    assert.equal(__testables.PROJECTION_NAMES.length, WP150_TYPED_DUCK_PROJECTION_COUNT);
   });
 
   it('close() is a no-op and does not throw', async () => {

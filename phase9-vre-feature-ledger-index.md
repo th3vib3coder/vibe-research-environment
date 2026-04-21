@@ -17,8 +17,11 @@ Exactly ONE file has `status = active` at any time. All others are
 
 ## Rotation Rule
 
-When rotation fires (row count > 500, or file size > 250 KB, or explicit
-operator request), the sequence is atomic:
+When the active ledger reaches 400 rows, the next pass that appends new VRE
+feature rows MUST prepare the successor file. Rotation is mandatory no later
+than 500 rows. File size above 250 KB remains a secondary earlier trigger,
+and explicit operator request may rotate earlier for readability. When
+rotation fires, the sequence is atomic:
 
 1. Close the current file by appending a trailing row with
    `feature id = LEDGER-ROTATION-NN` (where `NN` is the outgoing file

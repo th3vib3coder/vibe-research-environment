@@ -4,7 +4,7 @@
  * Covers the acceptance bullets at
  * blueprints/definitive-spec/implementation-plan/phase6-02-wave-1-kernel-bridge-integration.md:214-224:
  *   - fake-sibling group runs on every host
- *   - all nine projections return valid envelopes
+ *   - all eight projections return valid envelopes
  *   - live-sibling group declares skip when VRE_KERNEL_PATH is unset
  *   - envelope shape asserted (ok:true, projection match, projectPath, data)
  *   - error-mode branches (timeout, bad envelope, kernel error)
@@ -24,6 +24,7 @@ import {
   KernelBridgeTimeoutError,
   __spawnProjectionForTest,
   __testables,
+  WP150_TYPED_DUCK_PROJECTION_COUNT,
 } from '../../lib/kernel-bridge.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -190,5 +191,6 @@ describe('WP-156 kernel-bridge integration — contract constants', () => {
       'getStateSnapshot',
     ];
     assert.deepEqual([...__testables.PROJECTION_NAMES], expected);
+    assert.equal(expected.length, WP150_TYPED_DUCK_PROJECTION_COUNT);
   });
 });
