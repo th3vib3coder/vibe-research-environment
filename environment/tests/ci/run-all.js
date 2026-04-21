@@ -11,6 +11,7 @@ import validateRoles from './validate-roles.js';
 import validateNoPersonalPaths from './validate-no-personal-paths.js';
 import validateCloseoutHonesty from './validate-closeout-honesty.js';
 import validateCiWorkflow from './validate-ci-workflow.js';
+import checkPhase9Ledger from './check-phase9-ledger.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -24,7 +25,8 @@ const validators = [
   ['validate-roles', validateRoles],
   ['validate-no-personal-paths', validateNoPersonalPaths],
   ['validate-closeout-honesty', validateCloseoutHonesty],
-  ['validate-ci-workflow', validateCiWorkflow]
+  ['validate-ci-workflow', validateCiWorkflow],
+  ['check-phase9-ledger', checkPhase9Ledger]
 ];
 
 for (const [name, validator] of validators) {

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "check": "npm run validate && npm test",
+    "check:phase9-ledger": "node environment/tests/ci/check-phase9-ledger.js",
     "test": "node --test",
     "validate": "node environment/tests/ci/run-all.js",
     "validate:closeout-honesty": "node environment/tests/ci/validate-closeout-honesty.js",
