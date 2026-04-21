@@ -76,6 +76,23 @@ async function loadPhase9CliSurfaceDefinitions(localRepoRoot) {
   return Array.isArray(definitions) ? definitions : [];
 }
 
+const EXTRA_PHASE9_SURFACES = Object.freeze([
+  {
+    file: 'environment/control/time-provider.js',
+    kind: 'orchestrator-surface',
+    name: 'time-provider',
+    featureId: 'W0-TIME-PROVIDER-SEAM',
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/control/approved-memory-apis.json',
+    kind: 'orchestrator-surface',
+    name: 'approved-memory-apis',
+    featureId: 'W0-MEMORY-API-ALLOWLIST',
+    introducedAt: '2026-04-22'
+  }
+]);
+
 function buildSurface({ kind, name, paths, featureId, introducedAt }) {
   return {
     kind,
@@ -164,6 +181,18 @@ export async function generatePhase9SurfaceIndex(options = {}) {
       featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
       introducedAt: '2026-04-21'
     }));
+  }
+
+  for (const definition of EXTRA_PHASE9_SURFACES) {
+    if (await pathExistsAt(localRepoRoot, definition.file)) {
+      surfaces.push(buildSurface({
+        kind: definition.kind,
+        name: definition.name,
+        paths: [definition.file],
+        featureId: definition.featureId,
+        introducedAt: definition.introducedAt
+      }));
+    }
   }
 
   const cliDefinitions = await loadPhase9CliSurfaceDefinitions(localRepoRoot);

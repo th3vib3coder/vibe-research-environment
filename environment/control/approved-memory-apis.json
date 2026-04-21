@@ -1,0 +1,90 @@
+[
+  {
+    "name": "buildMarkIndex",
+    "modulePath": "environment/memory/marks.js",
+    "exportName": "buildMarkIndex",
+    "summary": "Build an in-memory lookup of reviewed memory marks by target.",
+    "safeToExpose": true,
+    "category": "mark-index"
+  },
+  {
+    "name": "getMemoryMarks",
+    "modulePath": "environment/memory/marks.js",
+    "exportName": "getMemoryMarks",
+    "summary": "Read and validate durable memory mark records from disk.",
+    "safeToExpose": true,
+    "category": "read-status"
+  },
+  {
+    "name": "getTargetMarks",
+    "modulePath": "environment/memory/marks.js",
+    "exportName": "getTargetMarks",
+    "summary": "Return reviewed marks for one target from a mark index.",
+    "safeToExpose": true,
+    "category": "mark-index"
+  },
+  {
+    "name": "prioritizeByMarks",
+    "modulePath": "environment/memory/marks.js",
+    "exportName": "prioritizeByMarks",
+    "summary": "Sort candidate records so marked memory targets surface first.",
+    "safeToExpose": true,
+    "category": "prioritization"
+  },
+  {
+    "name": "getMemoryFreshness",
+    "modulePath": "environment/memory/status.js",
+    "exportName": "getMemoryFreshness",
+    "summary": "Read sync-state freshness and report whether memory mirrors are stale.",
+    "safeToExpose": true,
+    "category": "read-status"
+  },
+  {
+    "name": "MEMORY_STATUS_UNAVAILABLE_WARNING",
+    "modulePath": "environment/memory/status.js",
+    "exportName": "MEMORY_STATUS_UNAVAILABLE_WARNING",
+    "summary": "Reviewed warning text for unavailable memory freshness truth.",
+    "safeToExpose": true,
+    "category": "warning-constant"
+  },
+  {
+    "name": "STALE_MEMORY_WARNING",
+    "modulePath": "environment/memory/status.js",
+    "exportName": "STALE_MEMORY_WARNING",
+    "summary": "Reviewed warning text for stale memory freshness state.",
+    "safeToExpose": true,
+    "category": "warning-constant"
+  },
+  {
+    "name": "getMemorySyncState",
+    "modulePath": "environment/memory/sync.js",
+    "exportName": "getMemorySyncState",
+    "summary": "Read the last persisted memory sync-state artifact.",
+    "safeToExpose": true,
+    "category": "read-status"
+  },
+  {
+    "name": "renderDecisionLogMirror",
+    "modulePath": "environment/memory/sync.js",
+    "exportName": "renderDecisionLogMirror",
+    "summary": "Render the reviewed decision-log mirror from structured inputs.",
+    "safeToExpose": true,
+    "category": "render-helper"
+  },
+  {
+    "name": "renderProjectOverviewMirror",
+    "modulePath": "environment/memory/sync.js",
+    "exportName": "renderProjectOverviewMirror",
+    "summary": "Render the reviewed project-overview mirror from structured inputs.",
+    "safeToExpose": true,
+    "category": "render-helper"
+  },
+  {
+    "name": "syncMemory",
+    "modulePath": "environment/memory/sync.js",
+    "exportName": "syncMemory",
+    "summary": "Write the durable memory mirror surface and validated sync-state file.",
+    "safeToExpose": true,
+    "category": "write-memory"
+  }
+]

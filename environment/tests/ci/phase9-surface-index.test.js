@@ -16,6 +16,7 @@ async function withFixtureRepo(fn) {
   try {
     await mkdir(path.join(repoRoot, 'bin'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'tests', 'ci'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'environment', 'control'), { recursive: true });
     await writeFile(
       path.join(repoRoot, 'package.json'),
       JSON.stringify({
@@ -60,6 +61,8 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'run-all.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'validate-counts.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'control', 'time-provider.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'control', 'approved-memory-apis.json'), '[]\n', 'utf8');
 
     await fn(repoRoot);
   } finally {
@@ -70,9 +73,11 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 4);
+    assert.equal(surfaces.length, 6);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'time-provider'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'approved-memory-apis'), true);
   });
 });
 

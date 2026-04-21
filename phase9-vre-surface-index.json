@@ -99,6 +99,24 @@
     "introducedAt": "2026-04-22"
   },
   {
+    "kind": "orchestrator-surface",
+    "name": "approved-memory-apis",
+    "paths": [
+      "environment/control/approved-memory-apis.json"
+    ],
+    "featureId": "W0-MEMORY-API-ALLOWLIST",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "orchestrator-surface",
+    "name": "time-provider",
+    "paths": [
+      "environment/control/time-provider.js"
+    ],
+    "featureId": "W0-TIME-PROVIDER-SEAM",
+    "introducedAt": "2026-04-22"
+  },
+  {
     "kind": "scheduler-command",
     "name": "scheduler install",
     "paths": [
