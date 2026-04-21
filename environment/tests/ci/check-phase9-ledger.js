@@ -4,11 +4,18 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 import { assert, isDirectRun, normalizeSlashes, repoRoot } from './_helpers.js';
+import {
+  generatePhase9SurfaceIndex,
+  SURFACE_INDEX_PATH,
+  validateSurfaceIndexShape
+} from './phase9-surface-index.js';
 
 const execFileAsync = promisify(execFile);
 
 export const PATHS = {
   vreLedger: 'phase9-vre-feature-ledger.md',
+  ledgerIndex: 'phase9-vre-feature-ledger-index.md',
+  surfaceIndex: SURFACE_INDEX_PATH,
   specLedger: '../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md',
   specReviewLog: '../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/12-spec-self-review-log.md',
   planReviewLog: '../vibe-science/blueprints/private/phase9-implementation-plan/11-plan-self-review-log.md'
@@ -278,6 +285,151 @@ function hasGoEntry(markdown) {
   return GO_ENTRY_PATTERN.test(markdown);
 }
 
+function parseMarkdownTable(markdown, heading) {
+  const lines = markdown.replace(/\r\n/gu, '\n').split('\n');
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) {
+    return [];
+  }
+
+  const tableLines = [];
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const trimmed = lines[index].trim();
+    if (!trimmed) {
+      if (tableLines.length > 0) {
+        break;
+      }
+      continue;
+    }
+    if (!trimmed.startsWith('|')) {
+      if (tableLines.length > 0) {
+        break;
+      }
+      continue;
+    }
+    tableLines.push(trimmed);
+  }
+
+  if (tableLines.length < 3) {
+    return [];
+  }
+
+  const headers = tableLines[0]
+    .split('|')
+    .slice(1, -1)
+    .map((value) => value.trim());
+
+  return tableLines
+    .slice(2)
+    .map((line) => line.split('|').slice(1, -1).map((value) => value.trim()))
+    .map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ''])));
+}
+
+function stripMarkdownTicks(value) {
+  return value.replace(/`/gu, '').trim();
+}
+
+function parseLedgerPaths(cell) {
+  const tickMatches = [...cell.matchAll(/`([^`]+)`/gu)].map((match) => match[1].trim()).filter(Boolean);
+  if (tickMatches.length > 0) {
+    return [...new Set(tickMatches)];
+  }
+
+  return cell
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function parseLedgerRows(markdown) {
+  return parseMarkdownTable(markdown, '## Ledger').map((row) => ({
+    seq: stripMarkdownTicks(row.seq ?? ''),
+    featureId: stripMarkdownTicks(row['feature id'] ?? ''),
+    paths: parseLedgerPaths(row.paths ?? ''),
+    status: stripMarkdownTicks(row.status ?? '')
+  }));
+}
+
+function parseIndexRows(markdown) {
+  return parseMarkdownTable(markdown, '## Index').map((row) => ({
+    file: stripMarkdownTicks(row.file ?? ''),
+    status: stripMarkdownTicks(row.status ?? ''),
+    seqRange: stripMarkdownTicks(row['seq range'] ?? ''),
+    closed: stripMarkdownTicks(row.closed ?? '')
+  }));
+}
+
+function parseSeqRange(seqRange) {
+  const normalized = seqRange.replace(/…/gu, '...').trim();
+  const [startRaw, endRaw] = normalized.split(/[–-]/u).map((value) => value.trim());
+  const start = /^\d+$/u.test(startRaw) ? Number(startRaw) : null;
+  const end = endRaw === '...' ? null : (/^\d+$/u.test(endRaw) ? Number(endRaw) : null);
+  return {
+    start,
+    end,
+    openEnded: endRaw === '...'
+  };
+}
+
+function isInventoryTrackablePath(pathValue) {
+  return pathValue === 'package.json'
+    || pathValue === PATHS.surfaceIndex
+    || pathValue.startsWith('bin/')
+    || pathValue.startsWith('environment/');
+}
+
+function isInventoryEligibleLedgerRow(row) {
+  return (row.status === 'implemented' || row.status === 'verified')
+    && row.paths.some(isInventoryTrackablePath);
+}
+
+function surfaceMatchesLedgerRow(surface, row) {
+  if (row.featureId && surface.featureId && row.featureId === surface.featureId) {
+    return true;
+  }
+
+  return row.paths.some((pathValue) => surface.paths.includes(pathValue));
+}
+
+function surfaceKey(surface) {
+  return [
+    surface.kind,
+    surface.name,
+    surface.featureId ?? 'null',
+    [...surface.paths].sort().join(',')
+  ].join('|');
+}
+
+function validateLedgerIndexRows(rows) {
+  const violations = [];
+  const activeRows = rows.filter((row) => row.status === 'active');
+  if (activeRows.length !== 1) {
+    violations.push(
+      `E_LEDGER_INDEX_INCONSISTENT expected exactly one active ledger row, found ${activeRows.length}`
+    );
+  }
+
+  for (const row of rows) {
+    if (row.status === 'archived' && (!row.closed || row.closed === '—')) {
+      violations.push(
+        `E_LEDGER_INDEX_INCONSISTENT archived ledger row ${row.file} is missing a closed date`
+      );
+    }
+  }
+
+  for (let index = 1; index < rows.length; index += 1) {
+    const previous = parseSeqRange(rows[index - 1].seqRange);
+    const current = parseSeqRange(rows[index].seqRange);
+    if (previous.end != null && current.start != null && previous.end + 1 !== current.start) {
+      violations.push(
+        `E_LEDGER_INDEX_INCONSISTENT seq range gap between ${rows[index - 1].file} and ${rows[index].file}`
+      );
+    }
+  }
+
+  return violations;
+}
+
 export default async function checkPhase9Ledger(options = {}) {
   const localRepoRoot = options.repoRoot ?? repoRoot;
   const { files: changedFiles, mode } = await resolveChangedFiles(options);
@@ -334,6 +486,98 @@ export default async function checkPhase9Ledger(options = {}) {
         `E_SPEC_LEDGER_UPDATE_REQUIRED covered Phase 9 work changed without updating ${PATHS.specLedger} (mode=${mode}; triggering paths: ${triggering.join(', ')})`
       );
     }
+  }
+
+  const [ledgerExistsForCrossCheck, ledgerIndexExists, surfaceIndexExists] = await Promise.all([
+    pathExists(localRepoRoot, PATHS.vreLedger),
+    pathExists(localRepoRoot, PATHS.ledgerIndex),
+    pathExists(localRepoRoot, PATHS.surfaceIndex)
+  ]);
+
+  const [ledgerMarkdown, ledgerIndexMarkdown] = await Promise.all([
+    ledgerExistsForCrossCheck ? readText(localRepoRoot, PATHS.vreLedger) : Promise.resolve(''),
+    ledgerIndexExists ? readText(localRepoRoot, PATHS.ledgerIndex) : Promise.resolve('')
+  ]);
+
+  // Parsed once; reused by both the absence check below and the cross-check
+  // block. An "inventory-eligible" row is implemented or verified AND has
+  // at least one inventory-trackable path (bin/, environment/, package.json,
+  // or the inventory file itself). Before the first eligible row lands this
+  // array is empty and the downstream checks are inert.
+  const eligibleLedgerRows = ledgerExistsForCrossCheck
+    ? parseLedgerRows(ledgerMarkdown).filter(isInventoryEligibleLedgerRow)
+    : [];
+
+  // E_LEDGER_SURFACE_INDEX_MISSING closes the loophole observed during the
+  // Round 19 adversarial review: deleting phase9-vre-surface-index.json
+  // silently disabled the entire cross-check block because the block is
+  // gated by pathExists(surfaceIndex). Once the ledger has at least one
+  // inventory-eligible row, the inventory file MUST exist. Round 20 (VRE
+  // seq 007) landed this refinement.
+  if (eligibleLedgerRows.length > 0 && !surfaceIndexExists) {
+    violations.push(
+      `E_LEDGER_SURFACE_INDEX_MISSING ledger has ${eligibleLedgerRows.length} inventory-eligible row(s) but ${PATHS.surfaceIndex} does not exist (run "npm run build:surface-index" to regenerate)`
+    );
+  }
+
+  if (surfaceIndexExists) {
+    let persistedInventory;
+    try {
+      persistedInventory = JSON.parse(await readText(localRepoRoot, PATHS.surfaceIndex));
+      validateSurfaceIndexShape(persistedInventory);
+    } catch (error) {
+      violations.push(`E_LEDGER_MISSING_SURFACE ${PATHS.surfaceIndex} is unreadable or invalid: ${error.message}`);
+      persistedInventory = [];
+    }
+
+    const liveInventory = await generatePhase9SurfaceIndex({ repoRoot: localRepoRoot });
+    const persistedKeys = new Set(persistedInventory.map(surfaceKey));
+    const liveKeys = new Set(liveInventory.map(surfaceKey));
+
+    for (const surface of liveInventory) {
+      if (!persistedKeys.has(surfaceKey(surface))) {
+        violations.push(
+          `E_LEDGER_MISSING_SURFACE ${PATHS.surfaceIndex} is missing live surface ${surface.name}`
+        );
+      }
+    }
+
+    for (const surface of persistedInventory) {
+      if (!liveKeys.has(surfaceKey(surface))) {
+        violations.push(
+          `E_LEDGER_ORPHAN_ROW ${PATHS.surfaceIndex} contains stale surface ${surface.name} not present in the live codebase`
+        );
+      }
+    }
+
+    // NOTE: surfaceMatchesLedgerRow is intentionally lenient — it matches
+    // by feature-id OR ANY path overlap. This lets correction/hardening
+    // rows (e.g. seq 003/004, which share code paths with seq 001) match
+    // the same live surface as the originating row. Tightening this rule
+    // needs a "parent seq" field in the ledger schema and is deferred as
+    // a known followup beyond T0.4a-ter scope (see Round 20 log entries).
+    for (const surface of liveInventory) {
+      const hasLedgerMatch = eligibleLedgerRows.some((row) => surfaceMatchesLedgerRow(surface, row));
+      if (!hasLedgerMatch) {
+        violations.push(
+          `E_LEDGER_MISSING_SURFACE live surface ${surface.name} has no matching implemented/verified ledger row`
+        );
+      }
+    }
+
+    for (const row of eligibleLedgerRows) {
+      const hasSurfaceMatch = liveInventory.some((surface) => surfaceMatchesLedgerRow(surface, row));
+      if (!hasSurfaceMatch) {
+        violations.push(
+          `E_LEDGER_ORPHAN_ROW ledger row seq ${row.seq} (${row.featureId || 'no-feature-id'}) has no matching live surface`
+        );
+      }
+    }
+  }
+
+  if (ledgerIndexExists) {
+    const indexViolations = validateLedgerIndexRows(parseIndexRows(ledgerIndexMarkdown));
+    violations.push(...indexViolations);
   }
 
   assert(violations.length === 0, violations.join('\n'));

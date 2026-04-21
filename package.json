@@ -8,6 +8,7 @@
     "vre": "bin/vre"
   },
   "scripts": {
+    "build:surface-index": "node environment/tests/ci/phase9-surface-index.js",
     "check": "npm run validate && npm test",
     "check:phase9-ledger": "node environment/tests/ci/check-phase9-ledger.js",
     "test": "node --test",

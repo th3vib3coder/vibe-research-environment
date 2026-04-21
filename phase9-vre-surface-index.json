@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "test-entrypoint",
+    "name": "build:surface-index",
+    "paths": [
+      "environment/tests/ci/check-phase9-ledger.js",
+      "environment/tests/ci/phase9-surface-index.js",
+      "package.json",
+      "phase9-vre-surface-index.json"
+    ],
+    "featureId": "W0-SURFACE-INDEX-CROSSCHECK",
+    "introducedAt": "2026-04-21"
+  },
+  {
+    "kind": "test-entrypoint",
+    "name": "check:phase9-ledger",
+    "paths": [
+      "environment/tests/ci/check-phase9-ledger.js",
+      "environment/tests/ci/run-all.js",
+      "environment/tests/ci/validate-counts.js",
+      "package.json"
+    ],
+    "featureId": "W0-CI-LEDGER-CHECK",
+    "introducedAt": "2026-04-21"
+  }
+]
