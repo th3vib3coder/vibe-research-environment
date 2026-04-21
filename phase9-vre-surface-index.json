@@ -1,5 +1,131 @@
 [
   {
+    "kind": "cli-command",
+    "name": "capabilities --json",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-CAPABILITIES-JSON",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "objective pause",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-OBJECTIVE-PAUSE",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "objective resume",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-OBJECTIVE-RESUME",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "objective start",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-OBJECTIVE-START",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "objective status",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-OBJECTIVE-STATUS",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "objective stop",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-OBJECTIVE-STOP",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "research-loop",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-RESEARCH-LOOP",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "cli-command",
+    "name": "run-analysis",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-RUN-ANALYSIS",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "doctor-surface",
+    "name": "capabilities doctor",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-CAPABILITIES-DOCTOR",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "doctor-surface",
+    "name": "objective doctor",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-OBJECTIVE-DOCTOR",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "doctor-surface",
+    "name": "scheduler doctor",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-SCHEDULER-DOCTOR",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "scheduler-command",
+    "name": "scheduler install",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-SCHEDULER-INSTALL",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "scheduler-command",
+    "name": "scheduler remove",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-SCHEDULER-REMOVE",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "scheduler-command",
+    "name": "scheduler status",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "W0-CLI-SCHEDULER-STATUS",
+    "introducedAt": "2026-04-22"
+  },
+  {
     "kind": "test-entrypoint",
     "name": "build:surface-index",
     "paths": [

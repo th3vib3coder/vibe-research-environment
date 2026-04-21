@@ -60,6 +60,10 @@ async function seedSurfaceTrackingFixture(vreRoot, options = {}) {
   await writeFile(path.join(vreRoot, 'environment', 'tests', 'ci', 'run-all.js'), '// fixture\n', 'utf8');
   await writeFile(path.join(vreRoot, 'environment', 'tests', 'ci', 'validate-counts.js'), '// fixture\n', 'utf8');
   await writeFile(path.join(vreRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
+  if (options.binVreSource) {
+    await mkdir(path.join(vreRoot, 'bin'), { recursive: true });
+    await writeFile(path.join(vreRoot, 'bin', 'vre'), options.binVreSource, 'utf8');
+  }
 
   await writeFile(
     path.join(vreRoot, PATHS.vreLedger),
@@ -543,6 +547,80 @@ test('phase9-ledger check STILL fires E_LEDGER_ORPHAN_ROW for rows on covered su
           changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
         }),
       /E_LEDGER_ORPHAN_ROW.*seq 050.*W0-GENUINELY-ORPHANED/u
+    );
+  });
+});
+
+test('phase9-ledger check requires featureId match for live surfaces that share the same backing path', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Ledger CI runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row for check surface |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Surface inventory generator | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row for build surface |',
+        '| 012 | 2026-04-22 | 0 | W0-CLI-OBJECTIVE-START | Objective start stub | `bin/vre` | none | none | verified | fixture row for one CLI surface only |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'package.json', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js', 'package.json'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'cli-command',
+          name: 'objective start',
+          paths: ['bin/vre'],
+          featureId: 'W0-CLI-OBJECTIVE-START',
+          introducedAt: '2026-04-22'
+        },
+        {
+          kind: 'cli-command',
+          name: 'objective status',
+          paths: ['bin/vre'],
+          featureId: 'W0-CLI-OBJECTIVE-STATUS',
+          introducedAt: '2026-04-22'
+        }
+      ],
+      binVreSource: [
+        'export const PHASE9_STUB_DEFINITIONS = Object.freeze([',
+        '  {',
+        "    root: 'objective',",
+        "    action: 'start',",
+        "    canonicalCommand: 'objective start',",
+        "    kind: 'cli-command',",
+        "    featureId: 'W0-CLI-OBJECTIVE-START',",
+        "    introducedAt: '2026-04-22',",
+        '    mutating: true',
+        '  },',
+        '  {',
+        "    root: 'objective',",
+        "    action: 'status',",
+        "    canonicalCommand: 'objective status',",
+        "    kind: 'cli-command',",
+        "    featureId: 'W0-CLI-OBJECTIVE-STATUS',",
+        "    introducedAt: '2026-04-22',",
+        '    mutating: false',
+        '  }',
+        ']);',
+        ''
+      ].join('\n')
+    });
+
+    await assert.rejects(
+      () => checkPhase9Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+      }),
+      /E_LEDGER_MISSING_SURFACE.*objective status/u
     );
   });
 });

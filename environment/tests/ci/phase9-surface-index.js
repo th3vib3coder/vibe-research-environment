@@ -1,5 +1,6 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { assert, isDirectRun, repoRoot, runValidator } from './_helpers.js';
 
@@ -62,6 +63,17 @@ async function pathExistsAt(localRepoRoot, repoRelativePath) {
     }
     throw error;
   }
+}
+
+async function loadPhase9CliSurfaceDefinitions(localRepoRoot) {
+  if (!(await pathExistsAt(localRepoRoot, 'bin/vre'))) {
+    return [];
+  }
+
+  const moduleUrl = pathToFileURL(path.join(localRepoRoot, 'bin', 'vre')).href;
+  const mod = await import(moduleUrl);
+  const definitions = mod.PHASE9_STUB_DEFINITIONS;
+  return Array.isArray(definitions) ? definitions : [];
 }
 
 function buildSurface({ kind, name, paths, featureId, introducedAt }) {
@@ -151,6 +163,17 @@ export async function generatePhase9SurfaceIndex(options = {}) {
       paths: surfaceIndexFiles,
       featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
       introducedAt: '2026-04-21'
+    }));
+  }
+
+  const cliDefinitions = await loadPhase9CliSurfaceDefinitions(localRepoRoot);
+  for (const definition of cliDefinitions) {
+    surfaces.push(buildSurface({
+      kind: definition.kind,
+      name: definition.canonicalCommand,
+      paths: ['bin/vre'],
+      featureId: definition.featureId,
+      introducedAt: definition.introducedAt ?? null
     }));
   }
 

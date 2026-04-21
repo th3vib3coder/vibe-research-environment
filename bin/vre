@@ -32,8 +32,143 @@ export const DISPATCH_TABLE = Object.freeze({
   }
 });
 
+const PHASE9_STUB_DATE = '2026-04-22';
+
+export const PHASE9_STUB_DEFINITIONS = Object.freeze([
+  {
+    root: 'capabilities',
+    action: null,
+    canonicalCommand: 'capabilities --json',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-CAPABILITIES-JSON',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'capabilities',
+    action: 'doctor',
+    canonicalCommand: 'capabilities doctor',
+    kind: 'doctor-surface',
+    featureId: 'W0-CLI-CAPABILITIES-DOCTOR',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'objective',
+    action: 'start',
+    canonicalCommand: 'objective start',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-OBJECTIVE-START',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'objective',
+    action: 'status',
+    canonicalCommand: 'objective status',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-OBJECTIVE-STATUS',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'objective',
+    action: 'doctor',
+    canonicalCommand: 'objective doctor',
+    kind: 'doctor-surface',
+    featureId: 'W0-CLI-OBJECTIVE-DOCTOR',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'objective',
+    action: 'stop',
+    canonicalCommand: 'objective stop',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-OBJECTIVE-STOP',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'objective',
+    action: 'pause',
+    canonicalCommand: 'objective pause',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-OBJECTIVE-PAUSE',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'objective',
+    action: 'resume',
+    canonicalCommand: 'objective resume',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-OBJECTIVE-RESUME',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'run-analysis',
+    action: null,
+    canonicalCommand: 'run-analysis',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-RUN-ANALYSIS',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'research-loop',
+    action: null,
+    canonicalCommand: 'research-loop',
+    kind: 'cli-command',
+    featureId: 'W0-CLI-RESEARCH-LOOP',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'scheduler',
+    action: 'install',
+    canonicalCommand: 'scheduler install',
+    kind: 'scheduler-command',
+    featureId: 'W0-CLI-SCHEDULER-INSTALL',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  },
+  {
+    root: 'scheduler',
+    action: 'status',
+    canonicalCommand: 'scheduler status',
+    kind: 'scheduler-command',
+    featureId: 'W0-CLI-SCHEDULER-STATUS',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'scheduler',
+    action: 'doctor',
+    canonicalCommand: 'scheduler doctor',
+    kind: 'doctor-surface',
+    featureId: 'W0-CLI-SCHEDULER-DOCTOR',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'scheduler',
+    action: 'remove',
+    canonicalCommand: 'scheduler remove',
+    kind: 'scheduler-command',
+    featureId: 'W0-CLI-SCHEDULER-REMOVE',
+    introducedAt: PHASE9_STUB_DATE,
+    mutating: true
+  }
+]);
+
 const SESSION_SNAPSHOT_PATH = '.vibe-science-environment/control/session.json';
-const KNOWN_COMMANDS = [...Object.keys(DISPATCH_TABLE), 'init'].sort();
+const PHASE9_ROOTS = [...new Set(PHASE9_STUB_DEFINITIONS.map((definition) => definition.root))].sort();
+const KNOWN_COMMANDS = [...Object.keys(DISPATCH_TABLE), ...PHASE9_ROOTS, 'init'].sort();
+const PHASE9_LOOKUP = new Map(
+  PHASE9_STUB_DEFINITIONS.map((definition) => [`${definition.root}::${definition.action ?? ''}`, definition])
+);
 
 // Sibling kernel auto-discovery: if VRE_KERNEL_PATH is not set, look for a
 // common layout where vibe-science lives beside vibe-research-environment in
@@ -71,6 +206,10 @@ function isDirectRun(importMeta) {
 
 function normalizeSlashes(value) {
   return value.split(path.sep).join('/');
+}
+
+function findPhase9Definition(root, action = null) {
+  return PHASE9_LOOKUP.get(`${root}::${action ?? ''}`) ?? null;
 }
 
 function readPackageName(candidateRoot) {
@@ -234,6 +373,163 @@ function printUnknown(subcommand) {
   process.stderr.write(`vre: unknown subcommand "${subcommand}". Allowed: ${KNOWN_COMMANDS.join(', ')}\n`);
 }
 
+function parseLongOptions(tokens) {
+  const options = {};
+  const positionals = [];
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token === '--') {
+      positionals.push(...tokens.slice(index + 1));
+      break;
+    }
+
+    if (!token.startsWith('--') || token === '--') {
+      positionals.push(token);
+      continue;
+    }
+
+    const body = token.slice(2);
+    if (body.includes('=')) {
+      const [key, ...rawRest] = body.split('=');
+      options[key] = rawRest.join('=');
+      continue;
+    }
+
+    const next = tokens[index + 1];
+    if (next && !next.startsWith('--')) {
+      options[body] = next;
+      index += 1;
+      continue;
+    }
+
+    options[body] = true;
+  }
+
+  return { options, positionals };
+}
+
+function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extra = {}) {
+  return {
+    ok: false,
+    code,
+    command: definition.canonicalCommand,
+    phase9: true,
+    status: 'stub',
+    mutating: definition.mutating,
+    requiresPhase9Enabled: definition.mutating,
+    phase9Enabled: process.env.VIBE_PHASE9_ENABLED === '1',
+    argv: {
+      options: parsed.options,
+      positionals: parsed.positionals
+    },
+    ...extra
+  };
+}
+
+function writeJsonPayload(payload) {
+  process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function parsePhase9Invocation(tokens) {
+  const [root, maybeAction, ...rest] = tokens;
+  if (!PHASE9_ROOTS.includes(root)) {
+    return null;
+  }
+
+  if (root === 'run-analysis' || root === 'research-loop') {
+    const definition = findPhase9Definition(root);
+    return {
+      kind: 'phase9',
+      definition,
+      parsed: parseLongOptions(tokens.slice(1))
+    };
+  }
+
+  if (root === 'capabilities') {
+    if (maybeAction === 'doctor') {
+      return {
+        kind: 'phase9',
+        definition: findPhase9Definition(root, 'doctor'),
+        parsed: parseLongOptions(rest)
+      };
+    }
+
+    const parsed = parseLongOptions(tokens.slice(1));
+    if (parsed.positionals.length > 0) {
+      return {
+        kind: 'phase9-error',
+        exitCode: 2,
+        payload: {
+          ok: false,
+          code: 'PHASE9_UNKNOWN_SUBCOMMAND',
+          command: `capabilities ${parsed.positionals[0]}`,
+          phase9: true,
+          allowed: ['capabilities --json', 'capabilities doctor']
+        }
+      };
+    }
+
+    if (parsed.options.json === true || parsed.options.json === 'true') {
+      return {
+        kind: 'phase9',
+        definition: findPhase9Definition(root),
+        parsed
+      };
+    }
+
+    return {
+      kind: 'phase9-error',
+      exitCode: 3,
+      payload: {
+        ok: false,
+        code: 'PHASE9_USAGE',
+        command: 'capabilities',
+        phase9: true,
+        expected: 'capabilities --json or capabilities doctor'
+      }
+    };
+  }
+
+  if (!maybeAction) {
+    return {
+      kind: 'phase9-error',
+      exitCode: 3,
+      payload: {
+        ok: false,
+        code: 'PHASE9_USAGE',
+        command: root,
+        phase9: true,
+        expected: `${root} <subcommand>`
+      }
+    };
+  }
+
+  const definition = findPhase9Definition(root, maybeAction);
+  if (!definition) {
+    const allowed = PHASE9_STUB_DEFINITIONS
+      .filter((candidate) => candidate.root === root)
+      .map((candidate) => candidate.canonicalCommand);
+    return {
+      kind: 'phase9-error',
+      exitCode: 2,
+      payload: {
+        ok: false,
+        code: 'PHASE9_UNKNOWN_SUBCOMMAND',
+        command: `${root} ${maybeAction}`,
+        phase9: true,
+        allowed
+      }
+    };
+  }
+
+  return {
+    kind: 'phase9',
+    definition,
+    parsed: parseLongOptions(rest)
+  };
+}
+
 async function invokeEntry(repoRoot, subcommand, entry, reader) {
   const mod = await import(pathToFileURL(path.join(repoRoot, entry.module)).href);
   const helper = mod[entry.export];
@@ -311,6 +607,27 @@ export async function main(argv = process.argv) {
       return 3;
     }
     return runInit(repoRoot);
+  }
+
+  const phase9Invocation = parsePhase9Invocation([subcommand, ...rest]);
+  if (phase9Invocation?.kind === 'phase9-error') {
+    writeJsonPayload(phase9Invocation.payload);
+    return phase9Invocation.exitCode;
+  }
+  if (phase9Invocation?.kind === 'phase9') {
+    const repoRoot = resolveRepoRoot(process.cwd());
+    if (!repoRoot) {
+      writeJsonPayload({
+        ok: false,
+        code: 'NOT_IN_VRE_REPO',
+        command: phase9Invocation.definition.canonicalCommand,
+        phase9: true
+      });
+      return 3;
+    }
+
+    writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
+    return 0;
   }
 
   const entry = DISPATCH_TABLE[subcommand];

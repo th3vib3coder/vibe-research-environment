@@ -394,7 +394,15 @@ function isInventoryEligibleLedgerRow(row) {
     && row.paths.some(isInventoryTrackablePath);
 }
 
-function surfaceMatchesLedgerRow(surface, row) {
+function liveSurfaceMatchesLedgerRow(surface, row) {
+  if (surface.featureId) {
+    return row.featureId === surface.featureId;
+  }
+
+  return row.paths.some((pathValue) => surface.paths.includes(pathValue));
+}
+
+function ledgerRowMatchesLiveSurface(row, surface) {
   if (row.featureId && surface.featureId && row.featureId === surface.featureId) {
     return true;
   }
@@ -561,35 +569,40 @@ export default async function checkPhase9Ledger(options = {}) {
       }
     }
 
-    // NOTE: surfaceMatchesLedgerRow is intentionally lenient — it matches
-    // by feature-id OR ANY path overlap. This lets correction/hardening
-    // rows (e.g. seq 003/004, which share code paths with seq 001) match
-    // the same live surface as the originating row. Tightening this rule
-    // needs a "parent seq" field in the ledger schema and is deferred as
-    // a known followup beyond T0.4a-ter scope (see Round 20 log entries).
-    //
-    // Round 22: the orphan check iterates every eligible ledger row again.
-    // The Round 21 surfaceBackedLedgerRows pre-filter was reverted because
-    // it silently skipped orphan detection for any row that did not match
+      // Missing-surface and orphan checks are intentionally asymmetric:
+      //
+      // - live surface -> ledger row is STRICT when the live surface carries
+      //   a featureId. This is needed for T0.3 CLI stubs, where many real
+      //   surfaces share the same backing path (`bin/vre`). Without strict
+      //   featureId matching in this direction, one ledger row would mask a
+      //   missing sibling surface via path overlap alone.
+      // - ledger row -> live surface keeps the older path-overlap fallback so
+      //   correction/hardening rows that annotate an existing surface do not
+      //   get misclassified as orphaned just because they use a different
+      //   featureId than the original landing row.
+      //
+      // Round 22: the orphan check iterates every eligible ledger row again.
+      // The Round 21 surfaceBackedLedgerRows pre-filter was reverted because
+      // it silently skipped orphan detection for any row that did not match
     // a live or persisted surface — the exact scenario "code deleted, row
     // stays behind" would never fire. Eligibility is now correctly scoped
-    // by isInventoryTrackablePath (aligned with isCoveredVrePath) so that
-    // non-surface library rows never become eligible in the first place,
-    // and the strict orphan rule holds for genuinely covered surfaces.
-    for (const surface of liveInventory) {
-      const hasLedgerMatch = eligibleLedgerRows.some((row) => surfaceMatchesLedgerRow(surface, row));
-      if (!hasLedgerMatch) {
-        violations.push(
-          `E_LEDGER_MISSING_SURFACE live surface ${surface.name} has no matching implemented/verified ledger row`
+      // by isInventoryTrackablePath (aligned with isCoveredVrePath) so that
+      // non-surface library rows never become eligible in the first place,
+      // and the strict orphan rule holds for genuinely covered surfaces.
+      for (const surface of liveInventory) {
+        const hasLedgerMatch = eligibleLedgerRows.some((row) => liveSurfaceMatchesLedgerRow(surface, row));
+        if (!hasLedgerMatch) {
+          violations.push(
+            `E_LEDGER_MISSING_SURFACE live surface ${surface.name} has no matching implemented/verified ledger row`
         );
       }
     }
 
-    for (const row of eligibleLedgerRows) {
-      const hasSurfaceMatch = liveInventory.some((surface) => surfaceMatchesLedgerRow(surface, row));
-      if (!hasSurfaceMatch) {
-        violations.push(
-          `E_LEDGER_ORPHAN_ROW ledger row seq ${row.seq} (${row.featureId || 'no-feature-id'}) has no matching live surface`
+      for (const row of eligibleLedgerRows) {
+        const hasSurfaceMatch = liveInventory.some((surface) => ledgerRowMatchesLiveSurface(row, surface));
+        if (!hasSurfaceMatch) {
+          violations.push(
+            `E_LEDGER_ORPHAN_ROW ledger row seq ${row.seq} (${row.featureId || 'no-feature-id'}) has no matching live surface`
         );
       }
     }
