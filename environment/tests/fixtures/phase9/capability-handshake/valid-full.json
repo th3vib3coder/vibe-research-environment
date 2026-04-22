@@ -92,14 +92,29 @@
   },
   "vre": {
     "executableCommands": [
-      "capabilities --json",
-      "run-analysis"
+      "flow-status",
+      "orchestrator-status",
+      "sync-memory"
     ],
     "markdownOnlyContracts": [
-      "automation-status"
+      "automation-status",
+      "export-warning-digest",
+      "flow-experiment",
+      "flow-literature",
+      "flow-results",
+      "flow-writing",
+      "orchestrator-run",
+      "stale-memory-reminder",
+      "weekly-digest"
     ],
     "queueableTaskKinds": [
-      "literature-search"
+      "experiment-flow-register",
+      "literature-flow-register",
+      "memory-sync-refresh",
+      "results-bundle-discover",
+      "session-digest-export",
+      "session-digest-review",
+      "writing-export-finalize"
     ],
     "schemas": [
       {
@@ -114,20 +129,44 @@
       {
         "id": "filesystem-export",
         "path": "environment/connectors/manifests/filesystem-export.connector.json",
-        "status": "available",
+        "status": "degraded",
         "capabilities": [
-          "resultsExport"
+          "resultsExport",
+          "writingPackExport"
         ],
-        "degradedReason": null
+        "degradedReason": "connector filesystem-export is degraded: connectors-core bundle is not installed"
+      },
+      {
+        "id": "obsidian-export",
+        "path": "environment/connectors/manifests/obsidian-export.connector.json",
+        "status": "degraded",
+        "capabilities": [
+          "memoryMirrorExport"
+        ],
+        "degradedReason": "connector obsidian-export is degraded: connectors-core bundle is not installed"
       }
     ],
     "automations": [
       {
+        "id": "export-warning-digest",
+        "path": "environment/automation/definitions/export-warning-digest.automation.json",
+        "scheduleKind": "daily",
+        "status": "degraded",
+        "targetCommand": "/export-warning-digest"
+      },
+      {
         "id": "stale-memory-reminder",
         "path": "environment/automation/definitions/stale-memory-reminder.automation.json",
         "scheduleKind": "daily",
-        "status": "available",
+        "status": "degraded",
         "targetCommand": "/stale-memory-reminder"
+      },
+      {
+        "id": "weekly-research-digest",
+        "path": "environment/automation/definitions/weekly-research-digest.automation.json",
+        "scheduleKind": "weekly",
+        "status": "degraded",
+        "targetCommand": "/weekly-digest"
       }
     ],
     "domainPacks": [
@@ -135,10 +174,12 @@
         "id": "omics",
         "path": "environment/domain-packs/omics/pack.domain-pack.json",
         "domain": "omics",
-        "status": "available",
+        "status": "degraded",
         "exposedRules": [
+          "citation truth",
           "claim truth",
-          "citation truth"
+          "gate semantics",
+          "kernel stop behavior"
         ]
       }
     ],
@@ -156,11 +197,20 @@
     "operatorSurface": {
       "commands": [
         "capabilities --json",
+        "objective pause",
+        "objective resume",
         "objective start",
-        "run-analysis"
+        "objective status",
+        "objective stop",
+        "research-loop",
+        "run-analysis",
+        "scheduler install",
+        "scheduler remove",
+        "scheduler status"
       ],
       "doctorCommands": [
         "capabilities doctor",
+        "objective doctor",
         "scheduler doctor"
       ],
       "artifactPaths": [
@@ -171,7 +221,15 @@
         ".vibe-science-environment/objectives/<OBJ-ID>/BLOCKER.flag"
       ]
     },
-    "missingSurfaces": []
+    "missingSurfaces": [
+      "analysis-manifest schema",
+      "capabilities --json",
+      "plugin handshake injection",
+      "research-loop",
+      "reviewer-2 bridge",
+      "run-analysis",
+      "scheduler runtime"
+    ]
   },
   "objective": {
     "activePointer": null,
@@ -182,5 +240,12 @@
     "fresh": true,
     "lastSyncAt": "2026-04-22T17:55:00Z"
   },
-  "degradedReasons": []
+  "degradedReasons": [
+    "automation export-warning-digest is degraded: automation-core bundle is not installed",
+    "automation stale-memory-reminder is degraded: automation-core bundle is not installed",
+    "automation weekly-research-digest is degraded: automation-core bundle is not installed",
+    "connector filesystem-export is degraded: connectors-core bundle is not installed",
+    "connector obsidian-export is degraded: connectors-core bundle is not installed",
+    "domain pack omics is degraded: domain-packs-core bundle is not installed"
+  ]
 }

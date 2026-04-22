@@ -32,30 +32,120 @@
   },
   "vre": {
     "executableCommands": [
-      "capabilities --json"
+      "flow-status",
+      "orchestrator-status",
+      "sync-memory"
     ],
     "markdownOnlyContracts": [
-      "automation-status"
+      "automation-status",
+      "export-warning-digest",
+      "flow-experiment",
+      "flow-literature",
+      "flow-results",
+      "flow-writing",
+      "orchestrator-run",
+      "stale-memory-reminder",
+      "weekly-digest"
     ],
-    "queueableTaskKinds": [],
-    "schemas": [],
-    "connectors": [],
-    "automations": [],
-    "domainPacks": [],
-    "memoryApis": [],
+    "queueableTaskKinds": [
+      "experiment-flow-register",
+      "literature-flow-register",
+      "memory-sync-refresh",
+      "results-bundle-discover",
+      "session-digest-export",
+      "session-digest-review",
+      "writing-export-finalize"
+    ],
+    "schemas": [
+      {
+        "name": "phase9.capability-handshake.v1",
+        "schemaVersion": "phase9.capability-handshake.v1",
+        "path": "environment/schemas/phase9-capability-handshake.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-degraded-no-kernel.json",
+        "owner": "vre"
+      }
+    ],
+    "connectors": [
+      {
+        "id": "filesystem-export",
+        "path": "environment/connectors/manifests/filesystem-export.connector.json",
+        "status": "degraded",
+        "capabilities": [
+          "resultsExport",
+          "writingPackExport"
+        ],
+        "degradedReason": "connector filesystem-export is degraded: connectors-core bundle is not installed"
+      }
+    ],
+    "automations": [
+      {
+        "id": "stale-memory-reminder",
+        "path": "environment/automation/definitions/stale-memory-reminder.automation.json",
+        "scheduleKind": "daily",
+        "status": "degraded",
+        "targetCommand": "/stale-memory-reminder"
+      }
+    ],
+    "domainPacks": [
+      {
+        "id": "omics",
+        "path": "environment/domain-packs/omics/pack.domain-pack.json",
+        "domain": "omics",
+        "status": "degraded",
+        "exposedRules": [
+          "citation truth",
+          "claim truth",
+          "gate semantics",
+          "kernel stop behavior"
+        ]
+      }
+    ],
+    "memoryApis": [
+      {
+        "name": "getMemoryFreshness",
+        "modulePath": "environment/memory/status.js",
+        "exportName": "getMemoryFreshness",
+        "status": "available",
+        "summary": "Read sync-state freshness and report whether memory mirrors are stale.",
+        "safeToExpose": true,
+        "category": "read-status"
+      }
+    ],
     "operatorSurface": {
       "commands": [
-        "capabilities --json"
+        "capabilities --json",
+        "objective pause",
+        "objective resume",
+        "objective start",
+        "objective status",
+        "objective stop",
+        "research-loop",
+        "run-analysis",
+        "scheduler install",
+        "scheduler remove",
+        "scheduler status"
       ],
       "doctorCommands": [
-        "capabilities doctor"
+        "capabilities doctor",
+        "objective doctor",
+        "scheduler doctor"
       ],
       "artifactPaths": [
-        ".vibe-science-environment/objectives/<OBJ-ID>/resume-snapshot.json"
+        ".vibe-science-environment/objectives/<OBJ-ID>/resume-snapshot.json",
+        ".vibe-science-environment/objectives/<OBJ-ID>/digest-latest.md",
+        ".vibe-science-environment/objectives/<OBJ-ID>/events.jsonl",
+        ".vibe-science-environment/objectives/<OBJ-ID>/handoffs.jsonl",
+        ".vibe-science-environment/objectives/<OBJ-ID>/BLOCKER.flag"
       ]
     },
     "missingSurfaces": [
-      "capabilities --json"
+      "analysis-manifest schema",
+      "capabilities --json",
+      "plugin handshake injection",
+      "research-loop",
+      "reviewer-2 bridge",
+      "run-analysis",
+      "scheduler runtime"
     ]
   },
   "objective": {
@@ -68,6 +158,9 @@
     "lastSyncAt": null
   },
   "degradedReasons": [
-    "kernel missing: kernel root not found"
+    "automation stale-memory-reminder is degraded: automation-core bundle is not installed",
+    "connector filesystem-export is degraded: connectors-core bundle is not installed",
+    "domain pack omics is degraded: domain-packs-core bundle is not installed",
+    "kernel degraded: kernel root not found"
   ]
 }
