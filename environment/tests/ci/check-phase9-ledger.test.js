@@ -642,6 +642,123 @@ test('phase9-ledger check requires featureId match for live surfaces that share 
   });
 });
 
+test('phase9-ledger check still accepts legacy Wave 0 dispatcher-only hardening rows before the Round 29 transition seq', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Ledger CI runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row for check surface |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Surface inventory generator | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row for build surface |',
+        '| 015 | 2026-04-22 | 0 | W0-CLI-OBJECTIVE-START | Objective start stub | `bin/vre` | none | none | verified | originating objective start surface row |',
+        '| 034 | 2026-04-22 | 0 | W0-CLI-OBJECTIVE-START-REASONING-GATE | Objective start reasoning gate hardening | `bin/vre`, `environment/tests/cli/bin-vre-phase9-stubs.test.js` | none | none | verified | legacy Wave 0 hardening row that annotates the existing objective start surface |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'package.json', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js', 'package.json'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'cli-command',
+          name: 'objective start',
+          paths: ['bin/vre'],
+          featureId: 'W0-CLI-OBJECTIVE-START',
+          introducedAt: '2026-04-22'
+        }
+      ],
+      binVreSource: [
+        'export const PHASE9_STUB_DEFINITIONS = Object.freeze([',
+        '  {',
+        "    root: 'objective',",
+        "    action: 'start',",
+        "    canonicalCommand: 'objective start',",
+        "    kind: 'cli-command',",
+        "    featureId: 'W0-CLI-OBJECTIVE-START',",
+        "    introducedAt: '2026-04-22',",
+        '    mutating: true',
+        '  }',
+        ']);',
+        ''
+      ].join('\n')
+    });
+
+    await assert.doesNotReject(() =>
+      checkPhase9Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+      })
+    );
+  });
+});
+
+test('phase9-ledger check rejects post-Wave-0 dispatcher-only rows with a fresh featureId that matches no live CLI surface', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Ledger CI runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row for check surface |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Surface inventory generator | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row for build surface |',
+        '| 041 | 2026-04-22 | 0 | W1-CLI-FAKE-NEVER-LANDED | Fake post-Wave-0 dispatcher-only row | `bin/vre` | none | none | verified | should fail after the Round 29 dispatcher-only transition rule |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'package.json', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js', 'package.json'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'cli-command',
+          name: 'objective start',
+          paths: ['bin/vre'],
+          featureId: 'W0-CLI-OBJECTIVE-START',
+          introducedAt: '2026-04-22'
+        }
+      ],
+      binVreSource: [
+        'export const PHASE9_STUB_DEFINITIONS = Object.freeze([',
+        '  {',
+        "    root: 'objective',",
+        "    action: 'start',",
+        "    canonicalCommand: 'objective start',",
+        "    kind: 'cli-command',",
+        "    featureId: 'W0-CLI-OBJECTIVE-START',",
+        "    introducedAt: '2026-04-22',",
+        '    mutating: true',
+        '  }',
+        ']);',
+        ''
+      ].join('\n')
+    });
+
+    await assert.rejects(
+      () =>
+        checkPhase9Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+        }),
+      /E_LEDGER_ORPHAN_ROW.*seq 041.*W1-CLI-FAKE-NEVER-LANDED/u
+    );
+  });
+});
+
 test('phase9-ledger check fails-open when the sibling vibe-science spec ledger file is absent and covered VRE paths changed in discovered mode (Round 25 CI-scenario closure)', async () => {
   // Round 25 regression: in CI of vibe-research-environment alone, the
   // sibling vibe-science spec ledger path resolves to a non-existent file.

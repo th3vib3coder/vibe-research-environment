@@ -395,12 +395,30 @@ function isInventoryEligibleLedgerRow(row) {
     && row.paths.some(isInventoryTrackablePath);
 }
 
+const DISPATCHER_ONLY_SHARED_PATHS = new Set(['bin/vre']);
+const DISPATCHER_ONLY_TRANSITION_SEQ = 41;
+
+function parseLedgerSeq(row) {
+  const parsed = Number.parseInt(String(row.seq), 10);
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+}
+
+function sharedPathsBetweenRowAndSurface(row, surface) {
+  return row.paths.filter((pathValue) => surface.paths.includes(pathValue));
+}
+
+function isDispatcherOnlySharedFallback(row, sharedPaths) {
+  return sharedPaths.length > 0
+    && sharedPaths.every((pathValue) => DISPATCHER_ONLY_SHARED_PATHS.has(pathValue))
+    && row.paths.every((pathValue) => DISPATCHER_ONLY_SHARED_PATHS.has(pathValue));
+}
+
 function liveSurfaceMatchesLedgerRow(surface, row) {
   if (surface.featureId) {
     return row.featureId === surface.featureId;
   }
 
-  return row.paths.some((pathValue) => surface.paths.includes(pathValue));
+  return sharedPathsBetweenRowAndSurface(row, surface).length > 0;
 }
 
 function ledgerRowMatchesLiveSurface(row, surface) {
@@ -408,7 +426,26 @@ function ledgerRowMatchesLiveSurface(row, surface) {
     return true;
   }
 
-  return row.paths.some((pathValue) => surface.paths.includes(pathValue));
+  const sharedPaths = sharedPathsBetweenRowAndSurface(row, surface);
+  if (sharedPaths.length === 0) {
+    return false;
+  }
+
+  // Round 29: the last known shared-path lenience was specific to dispatcher-
+  // only rows on `bin/vre`. A fake post-Wave-0 row with a fresh featureId and
+  // only `bin/vre` in `paths` could still masquerade as "matched" merely
+  // because every CLI surface shares the dispatcher file. We close that
+  // loophole without rewriting the Wave 0 history:
+  //   - legacy Wave 0 dispatcher-only correction/hardening rows (`seq < 041`)
+  //     keep the old fallback so already-landed rows like seq 034 do not
+  //     become false reds;
+  //   - new dispatcher-only rows (`seq >= 041`) must match a live surface by
+  //     featureId, not by dispatcher-path overlap alone.
+  if (isDispatcherOnlySharedFallback(row, sharedPaths)) {
+    return parseLedgerSeq(row) < DISPATCHER_ONLY_TRANSITION_SEQ;
+  }
+
+  return true;
 }
 
 function surfaceKey(surface) {
