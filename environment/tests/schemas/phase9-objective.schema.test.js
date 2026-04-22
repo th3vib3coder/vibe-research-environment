@@ -17,7 +17,9 @@ for (const fixturePath of [
 
 for (const fixturePath of [
   'environment/tests/fixtures/phase9/objective/invalid-missing-budget.json',
-  'environment/tests/fixtures/phase9/objective/invalid-missing-reasoning-mode.json'
+  'environment/tests/fixtures/phase9/objective/invalid-missing-reasoning-mode.json',
+  'environment/tests/fixtures/phase9/objective/invalid-missing-stop-conditions.json',
+  'environment/tests/fixtures/phase9/objective/invalid-runtime-mode.json'
 ]) {
   test(`phase9-objective.schema rejects ${fixturePath}`, async () => {
     await expectFixtureValidity({

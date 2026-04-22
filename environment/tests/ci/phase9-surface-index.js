@@ -78,6 +78,13 @@ async function loadPhase9CliSurfaceDefinitions(localRepoRoot) {
 
 const EXTRA_PHASE9_SURFACES = Object.freeze([
   {
+    file: 'environment/objectives/store.js',
+    kind: 'orchestrator-surface',
+    name: 'objective-store',
+    featureId: 'W2-OBJECTIVE-STORE',
+    introducedAt: '2026-04-22'
+  },
+  {
     file: 'environment/control/capability-handshake.js',
     kind: 'orchestrator-surface',
     name: 'capability-handshake',

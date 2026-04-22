@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "phase9.objective.v1",
+  "objectiveId": "OBJ-2026-04-22-004",
+  "title": "Missing stop conditions fixture",
+  "question": "What happens when stopConditions is omitted?",
+  "createdAt": "2026-04-22T21:10:00Z",
+  "status": "active",
+  "budget": {
+    "schemaVersion": "phase9.runtime-budget.v1",
+    "maxWallSeconds": 14400,
+    "maxIterations": 12,
+    "maxTaskCount": 24,
+    "maxExternalCalls": 4,
+    "costCeiling": 12.5,
+    "heartbeatIntervalSeconds": 1800,
+    "allowedTaskKinds": [
+      "run-analysis"
+    ],
+    "networkPolicy": "allowlist-only",
+    "humanApprovalRequiredForDestructive": true
+  },
+  "runtimeMode": "interactive",
+  "reasoningMode": "rule-only",
+  "wakePolicy": {
+    "wakeOwner": "manual",
+    "wakeSourceId": null,
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "ownerAgentRole": "lead-researcher",
+  "stages": [
+    {
+      "stageId": "orientation",
+      "status": "active"
+    }
+  ],
+  "artifactsIndex": {
+    "literature": [],
+    "experiments": [],
+    "results": [],
+    "writing": [],
+    "review": []
+  },
+  "createdBySession": "sess-2026-04-22-night",
+  "lastUpdatedAt": "2026-04-22T21:10:30Z"
+}

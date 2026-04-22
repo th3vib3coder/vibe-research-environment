@@ -118,6 +118,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "objective-store",
+    "paths": [
+      "environment/objectives/store.js"
+    ],
+    "featureId": "W2-OBJECTIVE-STORE",
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "time-provider",
     "paths": [
       "environment/control/time-provider.js"
