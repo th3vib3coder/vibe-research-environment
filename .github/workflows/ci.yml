@@ -25,3 +25,6 @@ jobs:
 
       - name: Run check (validators + tests)
         run: npm run check
+
+      - name: Run named Phase 9 entrypoint
+        run: npm run test:phase9

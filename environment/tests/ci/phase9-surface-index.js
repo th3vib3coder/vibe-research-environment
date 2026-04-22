@@ -239,6 +239,27 @@ export async function generatePhase9SurfaceIndex(options = {}) {
     }));
   }
 
+  const phase9TestEntryFiles = [
+    'package.json',
+    '.github/workflows/ci.yml',
+    'environment/tests/ci/validate-runtime-contracts.js'
+  ];
+  const hasPhase9TestScript = typeof scripts['test:phase9'] === 'string'
+    && scripts['test:phase9'].includes('environment/tests/');
+  const hasPhase9TestFiles = await Promise.all(
+    phase9TestEntryFiles.map((file) => pathExistsAt(localRepoRoot, file))
+  ).then((values) => values.every(Boolean));
+
+  if (hasPhase9TestScript && hasPhase9TestFiles) {
+    surfaces.push(buildSurface({
+      kind: 'test-entrypoint',
+      name: 'test:phase9',
+      paths: phase9TestEntryFiles,
+      featureId: 'W0-PHASE9-TEST-ENTRYPOINT',
+      introducedAt: '2026-04-22'
+    }));
+  }
+
   for (const definition of EXTRA_PHASE9_SURFACES) {
     if (await pathExistsAt(localRepoRoot, definition.file)) {
       surfaces.push(buildSurface({

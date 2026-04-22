@@ -238,5 +238,16 @@
     ],
     "featureId": "W0-CI-LEDGER-CHECK",
     "introducedAt": "2026-04-21"
+  },
+  {
+    "kind": "test-entrypoint",
+    "name": "test:phase9",
+    "paths": [
+      ".github/workflows/ci.yml",
+      "environment/tests/ci/validate-runtime-contracts.js",
+      "package.json"
+    ],
+    "featureId": "W0-PHASE9-TEST-ENTRYPOINT",
+    "introducedAt": "2026-04-22"
   }
 ]

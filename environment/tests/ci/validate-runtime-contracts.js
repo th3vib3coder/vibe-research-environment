@@ -185,7 +185,28 @@ const activeIntegrationTestFiles = [
 const activeCliTestFiles = [
   'bin-vre-smoke.test.js',
   'bin-vre-errors.test.js',
-  'bin-vre-crossplatform.test.js'
+  'bin-vre-crossplatform.test.js',
+  'bin-vre-init.test.js',
+  'bin-vre-kernel-reader.test.js',
+  'bin-vre-phase9-stubs.test.js'
+];
+
+const activePhase9TestFiles = [
+  'environment/tests/ci/check-phase9-ledger.test.js',
+  'environment/tests/ci/phase9-surface-index.test.js',
+  'environment/tests/cli/bin-vre-phase9-stubs.test.js',
+  'environment/tests/control/time-provider.test.js',
+  'environment/tests/control/approved-memory-apis.test.js',
+  'environment/tests/lib/kernel-bridge.test.js',
+  'environment/tests/integration/kernel-bridge.test.js',
+  'environment/tests/schemas/phase9-runtime-budget.schema.test.js',
+  'environment/tests/schemas/phase9-objective.schema.test.js',
+  'environment/tests/schemas/phase9-active-objective-pointer.schema.test.js',
+  'environment/tests/schemas/phase9-objective-event.schema.test.js',
+  'environment/tests/schemas/phase9-handoff.schema.test.js',
+  'environment/tests/schemas/phase9-resume-snapshot.schema.test.js',
+  'environment/tests/schemas/phase9-lane-run-record.schema.test.js',
+  'environment/tests/schemas/phase9-role-envelope.schema.test.js'
 ];
 
 async function importRepoModule(repoRelativePath) {
@@ -194,6 +215,18 @@ async function importRepoModule(repoRelativePath) {
 }
 
 export default async function validateRuntimeContracts() {
+  const packageJson = await readJson('package.json');
+  assert(
+    typeof packageJson.scripts?.['test:phase9'] === 'string' && packageJson.scripts['test:phase9'].trim() !== '',
+    'Missing package.json script: test:phase9'
+  );
+  for (const testFile of activePhase9TestFiles) {
+    assert(
+      packageJson.scripts['test:phase9'].includes(testFile),
+      `package.json test:phase9 is missing ${testFile}`
+    );
+  }
+
   for (const schemaFile of activeSchemaFiles) {
     assert(await pathExists(`environment/schemas/${schemaFile}`), `Missing active schema: ${schemaFile}`);
     assert(

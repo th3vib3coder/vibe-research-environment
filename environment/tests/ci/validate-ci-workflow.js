@@ -49,6 +49,10 @@ function hasNpmRunCheck(content) {
   return /\bnpm\s+run\s+check\b/u.test(content);
 }
 
+function hasNpmRunTestPhase9(content) {
+  return /\bnpm\s+run\s+test:phase9\b/u.test(content);
+}
+
 function hasCheckoutAction(content) {
   return /actions\/checkout@/u.test(content);
 }
@@ -66,6 +70,7 @@ async function evaluateWorkflow(filePath) {
     ubuntuRunner: hasUbuntuRunner(content),
     npmCi: hasNpmCi(content),
     npmRunCheck: hasNpmRunCheck(content),
+    npmRunTestPhase9: hasNpmRunTestPhase9(content),
     checkoutAction: hasCheckoutAction(content),
     setupNodeAction: hasSetupNodeAction(content),
   };
@@ -77,6 +82,7 @@ function workflowIsCompliant(evaluation) {
     && evaluation.ubuntuRunner
     && evaluation.npmCi
     && evaluation.npmRunCheck
+    && evaluation.npmRunTestPhase9
     && evaluation.checkoutAction
     && evaluation.setupNodeAction
   );
@@ -88,6 +94,7 @@ function describeFailure(evaluation) {
   if (!evaluation.ubuntuRunner) missing.push('runs-on ubuntu-latest');
   if (!evaluation.npmCi) missing.push('npm ci step');
   if (!evaluation.npmRunCheck) missing.push('npm run check step');
+  if (!evaluation.npmRunTestPhase9) missing.push('npm run test:phase9 step');
   if (!evaluation.checkoutAction) missing.push('actions/checkout');
   if (!evaluation.setupNodeAction) missing.push('actions/setup-node');
   return missing.join(', ');
@@ -109,7 +116,7 @@ export default async function validateCiWorkflow() {
       .join('\n');
     assert(
       false,
-      `No CI workflow satisfies the Phase 6 WP-154 contract (needs pull_request trigger + ubuntu-latest + npm ci + npm run check + checkout + setup-node):\n${details}`
+      `No CI workflow satisfies the Phase 6 WP-154 + Phase 9 T0.5 contract (needs pull_request trigger + ubuntu-latest + npm ci + npm run check + npm run test:phase9 + checkout + setup-node):\n${details}`
     );
   }
 

@@ -23,6 +23,7 @@ export const PATHS = {
 
 const COVERED_VRE_PREFIXES = [
   'package.json',
+  '.github/workflows/',
   'bin/vre',
   'environment/control/',
   'environment/objectives/',
