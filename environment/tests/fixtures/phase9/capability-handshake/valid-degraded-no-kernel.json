@@ -32,6 +32,7 @@
   },
   "vre": {
     "executableCommands": [
+      "capabilities --json",
       "flow-status",
       "orchestrator-status",
       "sync-memory"
@@ -140,7 +141,6 @@
     },
     "missingSurfaces": [
       "analysis-manifest schema",
-      "capabilities --json",
       "plugin handshake injection",
       "research-loop",
       "reviewer-2 bridge",
@@ -158,10 +158,13 @@
     "lastSyncAt": null
   },
   "degradedReasons": [
+    "automation export-warning-digest is degraded: automation-core bundle is not installed",
     "automation stale-memory-reminder is degraded: automation-core bundle is not installed",
     "connector filesystem-export is degraded: connectors-core bundle is not installed",
+    "connector obsidian-export is degraded: connectors-core bundle is not installed",
     "domain pack omics is degraded: domain-packs-core bundle is not installed",
-    "kernel missing: kernel root not found",
+    "automation weekly-research-digest is degraded: automation-core bundle is not installed",
+    "kernel missing: CLI default: no reader provided",
     "kernel unresolvedR2Count is unavailable because listUnresolvedClaims is not currently available"
   ]
 }

@@ -1,14 +1,26 @@
 import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import test from 'node:test';
 
+import { DISPATCH_TABLE } from '../../../bin/vre';
 import {
   cleanupCliFixtureProject,
   createCliFixtureProject,
   runVre
 } from './_fixture.js';
 
+const HANDSHAKE_ARTIFACT_PATH = '.vibe-science-environment/control/capability-handshake.json';
+const FIXTURE_KERNEL_ENV = {
+  VRE_KERNEL_PATH: path.join(
+    'environment',
+    'tests',
+    'fixtures',
+    'fake-kernel-sibling'
+  )
+};
+
 const STUB_CASES = [
-  { argv: ['capabilities', '--json'], command: 'capabilities --json', optionChecks: { json: true } },
   { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' },
   {
     argv: ['objective', 'start', '--title', 'demo', '--question=why-now'],
@@ -51,6 +63,74 @@ test('Phase 9 CLI stubs are invokable and emit structured JSON instead of unknow
         assert.deepEqual(payload.argv.options[key], expected, `${stubCase.command} should parse option ${key}`);
       }
     }
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('capabilities --json emits JSON only and atomically rewrites the handshake artifact with the same bytes', async () => {
+  const projectRoot = await createCliFixtureProject('vre-phase9-cap-json-');
+  const artifactPath = path.join(projectRoot, HANDSHAKE_ARTIFACT_PATH);
+  try {
+    const result = await runVre(projectRoot, ['capabilities', '--json'], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.schemaVersion, 'phase9.capability-handshake.v1');
+    assert.equal(payload.vrePresent, true);
+
+    const artifactBytes = await readFile(artifactPath, 'utf8');
+    assert.equal(artifactBytes, result.stdout);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('capabilities --json rewrites stale artifact content instead of leaving old bytes behind', async () => {
+  const projectRoot = await createCliFixtureProject('vre-phase9-cap-rewrite-');
+  const artifactPath = path.join(projectRoot, HANDSHAKE_ARTIFACT_PATH);
+  try {
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, 'STALE-HANDSHAKE-CONTENT\n', 'utf8');
+
+    const first = await runVre(projectRoot, ['capabilities', '--json'], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(first.code, 0, `stderr=${first.stderr}`);
+    assert.equal(await readFile(artifactPath, 'utf8'), first.stdout);
+
+    await writeFile(artifactPath, 'STALE-CONTENT-SHOULD-DISAPPEAR\n', 'utf8');
+
+    const second = await runVre(projectRoot, ['capabilities', '--json'], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(second.code, 0, `stderr=${second.stderr}`);
+
+    const artifactBytes = await readFile(artifactPath, 'utf8');
+    assert.equal(artifactBytes, second.stdout);
+    assert.doesNotMatch(artifactBytes, /STALE-CONTENT-SHOULD-DISAPPEAR/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('capabilities --json reports only commands that are actually wired in bin/vre', async () => {
+  const projectRoot = await createCliFixtureProject('vre-phase9-cap-truth-');
+  try {
+    const result = await runVre(projectRoot, ['capabilities', '--json'], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const payload = JSON.parse(result.stdout);
+    assert.deepEqual(payload.vre.executableCommands, Object.keys(DISPATCH_TABLE).sort());
+    assert.equal(payload.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(payload.vre.executableCommands.includes('weekly-digest'), false);
+    assert.equal(payload.vre.markdownOnlyContracts.includes('weekly-digest'), true);
+    assert.equal(payload.vre.missingSurfaces.includes('capabilities --json'), false);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

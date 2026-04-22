@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+import { DISPATCH_TABLE } from '../../../bin/vre';
 import {
   generateCapabilityHandshake,
   HANDSHAKE_SCHEMA_FILE,
@@ -46,7 +47,8 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
       'listUnresolvedClaims'
     ]
   );
-  assert.equal(handshake.vre.executableCommands.includes('capabilities --json'), false);
+  assert.deepEqual(handshake.vre.executableCommands, Object.keys(DISPATCH_TABLE).sort());
+  assert.equal(handshake.vre.executableCommands.includes('capabilities --json'), true);
   assert.equal(handshake.vre.executableCommands.includes('flow-status'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('weekly-digest'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('flow-status'), false);
@@ -84,7 +86,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.objective.activeObjectiveId, null);
   assert.equal(handshake.objective.status, null);
   assert.equal(handshake.vre.missingSurfaces.includes('active-objective path'), false);
-  assert.equal(handshake.vre.missingSurfaces.includes('capabilities --json'), true);
+  assert.equal(handshake.vre.missingSurfaces.includes('capabilities --json'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('analysis-manifest schema'), true);
 });
 
@@ -100,6 +102,47 @@ test('capability-handshake generator reports an honest degraded kernel when no k
   assert.equal(handshake.kernel.projections.unavailable.length, 8);
   assert.equal(
     handshake.degradedReasons.some((reason) => reason.includes('kernel missing')),
+    true
+  );
+});
+
+test('canonical capability fixtures stay truthful once capabilities --json is a real executable command', async () => {
+  const fullFixture = JSON.parse(
+    await readFile(
+      path.join(
+        PROJECT_ROOT,
+        'environment',
+        'tests',
+        'fixtures',
+        'phase9',
+        'capability-handshake',
+        'valid-full.json'
+      ),
+      'utf8'
+    )
+  );
+  const degradedFixture = JSON.parse(
+    await readFile(
+      path.join(
+        PROJECT_ROOT,
+        'environment',
+        'tests',
+        'fixtures',
+        'phase9',
+        'capability-handshake',
+        'valid-degraded-no-kernel.json'
+      ),
+      'utf8'
+    )
+  );
+
+  for (const fixture of [fullFixture, degradedFixture]) {
+    assert.equal(fixture.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(fixture.vre.missingSurfaces.includes('capabilities --json'), false);
+  }
+
+  assert.equal(
+    degradedFixture.degradedReasons.includes('kernel missing: CLI default: no reader provided'),
     true
   );
 });

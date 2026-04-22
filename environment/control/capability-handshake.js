@@ -50,7 +50,10 @@ export const OPERATOR_ARTIFACT_PATHS = Object.freeze([
 const REVIEWED_MISSING_SURFACE_RULES = Object.freeze([
   {
     surface: 'capabilities --json',
-    present: async () => false
+    present: async (projectRoot, cliMetadata = null) => {
+      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(projectRoot);
+      return resolvedCliMetadata.IMPLEMENTED_PHASE9_COMMANDS.includes('capabilities --json');
+    }
   },
   {
     surface: 'run-analysis',
@@ -81,6 +84,52 @@ const REVIEWED_MISSING_SURFACE_RULES = Object.freeze([
       pathExists(path.join(path.dirname(projectRoot), 'vibe-science', 'plugin', 'scripts', 'r2-bridge-writer.js'))
   }
 ]);
+
+async function resolveCliMetadata(projectRoot, cliMetadataOverride = null) {
+  if (cliMetadataOverride != null) {
+    return {
+      DISPATCH_TABLE: cliMetadataOverride.DISPATCH_TABLE ?? {},
+      IMPLEMENTED_PHASE9_COMMANDS: Array.isArray(cliMetadataOverride.IMPLEMENTED_PHASE9_COMMANDS)
+        ? cliMetadataOverride.IMPLEMENTED_PHASE9_COMMANDS
+        : [],
+      PHASE9_STUB_DEFINITIONS: Array.isArray(cliMetadataOverride.PHASE9_STUB_DEFINITIONS)
+        ? cliMetadataOverride.PHASE9_STUB_DEFINITIONS
+        : [],
+      resolveKernelRoot: typeof cliMetadataOverride.resolveKernelRoot === 'function'
+        ? cliMetadataOverride.resolveKernelRoot
+        : () => ({ kernelRoot: null, source: 'not-found' })
+    };
+  }
+
+  return loadCliMetadata(projectRoot);
+}
+
+async function buildMissingSurfaces(projectRoot, cliMetadata = null) {
+  const missing = [];
+  for (const rule of REVIEWED_MISSING_SURFACE_RULES) {
+    if (!(await rule.present(projectRoot, cliMetadata))) {
+      missing.push(rule.surface);
+    }
+  }
+  return uniqueSorted(missing);
+}
+
+async function loadCliMetadata(projectRoot) {
+  const moduleUrl = pathToFileURL(path.join(projectRoot, 'bin', 'vre')).href;
+  const mod = await import(moduleUrl);
+  return {
+    DISPATCH_TABLE: mod.DISPATCH_TABLE ?? {},
+    IMPLEMENTED_PHASE9_COMMANDS: Array.isArray(mod.IMPLEMENTED_PHASE9_COMMANDS)
+      ? mod.IMPLEMENTED_PHASE9_COMMANDS
+      : [],
+    PHASE9_STUB_DEFINITIONS: Array.isArray(mod.PHASE9_STUB_DEFINITIONS)
+      ? mod.PHASE9_STUB_DEFINITIONS
+      : [],
+    resolveKernelRoot: typeof mod.resolveKernelRoot === 'function'
+      ? mod.resolveKernelRoot
+      : () => ({ kernelRoot: null, source: 'not-found' })
+  };
+}
 
 const NAMED_EXPORT_PATTERN =
   /^export\s+(?:async\s+function|function|const|let|var|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/gmu;
@@ -159,20 +208,6 @@ function parseNamedExports(source) {
     }
   }
   return uniqueSorted(exportNames);
-}
-
-async function loadCliMetadata(projectRoot) {
-  const moduleUrl = pathToFileURL(path.join(projectRoot, 'bin', 'vre')).href;
-  const mod = await import(moduleUrl);
-  return {
-    DISPATCH_TABLE: mod.DISPATCH_TABLE ?? {},
-    PHASE9_STUB_DEFINITIONS: Array.isArray(mod.PHASE9_STUB_DEFINITIONS)
-      ? mod.PHASE9_STUB_DEFINITIONS
-      : [],
-    resolveKernelRoot: typeof mod.resolveKernelRoot === 'function'
-      ? mod.resolveKernelRoot
-      : () => ({ kernelRoot: null, source: 'not-found' })
-  };
 }
 
 async function readPackageName(projectRoot) {
@@ -646,7 +681,7 @@ function determineKernelMode({ kernelRoot, readerDbAvailable, availableCount }) 
 
 async function buildKernelSection(projectRoot, options = {}) {
   const degradedReasons = [];
-  const cliMetadata = await loadCliMetadata(projectRoot);
+  const cliMetadata = await resolveCliMetadata(projectRoot, options.cliMetadata ?? null);
   const discovery = options.kernelRoot !== undefined
     ? { kernelRoot: options.kernelRoot, source: 'override' }
     : cliMetadata.resolveKernelRoot(projectRoot);
@@ -735,16 +770,6 @@ async function buildKernelSection(projectRoot, options = {}) {
   };
 }
 
-async function buildMissingSurfaces(projectRoot) {
-  const missing = [];
-  for (const rule of REVIEWED_MISSING_SURFACE_RULES) {
-    if (!(await rule.present(projectRoot))) {
-      missing.push(rule.surface);
-    }
-  }
-  return uniqueSorted(missing);
-}
-
 export async function generateCapabilityHandshake(projectPath, options = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
   const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, HANDSHAKE_SCHEMA_FILE);
@@ -806,11 +831,14 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
   if (!vrePresent) {
     degradedReasons.push('VRE_MISSING: target root is unavailable or does not look like vibe-research-environment');
   } else {
-    const cliMetadata = await loadCliMetadata(projectRoot);
-    const executableCommands = uniqueSorted(Object.keys(cliMetadata.DISPATCH_TABLE));
+    const cliMetadata = await resolveCliMetadata(projectRoot, options.cliMetadata ?? null);
+    const executableCommands = uniqueSorted([
+      ...Object.keys(cliMetadata.DISPATCH_TABLE),
+      ...cliMetadata.IMPLEMENTED_PHASE9_COMMANDS
+    ]);
     const markdownContracts = await collectMarkdownContracts(projectRoot);
     const markdownOnlyContracts = markdownContracts.filter(
-      (commandName) => !Object.prototype.hasOwnProperty.call(cliMetadata.DISPATCH_TABLE, commandName)
+      (commandName) => !executableCommands.includes(commandName)
     );
 
     handshake.vre.executableCommands = executableCommands;
@@ -828,7 +856,7 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
       ),
       artifactPaths: [...OPERATOR_ARTIFACT_PATHS]
     };
-    handshake.vre.missingSurfaces = await buildMissingSurfaces(projectRoot);
+    handshake.vre.missingSurfaces = await buildMissingSurfaces(projectRoot, cliMetadata);
 
     try {
       const registry = await getTaskRegistry();

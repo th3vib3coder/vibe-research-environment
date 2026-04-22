@@ -5,6 +5,11 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { atomicWriteJson, resolveInside } from '../environment/control/_io.js';
+import {
+  generateCapabilityHandshake,
+  HANDSHAKE_ARTIFACT_PATH
+} from '../environment/control/capability-handshake.js';
 import { runWithMiddleware } from '../environment/control/middleware.js';
 import { resolveKernelReader } from '../environment/lib/kernel-bridge.js';
 
@@ -29,8 +34,19 @@ export const DISPATCH_TABLE = Object.freeze({
     export: 'runOrchestratorStatus',
     scope: 'orchestrator-status',
     wrappedByMiddleware: true
+  },
+  'capabilities --json': {
+    contract: null,
+    module: 'environment/control/capability-handshake.js',
+    export: 'generateCapabilityHandshake',
+    scope: 'capability-handshake',
+    wrappedByMiddleware: false
   }
 });
+
+export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
+  Object.keys(DISPATCH_TABLE).filter((commandName) => commandName.includes(' '))
+);
 
 const PHASE9_STUB_DATE = '2026-04-22';
 
@@ -165,7 +181,11 @@ export const PHASE9_STUB_DEFINITIONS = Object.freeze([
 
 const SESSION_SNAPSHOT_PATH = '.vibe-science-environment/control/session.json';
 const PHASE9_ROOTS = [...new Set(PHASE9_STUB_DEFINITIONS.map((definition) => definition.root))].sort();
-const KNOWN_COMMANDS = [...Object.keys(DISPATCH_TABLE), ...PHASE9_ROOTS, 'init'].sort();
+const KNOWN_COMMANDS = [
+  ...Object.keys(DISPATCH_TABLE).filter((commandName) => !commandName.includes(' ')),
+  ...PHASE9_ROOTS,
+  'init'
+].sort();
 const PHASE9_LOOKUP = new Map(
   PHASE9_STUB_DEFINITIONS.map((definition) => [`${definition.root}::${definition.action ?? ''}`, definition])
 );
@@ -428,7 +448,11 @@ function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extr
 }
 
 function writeJsonPayload(payload) {
-  process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+  process.stdout.write(serializeJsonPayload(payload));
+}
+
+function serializeJsonPayload(payload) {
+  return `${JSON.stringify(payload, null, 2)}\n`;
 }
 
 function unsupportedReasoningModePayload(parsed) {
@@ -653,8 +677,28 @@ export async function main(argv = process.argv) {
       return 3;
     }
 
-    writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
-    return 0;
+    try {
+      if (phase9Invocation.definition.canonicalCommand === 'capabilities --json') {
+        const handshake = await generateCapabilityHandshake(repoRoot, {
+          cliMetadata: {
+            DISPATCH_TABLE,
+            IMPLEMENTED_PHASE9_COMMANDS,
+            PHASE9_STUB_DEFINITIONS,
+            resolveKernelRoot
+          }
+        });
+        const artifactPath = resolveInside(repoRoot, HANDSHAKE_ARTIFACT_PATH);
+        await atomicWriteJson(artifactPath, handshake);
+        process.stdout.write(serializeJsonPayload(handshake));
+        return 0;
+      }
+
+      writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
+      return 0;
+    } catch (error) {
+      process.stderr.write(`vre: ${phase9Invocation.definition.canonicalCommand}: ${error.message}\n`);
+      return 1;
+    }
   }
 
   const entry = DISPATCH_TABLE[subcommand];

@@ -92,6 +92,7 @@
   },
   "vre": {
     "executableCommands": [
+      "capabilities --json",
       "flow-status",
       "orchestrator-status",
       "sync-memory"
@@ -223,7 +224,6 @@
     },
     "missingSurfaces": [
       "analysis-manifest schema",
-      "capabilities --json",
       "plugin handshake injection",
       "research-loop",
       "reviewer-2 bridge",
