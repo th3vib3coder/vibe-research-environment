@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "phase9.handoff.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "ts": "2026-04-22T21:10:00Z",
+  "recordSeq": 7,
+  "handoffId": "H-0007",
+  "fromAgentRole": "lead-researcher",
+  "toAgentRole": "reviewer-2",
+  "artifactPaths": [
+    ".vibe-science-environment/objectives/OBJ-2026-04-22-001/review/claim-001.md"
+  ],
+  "summary": "Handing claim bundle to reviewer-2.",
+  "openBlockers": [],
+  "closesHandoffId": null,
+  "writerSession": "sess-2026-04-22-night"
+}

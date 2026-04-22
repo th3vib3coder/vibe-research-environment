@@ -1,0 +1,366 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.resume-snapshot.v1",
+  "title": "Phase 9 Resume Snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "writtenAt",
+    "writtenReason",
+    "objectiveId",
+    "objectiveStatusAtSnapshot",
+    "runtimeMode",
+    "reasoningMode",
+    "wakePolicySnapshot",
+    "budgetRemaining",
+    "queueVisibility",
+    "stageCursor",
+    "nextAction",
+    "openBlockers",
+    "openHandoffs",
+    "wakeLease",
+    "kernelFingerprint",
+    "notes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.resume-snapshot.v1"
+    },
+    "writtenAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "writtenReason": {
+      "type": "string",
+      "enum": [
+        "pre-compact",
+        "pre-stop",
+        "heartbeat",
+        "loop-iteration",
+        "pre-handoff",
+        "operator-pause",
+        "manual"
+      ]
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-.+$"
+    },
+    "objectiveStatusAtSnapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtimeMode": {
+      "type": "string",
+      "enum": [
+        "interactive",
+        "attended-batch",
+        "unattended-batch",
+        "resume-only"
+      ]
+    },
+    "reasoningMode": {
+      "type": "string",
+      "enum": [
+        "rule-only"
+      ]
+    },
+    "wakePolicySnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wakeOwner",
+        "wakeSourceId",
+        "heartbeatIntervalSeconds",
+        "leaseTtlSeconds",
+        "duplicateWakePolicy"
+      ],
+      "properties": {
+        "wakeOwner": {
+          "type": "string",
+          "enum": [
+            "windows-task-scheduler",
+            "codex-app",
+            "vre-automation",
+            "external-runner",
+            "manual"
+          ]
+        },
+        "wakeSourceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "heartbeatIntervalSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "leaseTtlSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "duplicateWakePolicy": {
+          "type": "string",
+          "enum": [
+            "no-op"
+          ]
+        }
+      }
+    },
+    "budgetRemaining": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxWallSecondsLeft",
+        "maxIterationsLeft",
+        "costCeilingLeft"
+      ],
+      "properties": {
+        "maxWallSecondsLeft": {
+          "type": "integer"
+        },
+        "maxIterationsLeft": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "costCeilingLeft": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "queueVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "queuePath",
+        "queueCursor",
+        "pendingCount",
+        "runningCount",
+        "lastTaskId"
+      ],
+      "properties": {
+        "queuePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "queueCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pendingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runningCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastTaskId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "stageCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current",
+        "stageStatus",
+        "lastCompleteStage"
+      ],
+      "properties": {
+        "current": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stageStatus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastCompleteStage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "nextAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "params"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "enqueue-task",
+            "run-analysis",
+            "request-r2",
+            "package-results",
+            "stop",
+            "await-operator"
+          ]
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    },
+    "openBlockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "openedAt"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "openHandoffs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "wakeLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wakeId",
+        "leaseAcquiredAt",
+        "leaseExpiresAt",
+        "acquiredBy",
+        "previousWakeId"
+      ],
+      "properties": {
+        "wakeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "leaseAcquiredAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "leaseExpiresAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "acquiredBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "previousWakeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "kernelFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lastClaimId",
+        "lastCitationCheckId",
+        "lastR2VerdictId",
+        "lastObserverAlertId",
+        "lastGateCheckId",
+        "lastPatternId",
+        "takenAt"
+      ],
+      "properties": {
+        "lastClaimId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lastCitationCheckId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lastR2VerdictId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lastObserverAlertId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lastGateCheckId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lastPatternId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "takenAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.handoff.v1",
+  "title": "Phase 9 Handoff v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "ts",
+    "recordSeq",
+    "handoffId",
+    "fromAgentRole",
+    "toAgentRole",
+    "artifactPaths",
+    "summary",
+    "openBlockers",
+    "closesHandoffId",
+    "writerSession"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.handoff.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-.+$"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recordSeq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "handoffId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fromAgentRole": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toAgentRole": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "openBlockers": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "closesHandoffId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "writerSession": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

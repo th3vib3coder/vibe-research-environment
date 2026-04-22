@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "phase9.lane-run-record.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "recordSeq": 20,
+  "experimentId": "EXP-001",
+  "analysisId": "AN-002",
+  "taskId": "TASK-002",
+  "manifestPath": ".vibe-science-environment/objectives/OBJ-2026-04-22-001/manifests/AN-002.json",
+  "scriptSha256": "abc456",
+  "inputPaths": [
+    "inputs/data.csv"
+  ],
+  "outputPaths": [],
+  "runner": "python",
+  "argv": [
+    "python",
+    "run.py"
+  ],
+  "startedAt": "2026-04-22T23:30:00Z",
+  "endedAt": "2026-04-22T23:35:00Z",
+  "exitCode": 130,
+  "stdoutPath": "logs/stdout-2.log",
+  "stderrPath": "logs/stderr-2.log",
+  "provenanceHash": "prov-002",
+  "status": "interrupted"
+}

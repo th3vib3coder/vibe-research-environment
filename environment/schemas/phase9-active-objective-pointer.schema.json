@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.active-objective-pointer.v1",
+  "title": "Phase 9 Active Objective Pointer v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "objectiveRecordPath",
+    "lockAcquiredAt",
+    "lockAcquiredBySession",
+    "currentWakeLease"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.active-objective-pointer.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-.+$"
+    },
+    "objectiveRecordPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lockAcquiredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lockAcquiredBySession": {
+      "type": "string",
+      "minLength": 1
+    },
+    "currentWakeLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wakeId",
+        "leaseAcquiredAt",
+        "leaseExpiresAt",
+        "acquiredBy",
+        "previousWakeId"
+      ],
+      "properties": {
+        "wakeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "leaseAcquiredAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "leaseExpiresAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "acquiredBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "previousWakeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

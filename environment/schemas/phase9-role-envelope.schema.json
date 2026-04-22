@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.role-envelope.v1",
+  "title": "Phase 9 Role Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "stageId",
+    "roleId",
+    "taskId",
+    "dispatchParentPid",
+    "sessionIsolation",
+    "handshakeSubset",
+    "handoffCursor",
+    "allowedActions",
+    "activeGates",
+    "stopConditions",
+    "expectedOutputShape",
+    "generatedAt",
+    "generatedBySession"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.role-envelope.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-.+$"
+    },
+    "stageId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roleId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dispatchParentPid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sessionIsolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childSessionId",
+        "workspaceRoot",
+        "scratchRoot",
+        "inheritChatHistory"
+      ],
+      "properties": {
+        "childSessionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]:[\\\\/]|/).+"
+        },
+        "scratchRoot": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(?:[A-Za-z]:[\\\\/]|/).+"
+        },
+        "inheritChatHistory": {
+          "const": false
+        }
+      }
+    },
+    "handshakeSubset": {
+      "type": "object"
+    },
+    "handoffCursor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "allowedActions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "activeGates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "stopConditions": {
+      "type": "object"
+    },
+    "expectedOutputShape": {
+      "type": "object"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generatedBySession": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

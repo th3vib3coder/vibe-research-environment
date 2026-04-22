@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "phase9.objective.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "title": "scRNA-seq perturbation overnight objective",
+  "question": "Which differential signatures remain after perturbation Z?",
+  "createdAt": "2026-04-22T20:00:00Z",
+  "status": "active",
+  "budget": {
+    "schemaVersion": "phase9.runtime-budget.v1",
+    "maxWallSeconds": 28800,
+    "maxIterations": 20,
+    "maxTaskCount": 40,
+    "maxExternalCalls": 8,
+    "costCeiling": 25.5,
+    "heartbeatIntervalSeconds": 1800,
+    "allowedTaskKinds": [
+      "run-analysis",
+      "package-results"
+    ],
+    "networkPolicy": "allowlist-only",
+    "humanApprovalRequiredForDestructive": true
+  },
+  "runtimeMode": "unattended-batch",
+  "reasoningMode": "rule-only",
+  "wakePolicy": {
+    "wakeOwner": "windows-task-scheduler",
+    "wakeSourceId": "TASK-OBJ-2026-04-22-001",
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "stopConditions": {
+    "onBudgetExhausted": "block",
+    "onBlocker": "block",
+    "onAmbiguousEvidence": "request-review",
+    "onMissingInput": "block",
+    "onFailedGate": "block",
+    "onHumanDecisionNeeded": "block"
+  },
+  "ownerAgentRole": "lead-researcher",
+  "stages": [
+    {
+      "stageId": "orientation",
+      "status": "completed"
+    },
+    {
+      "stageId": "analysis",
+      "status": "active"
+    }
+  ],
+  "artifactsIndex": {
+    "literature": [],
+    "experiments": [
+      "EXP-001"
+    ],
+    "results": [],
+    "writing": [],
+    "review": []
+  },
+  "createdBySession": "sess-2026-04-22-night",
+  "lastUpdatedAt": "2026-04-22T20:15:00Z"
+}

@@ -1,0 +1,43 @@
+{
+  "envelope": {
+    "schemaVersion": "phase9.role-envelope.v1",
+    "objectiveId": "OBJ-2026-04-22-001",
+    "stageId": "analysis",
+    "roleId": "reviewer-2",
+    "taskId": "TASK-009",
+    "dispatchParentPid": 4242,
+    "sessionIsolation": {
+      "childSessionId": "child-sess-001",
+      "workspaceRoot": "C:/vre/workspaces/project-a",
+      "scratchRoot": "C:/vre/workspaces/project-a/.vibe-science-environment/objectives/OBJ-2026-04-22-001/dispatch/scratch/TASK-009",
+      "inheritChatHistory": false
+    },
+    "handshakeSubset": {},
+    "handoffCursor": null,
+    "allowedActions": [
+      "write-handoff"
+    ],
+    "activeGates": [
+      "review-gate"
+    ],
+    "stopConditions": {
+      "onBlocker": "block"
+    },
+    "expectedOutputShape": {
+      "type": "handoff"
+    },
+    "generatedAt": "2026-04-22T23:40:00Z",
+    "generatedBySession": "sess-2026-04-22-night"
+  },
+  "cwd": "C:/vre/outside/project-b",
+  "env": {
+    "PATH": "C:/Windows/System32",
+    "HOME": "C:/Users/Test-User",
+    "TEMP": "C:/Temp",
+    "TMP": "C:/Temp",
+    "VRE_ROOT": "C:/vre/workspaces/project-a",
+    "PHASE9_OBJECTIVE_ID": "OBJ-2026-04-22-001",
+    "PHASE9_TASK_ID": "TASK-009",
+    "PHASE9_ENVELOPE_PATH": "C:/vre/workspaces/project-a/.vibe-science-environment/objectives/OBJ-2026-04-22-001/dispatch/envelopes/TASK-009.json"
+  }
+}

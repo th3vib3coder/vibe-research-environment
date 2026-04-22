@@ -90,6 +90,62 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     name: 'approved-memory-apis',
     featureId: 'W0-MEMORY-API-ALLOWLIST',
     introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-runtime-budget.schema.json',
+    kind: 'schema',
+    name: 'phase9.runtime-budget.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-objective.schema.json',
+    kind: 'schema',
+    name: 'phase9.objective.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-active-objective-pointer.schema.json',
+    kind: 'schema',
+    name: 'phase9.active-objective-pointer.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-objective-event.schema.json',
+    kind: 'schema',
+    name: 'phase9.objective-event.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-handoff.schema.json',
+    kind: 'schema',
+    name: 'phase9.handoff.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-resume-snapshot.schema.json',
+    kind: 'schema',
+    name: 'phase9.resume-snapshot.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-lane-run-record.schema.json',
+    kind: 'schema',
+    name: 'phase9.lane-run-record.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-role-envelope.schema.json',
+    kind: 'schema',
+    name: 'phase9.role-envelope.v1',
+    featureId: null,
+    introducedAt: '2026-04-22'
   }
 ]);
 

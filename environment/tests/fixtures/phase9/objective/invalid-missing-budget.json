@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "phase9.objective.v1",
+  "objectiveId": "OBJ-2026-04-22-003",
+  "title": "Missing budget fixture",
+  "question": "What breaks when budget is omitted?",
+  "createdAt": "2026-04-22T20:45:00Z",
+  "status": "active",
+  "runtimeMode": "interactive",
+  "reasoningMode": "rule-only",
+  "wakePolicy": {
+    "wakeOwner": "manual",
+    "wakeSourceId": null,
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "stopConditions": {
+    "onBudgetExhausted": "block",
+    "onBlocker": "block",
+    "onAmbiguousEvidence": "request-review",
+    "onMissingInput": "block",
+    "onFailedGate": "block",
+    "onHumanDecisionNeeded": "block"
+  },
+  "ownerAgentRole": "lead-researcher",
+  "stages": [
+    {
+      "stageId": "orientation",
+      "status": "active"
+    }
+  ],
+  "artifactsIndex": {
+    "literature": [],
+    "experiments": [],
+    "results": [],
+    "writing": [],
+    "review": []
+  },
+  "createdBySession": "sess-2026-04-22-night",
+  "lastUpdatedAt": "2026-04-22T20:45:30Z"
+}

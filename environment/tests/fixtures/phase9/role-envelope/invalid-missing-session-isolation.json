@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "phase9.role-envelope.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "stageId": "analysis",
+  "roleId": "reviewer-2",
+  "taskId": "TASK-009",
+  "dispatchParentPid": 4242,
+  "handshakeSubset": {
+    "kernel": {
+      "mode": "full"
+    }
+  },
+  "handoffCursor": null,
+  "allowedActions": [
+    "write-handoff",
+    "read-artifacts"
+  ],
+  "activeGates": [
+    "review-gate"
+  ],
+  "stopConditions": {
+    "onBlocker": "block"
+  },
+  "expectedOutputShape": {
+    "type": "handoff"
+  },
+  "generatedAt": "2026-04-22T23:40:00Z",
+  "generatedBySession": "sess-2026-04-22-night"
+}

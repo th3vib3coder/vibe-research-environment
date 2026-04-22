@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "phase9.resume-snapshot.v1",
+  "writtenAt": "2026-04-22T22:05:00Z",
+  "writtenReason": "pre-stop",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "objectiveStatusAtSnapshot": "blocked",
+  "runtimeMode": "unattended-batch",
+  "reasoningMode": "reviewed-api",
+  "wakePolicySnapshot": {
+    "wakeOwner": "windows-task-scheduler",
+    "wakeSourceId": "TASK-OBJ-2026-04-22-001",
+    "heartbeatIntervalSeconds": 1800,
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "budgetRemaining": {
+    "maxWallSecondsLeft": 3600,
+    "maxIterationsLeft": 3,
+    "costCeilingLeft": 5.5
+  },
+  "queueVisibility": {
+    "queuePath": ".vibe-science-environment/objectives/OBJ-2026-04-22-001/queue.json",
+    "queueCursor": "cursor-3",
+    "pendingCount": 0,
+    "runningCount": 0,
+    "lastTaskId": "TASK-003"
+  },
+  "stageCursor": {
+    "current": "analysis",
+    "stageStatus": "blocked",
+    "lastCompleteStage": "orientation"
+  },
+  "nextAction": {
+    "kind": "await-operator",
+    "params": {
+      "reason": "E_REASONING_MODE_DIVERGED"
+    }
+  },
+  "openBlockers": [
+    {
+      "code": "E_REASONING_MODE_DIVERGED",
+      "message": "Snapshot drifted from immutable objective reasoning mode.",
+      "openedAt": "2026-04-22T22:04:00Z"
+    }
+  ],
+  "openHandoffs": [],
+  "wakeLease": {
+    "wakeId": "WAKE-2026-04-22-002",
+    "leaseAcquiredAt": "2026-04-22T22:00:00Z",
+    "leaseExpiresAt": "2026-04-22T22:15:00Z",
+    "acquiredBy": "scheduler",
+    "previousWakeId": "WAKE-2026-04-22-001"
+  },
+  "kernelFingerprint": {
+    "lastClaimId": "CLM-001",
+    "lastCitationCheckId": "CIT-004",
+    "lastR2VerdictId": "R2-001",
+    "lastObserverAlertId": null,
+    "lastGateCheckId": "GATE-002",
+    "lastPatternId": null,
+    "takenAt": "2026-04-22T22:04:30Z"
+  },
+  "notes": "Invalid because Phase 9 v1 only allows reasoningMode=rule-only."
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "phase9.runtime-budget.v1",
+  "maxWallSeconds": 28800,
+  "maxIterations": 20,
+  "maxTaskCount": 40,
+  "maxExternalCalls": 8,
+  "costCeiling": 25.5,
+  "heartbeatIntervalSeconds": 1800,
+  "allowedTaskKinds": [
+    "run-analysis",
+    "package-results"
+  ],
+  "networkPolicy": "allowlist-only",
+  "humanApprovalRequiredForDestructive": true
+}

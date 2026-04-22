@@ -17,6 +17,7 @@ async function withFixtureRepo(fn) {
     await mkdir(path.join(repoRoot, 'bin'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'tests', 'ci'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'control'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'environment', 'schemas'), { recursive: true });
     await writeFile(
       path.join(repoRoot, 'package.json'),
       JSON.stringify({
@@ -63,6 +64,18 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'control', 'time-provider.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'control', 'approved-memory-apis.json'), '[]\n', 'utf8');
+    for (const schemaFile of [
+      'phase9-runtime-budget.schema.json',
+      'phase9-objective.schema.json',
+      'phase9-active-objective-pointer.schema.json',
+      'phase9-objective-event.schema.json',
+      'phase9-handoff.schema.json',
+      'phase9-resume-snapshot.schema.json',
+      'phase9-lane-run-record.schema.json',
+      'phase9-role-envelope.schema.json'
+    ]) {
+      await writeFile(path.join(repoRoot, 'environment', 'schemas', schemaFile), '{}\n', 'utf8');
+    }
 
     await fn(repoRoot);
   } finally {
@@ -73,11 +86,13 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 6);
+    assert.equal(surfaces.length, 14);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'time-provider'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'approved-memory-apis'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'phase9.objective.v1'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'phase9.role-envelope.v1'), true);
   });
 });
 
@@ -88,5 +103,6 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.doesNotThrow(() => validateSurfaceIndexShape(persisted));
     assert.equal(persisted.some((surface) => surface.name === 'build:surface-index'), true);
     assert.equal(persisted.some((surface) => surface.name === 'scheduler doctor'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase9.resume-snapshot.v1'), true);
   });
 });

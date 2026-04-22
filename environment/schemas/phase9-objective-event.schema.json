@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.objective-event.v1",
+  "title": "Phase 9 Objective Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "eventId",
+    "ts",
+    "recordSeq",
+    "kind",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.objective-event.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-.+$"
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recordSeq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "stage-start",
+        "stage-complete",
+        "handoff",
+        "blocker-open",
+        "blocker-resolve",
+        "budget-threshold",
+        "loop-iteration",
+        "analysis-run",
+        "r2-request",
+        "r2-verdict",
+        "stop",
+        "resume",
+        "heartbeat",
+        "stale-lock-reclaimed",
+        "stale-wake-lease-reclaimed",
+        "semantic-drift-detected",
+        "state-conflict-detected",
+        "state-repair"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "state-repair"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "repairedLayer",
+              "observedDivergence",
+              "repairedTo",
+              "reason"
+            ],
+            "properties": {
+              "repairedLayer": {
+                "type": "string",
+                "enum": [
+                  "pointer",
+                  "queue",
+                  "snapshot"
+                ]
+              },
+              "observedDivergence": {
+                "type": "string",
+                "minLength": 1
+              },
+              "repairedTo": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

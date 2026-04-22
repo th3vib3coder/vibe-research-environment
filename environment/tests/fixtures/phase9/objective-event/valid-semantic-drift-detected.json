@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "phase9.objective-event.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "eventId": "EV-0008",
+  "ts": "2026-04-22T22:11:00Z",
+  "recordSeq": 8,
+  "kind": "semantic-drift-detected",
+  "payload": {
+    "code": "SEMANTIC_DRIFT_DETECTED",
+    "checkpoint": "pre-slice",
+    "summary": "Queue drifted away from the objective question."
+  }
+}

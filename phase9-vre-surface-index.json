@@ -144,6 +144,78 @@
     "introducedAt": "2026-04-22"
   },
   {
+    "kind": "schema",
+    "name": "phase9.active-objective-pointer.v1",
+    "paths": [
+      "environment/schemas/phase9-active-objective-pointer.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.handoff.v1",
+    "paths": [
+      "environment/schemas/phase9-handoff.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.lane-run-record.v1",
+    "paths": [
+      "environment/schemas/phase9-lane-run-record.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.objective-event.v1",
+    "paths": [
+      "environment/schemas/phase9-objective-event.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.objective.v1",
+    "paths": [
+      "environment/schemas/phase9-objective.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.resume-snapshot.v1",
+    "paths": [
+      "environment/schemas/phase9-resume-snapshot.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.role-envelope.v1",
+    "paths": [
+      "environment/schemas/phase9-role-envelope.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "schema",
+    "name": "phase9.runtime-budget.v1",
+    "paths": [
+      "environment/schemas/phase9-runtime-budget.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-22"
+  },
+  {
     "kind": "test-entrypoint",
     "name": "build:surface-index",
     "paths": [

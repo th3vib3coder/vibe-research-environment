@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.runtime-budget.v1",
+  "title": "Phase 9 Runtime Budget v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "maxWallSeconds",
+    "maxIterations",
+    "maxTaskCount",
+    "maxExternalCalls",
+    "costCeiling",
+    "heartbeatIntervalSeconds",
+    "allowedTaskKinds",
+    "networkPolicy",
+    "humanApprovalRequiredForDestructive"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.runtime-budget.v1"
+    },
+    "maxWallSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxIterations": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxTaskCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxExternalCalls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "costCeiling": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "heartbeatIntervalSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "allowedTaskKinds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "networkPolicy": {
+      "type": "string",
+      "enum": [
+        "off",
+        "allowlist-only",
+        "open"
+      ]
+    },
+    "humanApprovalRequiredForDestructive": {
+      "type": "boolean"
+    }
+  }
+}

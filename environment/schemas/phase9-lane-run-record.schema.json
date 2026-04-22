@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.lane-run-record.v1",
+  "title": "Phase 9 Lane Run Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "recordSeq",
+    "experimentId",
+    "analysisId",
+    "taskId",
+    "manifestPath",
+    "scriptSha256",
+    "inputPaths",
+    "outputPaths",
+    "runner",
+    "argv",
+    "startedAt",
+    "endedAt",
+    "exitCode",
+    "stdoutPath",
+    "stderrPath",
+    "provenanceHash",
+    "status"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.lane-run-record.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-.+$"
+    },
+    "recordSeq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "experimentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "analysisId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifestPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scriptSha256": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputPaths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "outputPaths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "runner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "argv": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "exitCode": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "stdoutPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stderrPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provenanceHash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "complete",
+        "failed",
+        "interrupted",
+        "cancelled"
+      ]
+    }
+  }
+}

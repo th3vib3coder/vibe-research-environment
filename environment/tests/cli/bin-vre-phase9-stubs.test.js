@@ -94,3 +94,31 @@ test('Phase 9 capability root fails closed when --json or doctor is omitted', as
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+test('Phase 9 objective start rejects reviewed-api reasoning mode in v1', async () => {
+  const projectRoot = await createCliFixtureProject('vre-phase9-reasoning-mode-');
+  try {
+    const result = await runVre(projectRoot, [
+      'objective',
+      'start',
+      '--title',
+      'demo',
+      '--question',
+      'why-now',
+      '--reasoning-mode',
+      'reviewed-api'
+    ]);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.code, 'E_REASONING_MODE_UNSUPPORTED');
+    assert.equal(payload.command, 'objective start');
+    assert.equal(payload.phase9, true);
+    assert.equal(payload.requested, 'reviewed-api');
+    assert.deepEqual(payload.supported, ['rule-only']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});

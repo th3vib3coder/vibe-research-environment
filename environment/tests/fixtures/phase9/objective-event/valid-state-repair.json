@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "phase9.objective-event.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "eventId": "EV-0007",
+  "ts": "2026-04-22T22:10:00Z",
+  "recordSeq": 7,
+  "kind": "state-repair",
+  "payload": {
+    "repairedLayer": "snapshot",
+    "observedDivergence": "resume-snapshot.reasoningMode=reviewed-api while objective.reasoningMode=rule-only",
+    "repairedTo": "resume-snapshot regenerated from pointer/objective/queue/events/handoffs",
+    "reason": "objective resume --repair-snapshot"
+  }
+}

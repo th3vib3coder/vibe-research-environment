@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "phase9.objective-event.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "eventId": "EV-0009",
+  "ts": "2026-04-22T22:12:00Z",
+  "recordSeq": 9,
+  "kind": "state-repair",
+  "payload": {
+    "observedDivergence": "wake lease snapshot stale",
+    "repairedTo": "pointer mirror refreshed",
+    "reason": "repair test fixture should fail"
+  }
+}

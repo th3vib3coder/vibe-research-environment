@@ -431,6 +431,21 @@ function writeJsonPayload(payload) {
   process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
 }
 
+function unsupportedReasoningModePayload(parsed) {
+  return {
+    ok: false,
+    code: 'E_REASONING_MODE_UNSUPPORTED',
+    command: 'objective start',
+    phase9: true,
+    requested: parsed.options['reasoning-mode'],
+    supported: ['rule-only'],
+    argv: {
+      options: parsed.options,
+      positionals: parsed.positionals
+    }
+  };
+}
+
 function parsePhase9Invocation(tokens) {
   const [root, maybeAction, ...rest] = tokens;
   if (!PHASE9_ROOTS.includes(root)) {
@@ -523,10 +538,22 @@ function parsePhase9Invocation(tokens) {
     };
   }
 
+  const parsed = parseLongOptions(rest);
+  if (root === 'objective' && maybeAction === 'start') {
+    const requestedReasoningMode = parsed.options['reasoning-mode'];
+    if (requestedReasoningMode && requestedReasoningMode !== 'rule-only') {
+      return {
+        kind: 'phase9-error',
+        exitCode: 3,
+        payload: unsupportedReasoningModePayload(parsed)
+      };
+    }
+  }
+
   return {
     kind: 'phase9',
     definition,
-    parsed: parseLongOptions(rest)
+    parsed
   };
 }
 
