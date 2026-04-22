@@ -60,6 +60,11 @@ async function seedSurfaceTrackingFixture(vreRoot, options = {}) {
   await writeFile(path.join(vreRoot, 'environment', 'tests', 'ci', 'run-all.js'), '// fixture\n', 'utf8');
   await writeFile(path.join(vreRoot, 'environment', 'tests', 'ci', 'validate-counts.js'), '// fixture\n', 'utf8');
   await writeFile(path.join(vreRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
+  // Round 30: fixture parity with the live VRE repo — tests that seed
+  // legacy Wave 0 hardening rows (seq 034) expect the CLI-stubs test file
+  // to exist on disk, since Round 30 added the E_LEDGER_PHANTOM_PATH check.
+  await mkdir(path.join(vreRoot, 'environment', 'tests', 'cli'), { recursive: true });
+  await writeFile(path.join(vreRoot, 'environment', 'tests', 'cli', 'bin-vre-phase9-stubs.test.js'), '// fixture\n', 'utf8');
   if (options.binVreSource) {
     await mkdir(path.join(vreRoot, 'bin'), { recursive: true });
     await writeFile(path.join(vreRoot, 'bin', 'vre'), options.binVreSource, 'utf8');
@@ -843,4 +848,112 @@ test('phase9-ledger check fails-open with stderr diagnostic when the sibling vib
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }
+});
+
+test('phase9-ledger check raises E_LEDGER_PHANTOM_PATH for rows declaring VRE-local paths that do not exist on disk', async () => {
+  // Round 30 regression: closes the mixed-path residual identified during
+  // the Round 29 adversarial review. A row with paths=[bin/vre,
+  // environment/orchestrator/never-landed.js] previously passed the orphan
+  // check via bin/vre path overlap with live CLI surfaces, even though the
+  // env/orchestrator path never existed on disk. The phantom-path check
+  // now fires on such rows.
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Ledger CI runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row for check surface |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Surface inventory generator | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row for build surface |',
+        '| 015 | 2026-04-22 | 0 | W0-CLI-OBJECTIVE-START | Objective start stub | `bin/vre` | none | none | verified | originating surface row |',
+        '| 099 | 2026-04-22 | 0 | W1-FAKE-MIXED | Fake mixed-paths row | `bin/vre`, `environment/orchestrator/never-landed.js` | none | none | verified | declares a VRE-local path that does not exist on disk |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'package.json', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js', 'package.json'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'cli-command',
+          name: 'objective start',
+          paths: ['bin/vre'],
+          featureId: 'W0-CLI-OBJECTIVE-START',
+          introducedAt: '2026-04-22'
+        }
+      ],
+      binVreSource: [
+        'export const PHASE9_STUB_DEFINITIONS = Object.freeze([',
+        '  {',
+        "    root: 'objective',",
+        "    action: 'start',",
+        "    canonicalCommand: 'objective start',",
+        "    kind: 'cli-command',",
+        "    featureId: 'W0-CLI-OBJECTIVE-START',",
+        "    introducedAt: '2026-04-22',",
+        '    mutating: true',
+        '  }',
+        ']);',
+        ''
+      ].join('\n')
+    });
+
+    await assert.rejects(
+      () => checkPhase9Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+      }),
+      /E_LEDGER_PHANTOM_PATH.*seq 099.*environment\/orchestrator\/never-landed\.js/u
+    );
+  });
+});
+
+test('phase9-ledger check skips phantom-path check for sibling paths starting with ../vibe-science/', async () => {
+  // Round 30: sibling paths are legitimately absent in vibe-research-
+  // environment-only CI checkouts. The phantom-path check must not fire
+  // for them; the existing sibling-absent diagnostic covers this case.
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await seedSurfaceTrackingFixture(vreRoot, {
+      ledgerMarkdown: buildLedgerMarkdown([
+        '| 001 | 2026-04-21 | 0 | W0-CI-LEDGER-CHECK | Ledger CI runner | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/run-all.js`, `environment/tests/ci/validate-counts.js` | none | none | verified | fixture row for check surface |',
+        '| 006 | 2026-04-21 | 0 | W0-SURFACE-INDEX-CROSSCHECK | Surface inventory generator | `package.json`, `environment/tests/ci/check-phase9-ledger.js`, `environment/tests/ci/phase9-surface-index.js`, `phase9-vre-surface-index.json` | none | none | verified | fixture row for build surface |',
+        '| 050 | 2026-04-22 | 0 | W0-SIBLING-ONLY-ROW | Row with only sibling paths | `../vibe-science/plugin/scripts/pre-tool-use.js`, `../vibe-science/tests/governance-hooks.test.mjs` | none | none | verified | sibling paths skipped by phantom-path check |'
+      ]),
+      surfaceIndex: [
+        {
+          kind: 'test-entrypoint',
+          name: 'build:surface-index',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/phase9-surface-index.js', 'package.json', 'phase9-vre-surface-index.json'],
+          featureId: 'W0-SURFACE-INDEX-CROSSCHECK',
+          introducedAt: '2026-04-21'
+        },
+        {
+          kind: 'test-entrypoint',
+          name: 'check:phase9-ledger',
+          paths: ['environment/tests/ci/check-phase9-ledger.js', 'environment/tests/ci/run-all.js', 'environment/tests/ci/validate-counts.js', 'package.json'],
+          featureId: 'W0-CI-LEDGER-CHECK',
+          introducedAt: '2026-04-21'
+        }
+      ]
+    });
+
+    // seq 050 has ONLY sibling paths and no VRE-local paths → not
+    // inventory-eligible (no trackable path), so cross-check is inert.
+    // This test confirms the sibling paths don't trip phantom-path in any
+    // parallel code path (regression guard).
+    await assert.doesNotReject(() =>
+      checkPhase9Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: [PATHS.vreLedger, PATHS.specLedger, PATHS.surfaceIndex]
+      })
+    );
+  });
 });

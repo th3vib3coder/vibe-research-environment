@@ -612,6 +612,34 @@ export default async function checkPhase9Ledger(options = {}) {
     ? parseLedgerRows(ledgerMarkdown).filter(isInventoryEligibleLedgerRow)
     : [];
 
+  // Round 30: E_LEDGER_PHANTOM_PATH closes the remaining mixed-path residual
+  // identified during the Round 29 adversarial review. Before Round 30 a row
+  // with `paths=[bin/vre, environment/orchestrator/never-landed.js]` and a
+  // fresh featureId silently passed the orphan check because `bin/vre`
+  // overlapped with live CLI surfaces — even though the other declared path
+  // never existed on disk. The rule now: every VRE-local path declared by
+  // an inventory-eligible row must exist on disk. Sibling paths
+  // (`../vibe-science/...`) are skipped because the sibling repo may not be
+  // checked out in CI. This rule is orthogonal to the orphan check: a row
+  // can pass the orphan check (featureId or path overlap) AND still fail
+  // phantom-path if it claims a non-existent VRE-local file.
+  for (const row of eligibleLedgerRows) {
+    const phantom = [];
+    for (const p of row.paths) {
+      if (p.startsWith('../')) {
+        continue;
+      }
+      if (!(await pathExists(localRepoRoot, p))) {
+        phantom.push(p);
+      }
+    }
+    if (phantom.length > 0) {
+      violations.push(
+        `E_LEDGER_PHANTOM_PATH ledger row seq ${row.seq} (${row.featureId || 'no-feature-id'}) declares VRE-local path(s) that do not exist on disk: ${phantom.join(', ')}`
+      );
+    }
+  }
+
   // E_LEDGER_SURFACE_INDEX_MISSING closes the loophole observed during the
   // Round 19 adversarial review: deleting phase9-vre-surface-index.json
   // silently disabled the entire cross-check block because the block is
