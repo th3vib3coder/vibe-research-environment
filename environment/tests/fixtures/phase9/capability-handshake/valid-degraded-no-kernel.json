@@ -76,15 +76,38 @@
           "writingPackExport"
         ],
         "degradedReason": "connector filesystem-export is degraded: connectors-core bundle is not installed"
+      },
+      {
+        "id": "obsidian-export",
+        "path": "environment/connectors/manifests/obsidian-export.connector.json",
+        "status": "degraded",
+        "capabilities": [
+          "memoryMirrorExport"
+        ],
+        "degradedReason": "connector obsidian-export is degraded: connectors-core bundle is not installed"
       }
     ],
     "automations": [
+      {
+        "id": "export-warning-digest",
+        "path": "environment/automation/definitions/export-warning-digest.automation.json",
+        "scheduleKind": "daily",
+        "status": "degraded",
+        "targetCommand": "/export-warning-digest"
+      },
       {
         "id": "stale-memory-reminder",
         "path": "environment/automation/definitions/stale-memory-reminder.automation.json",
         "scheduleKind": "daily",
         "status": "degraded",
         "targetCommand": "/stale-memory-reminder"
+      },
+      {
+        "id": "weekly-research-digest",
+        "path": "environment/automation/definitions/weekly-research-digest.automation.json",
+        "scheduleKind": "weekly",
+        "status": "degraded",
+        "targetCommand": "/weekly-digest"
       }
     ],
     "domainPacks": [
@@ -114,7 +137,6 @@
     ],
     "operatorSurface": {
       "commands": [
-        "capabilities --json",
         "objective pause",
         "objective resume",
         "objective start",
@@ -160,10 +182,10 @@
   "degradedReasons": [
     "automation export-warning-digest is degraded: automation-core bundle is not installed",
     "automation stale-memory-reminder is degraded: automation-core bundle is not installed",
+    "automation weekly-research-digest is degraded: automation-core bundle is not installed",
     "connector filesystem-export is degraded: connectors-core bundle is not installed",
     "connector obsidian-export is degraded: connectors-core bundle is not installed",
     "domain pack omics is degraded: domain-packs-core bundle is not installed",
-    "automation weekly-research-digest is degraded: automation-core bundle is not installed",
     "kernel missing: CLI default: no reader provided",
     "kernel unresolvedR2Count is unavailable because listUnresolvedClaims is not currently available"
   ]

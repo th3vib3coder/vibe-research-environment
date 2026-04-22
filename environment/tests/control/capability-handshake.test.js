@@ -88,6 +88,19 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.missingSurfaces.includes('active-objective path'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('capabilities --json'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('analysis-manifest schema'), true);
+  // Round 36 invariant: operatorSurface enumerates only future/operator-only
+  // commands. A command that is actually dispatched through bin/vre (and
+  // therefore surfaced under executableCommands) MUST NOT also be reported
+  // as a pending operator stub. The two sets must be disjoint.
+  assert.equal(handshake.vre.operatorSurface.commands.includes('capabilities --json'), false);
+  const operatorExecutableIntersection = handshake.vre.operatorSurface.commands.filter(
+    (commandName) => handshake.vre.executableCommands.includes(commandName)
+  );
+  assert.deepEqual(operatorExecutableIntersection, []);
+  const operatorDoctorExecutableIntersection = handshake.vre.operatorSurface.doctorCommands.filter(
+    (commandName) => handshake.vre.executableCommands.includes(commandName)
+  );
+  assert.deepEqual(operatorDoctorExecutableIntersection, []);
 });
 
 test('capability-handshake generator reports an honest degraded kernel when no kernel root is available', async () => {

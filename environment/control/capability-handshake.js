@@ -843,15 +843,18 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
 
     handshake.vre.executableCommands = executableCommands;
     handshake.vre.markdownOnlyContracts = uniqueSorted(markdownOnlyContracts);
+    const executableCommandSet = new Set(executableCommands);
     handshake.vre.operatorSurface = {
       commands: uniqueSorted(
         cliMetadata.PHASE9_STUB_DEFINITIONS
           .filter((definition) => definition.kind !== 'doctor-surface')
+          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
           .map((definition) => definition.canonicalCommand)
       ),
       doctorCommands: uniqueSorted(
         cliMetadata.PHASE9_STUB_DEFINITIONS
           .filter((definition) => definition.kind === 'doctor-surface')
+          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
           .map((definition) => definition.canonicalCommand)
       ),
       artifactPaths: [...OPERATOR_ARTIFACT_PATHS]
