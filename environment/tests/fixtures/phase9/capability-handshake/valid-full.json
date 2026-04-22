@@ -246,6 +246,7 @@
     "automation weekly-research-digest is degraded: automation-core bundle is not installed",
     "connector filesystem-export is degraded: connectors-core bundle is not installed",
     "connector obsidian-export is degraded: connectors-core bundle is not installed",
-    "domain pack omics is degraded: domain-packs-core bundle is not installed"
+    "domain pack omics is degraded: domain-packs-core bundle is not installed",
+    "kernel unresolvedR2Count is currently derived from listUnresolvedClaims until a dedicated R2 projection lands"
   ]
 }

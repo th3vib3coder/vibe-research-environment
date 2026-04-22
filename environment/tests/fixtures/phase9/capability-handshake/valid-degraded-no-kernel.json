@@ -161,6 +161,7 @@
     "automation stale-memory-reminder is degraded: automation-core bundle is not installed",
     "connector filesystem-export is degraded: connectors-core bundle is not installed",
     "domain pack omics is degraded: domain-packs-core bundle is not installed",
-    "kernel degraded: kernel root not found"
+    "kernel missing: kernel root not found",
+    "kernel unresolvedR2Count is unavailable because listUnresolvedClaims is not currently available"
   ]
 }
