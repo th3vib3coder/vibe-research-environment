@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { DISPATCH_TABLE } from '../../../bin/vre';
+import { DISPATCH_TABLE, IMPLEMENTED_PHASE9_COMMANDS } from '../../../bin/vre';
 import {
   generateCapabilityHandshake,
   HANDSHAKE_SCHEMA_FILE,
@@ -47,9 +47,15 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
       'listUnresolvedClaims'
     ]
   );
-  assert.deepEqual(handshake.vre.executableCommands, Object.keys(DISPATCH_TABLE).sort());
+  assert.deepEqual(
+    handshake.vre.executableCommands,
+    [...new Set([...Object.keys(DISPATCH_TABLE), ...IMPLEMENTED_PHASE9_COMMANDS])].sort()
+  );
   assert.equal(handshake.vre.executableCommands.includes('capabilities --json'), true);
   assert.equal(handshake.vre.executableCommands.includes('flow-status'), true);
+  assert.equal(handshake.vre.executableCommands.includes('objective start'), true);
+  assert.equal(handshake.vre.executableCommands.includes('objective pause'), true);
+  assert.equal(handshake.vre.executableCommands.includes('objective stop'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('weekly-digest'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('flow-status'), false);
   assert.equal(handshake.vre.queueableTaskKinds.length > 0, true);
@@ -77,6 +83,9 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
     handshake.vre.operatorSurface.commands.includes('research-loop'),
     true
   );
+  assert.equal(handshake.vre.operatorSurface.commands.includes('objective start'), false);
+  assert.equal(handshake.vre.operatorSurface.commands.includes('objective pause'), false);
+  assert.equal(handshake.vre.operatorSurface.commands.includes('objective stop'), false);
   assert.equal(
     handshake.vre.operatorSurface.doctorCommands.includes('capabilities doctor'),
     true
@@ -91,6 +100,24 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(
     handshake.degradedReasons.includes(
       'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command objective start is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command objective pause is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command objective stop is wired in bin/vre but missing a reviewed markdown contract'
     ),
     true
   );
@@ -157,10 +184,34 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
 
   for (const fixture of [fullFixture, degradedFixture]) {
     assert.equal(fixture.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(fixture.vre.executableCommands.includes('objective start'), true);
+    assert.equal(fixture.vre.executableCommands.includes('objective pause'), true);
+    assert.equal(fixture.vre.executableCommands.includes('objective stop'), true);
     assert.equal(fixture.vre.missingSurfaces.includes('capabilities --json'), false);
+    assert.equal(fixture.vre.operatorSurface.commands.includes('objective start'), false);
+    assert.equal(fixture.vre.operatorSurface.commands.includes('objective pause'), false);
+    assert.equal(fixture.vre.operatorSurface.commands.includes('objective stop'), false);
     assert.equal(
       fixture.degradedReasons.includes(
         'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command objective start is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command objective pause is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command objective stop is wired in bin/vre but missing a reviewed markdown contract'
       ),
       true
     );

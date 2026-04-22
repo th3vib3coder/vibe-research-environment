@@ -200,6 +200,7 @@ const activePhase9TestFiles = [
   'environment/tests/control/approved-memory-apis.test.js',
   'environment/tests/control/capability-handshake.test.js',
   'environment/tests/control/objective-store.test.js',
+  'environment/tests/control/objective-lock.test.js',
   'environment/tests/lib/kernel-bridge.test.js',
   'environment/tests/integration/kernel-bridge.test.js',
   'environment/tests/schemas/phase9-runtime-budget.schema.test.js',

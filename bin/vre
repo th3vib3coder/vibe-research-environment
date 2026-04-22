@@ -1,17 +1,27 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { atomicWriteJson, resolveInside } from '../environment/control/_io.js';
+import { atomicWriteJson, now, resolveInside } from '../environment/control/_io.js';
 import {
   generateCapabilityHandshake,
   HANDSHAKE_ARTIFACT_PATH
 } from '../environment/control/capability-handshake.js';
 import { runWithMiddleware } from '../environment/control/middleware.js';
 import { resolveKernelReader } from '../environment/lib/kernel-bridge.js';
+import {
+  activateObjective,
+  ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
+  deleteActiveObjectivePointer,
+  deleteObjectiveStore,
+  ObjectiveLockHeldError,
+  pauseObjective,
+  stopObjective
+} from '../environment/objectives/store.js';
+import { getTaskRegistry } from '../environment/orchestrator/task-registry.js';
 
 export const DISPATCH_TABLE = Object.freeze({
   'flow-status': {
@@ -45,10 +55,19 @@ export const DISPATCH_TABLE = Object.freeze({
 });
 
 export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
-  Object.keys(DISPATCH_TABLE).filter((commandName) => commandName.includes(' '))
+  [
+    ...new Set([
+      ...Object.keys(DISPATCH_TABLE).filter((commandName) => commandName.includes(' ')),
+      'objective pause',
+      'objective start',
+      'objective stop'
+    ])
+  ].sort()
 );
 
 const PHASE9_STUB_DATE = '2026-04-22';
+const DEFAULT_MAX_EXTERNAL_CALLS = 8;
+const DEFAULT_OBJECTIVE_OWNER_ROLE = 'lead-researcher';
 
 export const PHASE9_STUB_DEFINITIONS = Object.freeze([
   {
@@ -429,6 +448,368 @@ function parseLongOptions(tokens) {
   return { options, positionals };
 }
 
+function phase9SuccessPayload(command, extra = {}) {
+  return {
+    ok: true,
+    command,
+    phase9: true,
+    ...extra
+  };
+}
+
+function namedPhase9ErrorPayload(command, code, message, extra = {}) {
+  return {
+    ok: false,
+    command,
+    code,
+    phase9: true,
+    message,
+    ...extra
+  };
+}
+
+function resolvePhase9SessionId() {
+  const explicit = process.env.VRE_SESSION_ID;
+  if (typeof explicit === 'string' && explicit.trim() !== '') {
+    return explicit.trim();
+  }
+
+  return `sess-cli-${process.pid}`;
+}
+
+function requiredStringOption(parsed, optionName, commandName) {
+  const value = parsed.options[optionName];
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`${commandName} requires --${optionName}`);
+  }
+  return value.trim();
+}
+
+function parseInlineScalar(rawValue) {
+  const trimmed = String(rawValue).trim();
+  if (trimmed === 'true') {
+    return true;
+  }
+  if (trimmed === 'false') {
+    return false;
+  }
+  if (trimmed === 'null') {
+    return null;
+  }
+  if (/^-?\d+$/u.test(trimmed)) {
+    return Number.parseInt(trimmed, 10);
+  }
+  if (/^-?\d+\.\d+$/u.test(trimmed)) {
+    return Number.parseFloat(trimmed);
+  }
+  if (trimmed.includes('|')) {
+    return trimmed.split('|').map((value) => value.trim()).filter(Boolean);
+  }
+  return trimmed;
+}
+
+function parseInlineObject(rawValue, label) {
+  const pairs = String(rawValue)
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (pairs.length === 0) {
+    throw new Error(`${label} must not be empty`);
+  }
+
+  const result = {};
+  for (const pair of pairs) {
+    const separatorIndex = pair.indexOf('=');
+    if (separatorIndex <= 0) {
+      throw new Error(`${label} entries must use key=value: ${pair}`);
+    }
+
+    const key = pair.slice(0, separatorIndex).trim();
+    const value = pair.slice(separatorIndex + 1);
+    result[key] = parseInlineScalar(value);
+  }
+
+  return result;
+}
+
+async function loadInlineOrJsonObject(projectRoot, rawValue, label) {
+  if (typeof rawValue !== 'string' || rawValue.trim() === '') {
+    throw new Error(`${label} is required`);
+  }
+
+  const trimmed = rawValue.trim();
+  const candidatePath = path.resolve(projectRoot, trimmed);
+  if (
+    existsSync(candidatePath) &&
+    !trimmed.includes('=') &&
+    !trimmed.startsWith('{') &&
+    !trimmed.startsWith('[')
+  ) {
+    return JSON.parse(await readFile(candidatePath, 'utf8'));
+  }
+
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    return JSON.parse(trimmed);
+  }
+
+  return parseInlineObject(trimmed, label);
+}
+
+function coercePositiveInteger(value, label) {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${label} must be a positive integer`);
+  }
+  return value;
+}
+
+function coerceNonNegativeInteger(value, label) {
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`${label} must be a non-negative integer`);
+  }
+  return value;
+}
+
+function coerceNullableNumber(value, label) {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== 'number' || Number.isNaN(value) || value < 0) {
+    throw new Error(`${label} must be a non-negative number or null`);
+  }
+  return value;
+}
+
+function normalizeAllowedTaskKinds(value, fallback) {
+  if (value == null) {
+    return [...fallback];
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry).trim()).filter(Boolean);
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value.split('|').map((entry) => entry.trim()).filter(Boolean);
+  }
+  throw new Error('budget.allowedTaskKinds must be an array or pipe-delimited string');
+}
+
+async function buildObjectiveBudget(projectRoot, rawBudget) {
+  const registry = await getTaskRegistry();
+  const defaultTaskKinds = [...registry.keys()].sort();
+  const maxIterations = coercePositiveInteger(rawBudget.maxIterations, 'budget.maxIterations');
+  return {
+    schemaVersion: 'phase9.runtime-budget.v1',
+    maxWallSeconds: coercePositiveInteger(rawBudget.maxWallSeconds, 'budget.maxWallSeconds'),
+    maxIterations,
+    maxTaskCount: coercePositiveInteger(
+      rawBudget.maxTaskCount ?? maxIterations * 2,
+      'budget.maxTaskCount'
+    ),
+    maxExternalCalls: coerceNonNegativeInteger(
+      rawBudget.maxExternalCalls ?? DEFAULT_MAX_EXTERNAL_CALLS,
+      'budget.maxExternalCalls'
+    ),
+    costCeiling: coerceNullableNumber(
+      rawBudget.costCeiling ?? null,
+      'budget.costCeiling'
+    ),
+    heartbeatIntervalSeconds: coercePositiveInteger(
+      rawBudget.heartbeatIntervalSeconds,
+      'budget.heartbeatIntervalSeconds'
+    ),
+    allowedTaskKinds: normalizeAllowedTaskKinds(
+      rawBudget.allowedTaskKinds,
+      defaultTaskKinds
+    ),
+    networkPolicy: rawBudget.networkPolicy ?? 'allowlist-only',
+    humanApprovalRequiredForDestructive:
+      rawBudget.humanApprovalRequiredForDestructive ?? true
+  };
+}
+
+function buildObjectiveWakePolicy(rawWakePolicy, runtimeMode, budget) {
+  if (rawWakePolicy == null) {
+    if (runtimeMode === 'interactive') {
+      return {
+        wakeOwner: 'manual',
+        wakeSourceId: null,
+        leaseTtlSeconds: budget.heartbeatIntervalSeconds,
+        duplicateWakePolicy: 'no-op'
+      };
+    }
+    throw new Error('objective start requires --wake-policy for non-interactive modes');
+  }
+
+  const wakeOwner = rawWakePolicy.wakeOwner;
+  if (typeof wakeOwner !== 'string' || wakeOwner.trim() === '') {
+    throw new Error('wakePolicy.wakeOwner is required');
+  }
+
+  return {
+    wakeOwner,
+    wakeSourceId: rawWakePolicy.wakeSourceId ?? null,
+    leaseTtlSeconds: coercePositiveInteger(
+      rawWakePolicy.leaseTtlSeconds ?? budget.heartbeatIntervalSeconds,
+      'wakePolicy.leaseTtlSeconds'
+    ),
+    duplicateWakePolicy: rawWakePolicy.duplicateWakePolicy ?? 'no-op'
+  };
+}
+
+function buildInitialObjectiveRecord({ title, question, runtimeMode, reasoningMode, budget, wakePolicy, sessionId }) {
+  const timestamp = now();
+  return {
+    schemaVersion: 'phase9.objective.v1',
+    title,
+    question,
+    createdAt: timestamp,
+    status: 'active',
+    budget,
+    runtimeMode,
+    reasoningMode,
+    wakePolicy,
+    stopConditions: {
+      onBudgetExhausted: 'block',
+      onBlocker: 'block',
+      onAmbiguousEvidence: 'request-review',
+      onMissingInput: 'block',
+      onFailedGate: 'block',
+      onHumanDecisionNeeded: 'block'
+    },
+    ownerAgentRole: DEFAULT_OBJECTIVE_OWNER_ROLE,
+    stages: [
+      {
+        stageId: 'orientation',
+        status: 'active'
+      }
+    ],
+    artifactsIndex: {
+      literature: [],
+      experiments: [],
+      results: [],
+      writing: [],
+      review: []
+    },
+    createdBySession: sessionId,
+    lastUpdatedAt: timestamp
+  };
+}
+
+async function persistCapabilityHandshakeArtifact(repoRoot) {
+  const handshake = await generateCapabilityHandshake(repoRoot, {
+    cliMetadata: {
+      DISPATCH_TABLE,
+      IMPLEMENTED_PHASE9_COMMANDS,
+      PHASE9_STUB_DEFINITIONS,
+      resolveKernelRoot
+    }
+  });
+  const artifactPath = resolveInside(repoRoot, HANDSHAKE_ARTIFACT_PATH);
+  await atomicWriteJson(artifactPath, handshake);
+  return {
+    artifactPath,
+    handshake
+  };
+}
+
+function objectiveLockHeldPayload(error) {
+  return namedPhase9ErrorPayload(
+    'objective start',
+    'OBJECTIVE_LOCK_HELD',
+    error.message,
+    {
+      activeObjectiveId: error.objectiveId,
+      activePointer: error.pointerPath,
+      stopCommand: error.stopCommand,
+      pauseCommand: error.pauseCommand
+    }
+  );
+}
+
+async function runObjectiveStart(repoRoot, parsed) {
+  const title = requiredStringOption(parsed, 'title', 'objective start');
+  const question = requiredStringOption(parsed, 'question', 'objective start');
+  const runtimeMode = requiredStringOption(parsed, 'mode', 'objective start');
+  const reasoningMode = parsed.options['reasoning-mode'] ?? 'rule-only';
+  const rawBudget = await loadInlineOrJsonObject(repoRoot, parsed.options.budget, '--budget');
+  const budget = await buildObjectiveBudget(repoRoot, rawBudget);
+  const rawWakePolicy = parsed.options['wake-policy'] == null
+    ? null
+    : await loadInlineOrJsonObject(repoRoot, parsed.options['wake-policy'], '--wake-policy');
+  const wakePolicy = buildObjectiveWakePolicy(rawWakePolicy, runtimeMode, budget);
+  const sessionId = resolvePhase9SessionId();
+  const objectiveRecord = buildInitialObjectiveRecord({
+    title,
+    question,
+    runtimeMode,
+    reasoningMode,
+    budget,
+    wakePolicy,
+    sessionId
+  });
+
+  const activation = await activateObjective(repoRoot, objectiveRecord, {
+    lockAcquiredBySession: sessionId
+  });
+  let persistedHandshake;
+  try {
+    persistedHandshake = await persistCapabilityHandshakeArtifact(repoRoot);
+  } catch (error) {
+    await deleteActiveObjectivePointer(
+      repoRoot,
+      activation.objectiveRecord.objectiveId
+    ).catch(() => {});
+    await deleteObjectiveStore(
+      repoRoot,
+      activation.objectiveRecord.objectiveId
+    ).catch(() => {});
+    throw error;
+  }
+  const { artifactPath, handshake } = persistedHandshake;
+
+  return phase9SuccessPayload('objective start', {
+    objectiveId: activation.objectiveRecord.objectiveId,
+    objectiveRecordPath: normalizeSlashes(
+      path.relative(repoRoot, activation.objectiveRecordPath)
+    ),
+    activePointer: ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
+    currentWakeLease: activation.activeObjectivePointer.currentWakeLease,
+    handshakeArtifactPath: normalizeSlashes(path.relative(repoRoot, artifactPath)),
+    handshakeObjective: handshake.objective
+  });
+}
+
+async function runObjectivePause(repoRoot, parsed) {
+  const objectiveId = requiredStringOption(parsed, 'objective', 'objective pause');
+  const reason = requiredStringOption(parsed, 'reason', 'objective pause');
+  const result = await pauseObjective(repoRoot, objectiveId);
+  const { artifactPath, handshake } = await persistCapabilityHandshakeArtifact(repoRoot);
+  return phase9SuccessPayload('objective pause', {
+    objectiveId,
+    reason,
+    status: result.objectiveRecord.status,
+    activePointer: ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
+    activePointerReleased: false,
+    handshakeArtifactPath: normalizeSlashes(path.relative(repoRoot, artifactPath)),
+    handshakeObjective: handshake.objective
+  });
+}
+
+async function runObjectiveStop(repoRoot, parsed) {
+  const objectiveId = requiredStringOption(parsed, 'objective', 'objective stop');
+  const reason = requiredStringOption(parsed, 'reason', 'objective stop');
+  const result = await stopObjective(repoRoot, objectiveId);
+  const { artifactPath, handshake } = await persistCapabilityHandshakeArtifact(repoRoot);
+  return phase9SuccessPayload('objective stop', {
+    objectiveId,
+    reason,
+    status: result.objectiveRecord.status,
+    releasedPointer: result.releasedPointerPath,
+    handshakeArtifactPath: normalizeSlashes(path.relative(repoRoot, artifactPath)),
+    handshakeObjective: handshake.objective
+  });
+}
+
 function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extra = {}) {
   return {
     ok: false,
@@ -679,23 +1060,36 @@ export async function main(argv = process.argv) {
 
     try {
       if (phase9Invocation.definition.canonicalCommand === 'capabilities --json') {
-        const handshake = await generateCapabilityHandshake(repoRoot, {
-          cliMetadata: {
-            DISPATCH_TABLE,
-            IMPLEMENTED_PHASE9_COMMANDS,
-            PHASE9_STUB_DEFINITIONS,
-            resolveKernelRoot
-          }
-        });
-        const artifactPath = resolveInside(repoRoot, HANDSHAKE_ARTIFACT_PATH);
-        await atomicWriteJson(artifactPath, handshake);
+        const { handshake } = await persistCapabilityHandshakeArtifact(repoRoot);
         process.stdout.write(serializeJsonPayload(handshake));
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'objective start') {
+        const payload = await runObjectiveStart(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'objective pause') {
+        const payload = await runObjectivePause(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'objective stop') {
+        const payload = await runObjectiveStop(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
         return 0;
       }
 
       writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
       return 0;
     } catch (error) {
+      if (error instanceof ObjectiveLockHeldError) {
+        writeJsonPayload(objectiveLockHeldPayload(error));
+        return 1;
+      }
       process.stderr.write(`vre: ${phase9Invocation.definition.canonicalCommand}: ${error.message}\n`);
       return 1;
     }

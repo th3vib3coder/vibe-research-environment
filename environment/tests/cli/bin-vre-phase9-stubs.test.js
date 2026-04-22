@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
-import { DISPATCH_TABLE } from '../../../bin/vre';
+import { DISPATCH_TABLE, IMPLEMENTED_PHASE9_COMMANDS } from '../../../bin/vre';
 import {
   cleanupCliFixtureProject,
   createCliFixtureProject,
@@ -22,15 +22,8 @@ const FIXTURE_KERNEL_ENV = {
 
 const STUB_CASES = [
   { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' },
-  {
-    argv: ['objective', 'start', '--title', 'demo', '--question=why-now'],
-    command: 'objective start',
-    optionChecks: { title: 'demo', question: 'why-now' }
-  },
   { argv: ['objective', 'status', '--objective', 'OBJ-1'], command: 'objective status', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['objective', 'doctor', '--objective=OBJ-1'], command: 'objective doctor', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['objective', 'stop', '--objective', 'OBJ-1'], command: 'objective stop', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['objective', 'pause', '--objective', 'OBJ-1'], command: 'objective pause', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['objective', 'resume', '--objective', 'OBJ-1'], command: 'objective resume', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['run-analysis', '--analysis-id', 'AN-7'], command: 'run-analysis', optionChecks: { 'analysis-id': 'AN-7' } },
   {
@@ -126,8 +119,14 @@ test('capabilities --json reports only commands that are actually wired in bin/v
     assert.equal(result.code, 0, `stderr=${result.stderr}`);
 
     const payload = JSON.parse(result.stdout);
-    assert.deepEqual(payload.vre.executableCommands, Object.keys(DISPATCH_TABLE).sort());
+    assert.deepEqual(
+      payload.vre.executableCommands,
+      [...new Set([...Object.keys(DISPATCH_TABLE), ...IMPLEMENTED_PHASE9_COMMANDS])].sort()
+    );
     assert.equal(payload.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(payload.vre.executableCommands.includes('objective start'), true);
+    assert.equal(payload.vre.executableCommands.includes('objective pause'), true);
+    assert.equal(payload.vre.executableCommands.includes('objective stop'), true);
     assert.equal(payload.vre.executableCommands.includes('weekly-digest'), false);
     assert.equal(payload.vre.markdownOnlyContracts.includes('weekly-digest'), true);
     assert.equal(payload.vre.missingSurfaces.includes('capabilities --json'), false);
@@ -136,26 +135,26 @@ test('capabilities --json reports only commands that are actually wired in bin/v
   }
 });
 
-test('Phase 9 parser does not reject nested commands merely because extra args are present', async () => {
+test('Phase 9 parser does not reject nested stub commands merely because extra args are present', async () => {
   const projectRoot = await createCliFixtureProject('vre-phase9-args-');
   try {
     const result = await runVre(projectRoot, [
-      'objective',
-      'start',
-      '--title',
-      'demo',
-      '--question=why-now',
-      '--budget',
-      'maxWallSeconds=60'
+      'scheduler',
+      'install',
+      '--objective',
+      'OBJ-1',
+      '--wake-owner=manual',
+      '--lease-ttl-seconds',
+      '60'
     ]);
     assert.equal(result.code, 0, `stderr=${result.stderr}`);
     assert.doesNotMatch(result.stderr, /unexpected arguments/u);
 
     const payload = JSON.parse(result.stdout);
-    assert.equal(payload.command, 'objective start');
-    assert.equal(payload.argv.options.title, 'demo');
-    assert.equal(payload.argv.options.question, 'why-now');
-    assert.equal(payload.argv.options.budget, 'maxWallSeconds=60');
+    assert.equal(payload.command, 'scheduler install');
+    assert.equal(payload.argv.options.objective, 'OBJ-1');
+    assert.equal(payload.argv.options['wake-owner'], 'manual');
+    assert.equal(payload.argv.options['lease-ttl-seconds'], '60');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

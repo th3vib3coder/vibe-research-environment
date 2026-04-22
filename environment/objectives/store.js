@@ -3,11 +3,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  atomicWriteJson,
   assertValid,
   loadValidator,
+  now,
   resolveInside,
   resolveProjectRoot,
-  readJson
+  readJson,
+  withLock
 } from '../control/_io.js';
 
 export const OBJECTIVES_ROOT_RELATIVE_PATH = '.vibe-science-environment/objectives';
@@ -16,9 +19,31 @@ export const OBJECTIVE_EVENTS_FILE = 'events.jsonl';
 export const OBJECTIVE_HANDOFFS_FILE = 'handoffs.jsonl';
 export const OBJECTIVE_DIGESTS_DIR = 'digests';
 export const OBJECTIVE_SCHEMA_FILE = 'phase9-objective.schema.json';
+export const ACTIVE_OBJECTIVE_POINTER_FILE = 'active-objective.json';
+export const ACTIVE_OBJECTIVE_POINTER_SCHEMA_FILE = 'phase9-active-objective-pointer.schema.json';
+export const ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH = `${OBJECTIVES_ROOT_RELATIVE_PATH}/${ACTIVE_OBJECTIVE_POINTER_FILE}`;
+export const OBJECTIVE_POINTER_LOCK_NAME = 'phase9-active-objective-pointer';
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const MODULE_PROJECT_ROOT = resolveProjectRoot(path.join(MODULE_DIR, '..', '..'));
+const PAUSABLE_STATUSES = new Set(['active', 'blocked']);
+
+export class ObjectiveLockHeldError extends Error {
+  constructor({ objectiveId, pointerPath }) {
+    const stopCommand = `node bin/vre objective stop --objective ${objectiveId} --reason "<short>"`;
+    const pauseCommand = `node bin/vre objective pause --objective ${objectiveId} --reason "<short>"`;
+    super(
+      `OBJECTIVE_LOCK_HELD active objective ${objectiveId} already owns ${pointerPath}; ` +
+      `stop with "${stopCommand}" or pause with "${pauseCommand}"`
+    );
+    this.name = 'ObjectiveLockHeldError';
+    this.code = 'OBJECTIVE_LOCK_HELD';
+    this.objectiveId = objectiveId;
+    this.pointerPath = pointerPath;
+    this.stopCommand = stopCommand;
+    this.pauseCommand = pauseCommand;
+  }
+}
 
 function assertSafeObjectiveId(objectiveId) {
   if (typeof objectiveId !== 'string' || objectiveId.trim() === '') {
@@ -70,17 +95,43 @@ async function pathExists(targetPath) {
   }
 }
 
-async function resolveSchemaHostRoot(projectRoot) {
+async function resolveSchemaHostRoot(projectRoot, schemaFile = OBJECTIVE_SCHEMA_FILE) {
   const targetSchemaPath = path.join(
     projectRoot,
     'environment',
     'schemas',
-    OBJECTIVE_SCHEMA_FILE
+    schemaFile
   );
   if (await pathExists(targetSchemaPath)) {
     return projectRoot;
   }
   return MODULE_PROJECT_ROOT;
+}
+
+function toRepoRelative(projectRoot, targetPath) {
+  return path.relative(projectRoot, targetPath).split(path.sep).join('/');
+}
+
+export function createInitialWakeLease() {
+  return {
+    wakeId: null,
+    leaseAcquiredAt: null,
+    leaseExpiresAt: null,
+    acquiredBy: null,
+    previousWakeId: null
+  };
+}
+
+async function validateObjectiveRecord(projectRoot, objectiveRecord) {
+  const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, OBJECTIVE_SCHEMA_FILE);
+  const validate = await loadValidator(schemaHostRoot, OBJECTIVE_SCHEMA_FILE);
+  assertValid(validate, objectiveRecord, 'phase9 objective');
+}
+
+async function validateActiveObjectivePointer(projectRoot, pointer) {
+  const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, ACTIVE_OBJECTIVE_POINTER_SCHEMA_FILE);
+  const validate = await loadValidator(schemaHostRoot, ACTIVE_OBJECTIVE_POINTER_SCHEMA_FILE);
+  assertValid(validate, pointer, 'phase9 active objective pointer');
 }
 
 export function objectivesRootDir(projectPath) {
@@ -112,11 +163,24 @@ export function objectiveDigestsDir(projectPath, objectiveId) {
   return resolveInside(objectiveDir(projectPath, objectiveId), OBJECTIVE_DIGESTS_DIR);
 }
 
+export function activeObjectivePointerPath(projectPath) {
+  return resolveInside(objectivesRootDir(projectPath), ACTIVE_OBJECTIVE_POINTER_FILE);
+}
+
+async function writeObjectiveRecord(projectPath, objectiveRecord) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  await validateObjectiveRecord(projectRoot, objectiveRecord);
+  const recordPath = objectiveRecordPath(projectRoot, objectiveRecord.objectiveId);
+  await atomicWriteUtf8(
+    recordPath,
+    `${JSON.stringify(objectiveRecord, null, 2)}\n`
+  );
+  return recordPath;
+}
+
 export async function createObjectiveStore(projectPath, objectiveRecord) {
   const projectRoot = resolveProjectRoot(projectPath);
-  const schemaHostRoot = await resolveSchemaHostRoot(projectRoot);
-  const validate = await loadValidator(schemaHostRoot, OBJECTIVE_SCHEMA_FILE);
-  assertValid(validate, objectiveRecord, 'phase9 objective');
+  await validateObjectiveRecord(projectRoot, objectiveRecord);
 
   const objectivesRoot = objectivesRootDir(projectRoot);
   const objectivePath = objectiveDir(projectRoot, objectiveRecord.objectiveId);
@@ -142,10 +206,7 @@ export async function createObjectiveStore(projectPath, objectiveRecord) {
     await mkdir(digestsPath);
     await atomicWriteUtf8(eventsPath, '');
     await atomicWriteUtf8(handoffsPath, '');
-    await atomicWriteUtf8(
-      recordPath,
-      `${JSON.stringify(objectiveRecord, null, 2)}\n`
-    );
+    await writeObjectiveRecord(projectRoot, objectiveRecord);
   } catch (error) {
     await rm(objectivePath, { recursive: true, force: true }).catch(() => {});
     throw error;
@@ -163,6 +224,193 @@ export async function createObjectiveStore(projectPath, objectiveRecord) {
 
 export async function readObjectiveRecord(projectPath, objectiveId) {
   return readJson(objectiveRecordPath(projectPath, objectiveId));
+}
+
+export async function deleteObjectiveStore(projectPath, objectiveId) {
+  await rm(objectiveDir(projectPath, objectiveId), { recursive: true, force: true });
+}
+
+export async function readActiveObjectivePointer(projectPath) {
+  try {
+    const projectRoot = resolveProjectRoot(projectPath);
+    const pointer = await readJson(activeObjectivePointerPath(projectRoot));
+    await validateActiveObjectivePointer(projectRoot, pointer);
+    return pointer;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function deleteActiveObjectivePointer(projectPath, expectedObjectiveId = null) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const activePointer = await readActiveObjectivePointer(projectRoot);
+  if (!activePointer) {
+    return null;
+  }
+
+  if (expectedObjectiveId && activePointer.objectiveId !== expectedObjectiveId) {
+    throw new Error(
+      `Active objective pointer references ${activePointer.objectiveId}, not ${expectedObjectiveId}`
+    );
+  }
+
+  await rm(activeObjectivePointerPath(projectRoot), { force: true });
+  return activePointer;
+}
+
+export async function nextObjectiveId(projectPath) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const objectivesRoot = objectivesRootDir(projectRoot);
+  await mkdir(objectivesRoot, { recursive: true });
+  const entries = await readdir(objectivesRoot, { withFileTypes: true });
+  const highestNumericSuffix = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => /^OBJ-(\d+)$/u.exec(entry.name))
+    .filter(Boolean)
+    .map((match) => Number.parseInt(match[1], 10))
+    .reduce((maxValue, value) => Math.max(maxValue, value), 0);
+  return `OBJ-${String(highestNumericSuffix + 1).padStart(3, '0')}`;
+}
+
+export async function createActiveObjectivePointer(projectPath, payload, options = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const pointer = {
+    schemaVersion: 'phase9.active-objective-pointer.v1',
+    objectiveId: payload.objectiveId,
+    objectiveRecordPath: payload.objectiveRecordPath,
+    lockAcquiredAt: payload.lockAcquiredAt ?? now(),
+    lockAcquiredBySession: payload.lockAcquiredBySession,
+    currentWakeLease: payload.currentWakeLease ?? createInitialWakeLease()
+  };
+
+  await validateActiveObjectivePointer(projectRoot, pointer);
+  const pointerPath = activeObjectivePointerPath(projectRoot);
+  const atomicWritePointer = options.atomicWriteJsonImpl ?? atomicWriteJson;
+  await atomicWritePointer(pointerPath, pointer);
+  return {
+    pointer,
+    pointerPath
+  };
+}
+
+export async function activateObjective(projectPath, objectiveRecord, options = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const lockAcquiredBySession = options.lockAcquiredBySession ?? options.sessionId;
+  if (typeof lockAcquiredBySession !== 'string' || lockAcquiredBySession.trim() === '') {
+    throw new TypeError('lockAcquiredBySession must be a non-empty string');
+  }
+
+  return withLock(projectRoot, OBJECTIVE_POINTER_LOCK_NAME, async () => {
+    const existingPointer = await readActiveObjectivePointer(projectRoot);
+    if (existingPointer) {
+      throw new ObjectiveLockHeldError({
+        objectiveId: existingPointer.objectiveId,
+        pointerPath: ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH
+      });
+    }
+
+    const resolvedObjectiveRecord = objectiveRecord.objectiveId
+      ? objectiveRecord
+      : {
+          ...objectiveRecord,
+          objectiveId: await nextObjectiveId(projectRoot)
+        };
+
+    const objectiveStore = await createObjectiveStore(projectRoot, resolvedObjectiveRecord);
+    try {
+      const activePointer = await createActiveObjectivePointer(
+        projectRoot,
+        {
+          objectiveId: resolvedObjectiveRecord.objectiveId,
+          objectiveRecordPath: toRepoRelative(projectRoot, objectiveStore.objectiveRecordPath),
+          lockAcquiredAt: options.lockAcquiredAt ?? now(),
+          lockAcquiredBySession,
+          currentWakeLease: createInitialWakeLease()
+        },
+        options
+      );
+
+      return {
+        ...objectiveStore,
+        activeObjectivePointerPath: activePointer.pointerPath,
+        activeObjectivePointer: activePointer.pointer,
+        objectiveRecord: resolvedObjectiveRecord
+      };
+    } catch (error) {
+      await rm(activeObjectivePointerPath(projectRoot), { force: true }).catch(() => {});
+      await rm(objectiveStore.objectiveDir, { recursive: true, force: true }).catch(() => {});
+      throw error;
+    }
+  });
+}
+
+async function requireActiveObjective(projectRoot, expectedObjectiveId = null) {
+  const activePointer = await readActiveObjectivePointer(projectRoot);
+  if (!activePointer) {
+    throw new Error('No active objective pointer exists');
+  }
+
+  if (expectedObjectiveId && activePointer.objectiveId !== expectedObjectiveId) {
+    throw new Error(
+      `Active objective pointer references ${activePointer.objectiveId}, not ${expectedObjectiveId}`
+    );
+  }
+
+  const objectiveRecord = await readObjectiveRecord(projectRoot, activePointer.objectiveId);
+  return {
+    activePointer,
+    objectiveRecord
+  };
+}
+
+export async function pauseObjective(projectPath, objectiveId, options = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+
+  return withLock(projectRoot, OBJECTIVE_POINTER_LOCK_NAME, async () => {
+    const { activePointer, objectiveRecord } = await requireActiveObjective(projectRoot, objectiveId);
+    if (!PAUSABLE_STATUSES.has(objectiveRecord.status)) {
+      throw new Error(`Cannot pause objective in status ${objectiveRecord.status}`);
+    }
+
+    const updatedRecord = {
+      ...objectiveRecord,
+      status: 'paused',
+      lastUpdatedAt: options.updatedAt ?? now()
+    };
+    await writeObjectiveRecord(projectRoot, updatedRecord);
+
+    return {
+      activeObjectivePointerPath: activeObjectivePointerPath(projectRoot),
+      activeObjectivePointer: activePointer,
+      objectiveRecord: updatedRecord
+    };
+  });
+}
+
+export async function stopObjective(projectPath, objectiveId, options = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+
+  return withLock(projectRoot, OBJECTIVE_POINTER_LOCK_NAME, async () => {
+    const { activePointer, objectiveRecord } = await requireActiveObjective(projectRoot, objectiveId);
+    const terminalStatus = objectiveRecord.status === 'completed' ? 'completed' : 'abandoned';
+    const updatedRecord = {
+      ...objectiveRecord,
+      status: terminalStatus,
+      lastUpdatedAt: options.updatedAt ?? now()
+    };
+
+    await writeObjectiveRecord(projectRoot, updatedRecord);
+    await rm(activeObjectivePointerPath(projectRoot), { force: true });
+
+    return {
+      releasedPointerPath: ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
+      releasedPointer: activePointer,
+      objectiveRecord: updatedRecord
+    };
+  });
 }
 
 export async function listObjectiveStoreEntries(projectPath, objectiveId) {

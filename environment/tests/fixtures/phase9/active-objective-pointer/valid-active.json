@@ -5,10 +5,10 @@
   "lockAcquiredAt": "2026-04-22T20:16:00Z",
   "lockAcquiredBySession": "sess-2026-04-22-night",
   "currentWakeLease": {
-    "wakeId": "WAKE-2026-04-22-001",
-    "leaseAcquiredAt": "2026-04-22T20:16:00Z",
-    "leaseExpiresAt": "2026-04-22T20:31:00Z",
-    "acquiredBy": "scheduler",
+    "wakeId": null,
+    "leaseAcquiredAt": null,
+    "leaseExpiresAt": null,
+    "acquiredBy": null,
     "previousWakeId": null
   }
 }

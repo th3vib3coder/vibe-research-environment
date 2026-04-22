@@ -34,6 +34,9 @@
     "executableCommands": [
       "capabilities --json",
       "flow-status",
+      "objective pause",
+      "objective start",
+      "objective stop",
       "orchestrator-status",
       "sync-memory"
     ],
@@ -137,11 +140,8 @@
     ],
     "operatorSurface": {
       "commands": [
-        "objective pause",
         "objective resume",
-        "objective start",
         "objective status",
-        "objective stop",
         "research-loop",
         "run-analysis",
         "scheduler install",
@@ -187,6 +187,9 @@
     "connector obsidian-export is degraded: connectors-core bundle is not installed",
     "domain pack omics is degraded: domain-packs-core bundle is not installed",
     "executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command objective pause is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command objective start is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command objective stop is wired in bin/vre but missing a reviewed markdown contract",
     "kernel missing: CLI default: no reader provided",
     "kernel unresolvedR2Count is unavailable because listUnresolvedClaims is not currently available"
   ]
