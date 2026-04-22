@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "phase9.capability-handshake.v1",
+  "generatedAt": "2026-04-22T18:00:00Z",
+  "vrePresent": true,
+  "vrePath": "C:/vre",
+  "kernel": {
+    "mode": "degraded",
+    "dbAvailable": true,
+    "unreachableReason": "one probe unavailable",
+    "projections": {
+      "probes": [
+        {
+          "name": "listClaimHeads",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "listObserverAlerts",
+          "status": "unavailable",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": null,
+          "degradedReason": "fixture unavailable",
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        }
+      ],
+      "availableNames": [
+        "listClaimHeads"
+      ],
+      "unavailable": [
+        {
+          "name": "listObserverAlerts",
+          "reason": "fixture unavailable"
+        }
+      ]
+    },
+    "alertsCount": 0,
+    "unresolvedR2Count": 0,
+    "lastKernelActivity": "2026-04-22T18:00:00Z"
+  },
+  "vre": {
+    "executableCommands": [],
+    "markdownOnlyContracts": [],
+    "queueableTaskKinds": [],
+    "schemas": [],
+    "connectors": [],
+    "automations": [],
+    "domainPacks": [],
+    "memoryApis": [],
+    "operatorSurface": {
+      "commands": [],
+      "doctorCommands": [],
+      "artifactPaths": []
+    },
+    "missingSurfaces": []
+  },
+  "objective": {
+    "activePointer": null,
+    "activeObjectiveId": null,
+    "status": null
+  },
+  "memory": {
+    "fresh": false,
+    "lastSyncAt": null
+  },
+  "degradedReasons": [
+    "fixture degraded"
+  ]
+}

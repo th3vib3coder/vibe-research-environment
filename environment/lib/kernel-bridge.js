@@ -22,6 +22,7 @@ import path from 'node:path';
 export const DEFAULT_TIMEOUT_MS = 10_000; // WP-150 default
 export const SIGKILL_GRACE_MS = 2_000;
 export const MAX_STDERR_BYTES = 4 * 1024;
+export const KERNEL_PROJECTION_SCHEMA_VERSION = 'wp150.typed-duck.v1';
 
 // Copied from environment/orchestrator/executors/local-subprocess.js:7-20 per
 // WP-155 rule (prefer copy to avoid deep refactor scope). If this list ever
@@ -54,6 +55,8 @@ const PROJECTION_NAMES = Object.freeze([
   'listGateChecks',
   'getStateSnapshot',
 ]);
+
+export const KERNEL_PROJECTION_NAMES = PROJECTION_NAMES;
 
 const KERNEL_BRIDGE_META = Symbol('vreKernelBridgeMeta');
 

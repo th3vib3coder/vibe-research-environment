@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "phase9.capability-handshake.v1",
+  "generatedAt": "2026-04-22T18:00:00Z",
+  "vrePresent": true,
+  "vrePath": "C:/vre",
+  "kernel": {
+    "mode": "missing",
+    "dbAvailable": false,
+    "unreachableReason": "kernel root not found",
+    "projections": {
+      "probes": [
+        {
+          "name": "listClaimHeads",
+          "status": "unavailable",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": null,
+          "degradedReason": "kernel root not found",
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        }
+      ],
+      "availableNames": [],
+      "unavailable": [
+        {
+          "name": "listClaimHeads",
+          "reason": "kernel root not found"
+        }
+      ]
+    },
+    "alertsCount": 0,
+    "unresolvedR2Count": 0,
+    "lastKernelActivity": null
+  },
+  "vre": {
+    "executableCommands": [
+      "capabilities --json"
+    ],
+    "markdownOnlyContracts": [
+      "automation-status"
+    ],
+    "queueableTaskKinds": [],
+    "schemas": [],
+    "connectors": [],
+    "automations": [],
+    "domainPacks": [],
+    "memoryApis": [],
+    "operatorSurface": {
+      "commands": [
+        "capabilities --json"
+      ],
+      "doctorCommands": [
+        "capabilities doctor"
+      ],
+      "artifactPaths": [
+        ".vibe-science-environment/objectives/<OBJ-ID>/resume-snapshot.json"
+      ]
+    },
+    "missingSurfaces": [
+      "capabilities --json"
+    ]
+  },
+  "objective": {
+    "activePointer": null,
+    "activeObjectiveId": null,
+    "status": null
+  },
+  "memory": {
+    "fresh": false,
+    "lastSyncAt": null
+  },
+  "degradedReasons": [
+    "kernel missing: kernel root not found"
+  ]
+}

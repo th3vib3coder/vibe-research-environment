@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "phase9.capability-handshake.v1",
+  "generatedAt": "2026-04-22T18:00:00Z",
+  "vrePresent": true,
+  "vrePath": "C:/vre",
+  "kernel": {
+    "mode": "full",
+    "dbAvailable": true,
+    "unreachableReason": null,
+    "projections": {
+      "probes": [],
+      "availableNames": [],
+      "unavailable": []
+    },
+    "alertsCount": 0,
+    "unresolvedR2Count": 0,
+    "lastKernelActivity": null
+  },
+  "vre": {
+    "executableCommands": [],
+    "markdownOnlyContracts": [],
+    "queueableTaskKinds": [],
+    "schemas": [],
+    "connectors": [],
+    "automations": [],
+    "domainPacks": [],
+    "operatorSurface": {
+      "commands": [],
+      "doctorCommands": [],
+      "artifactPaths": []
+    },
+    "missingSurfaces": []
+  },
+  "objective": {
+    "activePointer": null,
+    "activeObjectiveId": null,
+    "status": null
+  },
+  "memory": {
+    "fresh": false,
+    "lastSyncAt": null
+  },
+  "degradedReasons": []
+}

@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "phase9.capability-handshake.v1",
+  "generatedAt": "2026-04-22T18:00:00Z",
+  "vrePresent": true,
+  "vrePath": "C:/vre",
+  "kernel": {
+    "mode": "full",
+    "dbAvailable": true,
+    "unreachableReason": null,
+    "projections": {
+      "probes": [
+        {
+          "name": "listClaimHeads",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "listUnresolvedClaims",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "listCitationChecks",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "getProjectOverview",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "listLiteratureSearches",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "listObserverAlerts",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "listGateChecks",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
+          "name": "getStateSnapshot",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        }
+      ],
+      "availableNames": [
+        "getProjectOverview",
+        "getStateSnapshot",
+        "listCitationChecks",
+        "listClaimHeads",
+        "listGateChecks",
+        "listLiteratureSearches",
+        "listObserverAlerts",
+        "listUnresolvedClaims"
+      ],
+      "unavailable": []
+    },
+    "alertsCount": 0,
+    "unresolvedR2Count": 0,
+    "lastKernelActivity": "2026-04-22T18:00:00Z"
+  },
+  "vre": {
+    "executableCommands": [
+      "capabilities --json",
+      "run-analysis"
+    ],
+    "markdownOnlyContracts": [
+      "automation-status"
+    ],
+    "queueableTaskKinds": [
+      "literature-search"
+    ],
+    "schemas": [
+      {
+        "name": "phase9.capability-handshake.v1",
+        "schemaVersion": "phase9.capability-handshake.v1",
+        "path": "environment/schemas/phase9-capability-handshake.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-full.json",
+        "owner": "vre"
+      }
+    ],
+    "connectors": [
+      {
+        "id": "filesystem-export",
+        "path": "environment/connectors/manifests/filesystem-export.connector.json",
+        "status": "available",
+        "capabilities": [
+          "resultsExport"
+        ],
+        "degradedReason": null
+      }
+    ],
+    "automations": [
+      {
+        "id": "stale-memory-reminder",
+        "path": "environment/automation/definitions/stale-memory-reminder.automation.json",
+        "scheduleKind": "daily",
+        "status": "available",
+        "targetCommand": "/stale-memory-reminder"
+      }
+    ],
+    "domainPacks": [
+      {
+        "id": "omics",
+        "path": "environment/domain-packs/omics/pack.domain-pack.json",
+        "domain": "omics",
+        "status": "available",
+        "exposedRules": [
+          "claim truth",
+          "citation truth"
+        ]
+      }
+    ],
+    "memoryApis": [
+      {
+        "name": "getMemoryFreshness",
+        "modulePath": "environment/memory/status.js",
+        "exportName": "getMemoryFreshness",
+        "status": "available",
+        "summary": "Read sync-state freshness and report whether memory mirrors are stale.",
+        "safeToExpose": true,
+        "category": "read-status"
+      }
+    ],
+    "operatorSurface": {
+      "commands": [
+        "capabilities --json",
+        "objective start",
+        "run-analysis"
+      ],
+      "doctorCommands": [
+        "capabilities doctor",
+        "scheduler doctor"
+      ],
+      "artifactPaths": [
+        ".vibe-science-environment/objectives/<OBJ-ID>/resume-snapshot.json",
+        ".vibe-science-environment/objectives/<OBJ-ID>/digest-latest.md",
+        ".vibe-science-environment/objectives/<OBJ-ID>/events.jsonl",
+        ".vibe-science-environment/objectives/<OBJ-ID>/handoffs.jsonl",
+        ".vibe-science-environment/objectives/<OBJ-ID>/BLOCKER.flag"
+      ]
+    },
+    "missingSurfaces": []
+  },
+  "objective": {
+    "activePointer": null,
+    "activeObjectiveId": null,
+    "status": null
+  },
+  "memory": {
+    "fresh": true,
+    "lastSyncAt": "2026-04-22T17:55:00Z"
+  },
+  "degradedReasons": []
+}

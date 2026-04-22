@@ -1,0 +1,532 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.capability-handshake.v1",
+  "title": "Phase 9 Capability Handshake v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "vrePresent",
+    "vrePath",
+    "kernel",
+    "vre",
+    "objective",
+    "memory",
+    "degradedReasons"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.capability-handshake.v1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "vrePresent": {
+      "type": "boolean"
+    },
+    "vrePath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "kernel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "dbAvailable",
+        "unreachableReason",
+        "projections",
+        "alertsCount",
+        "unresolvedR2Count",
+        "lastKernelActivity"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "full",
+            "degraded",
+            "missing"
+          ]
+        },
+        "dbAvailable": {
+          "type": "boolean"
+        },
+        "unreachableReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "projections": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "probes",
+            "availableNames",
+            "unavailable"
+          ],
+          "properties": {
+            "probes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "status",
+                  "schemaVersion",
+                  "sourceTimestamp",
+                  "degradedReason",
+                  "fixturePath"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "available",
+                      "unavailable"
+                    ]
+                  },
+                  "schemaVersion": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "sourceTimestamp": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "degradedReason": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "fixturePath": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "availableNames": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "unavailable": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "reason"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "alertsCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolvedR2Count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastKernelActivity": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "vre": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executableCommands",
+        "markdownOnlyContracts",
+        "queueableTaskKinds",
+        "schemas",
+        "connectors",
+        "automations",
+        "domainPacks",
+        "memoryApis",
+        "operatorSurface",
+        "missingSurfaces"
+      ],
+      "properties": {
+        "executableCommands": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "markdownOnlyContracts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "queueableTaskKinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "schemaVersion",
+              "path",
+              "fixturePath",
+              "owner"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "schemaVersion": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fixturePath": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "owner": {
+                "type": "string",
+                "enum": [
+                  "vre",
+                  "plugin",
+                  "shared"
+                ]
+              }
+            }
+          }
+        },
+        "connectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "path",
+              "status",
+              "capabilities",
+              "degradedReason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available",
+                  "degraded"
+                ]
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "degradedReason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "automations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "path",
+              "scheduleKind",
+              "status",
+              "targetCommand"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scheduleKind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available",
+                  "degraded"
+                ]
+              },
+              "targetCommand": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "domainPacks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "path",
+              "domain",
+              "status",
+              "exposedRules"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "domain": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available",
+                  "degraded"
+                ]
+              },
+              "exposedRules": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "memoryApis": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "modulePath",
+              "exportName",
+              "status",
+              "summary",
+              "safeToExpose",
+              "category"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "modulePath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "exportName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available",
+                  "degraded"
+                ]
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1
+              },
+              "safeToExpose": {
+                "type": "boolean"
+              },
+              "category": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "operatorSurface": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commands",
+            "doctorCommands",
+            "artifactPaths"
+          ],
+          "properties": {
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "doctorCommands": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "artifactPaths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "missingSurfaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activePointer",
+        "activeObjectiveId",
+        "status"
+      ],
+      "properties": {
+        "activePointer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "activeObjectiveId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "active",
+            "blocked",
+            "paused",
+            "completed",
+            "abandoned",
+            null
+          ]
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fresh",
+        "lastSyncAt"
+      ],
+      "properties": {
+        "fresh": {
+          "type": "boolean"
+        },
+        "lastSyncAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "degradedReasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

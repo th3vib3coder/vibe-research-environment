@@ -53,6 +53,7 @@ const activeSchemaFiles = [
   'lane-policy.schema.json',
   'lane-run-record.schema.json',
   'phase9-runtime-budget.schema.json',
+  'phase9-capability-handshake.schema.json',
   'phase9-objective.schema.json',
   'phase9-active-objective-pointer.schema.json',
   'phase9-objective-event.schema.json',
@@ -197,6 +198,7 @@ const activePhase9TestFiles = [
   'environment/tests/cli/bin-vre-phase9-stubs.test.js',
   'environment/tests/control/time-provider.test.js',
   'environment/tests/control/approved-memory-apis.test.js',
+  'environment/tests/control/capability-handshake.test.js',
   'environment/tests/lib/kernel-bridge.test.js',
   'environment/tests/integration/kernel-bridge.test.js',
   'environment/tests/schemas/phase9-runtime-budget.schema.test.js',
@@ -206,7 +208,8 @@ const activePhase9TestFiles = [
   'environment/tests/schemas/phase9-handoff.schema.test.js',
   'environment/tests/schemas/phase9-resume-snapshot.schema.test.js',
   'environment/tests/schemas/phase9-lane-run-record.schema.test.js',
-  'environment/tests/schemas/phase9-role-envelope.schema.test.js'
+  'environment/tests/schemas/phase9-role-envelope.schema.test.js',
+  'environment/tests/schemas/phase9-capability-handshake.schema.test.js'
 ];
 
 async function importRepoModule(repoRelativePath) {

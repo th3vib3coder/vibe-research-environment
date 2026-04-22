@@ -78,6 +78,13 @@ async function loadPhase9CliSurfaceDefinitions(localRepoRoot) {
 
 const EXTRA_PHASE9_SURFACES = Object.freeze([
   {
+    file: 'environment/control/capability-handshake.js',
+    kind: 'orchestrator-surface',
+    name: 'capability-handshake',
+    featureId: 'W1-CAPABILITY-HANDSHAKE-AGGREGATOR',
+    introducedAt: '2026-04-22'
+  },
+  {
     file: 'environment/control/time-provider.js',
     kind: 'orchestrator-surface',
     name: 'time-provider',
@@ -89,6 +96,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     kind: 'orchestrator-surface',
     name: 'approved-memory-apis',
     featureId: 'W0-MEMORY-API-ALLOWLIST',
+    introducedAt: '2026-04-22'
+  },
+  {
+    file: 'environment/schemas/phase9-capability-handshake.schema.json',
+    kind: 'schema',
+    name: 'phase9.capability-handshake.v1',
+    featureId: null,
     introducedAt: '2026-04-22'
   },
   {
