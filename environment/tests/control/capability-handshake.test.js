@@ -88,6 +88,12 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.missingSurfaces.includes('active-objective path'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('capabilities --json'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('analysis-manifest schema'), true);
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
   // Round 36 invariant: operatorSurface enumerates only future/operator-only
   // commands. A command that is actually dispatched through bin/vre (and
   // therefore surfaced under executableCommands) MUST NOT also be reported
@@ -152,6 +158,12 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
   for (const fixture of [fullFixture, degradedFixture]) {
     assert.equal(fixture.vre.executableCommands.includes('capabilities --json'), true);
     assert.equal(fixture.vre.missingSurfaces.includes('capabilities --json'), false);
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
   }
 
   assert.equal(

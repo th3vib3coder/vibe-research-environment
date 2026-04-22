@@ -250,6 +250,37 @@ async function collectMarkdownContracts(projectRoot) {
   return names;
 }
 
+function classifyCommandSurface(executableCommands, markdownContracts, stubDefinitions) {
+  const executable = uniqueSorted(executableCommands);
+  const markdown = uniqueSorted(markdownContracts);
+  const executableCommandSet = new Set(executable);
+  const markdownContractSet = new Set(markdown);
+
+  return {
+    markdownOnlyContracts: markdown.filter((commandName) => !executableCommandSet.has(commandName)),
+    undocumentedExecutableWarnings: executable
+      .filter((commandName) => !markdownContractSet.has(commandName))
+      .map(
+        (commandName) =>
+          `executable command ${commandName} is wired in bin/vre but missing a reviewed markdown contract`
+      ),
+    operatorSurface: {
+      commands: uniqueSorted(
+        stubDefinitions
+          .filter((definition) => definition.kind !== 'doctor-surface')
+          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
+          .map((definition) => definition.canonicalCommand)
+      ),
+      doctorCommands: uniqueSorted(
+        stubDefinitions
+          .filter((definition) => definition.kind === 'doctor-surface')
+          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
+          .map((definition) => definition.canonicalCommand)
+      )
+    }
+  };
+}
+
 async function guessFixturePath(projectRoot, schemaFile) {
   if (!schemaFile.startsWith('phase9-')) {
     return null;
@@ -837,28 +868,20 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
       ...cliMetadata.IMPLEMENTED_PHASE9_COMMANDS
     ]);
     const markdownContracts = await collectMarkdownContracts(projectRoot);
-    const markdownOnlyContracts = markdownContracts.filter(
-      (commandName) => !executableCommands.includes(commandName)
+    const commandSurface = classifyCommandSurface(
+      executableCommands,
+      markdownContracts,
+      cliMetadata.PHASE9_STUB_DEFINITIONS
     );
 
     handshake.vre.executableCommands = executableCommands;
-    handshake.vre.markdownOnlyContracts = uniqueSorted(markdownOnlyContracts);
-    const executableCommandSet = new Set(executableCommands);
+    handshake.vre.markdownOnlyContracts = commandSurface.markdownOnlyContracts;
     handshake.vre.operatorSurface = {
-      commands: uniqueSorted(
-        cliMetadata.PHASE9_STUB_DEFINITIONS
-          .filter((definition) => definition.kind !== 'doctor-surface')
-          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
-          .map((definition) => definition.canonicalCommand)
-      ),
-      doctorCommands: uniqueSorted(
-        cliMetadata.PHASE9_STUB_DEFINITIONS
-          .filter((definition) => definition.kind === 'doctor-surface')
-          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
-          .map((definition) => definition.canonicalCommand)
-      ),
+      commands: commandSurface.operatorSurface.commands,
+      doctorCommands: commandSurface.operatorSurface.doctorCommands,
       artifactPaths: [...OPERATOR_ARTIFACT_PATHS]
     };
+    degradedReasons.push(...commandSurface.undocumentedExecutableWarnings);
     handshake.vre.missingSurfaces = await buildMissingSurfaces(projectRoot, cliMetadata);
 
     try {
@@ -916,6 +939,7 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
 
 export const INTERNALS = {
   buildMissingSurfaces,
+  classifyCommandSurface,
   collectAutomations,
   collectConnectors,
   collectDomainPacks,
