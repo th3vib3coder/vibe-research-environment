@@ -1,16 +1,27 @@
 import { randomUUID } from 'node:crypto';
+import { appendFile } from 'node:fs/promises';
 
-import { now } from '../control/_io.js';
+import {
+  assertValid,
+  loadValidator,
+  now,
+  readJsonl,
+} from '../control/_io.js';
 import { ORCHESTRATOR_FILES } from './_paths.js';
 import {
   appendOrchestratorJsonl,
   readOrchestratorJsonl,
+  withOrchestratorLock,
 } from './_io.js';
+import { resolveOrchestratorPath } from './_paths.js';
 
 const LANE_RUN_SCHEMA = 'lane-run-record.schema.json';
+const PHASE9_LANE_RUN_SCHEMA = 'phase9-lane-run-record.schema.json';
 const RECOVERY_SCHEMA = 'recovery-record.schema.json';
 const ESCALATION_SCHEMA = 'escalation-record.schema.json';
 const EXTERNAL_REVIEW_SCHEMA = 'external-review-record.schema.json';
+const ORCHESTRATOR_LANE_RUN_SCHEMA_VERSION = 'vibe-orch.lane-run-record.v1';
+const PHASE9_LANE_RUN_SCHEMA_VERSION = 'phase9.lane-run-record.v1';
 
 function generateId(prefix) {
   const stamp = now()
@@ -21,14 +32,30 @@ function generateId(prefix) {
 }
 
 function sortDescending(records, field) {
-  return [...records].sort((left, right) =>
-    (right[field] ?? '').localeCompare(left[field] ?? ''),
-  );
+  return [...records].sort((left, right) => {
+    const leftValue = left[field] ?? null;
+    const rightValue = right[field] ?? null;
+    if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+      return rightValue - leftValue;
+    }
+    return String(rightValue ?? '').localeCompare(String(leftValue ?? ''));
+  });
+}
+
+function filterLaneRunsByVersion(records, schemaVersion) {
+  return records.filter((record) => record?.schemaVersion === schemaVersion);
+}
+
+async function validateRecords(projectPath, records, schemaFile, label) {
+  const validate = await loadValidator(projectPath, schemaFile);
+  for (const [index, record] of records.entries()) {
+    assertValid(validate, record, `${label} record ${index + 1}`);
+  }
 }
 
 export async function appendLaneRun(projectPath, data = {}) {
   const record = {
-    schemaVersion: 'vibe-orch.lane-run-record.v1',
+    schemaVersion: ORCHESTRATOR_LANE_RUN_SCHEMA_VERSION,
     laneRunId: data.laneRunId ?? generateId('ORCH-RUN'),
     laneId: data.laneId,
     taskId: data.taskId ?? null,
@@ -61,10 +88,11 @@ export async function appendLaneRun(projectPath, data = {}) {
 }
 
 export async function listLaneRuns(projectPath, filters = {}) {
-  let records = await readOrchestratorJsonl(projectPath, ORCHESTRATOR_FILES.laneRuns, {
-    schemaFile: LANE_RUN_SCHEMA,
-    label: 'lane run record',
-  });
+  let records = filterLaneRunsByVersion(
+    await readJsonl(resolveOrchestratorPath(projectPath, ORCHESTRATOR_FILES.laneRuns)),
+    ORCHESTRATOR_LANE_RUN_SCHEMA_VERSION,
+  );
+  await validateRecords(projectPath, records, LANE_RUN_SCHEMA, 'lane run');
 
   if (filters.laneId) {
     records = records.filter((record) => record.laneId === filters.laneId);
@@ -77,6 +105,69 @@ export async function listLaneRuns(projectPath, filters = {}) {
   }
 
   return sortDescending(records, 'startedAt');
+}
+
+export async function appendPhase9LaneRun(projectPath, data = {}) {
+  const laneRunsPath = resolveOrchestratorPath(projectPath, ORCHESTRATOR_FILES.laneRuns);
+  return withOrchestratorLock(projectPath, ORCHESTRATOR_FILES.laneRuns, async () => {
+    const existingRecords = await readJsonl(laneRunsPath);
+    const existingPhase9Records = filterLaneRunsByVersion(
+      existingRecords,
+      PHASE9_LANE_RUN_SCHEMA_VERSION,
+    );
+    const record = {
+      schemaVersion: PHASE9_LANE_RUN_SCHEMA_VERSION,
+      objectiveId: data.objectiveId,
+      recordSeq: (existingPhase9Records.at(-1)?.recordSeq ?? 0) + 1,
+      experimentId: data.experimentId,
+      analysisId: data.analysisId,
+      taskId: data.taskId,
+      manifestPath: data.manifestPath,
+      scriptSha256: data.scriptSha256,
+      inputPaths: data.inputPaths ?? [],
+      outputPaths: data.outputPaths ?? [],
+      runner: data.runner,
+      argv: data.argv ?? [],
+      startedAt: data.startedAt ?? now(),
+      endedAt: data.endedAt ?? null,
+      exitCode: data.exitCode ?? null,
+      stdoutPath: data.stdoutPath ?? null,
+      stderrPath: data.stderrPath ?? null,
+      provenanceHash: data.provenanceHash,
+      status: data.status,
+    };
+
+    const validate = await loadValidator(projectPath, PHASE9_LANE_RUN_SCHEMA);
+    assertValid(validate, record, 'phase9 lane run record');
+    await appendFile(laneRunsPath, `${JSON.stringify(record)}\n`, 'utf8');
+    return record;
+  });
+}
+
+export async function listPhase9LaneRuns(projectPath, filters = {}) {
+  let records = filterLaneRunsByVersion(
+    await readJsonl(resolveOrchestratorPath(projectPath, ORCHESTRATOR_FILES.laneRuns)),
+    PHASE9_LANE_RUN_SCHEMA_VERSION,
+  );
+  await validateRecords(projectPath, records, PHASE9_LANE_RUN_SCHEMA, 'phase9 lane run');
+
+  if (filters.objectiveId) {
+    records = records.filter((record) => record.objectiveId === filters.objectiveId);
+  }
+  if (filters.experimentId) {
+    records = records.filter((record) => record.experimentId === filters.experimentId);
+  }
+  if (filters.analysisId) {
+    records = records.filter((record) => record.analysisId === filters.analysisId);
+  }
+  if (filters.taskId) {
+    records = records.filter((record) => record.taskId === filters.taskId);
+  }
+  if (filters.status) {
+    records = records.filter((record) => record.status === filters.status);
+  }
+
+  return sortDescending(records, 'recordSeq');
 }
 
 export async function getLatestLaneRun(projectPath, filters = {}) {

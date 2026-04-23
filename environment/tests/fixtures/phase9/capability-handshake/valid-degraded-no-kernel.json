@@ -40,6 +40,7 @@
       "objective status",
       "objective stop",
       "orchestrator-status",
+      "run-analysis",
       "sync-memory"
     ],
     "markdownOnlyContracts": [
@@ -150,7 +151,6 @@
     "operatorSurface": {
       "commands": [
         "research-loop",
-        "run-analysis",
         "scheduler install",
         "scheduler remove",
         "scheduler status"
@@ -169,10 +169,8 @@
       ]
     },
     "missingSurfaces": [
-      "plugin handshake injection",
       "research-loop",
       "reviewer-2 bridge",
-      "run-analysis",
       "scheduler runtime"
     ]
   },
@@ -198,6 +196,7 @@
     "executable command objective start is wired in bin/vre but missing a reviewed markdown contract",
     "executable command objective status is wired in bin/vre but missing a reviewed markdown contract",
     "executable command objective stop is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract",
     "kernel missing: CLI default: no reader provided",
     "kernel unresolvedR2Count is unavailable because listUnresolvedClaims is not currently available"
   ]

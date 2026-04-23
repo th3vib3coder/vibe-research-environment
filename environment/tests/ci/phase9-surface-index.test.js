@@ -72,6 +72,8 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'resume-snapshot.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'experiment-binding.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'analysis-manifest.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'execution-lane.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'ledgers.js'), '// fixture\n', 'utf8');
     await writeFile(
       path.join(repoRoot, '.github', 'workflows', 'ci.yml'),
       [
@@ -116,7 +118,7 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 23);
+    assert.equal(surfaces.length, 25);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'test:phase9'), true);
@@ -128,6 +130,8 @@ test('phase9 surface-index generator runs and returns the pinned shape', async (
     assert.equal(surfaces.some((surface) => surface.name === 'resume-snapshot'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'experiment-binding'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'analysis-manifest'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'execution-lane'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'orchestrator-ledgers'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.analysis-manifest.v1'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.objective.v1'), true);
@@ -147,6 +151,8 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'objective-store'), true);
     assert.equal(persisted.some((surface) => surface.name === 'resume-snapshot'), true);
     assert.equal(persisted.some((surface) => surface.name === 'experiment-binding'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'execution-lane'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'orchestrator-ledgers'), true);
     assert.equal(persisted.some((surface) => surface.name === 'scheduler doctor'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase9.analysis-manifest.v1'), true);

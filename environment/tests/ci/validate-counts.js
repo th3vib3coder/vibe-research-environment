@@ -14,7 +14,7 @@ const expectedCounts = {
   evalTests: 2,
   installTests: 5,
   integrationTests: 15,
-  cliTests: 7,
+  cliTests: 8,
   schemaTests: 53,
   ciValidators: 14
 };

@@ -21,6 +21,7 @@ import {
   statusObjectiveCommand,
   stopObjectiveCommand
 } from '../environment/objectives/cli.js';
+import { RunAnalysisCliError, runAnalysisCommand } from '../environment/orchestrator/execution-lane.js';
 import { getTaskRegistry } from '../environment/orchestrator/task-registry.js';
 
 export const DISPATCH_TABLE = Object.freeze({
@@ -62,7 +63,8 @@ export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
       'objective resume',
       'objective start',
       'objective status',
-      'objective stop'
+      'objective stop',
+      'run-analysis',
     ])
   ].sort()
 );
@@ -826,6 +828,23 @@ async function runObjectiveResume(repoRoot, parsed) {
   }
 }
 
+async function runRunAnalysis(repoRoot, parsed) {
+  if (parsed.positionals.length > 0) {
+    throw new RunAnalysisCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: `run-analysis does not accept positional arguments: ${parsed.positionals.join(' ')}`,
+    });
+  }
+
+  return runAnalysisCommand(repoRoot, {
+    manifestPath: requiredStringOption(parsed, 'manifest', 'run-analysis'),
+    dryRun:
+      parsed.options['dry-run'] === true ||
+      parsed.options['dry-run'] === 'true',
+  });
+}
+
 function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extra = {}) {
   return {
     ok: false,
@@ -1111,10 +1130,16 @@ export async function main(argv = process.argv) {
         return 0;
       }
 
+      if (phase9Invocation.definition.canonicalCommand === 'run-analysis') {
+        const payload = await runRunAnalysis(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
       writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
       return 0;
     } catch (error) {
-      if (error instanceof ObjectiveCliError) {
+      if (error instanceof ObjectiveCliError || error instanceof RunAnalysisCliError) {
         writeJsonPayload(
           namedPhase9ErrorPayload(
             error.command,

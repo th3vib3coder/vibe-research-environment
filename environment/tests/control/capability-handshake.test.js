@@ -58,6 +58,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.executableCommands.includes('objective status'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective pause'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective stop'), true);
+  assert.equal(handshake.vre.executableCommands.includes('run-analysis'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('weekly-digest'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('flow-status'), false);
   assert.equal(handshake.vre.queueableTaskKinds.length > 0, true);
@@ -90,6 +91,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.operatorSurface.commands.includes('objective status'), false);
   assert.equal(handshake.vre.operatorSurface.commands.includes('objective pause'), false);
   assert.equal(handshake.vre.operatorSurface.commands.includes('objective stop'), false);
+  assert.equal(handshake.vre.operatorSurface.commands.includes('run-analysis'), false);
   assert.equal(
     handshake.vre.operatorSurface.doctorCommands.includes('capabilities doctor'),
     true
@@ -101,6 +103,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.missingSurfaces.includes('active-objective path'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('capabilities --json'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('analysis-manifest schema'), false);
+  assert.equal(handshake.vre.missingSurfaces.includes('run-analysis'), false);
   assert.equal(
     handshake.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
     true
@@ -138,6 +141,12 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(
     handshake.degradedReasons.includes(
       'executable command objective stop is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract'
     ),
     true
   );
@@ -209,13 +218,17 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     assert.equal(fixture.vre.executableCommands.includes('objective status'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective pause'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective stop'), true);
+    assert.equal(fixture.vre.executableCommands.includes('run-analysis'), true);
+    assert.equal(fixture.vre.missingSurfaces.includes('plugin handshake injection'), false);
     assert.equal(fixture.vre.missingSurfaces.includes('capabilities --json'), false);
     assert.equal(fixture.vre.missingSurfaces.includes('analysis-manifest schema'), false);
+    assert.equal(fixture.vre.missingSurfaces.includes('run-analysis'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective start'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective resume'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective status'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective pause'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective stop'), false);
+    assert.equal(fixture.vre.operatorSurface.commands.includes('run-analysis'), false);
     assert.equal(
       fixture.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
       true
@@ -253,6 +266,12 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     assert.equal(
       fixture.degradedReasons.includes(
         'executable command objective stop is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract'
       ),
       true
     );

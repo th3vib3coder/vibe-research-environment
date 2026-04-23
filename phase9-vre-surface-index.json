@@ -127,6 +127,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "execution-lane",
+    "paths": [
+      "environment/orchestrator/execution-lane.js"
+    ],
+    "featureId": "W3-RUN-ANALYSIS-EXECUTION-LANE",
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "experiment-binding",
     "paths": [
       "environment/orchestrator/experiment-binding.js"
@@ -151,6 +160,15 @@
     ],
     "featureId": "W2-OBJECTIVE-STORE",
     "introducedAt": "2026-04-22"
+  },
+  {
+    "kind": "orchestrator-surface",
+    "name": "orchestrator-ledgers",
+    "paths": [
+      "environment/orchestrator/ledgers.js"
+    ],
+    "featureId": "W3-RUN-ANALYSIS-EXECUTION-LANE",
+    "introducedAt": "2026-04-23"
   },
   {
     "kind": "orchestrator-surface",

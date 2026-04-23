@@ -191,7 +191,8 @@ const activeCliTestFiles = [
   'bin-vre-init.test.js',
   'bin-vre-kernel-reader.test.js',
   'bin-vre-phase9-stubs.test.js',
-  'objective-cli.test.js'
+  'objective-cli.test.js',
+  'run-analysis.test.js'
 ];
 
 const activePhase9TestFiles = [
@@ -199,6 +200,7 @@ const activePhase9TestFiles = [
   'environment/tests/ci/phase9-surface-index.test.js',
   'environment/tests/cli/bin-vre-phase9-stubs.test.js',
   'environment/tests/cli/objective-cli.test.js',
+  'environment/tests/cli/run-analysis.test.js',
   'environment/tests/control/time-provider.test.js',
   'environment/tests/control/approved-memory-apis.test.js',
   'environment/tests/control/capability-handshake.test.js',

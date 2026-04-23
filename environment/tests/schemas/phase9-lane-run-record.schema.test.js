@@ -18,6 +18,14 @@ test('phase9-lane-run-record.schema accepts a valid interrupted fixture', async 
   });
 });
 
+test('phase9-lane-run-record.schema accepts a valid running fixture created before execution completes', async () => {
+  await expectFixtureValidity({
+    schemaFile: 'phase9-lane-run-record.schema.json',
+    fixturePath: 'environment/tests/fixtures/phase9/lane-run-record/valid-running.json',
+    expectedValid: true
+  });
+});
+
 test('phase9-lane-run-record.schema rejects a fixture missing recordSeq', async () => {
   await expectFixtureValidity({
     schemaFile: 'phase9-lane-run-record.schema.json',
