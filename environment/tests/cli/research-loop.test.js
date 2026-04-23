@@ -609,6 +609,203 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
   }
 });
 
+// Round 62 regression: seq 075 ledger row claims "budget exhausted ->
+// blocked/paused per stopConditions", and the runtime `applyBudgetStopCondition`
+// has three branches (pause, stop, block) but only the `pause` branch was
+// pinned. The default fixture ships with `onBudgetExhausted: 'block'` so the
+// current default runtime path was entirely untested. This test forces the
+// `block` branch and asserts that objective status becomes `blocked`, a
+// BLOCKER.flag is written with `E_BUDGET_EXHAUSTED`, and a `blocker-open`
+// objective event is appended.
+test('research-loop blocks the objective and writes BLOCKER.flag when stopConditions.onBudgetExhausted=block is exhausted', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-budget-block-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      scriptContents: SAFE_SCRIPT,
+      budget: {
+        maxIterations: 1
+      },
+      stopConditions: {
+        onBudgetExhausted: 'block'
+      }
+    });
+    await appendObjectiveEvent(projectRoot, context.objectiveId, 'loop-iteration', {
+      seeded: true
+    }, '2026-04-23T21:05:00Z');
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--heartbeat',
+      '--wake-id',
+      'WAKE-BUDGET-BLOCK'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'blocked');
+    assert.equal(payload.stopReason, 'budget-exhausted');
+
+    const objectiveRecord = await readObjectiveRecord(projectRoot, context.objectiveId);
+    assert.equal(objectiveRecord.status, 'blocked');
+
+    // BLOCKER.flag MUST exist with the budget code
+    const blockerText = await readBlockerText(projectRoot, context.objectiveId);
+    assert.match(blockerText, /E_BUDGET_EXHAUSTED/u);
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const blockerOpen = events.find((entry) => entry.kind === 'blocker-open');
+    assert.ok(blockerOpen, 'blocker-open event must be appended on block branch');
+    assert.equal(blockerOpen.payload.code, 'E_BUDGET_EXHAUSTED');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// Round 62 regression: the `applyBudgetStopCondition` stop branch is TERMINAL
+// (stopObjective releases the active pointer) while pause/block are
+// reversible. Without a regression test, a silent refactor could conflate
+// stop with pause and never actually terminate objectives that operators
+// configured to stop on budget exhaustion. This pins terminal transition.
+test('research-loop stops the objective terminally when stopConditions.onBudgetExhausted=stop is exhausted', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-budget-stop-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      scriptContents: SAFE_SCRIPT,
+      budget: {
+        maxIterations: 1
+      },
+      stopConditions: {
+        onBudgetExhausted: 'stop'
+      }
+    });
+    await appendObjectiveEvent(projectRoot, context.objectiveId, 'loop-iteration', {
+      seeded: true
+    }, '2026-04-23T21:05:00Z');
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--heartbeat',
+      '--wake-id',
+      'WAKE-BUDGET-STOP'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'stopped');
+    assert.equal(payload.stopReason, 'budget-exhausted');
+
+    const objectiveRecord = await readObjectiveRecord(projectRoot, context.objectiveId);
+    // Terminal status: stopObjective moves to completed or abandoned-like
+    assert.notEqual(objectiveRecord.status, 'active');
+    assert.notEqual(objectiveRecord.status, 'paused');
+    assert.notEqual(objectiveRecord.status, 'blocked');
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const stopEvent = events.find(
+      (entry) => entry.kind === 'stop' && entry.payload.disposition === 'stop'
+    );
+    assert.ok(stopEvent, 'stop event with disposition=stop must be appended on terminal stop branch');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// Round 62 regression: the wake-lease resolver has TWO no-op reasons:
+// `duplicate-wake-id` (same wakeId; already tested) and
+// `wake-lease-still-active` (DIFFERENT wakeId but current lease still
+// unexpired). The second branch was implemented but no test covered the
+// wake-lease protection semantic: a fresh wake id cannot steal an
+// unexpired lease owned by another session.
+test('research-loop refuses to acquire the lease when a different wake owns an unexpired lease', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-wake-unexpired-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-unexpired-001',
+      scriptContents: SAFE_SCRIPT
+    });
+    // Pre-seed an unexpired lease owned by a DIFFERENT wake id.
+    const futureExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-OWNED-BY-OTHER',
+      leaseAcquiredAt: new Date(Date.now() - 60 * 1000).toISOString(),
+      leaseExpiresAt: futureExpiry,
+      acquiredBy: 'sess-other',
+      previousWakeId: null
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--heartbeat',
+      '--wake-id',
+      'WAKE-CONTENDER'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'no-op');
+    assert.equal(payload.reason, 'wake-lease-still-active');
+
+    // Queue and snapshot should NOT have been mutated by slice execution.
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords, []);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// Round 62 regression: E_OBJECTIVE_ID_MISMATCH is defensively checked at
+// two layers of autonomy-runtime.js (the outer entry at runResearchLoopCommand
+// and again inside the wake-lease `withLock` block). This pins the outer
+// guard so a silent refactor cannot erode the cross-objective safety net
+// that prevents one session from driving slices on the wrong objective.
+test('research-loop fails closed with E_OBJECTIVE_ID_MISMATCH when the requested objective is not the active one', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-id-mismatch-');
+  try {
+    await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-001',
+      analysisId: 'ANL-loop-idmm-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      'OBJ-999-DIFFERENT',
+      '--heartbeat',
+      '--wake-id',
+      'WAKE-IDMM'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 1, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.code, 'E_OBJECTIVE_ID_MISMATCH');
+    // namedPhase9ErrorPayload spreads `extra` into the top-level payload.
+    assert.equal(payload.activeObjectiveId, 'OBJ-001');
+    assert.equal(payload.objectiveId, 'OBJ-999-DIFFERENT');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 // Round 61 regression: seq 075 ledger row explicitly claims the strategic
 // relevance checkpoint runs "before every unattended slice AND before
 // spending the final 25% of the iteration budget". The first trigger is
