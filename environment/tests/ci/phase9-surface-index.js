@@ -85,6 +85,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-22'
   },
   {
+    file: 'environment/objectives/cli.js',
+    kind: 'orchestrator-surface',
+    name: 'objective-cli',
+    featureId: 'W2-OBJECTIVE-CLI',
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/control/capability-handshake.js',
     kind: 'orchestrator-surface',
     name: 'capability-handshake',

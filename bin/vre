@@ -13,14 +13,14 @@ import {
 import { runWithMiddleware } from '../environment/control/middleware.js';
 import { resolveKernelReader } from '../environment/lib/kernel-bridge.js';
 import {
-  activateObjective,
-  ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
-  deleteActiveObjectivePointer,
-  deleteObjectiveStore,
-  ObjectiveLockHeldError,
-  pauseObjective,
-  stopObjective
-} from '../environment/objectives/store.js';
+  ObjectiveCliError,
+  coerceObjectiveCliError,
+  pauseObjectiveCommand,
+  resumeObjectiveCommand,
+  startObjectiveCommand,
+  statusObjectiveCommand,
+  stopObjectiveCommand
+} from '../environment/objectives/cli.js';
 import { getTaskRegistry } from '../environment/orchestrator/task-registry.js';
 
 export const DISPATCH_TABLE = Object.freeze({
@@ -59,7 +59,9 @@ export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
     ...new Set([
       ...Object.keys(DISPATCH_TABLE).filter((commandName) => commandName.includes(' ')),
       'objective pause',
+      'objective resume',
       'objective start',
+      'objective status',
       'objective stop'
     ])
   ].sort()
@@ -712,102 +714,116 @@ async function persistCapabilityHandshakeArtifact(repoRoot) {
   };
 }
 
-function objectiveLockHeldPayload(error) {
-  return namedPhase9ErrorPayload(
-    'objective start',
-    'OBJECTIVE_LOCK_HELD',
-    error.message,
-    {
-      activeObjectiveId: error.objectiveId,
-      activePointer: error.pointerPath,
-      stopCommand: error.stopCommand,
-      pauseCommand: error.pauseCommand
-    }
-  );
+function objectiveCliDeps() {
+  return {
+    persistCapabilityHandshake: persistCapabilityHandshakeArtifact,
+    generateCapabilityHandshake: (projectRoot) =>
+      generateCapabilityHandshake(projectRoot, {
+        cliMetadata: {
+          DISPATCH_TABLE,
+          IMPLEMENTED_PHASE9_COMMANDS,
+          PHASE9_STUB_DEFINITIONS,
+          resolveKernelRoot
+        }
+      })
+  };
 }
 
 async function runObjectiveStart(repoRoot, parsed) {
-  const title = requiredStringOption(parsed, 'title', 'objective start');
-  const question = requiredStringOption(parsed, 'question', 'objective start');
-  const runtimeMode = requiredStringOption(parsed, 'mode', 'objective start');
-  const reasoningMode = parsed.options['reasoning-mode'] ?? 'rule-only';
-  const rawBudget = await loadInlineOrJsonObject(repoRoot, parsed.options.budget, '--budget');
-  const budget = await buildObjectiveBudget(repoRoot, rawBudget);
-  const rawWakePolicy = parsed.options['wake-policy'] == null
-    ? null
-    : await loadInlineOrJsonObject(repoRoot, parsed.options['wake-policy'], '--wake-policy');
-  const wakePolicy = buildObjectiveWakePolicy(rawWakePolicy, runtimeMode, budget);
-  const sessionId = resolvePhase9SessionId();
-  const objectiveRecord = buildInitialObjectiveRecord({
-    title,
-    question,
-    runtimeMode,
-    reasoningMode,
-    budget,
-    wakePolicy,
-    sessionId
-  });
-
-  const activation = await activateObjective(repoRoot, objectiveRecord, {
-    lockAcquiredBySession: sessionId
-  });
-  let persistedHandshake;
   try {
-    persistedHandshake = await persistCapabilityHandshakeArtifact(repoRoot);
-  } catch (error) {
-    await deleteActiveObjectivePointer(
-      repoRoot,
-      activation.objectiveRecord.objectiveId
-    ).catch(() => {});
-    await deleteObjectiveStore(
-      repoRoot,
-      activation.objectiveRecord.objectiveId
-    ).catch(() => {});
-    throw error;
-  }
-  const { artifactPath, handshake } = persistedHandshake;
+    const title = requiredStringOption(parsed, 'title', 'objective start');
+    const question = requiredStringOption(parsed, 'question', 'objective start');
+    const runtimeMode = requiredStringOption(parsed, 'mode', 'objective start');
+    const reasoningMode = parsed.options['reasoning-mode'] ?? 'rule-only';
+    const rawBudget = await loadInlineOrJsonObject(repoRoot, parsed.options.budget, '--budget');
+    const budget = await buildObjectiveBudget(repoRoot, rawBudget);
+    const rawWakePolicy = parsed.options['wake-policy'] == null
+      ? null
+      : await loadInlineOrJsonObject(repoRoot, parsed.options['wake-policy'], '--wake-policy');
+    const wakePolicy = buildObjectiveWakePolicy(rawWakePolicy, runtimeMode, budget);
+    const sessionId = resolvePhase9SessionId();
+    const objectiveRecord = buildInitialObjectiveRecord({
+      title,
+      question,
+      runtimeMode,
+      reasoningMode,
+      budget,
+      wakePolicy,
+      sessionId
+    });
 
-  return phase9SuccessPayload('objective start', {
-    objectiveId: activation.objectiveRecord.objectiveId,
-    objectiveRecordPath: normalizeSlashes(
-      path.relative(repoRoot, activation.objectiveRecordPath)
-    ),
-    activePointer: ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
-    currentWakeLease: activation.activeObjectivePointer.currentWakeLease,
-    handshakeArtifactPath: normalizeSlashes(path.relative(repoRoot, artifactPath)),
-    handshakeObjective: handshake.objective
-  });
+    return startObjectiveCommand(
+      repoRoot,
+      {
+        objectiveRecord,
+        sessionId
+      },
+      objectiveCliDeps()
+    );
+  } catch (error) {
+    throw coerceObjectiveCliError('objective start', error);
+  }
 }
 
 async function runObjectivePause(repoRoot, parsed) {
-  const objectiveId = requiredStringOption(parsed, 'objective', 'objective pause');
-  const reason = requiredStringOption(parsed, 'reason', 'objective pause');
-  const result = await pauseObjective(repoRoot, objectiveId);
-  const { artifactPath, handshake } = await persistCapabilityHandshakeArtifact(repoRoot);
-  return phase9SuccessPayload('objective pause', {
-    objectiveId,
-    reason,
-    status: result.objectiveRecord.status,
-    activePointer: ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH,
-    activePointerReleased: false,
-    handshakeArtifactPath: normalizeSlashes(path.relative(repoRoot, artifactPath)),
-    handshakeObjective: handshake.objective
-  });
+  try {
+    return pauseObjectiveCommand(
+      repoRoot,
+      {
+        objectiveId: requiredStringOption(parsed, 'objective', 'objective pause'),
+        reason: requiredStringOption(parsed, 'reason', 'objective pause')
+      },
+      objectiveCliDeps()
+    );
+  } catch (error) {
+    throw coerceObjectiveCliError('objective pause', error);
+  }
 }
 
 async function runObjectiveStop(repoRoot, parsed) {
-  const objectiveId = requiredStringOption(parsed, 'objective', 'objective stop');
-  const reason = requiredStringOption(parsed, 'reason', 'objective stop');
-  const result = await stopObjective(repoRoot, objectiveId);
-  const { artifactPath, handshake } = await persistCapabilityHandshakeArtifact(repoRoot);
-  return phase9SuccessPayload('objective stop', {
-    objectiveId,
-    reason,
-    status: result.objectiveRecord.status,
-    releasedPointer: result.releasedPointerPath,
-    handshakeArtifactPath: normalizeSlashes(path.relative(repoRoot, artifactPath)),
-    handshakeObjective: handshake.objective
-  });
+  try {
+    return stopObjectiveCommand(
+      repoRoot,
+      {
+        objectiveId: requiredStringOption(parsed, 'objective', 'objective stop'),
+        reason: requiredStringOption(parsed, 'reason', 'objective stop')
+      },
+      objectiveCliDeps()
+    );
+  } catch (error) {
+    throw coerceObjectiveCliError('objective stop', error);
+  }
+}
+
+async function runObjectiveStatus(repoRoot, parsed) {
+  try {
+    return statusObjectiveCommand(
+      repoRoot,
+      {
+        objectiveId: requiredStringOption(parsed, 'objective', 'objective status')
+      },
+      objectiveCliDeps()
+    );
+  } catch (error) {
+    throw coerceObjectiveCliError('objective status', error);
+  }
+}
+
+async function runObjectiveResume(repoRoot, parsed) {
+  try {
+    return resumeObjectiveCommand(
+      repoRoot,
+      {
+        objectiveId: requiredStringOption(parsed, 'objective', 'objective resume'),
+        repairSnapshot:
+          parsed.options['repair-snapshot'] === true ||
+          parsed.options['repair-snapshot'] === 'true'
+      },
+      objectiveCliDeps()
+    );
+  } catch (error) {
+    throw coerceObjectiveCliError('objective resume', error);
+  }
 }
 
 function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extra = {}) {
@@ -1077,6 +1093,18 @@ export async function main(argv = process.argv) {
         return 0;
       }
 
+      if (phase9Invocation.definition.canonicalCommand === 'objective resume') {
+        const payload = await runObjectiveResume(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'objective status') {
+        const payload = await runObjectiveStatus(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
       if (phase9Invocation.definition.canonicalCommand === 'objective stop') {
         const payload = await runObjectiveStop(repoRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
@@ -1086,9 +1114,16 @@ export async function main(argv = process.argv) {
       writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
       return 0;
     } catch (error) {
-      if (error instanceof ObjectiveLockHeldError) {
-        writeJsonPayload(objectiveLockHeldPayload(error));
-        return 1;
+      if (error instanceof ObjectiveCliError) {
+        writeJsonPayload(
+          namedPhase9ErrorPayload(
+            error.command,
+            error.code,
+            error.message,
+            error.extra
+          )
+        );
+        return error.exitCode ?? 1;
       }
       process.stderr.write(`vre: ${phase9Invocation.definition.canonicalCommand}: ${error.message}\n`);
       return 1;

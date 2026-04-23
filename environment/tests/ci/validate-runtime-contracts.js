@@ -189,13 +189,15 @@ const activeCliTestFiles = [
   'bin-vre-crossplatform.test.js',
   'bin-vre-init.test.js',
   'bin-vre-kernel-reader.test.js',
-  'bin-vre-phase9-stubs.test.js'
+  'bin-vre-phase9-stubs.test.js',
+  'objective-cli.test.js'
 ];
 
 const activePhase9TestFiles = [
   'environment/tests/ci/check-phase9-ledger.test.js',
   'environment/tests/ci/phase9-surface-index.test.js',
   'environment/tests/cli/bin-vre-phase9-stubs.test.js',
+  'environment/tests/cli/objective-cli.test.js',
   'environment/tests/control/time-provider.test.js',
   'environment/tests/control/approved-memory-apis.test.js',
   'environment/tests/control/capability-handshake.test.js',

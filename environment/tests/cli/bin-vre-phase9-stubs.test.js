@@ -22,9 +22,7 @@ const FIXTURE_KERNEL_ENV = {
 
 const STUB_CASES = [
   { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' },
-  { argv: ['objective', 'status', '--objective', 'OBJ-1'], command: 'objective status', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['objective', 'doctor', '--objective=OBJ-1'], command: 'objective doctor', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['objective', 'resume', '--objective', 'OBJ-1'], command: 'objective resume', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['run-analysis', '--analysis-id', 'AN-7'], command: 'run-analysis', optionChecks: { 'analysis-id': 'AN-7' } },
   {
     argv: ['research-loop', '--resume', '--objective=OBJ-1', '--max-iterations', '1'],
@@ -126,6 +124,8 @@ test('capabilities --json reports only commands that are actually wired in bin/v
     assert.equal(payload.vre.executableCommands.includes('capabilities --json'), true);
     assert.equal(payload.vre.executableCommands.includes('objective start'), true);
     assert.equal(payload.vre.executableCommands.includes('objective pause'), true);
+    assert.equal(payload.vre.executableCommands.includes('objective resume'), true);
+    assert.equal(payload.vre.executableCommands.includes('objective status'), true);
     assert.equal(payload.vre.executableCommands.includes('objective stop'), true);
     assert.equal(payload.vre.executableCommands.includes('weekly-digest'), false);
     assert.equal(payload.vre.markdownOnlyContracts.includes('weekly-digest'), true);

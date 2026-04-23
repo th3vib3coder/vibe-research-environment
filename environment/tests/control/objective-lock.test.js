@@ -194,6 +194,12 @@ test('objective pause keeps the pointer while transitioning the objective to pau
       path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
     );
     assert.equal(objectiveRecord.status, 'paused');
+    assert.equal(
+      await pathExists(
+        path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'resume-snapshot.json')
+      ),
+      true
+    );
 
     const handshake = await readJson(
       path.join(projectRoot, '.vibe-science-environment', 'control', 'capability-handshake.json')
@@ -243,6 +249,12 @@ test('objective stop transitions to abandoned, releases the pointer, and clears 
       path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
     );
     assert.equal(objectiveRecord.status, 'abandoned');
+    assert.equal(
+      await pathExists(
+        path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'resume-snapshot.json')
+      ),
+      true
+    );
 
     const handshake = await readJson(
       path.join(projectRoot, '.vibe-science-environment', 'control', 'capability-handshake.json')
@@ -287,7 +299,7 @@ test('activateObjective rolls back the objective directory and leaves no active 
   }
 });
 
-// Round 44 coverage hardening: the following tests close T2.2 branches
+// Round 46 coverage hardening: the following tests close T2.2 branches
 // that were implemented by seq 059-060 but left without dedicated tests.
 // They do not change any reviewed contract; they pin implemented behavior
 // against silent regression.
@@ -306,8 +318,12 @@ test('objective stop without an active pointer fails with a clear error message 
       env: FIXTURE_KERNEL_ENV
     });
     assert.equal(result.code, 1);
-    assert.equal(result.stdout, '');
-    assert.match(result.stderr, /No active objective pointer exists/u);
+    assert.equal(result.stderr, '');
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective stop');
+    assert.equal(payload.code, 'E_ACTIVE_OBJECTIVE_POINTER_MISSING');
+    assert.match(payload.message, /No active objective pointer exists/u);
     assert.equal(
       await pathExists(
         path.join(projectRoot, '.vibe-science-environment', 'objectives', 'active-objective.json')
@@ -341,8 +357,12 @@ test('objective stop with a mismatched objectiveId preserves the active pointer 
       env: FIXTURE_KERNEL_ENV
     });
     assert.equal(stop.code, 1);
-    assert.equal(stop.stdout, '');
-    assert.match(stop.stderr, /references OBJ-001, not OBJ-999/u);
+    assert.equal(stop.stderr, '');
+    const payload = JSON.parse(stop.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective stop');
+    assert.equal(payload.code, 'E_OBJECTIVE_ID_MISMATCH');
+    assert.match(payload.message, /references OBJ-001, not OBJ-999/u);
 
     // Pointer MUST still exist: a mismatched stop cannot silently release
     // the lock.
@@ -396,8 +416,13 @@ test('objective pause on an already-paused objective fails instead of silently r
       env: FIXTURE_KERNEL_ENV
     });
     assert.equal(secondPause.code, 1);
-    assert.equal(secondPause.stdout, '');
-    assert.match(secondPause.stderr, /Cannot pause objective in status paused/u);
+    assert.equal(secondPause.stderr, '');
+    const payload = JSON.parse(secondPause.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective pause');
+    assert.equal(payload.code, 'E_OBJECTIVE_STATE_INVALID');
+    assert.equal(payload.status, 'paused');
+    assert.match(payload.message, /Cannot pause objective in status paused/u);
 
     // Pointer must still be there and objective must still be paused, not
     // accidentally reset to active.
@@ -449,8 +474,12 @@ test('objective stop called a second time after a successful stop fails because 
       env: FIXTURE_KERNEL_ENV
     });
     assert.equal(secondStop.code, 1);
-    assert.equal(secondStop.stdout, '');
-    assert.match(secondStop.stderr, /No active objective pointer exists/u);
+    assert.equal(secondStop.stderr, '');
+    const payload = JSON.parse(secondStop.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective stop');
+    assert.equal(payload.code, 'E_ACTIVE_OBJECTIVE_POINTER_MISSING');
+    assert.match(payload.message, /No active objective pointer exists/u);
 
     // After both calls the pointer stays released (idempotent safety).
     assert.equal(

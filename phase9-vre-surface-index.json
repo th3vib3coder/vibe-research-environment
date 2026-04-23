@@ -118,6 +118,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "objective-cli",
+    "paths": [
+      "environment/objectives/cli.js"
+    ],
+    "featureId": "W2-OBJECTIVE-CLI",
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "objective-store",
     "paths": [
       "environment/objectives/store.js"

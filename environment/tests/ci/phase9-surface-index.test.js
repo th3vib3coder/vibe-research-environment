@@ -29,7 +29,7 @@ async function withFixtureRepo(fn) {
         scripts: {
           'check:phase9-ledger': 'node environment/tests/ci/check-phase9-ledger.js',
           'build:surface-index': 'node environment/tests/ci/phase9-surface-index.js',
-          'test:phase9': 'node --test environment/tests/ci/check-phase9-ledger.test.js environment/tests/ci/phase9-surface-index.test.js environment/tests/cli/bin-vre-phase9-stubs.test.js environment/tests/control/time-provider.test.js environment/tests/control/approved-memory-apis.test.js environment/tests/control/capability-handshake.test.js environment/tests/control/objective-store.test.js environment/tests/lib/kernel-bridge.test.js environment/tests/integration/kernel-bridge.test.js environment/tests/schemas/phase9-runtime-budget.schema.test.js environment/tests/schemas/phase9-objective.schema.test.js environment/tests/schemas/phase9-active-objective-pointer.schema.test.js environment/tests/schemas/phase9-objective-event.schema.test.js environment/tests/schemas/phase9-handoff.schema.test.js environment/tests/schemas/phase9-resume-snapshot.schema.test.js environment/tests/schemas/phase9-lane-run-record.schema.test.js environment/tests/schemas/phase9-role-envelope.schema.test.js environment/tests/schemas/phase9-capability-handshake.schema.test.js'
+          'test:phase9': 'node --test environment/tests/ci/check-phase9-ledger.test.js environment/tests/ci/phase9-surface-index.test.js environment/tests/cli/bin-vre-phase9-stubs.test.js environment/tests/cli/objective-cli.test.js environment/tests/control/time-provider.test.js environment/tests/control/approved-memory-apis.test.js environment/tests/control/capability-handshake.test.js environment/tests/control/objective-store.test.js environment/tests/lib/kernel-bridge.test.js environment/tests/integration/kernel-bridge.test.js environment/tests/schemas/phase9-runtime-budget.schema.test.js environment/tests/schemas/phase9-objective.schema.test.js environment/tests/schemas/phase9-active-objective-pointer.schema.test.js environment/tests/schemas/phase9-objective-event.schema.test.js environment/tests/schemas/phase9-handoff.schema.test.js environment/tests/schemas/phase9-resume-snapshot.schema.test.js environment/tests/schemas/phase9-lane-run-record.schema.test.js environment/tests/schemas/phase9-role-envelope.schema.test.js environment/tests/schemas/phase9-capability-handshake.schema.test.js'
         }
       }, null, 2),
       'utf8'
@@ -67,6 +67,7 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'validate-runtime-contracts.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'store.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'objectives', 'cli.js'), '// fixture\n', 'utf8');
     await writeFile(
       path.join(repoRoot, '.github', 'workflows', 'ci.yml'),
       [
@@ -110,13 +111,14 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 18);
+    assert.equal(surfaces.length, 19);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'test:phase9'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'capability-handshake'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'time-provider'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'approved-memory-apis'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'objective-cli'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'objective-store'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.objective.v1'), true);
@@ -132,6 +134,7 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'build:surface-index'), true);
     assert.equal(persisted.some((surface) => surface.name === 'test:phase9'), true);
     assert.equal(persisted.some((surface) => surface.name === 'capability-handshake'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'objective-cli'), true);
     assert.equal(persisted.some((surface) => surface.name === 'objective-store'), true);
     assert.equal(persisted.some((surface) => surface.name === 'scheduler doctor'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
