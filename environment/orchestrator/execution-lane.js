@@ -272,8 +272,26 @@ function buildExecutionLogPaths(projectRoot, manifest) {
   };
 }
 
+function resolveRunAnalysisTimeoutMs(maxRuntimeSeconds, env = process.env) {
+  const manifestTimeoutMs = Math.max(1, maxRuntimeSeconds) * 1000;
+  // Operator-level cap. seq 073 promised VRE_RUN_ANALYSIS_TIMEOUT_MS as a
+  // feature flag but the runtime ignored it; Round 59 closes that gap by
+  // allowing operators to tighten a permissive manifest budget without
+  // widening it. The env var can only REDUCE the manifest timeout, never
+  // extend it, so a misconfigured manifest cannot bypass an operator cap.
+  const rawOverride = env.VRE_RUN_ANALYSIS_TIMEOUT_MS;
+  if (typeof rawOverride !== 'string' || rawOverride.trim() === '') {
+    return manifestTimeoutMs;
+  }
+  const parsed = Number.parseInt(rawOverride, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return manifestTimeoutMs;
+  }
+  return Math.min(parsed, manifestTimeoutMs);
+}
+
 async function executeApprovedManifest(projectRoot, approvedTemplate, maxRuntimeSeconds) {
-  const timeoutMs = Math.max(1, maxRuntimeSeconds) * 1000;
+  const timeoutMs = resolveRunAnalysisTimeoutMs(maxRuntimeSeconds);
   return new Promise((resolve) => {
     let child;
     try {

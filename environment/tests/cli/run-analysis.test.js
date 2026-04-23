@@ -435,3 +435,48 @@ test('run-analysis fails closed when no active objective pointer exists', async 
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 59 regression: seq 073 ledger row claims `VRE_RUN_ANALYSIS_TIMEOUT_MS`
+// as a feature flag but the runtime never honoured it. This test pins the
+// operator-level timeout cap: a slow script with a generous manifest budget
+// (60s) must be killed when VRE_RUN_ANALYSIS_TIMEOUT_MS is set to a much
+// shorter value (400ms), producing a recorded `interrupted` final record.
+const SLOW_SCRIPT = `
+await new Promise((resolve) => setTimeout(resolve, 5000));
+process.stdout.write('should have been killed\\n');
+`;
+
+test('run-analysis honours VRE_RUN_ANALYSIS_TIMEOUT_MS as an operator-level cap on the manifest budget', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-env-timeout-');
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-env-timeout-001',
+      scriptPath: 'analysis/scripts/slow-analysis.mjs',
+      inputPath: 'data/input.csv',
+      outputPath: 'artifacts/results.json',
+      scriptContents: SLOW_SCRIPT,
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_RUN_ANALYSIS_TIMEOUT_MS: '400',
+      },
+    });
+
+    assert.equal(result.code, 1, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.status, 'interrupted');
+
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'interrupted']);
+    assert.equal(laneRuns.at(-1)?.exitCode, null);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
