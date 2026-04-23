@@ -1,0 +1,431 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.analysis-manifest.v1",
+  "title": "Phase 9 Analysis Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "experimentId",
+    "analysisId",
+    "script",
+    "inputs",
+    "outputs",
+    "command",
+    "budget",
+    "safety",
+    "taskKind",
+    "expectedArtifacts",
+    "humanApproval",
+    "createdAt",
+    "createdBy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase9.analysis-manifest.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^OBJ-[A-Za-z0-9][A-Za-z0-9-]*$"
+    },
+    "experimentId": {
+      "type": "string",
+      "pattern": "^EXP-[0-9]{3}$"
+    },
+    "analysisId": {
+      "type": "string",
+      "pattern": "^ANL-[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "script": {
+      "$ref": "#/definitions/scriptRef"
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/ioRef"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/ioRef"
+      }
+    },
+    "command": {
+      "$ref": "#/definitions/commandRef"
+    },
+    "budget": {
+      "$ref": "#/definitions/budgetRef"
+    },
+    "safety": {
+      "$ref": "#/definitions/safetyRef"
+    },
+    "taskKind": {
+      "const": "analysis-execution-run"
+    },
+    "expectedArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/expectedArtifactRef"
+      }
+    },
+    "humanApproval": {
+      "$ref": "#/definitions/humanApprovalRef"
+    },
+    "experimentRegistration": {
+      "$ref": "#/definitions/experimentRegistrationRef"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdBy": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "definitions": {
+    "scriptRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "language"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "python",
+            "r",
+            "bash",
+            "notebook",
+            "other"
+          ]
+        }
+      }
+    },
+    "ioRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "sha256",
+        "sizeBytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "commandRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runner",
+        "argv"
+      ],
+      "properties": {
+        "runner": {
+          "type": "string",
+          "enum": [
+            "python",
+            "Rscript",
+            "jupyter",
+            "snakemake",
+            "nextflow",
+            "other"
+          ]
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "budgetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxRuntimeSeconds",
+        "maxMemoryGb",
+        "allowNetwork"
+      ],
+      "properties": {
+        "maxRuntimeSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxMemoryGb": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "allowNetwork": {
+          "type": "boolean"
+        }
+      }
+    },
+    "safetyRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "destructive",
+        "treeWideWrite",
+        "externalCall"
+      ],
+      "properties": {
+        "destructive": {
+          "type": "boolean"
+        },
+        "treeWideWrite": {
+          "type": "boolean"
+        },
+        "externalCall": {
+          "type": "boolean"
+        }
+      }
+    },
+    "expectedArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "required"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "humanApprovalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approved",
+        "approvedBy",
+        "approvedAt",
+        "reason"
+      ],
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "approvedBy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "approvedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "experimentRegistrationRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "registerInputPath"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "existing",
+            "same-transaction-register"
+          ]
+        },
+        "registerInputPath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "safety": {
+            "properties": {
+              "destructive": {
+                "const": true
+              }
+            },
+            "required": [
+              "destructive"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "humanApproval": {
+            "properties": {
+              "approved": {
+                "const": true
+              }
+            },
+            "required": [
+              "approved"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "safety": {
+            "properties": {
+              "treeWideWrite": {
+                "const": true
+              }
+            },
+            "required": [
+              "treeWideWrite"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "humanApproval": {
+            "properties": {
+              "approved": {
+                "const": true
+              }
+            },
+            "required": [
+              "approved"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "humanApproval": {
+            "properties": {
+              "approved": {
+                "const": true
+              }
+            },
+            "required": [
+              "approved"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "humanApproval": {
+            "properties": {
+              "approvedBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "approvedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "experimentRegistration": {
+            "properties": {
+              "mode": {
+                "const": "same-transaction-register"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "experimentRegistration": {
+            "properties": {
+              "registerInputPath": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

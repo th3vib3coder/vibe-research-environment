@@ -304,6 +304,8 @@ async function guessFixturePath(projectRoot, schemaFile) {
     'valid-basic.json',
     'valid-mid-loop.json',
     'valid-complete.json',
+    'valid-python.json',
+    'valid-notebook.json',
     'valid-subprocess.json',
     'valid-degraded-no-kernel.json'
   ]) {

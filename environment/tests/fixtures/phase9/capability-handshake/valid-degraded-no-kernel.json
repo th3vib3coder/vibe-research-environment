@@ -69,6 +69,13 @@
         "path": "environment/schemas/phase9-capability-handshake.schema.json",
         "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-degraded-no-kernel.json",
         "owner": "vre"
+      },
+      {
+        "name": "phase9.analysis-manifest.v1",
+        "schemaVersion": "phase9.analysis-manifest.v1",
+        "path": "environment/schemas/phase9-analysis-manifest.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/analysis-manifest/valid-notebook.json",
+        "owner": "vre"
       }
     ],
     "connectors": [
@@ -162,7 +169,6 @@
       ]
     },
     "missingSurfaces": [
-      "analysis-manifest schema",
       "plugin handshake injection",
       "research-loop",
       "reviewer-2 bridge",

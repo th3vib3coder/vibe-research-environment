@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "phase9.analysis-manifest.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "experimentId": "EXP-001",
+  "analysisId": "ANL-2026-04-23-danger-001",
+  "script": {
+    "path": "analysis/scripts/rewrite-tree.py",
+    "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "language": "python"
+  },
+  "inputs": [
+    {
+      "path": "data/input.h5ad",
+      "kind": "dataset",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "outputs": [
+    {
+      "path": "artifacts/rewrite-log.json",
+      "kind": "log",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "command": {
+    "runner": "python",
+    "argv": [
+      "analysis/scripts/rewrite-tree.py"
+    ]
+  },
+  "budget": {
+    "maxRuntimeSeconds": 900,
+    "maxMemoryGb": 4,
+    "allowNetwork": false
+  },
+  "safety": {
+    "destructive": true,
+    "treeWideWrite": true,
+    "externalCall": false
+  },
+  "taskKind": "analysis-execution-run",
+  "expectedArtifacts": [
+    {
+      "path": "artifacts/rewrite-log.json",
+      "kind": "log",
+      "required": true
+    }
+  ],
+  "humanApproval": {
+    "approved": false,
+    "approvedBy": null,
+    "approvedAt": null,
+    "reason": null
+  },
+  "createdAt": "2026-04-23T12:15:00Z",
+  "createdBy": "sess-wave3-analysis"
+}

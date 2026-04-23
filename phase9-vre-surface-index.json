@@ -190,6 +190,15 @@
   },
   {
     "kind": "schema",
+    "name": "phase9.analysis-manifest.v1",
+    "paths": [
+      "environment/schemas/phase9-analysis-manifest.schema.json"
+    ],
+    "featureId": null,
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "schema",
     "name": "phase9.capability-handshake.v1",
     "paths": [
       "environment/schemas/phase9-capability-handshake.schema.json"

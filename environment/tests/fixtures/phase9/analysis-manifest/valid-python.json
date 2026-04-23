@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "phase9.analysis-manifest.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "experimentId": "EXP-001",
+  "analysisId": "ANL-2026-04-23-py-001",
+  "script": {
+    "path": "analysis/scripts/diffexp.py",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "language": "python"
+  },
+  "inputs": [
+    {
+      "path": "data/input.h5ad",
+      "kind": "dataset",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "outputs": [
+    {
+      "path": "artifacts/results.csv",
+      "kind": "table",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "command": {
+    "runner": "python",
+    "argv": [
+      "analysis/scripts/diffexp.py",
+      "--input",
+      "data/input.h5ad",
+      "--output",
+      "artifacts/results.csv"
+    ]
+  },
+  "budget": {
+    "maxRuntimeSeconds": 1800,
+    "maxMemoryGb": 8,
+    "allowNetwork": false
+  },
+  "safety": {
+    "destructive": false,
+    "treeWideWrite": false,
+    "externalCall": false
+  },
+  "taskKind": "analysis-execution-run",
+  "expectedArtifacts": [
+    {
+      "path": "artifacts/results.csv",
+      "kind": "table",
+      "required": true
+    }
+  ],
+  "humanApproval": {
+    "approved": false,
+    "approvedBy": null,
+    "approvedAt": null,
+    "reason": null
+  },
+  "createdAt": "2026-04-23T12:00:00Z",
+  "createdBy": "sess-wave3-analysis"
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "phase9.analysis-manifest.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "experimentId": "EXP-002",
+  "analysisId": "ANL-2026-04-23-nb-001",
+  "script": {
+    "path": "analysis/notebooks/qc.ipynb",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "language": "notebook"
+  },
+  "inputs": [
+    {
+      "path": "data/input.h5ad",
+      "kind": "dataset",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "outputs": [
+    {
+      "path": "artifacts/qc-summary.html",
+      "kind": "report",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "command": {
+    "runner": "jupyter",
+    "argv": [
+      "nbconvert",
+      "--execute",
+      "analysis/notebooks/qc.ipynb"
+    ]
+  },
+  "budget": {
+    "maxRuntimeSeconds": 2400,
+    "maxMemoryGb": 12,
+    "allowNetwork": false
+  },
+  "safety": {
+    "destructive": false,
+    "treeWideWrite": false,
+    "externalCall": false
+  },
+  "taskKind": "analysis-execution-run",
+  "expectedArtifacts": [
+    {
+      "path": "artifacts/qc-summary.html",
+      "kind": "report",
+      "required": true
+    }
+  ],
+  "humanApproval": {
+    "approved": false,
+    "approvedBy": null,
+    "approvedAt": null,
+    "reason": null
+  },
+  "experimentRegistration": {
+    "mode": "same-transaction-register",
+    "registerInputPath": "analysis/register-experiment.json"
+  },
+  "createdAt": "2026-04-23T12:05:00Z",
+  "createdBy": "sess-wave3-analysis"
+}

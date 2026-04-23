@@ -127,6 +127,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-22'
   },
   {
+    file: 'environment/schemas/phase9-analysis-manifest.schema.json',
+    kind: 'schema',
+    name: 'phase9.analysis-manifest.v1',
+    featureId: null,
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/schemas/phase9-runtime-budget.schema.json',
     kind: 'schema',
     name: 'phase9.runtime-budget.v1',

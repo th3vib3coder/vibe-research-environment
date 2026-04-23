@@ -100,7 +100,11 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.objective.status, null);
   assert.equal(handshake.vre.missingSurfaces.includes('active-objective path'), false);
   assert.equal(handshake.vre.missingSurfaces.includes('capabilities --json'), false);
-  assert.equal(handshake.vre.missingSurfaces.includes('analysis-manifest schema'), true);
+  assert.equal(handshake.vre.missingSurfaces.includes('analysis-manifest schema'), false);
+  assert.equal(
+    handshake.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
+    true
+  );
   assert.equal(
     handshake.degradedReasons.includes(
       'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
@@ -206,11 +210,16 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     assert.equal(fixture.vre.executableCommands.includes('objective pause'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective stop'), true);
     assert.equal(fixture.vre.missingSurfaces.includes('capabilities --json'), false);
+    assert.equal(fixture.vre.missingSurfaces.includes('analysis-manifest schema'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective start'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective resume'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective status'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective pause'), false);
     assert.equal(fixture.vre.operatorSurface.commands.includes('objective stop'), false);
+    assert.equal(
+      fixture.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
+      true
+    );
     assert.equal(
       fixture.degradedReasons.includes(
         'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
