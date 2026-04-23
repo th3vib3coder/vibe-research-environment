@@ -127,6 +127,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "experiment-binding",
+    "paths": [
+      "environment/orchestrator/experiment-binding.js"
+    ],
+    "featureId": "W3-EXPERIMENT-MANIFEST-BINDING",
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "objective-cli",
     "paths": [
       "environment/objectives/cli.js"

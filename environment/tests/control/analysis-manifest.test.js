@@ -6,6 +6,7 @@ import test from 'node:test';
 
 import { createManifest } from '../../lib/manifest.js';
 import { activateObjective } from '../../objectives/store.js';
+import { bindExperimentManifestToObjective } from '../../orchestrator/experiment-binding.js';
 import {
   readAndValidateAnalysisManifest,
   validateAnalysisManifest
@@ -52,11 +53,18 @@ test('readAndValidateAnalysisManifest accepts a safe manifest without executing 
   const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-analysis-manifest-safe-'));
   try {
     const manifest = await readFixture('analysis-manifest', 'valid-python.json');
-    await activateFixtureObjective(projectRoot);
+    await activateFixtureObjective(projectRoot, {
+      artifactsIndex: {
+        experiments: []
+      }
+    });
     await createManifest(projectRoot, {
       experimentId: manifest.experimentId,
       title: 'Wave 3 safe analysis',
       objective: manifest.objectiveId
+    });
+    await bindExperimentManifestToObjective(projectRoot, manifest.objectiveId, manifest.experimentId, {
+      updatedAt: '2026-04-23T12:00:00Z'
     });
     await writeProjectFile(projectRoot, manifest.script.path, '# safe python script\n');
     await writeProjectFile(projectRoot, manifest.inputs[0].path, 'dataset\n');

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "vibe.experiment.manifest.v1",
+  "experimentId": "EXP-021",
+  "title": "Legacy VRE experiment manifest still visible",
+  "objective": "OBJ-2026-04-22-001",
+  "status": "planned",
+  "createdAt": "2026-04-23T11:45:00Z",
+  "completedAt": null,
+  "executionPolicy": {
+    "timeoutSeconds": 3600,
+    "unresponsiveSeconds": 300,
+    "maxAttempts": 2
+  },
+  "latestAttemptId": null,
+  "parameters": {
+    "pipeline": "legacy-vre"
+  },
+  "codeRef": {
+    "entrypoint": "scripts/run_legacy_experiment.py",
+    "gitCommit": "abc123def456"
+  },
+  "inputArtifacts": [
+    "data/legacy/input.csv"
+  ],
+  "outputArtifacts": [
+    "results/legacy/output.json"
+  ],
+  "relatedClaims": [],
+  "blockers": [],
+  "notes": "Legacy VRE manifest fixture for T3.2 binding visibility."
+}

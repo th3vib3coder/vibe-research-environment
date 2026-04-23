@@ -178,6 +178,18 @@ export async function writeObjectiveRecord(projectPath, objectiveRecord) {
   return recordPath;
 }
 
+export async function writeObjectiveArtifactsIndex(projectPath, objectiveId, artifactsIndex, options = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const objectiveRecord = await readObjectiveRecord(projectRoot, objectiveId);
+  const updatedRecord = {
+    ...objectiveRecord,
+    artifactsIndex,
+    lastUpdatedAt: options.updatedAt ?? now()
+  };
+  await writeObjectiveRecord(projectRoot, updatedRecord);
+  return updatedRecord;
+}
+
 export async function createObjectiveStore(projectPath, objectiveRecord) {
   const projectRoot = resolveProjectRoot(projectPath);
   await validateObjectiveRecord(projectRoot, objectiveRecord);

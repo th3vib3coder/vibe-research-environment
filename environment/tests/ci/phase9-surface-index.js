@@ -99,6 +99,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/experiment-binding.js',
+    kind: 'orchestrator-surface',
+    name: 'experiment-binding',
+    featureId: 'W3-EXPERIMENT-MANIFEST-BINDING',
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/orchestrator/analysis-manifest.js',
     kind: 'orchestrator-surface',
     name: 'analysis-manifest',

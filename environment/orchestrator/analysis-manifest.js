@@ -6,15 +6,16 @@ import {
   loadValidator,
   resolveProjectRoot
 } from '../control/_io.js';
-import {
-  ManifestNotFoundError,
-  readManifest
-} from '../lib/manifest.js';
+import { ManifestNotFoundError } from '../lib/manifest.js';
 import {
   readActiveObjectivePointer,
   readObjectiveRecord,
   resolveSchemaHostRoot
 } from '../objectives/store.js';
+import {
+  ExperimentManifestBindingValidationError,
+  resolveObjectiveExperimentManifestBinding
+} from './experiment-binding.js';
 
 export const ANALYSIS_MANIFEST_SCHEMA_FILE = 'phase9-analysis-manifest.schema.json';
 export const ANALYSIS_MANIFEST_SCHEMA_VERSION = 'phase9.analysis-manifest.v1';
@@ -47,18 +48,6 @@ function resolveProjectLocalPath(projectRoot, repoRelativePath, label) {
   }
 
   return resolvedPath;
-}
-
-function assertObjectiveExperimentBinding(objectiveRecord, experimentId) {
-  const experiments = Array.isArray(objectiveRecord?.artifactsIndex?.experiments)
-    ? objectiveRecord.artifactsIndex.experiments
-    : [];
-
-  if (!experiments.includes(experimentId)) {
-    throw new AnalysisManifestValidationError(
-      `Analysis manifest experimentId ${experimentId} is not bound to objective ${objectiveRecord.objectiveId}.`
-    );
-  }
 }
 
 export async function validateAnalysisManifest(projectPath, manifest) {
@@ -125,10 +114,12 @@ export async function validateAnalysisManifest(projectPath, manifest) {
     };
   }
 
-  assertObjectiveExperimentBinding(objectiveRecord, manifest.experimentId);
-
   try {
-    const experimentManifest = await readManifest(projectRoot, manifest.experimentId);
+    const { experimentManifest } = await resolveObjectiveExperimentManifestBinding(
+      projectRoot,
+      objectiveRecord,
+      manifest.experimentId
+    );
     return {
       manifest,
       objectiveRecord,
@@ -136,9 +127,12 @@ export async function validateAnalysisManifest(projectPath, manifest) {
       experimentManifest
     };
   } catch (error) {
-    if (error instanceof ManifestNotFoundError) {
+    if (error instanceof ExperimentManifestBindingValidationError) {
+      const message = error.cause instanceof ManifestNotFoundError
+        ? `Analysis manifest experimentId ${manifest.experimentId} does not reference an existing experiment manifest.`
+        : error.message;
       throw new AnalysisManifestValidationError(
-        `Analysis manifest experimentId ${manifest.experimentId} does not reference an existing experiment manifest.`,
+        message,
         { cause: error }
       );
     }
