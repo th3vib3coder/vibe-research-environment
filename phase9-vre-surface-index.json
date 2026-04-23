@@ -100,6 +100,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "analysis-manifest",
+    "paths": [
+      "environment/orchestrator/analysis-manifest.js"
+    ],
+    "featureId": "W3-ANALYSIS-MANIFEST-SCHEMA",
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "approved-memory-apis",
     "paths": [
       "environment/control/approved-memory-apis.json"

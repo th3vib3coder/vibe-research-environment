@@ -99,6 +99,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/analysis-manifest.js',
+    kind: 'orchestrator-surface',
+    name: 'analysis-manifest',
+    featureId: 'W3-ANALYSIS-MANIFEST-SCHEMA',
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/control/capability-handshake.js',
     kind: 'orchestrator-surface',
     name: 'capability-handshake',
