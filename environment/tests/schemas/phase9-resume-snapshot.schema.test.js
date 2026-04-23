@@ -5,7 +5,8 @@ import { expectFixtureValidity } from './phase9-schema-fixture-helper.js';
 for (const fixturePath of [
   'environment/tests/fixtures/phase9/resume-snapshot/valid-mid-loop.json',
   'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-stop.json',
-  'environment/tests/fixtures/phase9/resume-snapshot/valid-heartbeat.json'
+  'environment/tests/fixtures/phase9/resume-snapshot/valid-heartbeat.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-handoff.json'
 ]) {
   test(`phase9-resume-snapshot.schema accepts ${fixturePath}`, async () => {
     await expectFixtureValidity({
