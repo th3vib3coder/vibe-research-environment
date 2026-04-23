@@ -608,3 +608,113 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 61 regression: seq 075 ledger row explicitly claims the strategic
+// relevance checkpoint runs "before every unattended slice AND before
+// spending the final 25% of the iteration budget". The first trigger is
+// pinned by the semantic-drift test above, but the final-quarter trigger
+// (autonomy-runtime.js line 958: `(iterationsCompleted + 1) > floor(maxIter * 0.75)`)
+// was implemented without a dedicated test. This test exercises the
+// final-quarter phase alone (pre-slice returns aligned) and asserts the
+// loop still pauses with SEMANTIC_DRIFT_DETECTED.
+test('research-loop pauses when the final-quarter strategic checkpoint phase returns drifted even if pre-slice is aligned', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-final-quarter-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-fq-001',
+      scriptContents: SAFE_SCRIPT,
+      budget: {
+        maxIterations: 1
+      }
+    });
+
+    const phaseLog = [];
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-FQ-001',
+      sessionId: 'sess-fq'
+    }, {
+      generateCapabilityHandshake: async () => ({
+        vre: { missingSurfaces: [] },
+        kernel: { mode: 'full' }
+      }),
+      strategicCheckpoint: async (ctx) => {
+        phaseLog.push(ctx.phase);
+        if (ctx.phase === 'final-quarter') {
+          return {
+            status: 'drifted',
+            message: 'final-quarter relevance drifted: one iteration left, no sanctioned plan'
+          };
+        }
+        return { status: 'aligned' };
+      }
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'paused');
+    assert.equal(result.stopReason, 'semantic-drift');
+    // pre-slice must run BEFORE final-quarter, and final-quarter must be
+    // reached only because pre-slice was aligned.
+    assert.deepEqual(phaseLog, ['pre-slice', 'final-quarter']);
+    assert.match(
+      await readBlockerText(projectRoot, context.objectiveId),
+      /SEMANTIC_DRIFT_DETECTED/u
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// Round 61 regression: seq 075 ledger row explicitly claims memory sync
+// runs "after task result/event append and before the final resume
+// snapshot; if memory sync is unavailable, record the skipped reason in
+// the objective event payload and snapshot notes". The happy path uses
+// the real syncMemory silently. This test injects a failing syncMemory
+// and asserts the skipped reason is recorded in BOTH the loop-iteration
+// event payload AND the final resume snapshot notes.
+test('research-loop records the memory-sync skipped reason in the loop-iteration event payload and the final resume snapshot notes', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-memsync-skipped-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-memsync-skipped-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-MS-001',
+      sessionId: 'sess-ms'
+    }, {
+      generateCapabilityHandshake: async () => ({
+        vre: { missingSurfaces: [] },
+        kernel: { mode: 'full' }
+      }),
+      syncMemory: async () => {
+        throw new Error('memory store unavailable for fixture');
+      }
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'slice-complete');
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const loopEvent = events.find((entry) => entry.kind === 'loop-iteration');
+    assert.ok(loopEvent, 'loop-iteration event must be appended after the slice');
+    assert.equal(loopEvent.payload.memorySync.status, 'skipped');
+    assert.equal(
+      loopEvent.payload.memorySync.reason,
+      'memory store unavailable for fixture'
+    );
+
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.match(
+      String(snapshotState.snapshot.notes ?? ''),
+      /Memory sync skipped: memory store unavailable for fixture/u
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
