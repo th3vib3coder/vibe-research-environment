@@ -44,6 +44,7 @@ const OBJECTIVE_QUEUE_FILE = 'queue.jsonl';
 const DEFAULT_SESSION_PREFIX = 'sess-loop';
 const DEFAULT_WAKE_PREFIX = 'wake-loop';
 const TERMINAL_QUEUE_STATUSES = new Set(['completed', 'failed', 'blocked', 'interrupted']);
+const RUNTIME_MODES = new Set(['interactive', 'attended-batch', 'unattended-batch', 'resume-only']);
 
 export class ResearchLoopCliError extends Error {
   constructor({ code, message, exitCode = 1, extra = {} }) {
@@ -351,6 +352,44 @@ function resolveEffectiveBudget(objectiveRecord, options = {}) {
       ? objectiveRecord.budget.maxWallSeconds
       : Math.min(objectiveRecord.budget.maxWallSeconds, maxWallSecondsOverride)
   };
+}
+
+function resolveLoopRuntimeMode(objectiveRecord, options = {}) {
+  const storedMode = objectiveRecord.runtimeMode;
+  const requestedMode = typeof options.mode === 'string' && options.mode.trim() !== ''
+    ? options.mode.trim()
+    : null;
+  const resume = coerceBoolean(options.resume);
+
+  if (!RUNTIME_MODES.has(storedMode)) {
+    throw new ResearchLoopCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: `research-loop encountered unsupported stored objective.runtimeMode ${storedMode}.`
+    });
+  }
+
+  if (requestedMode != null && !RUNTIME_MODES.has(requestedMode)) {
+    throw new ResearchLoopCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: `research-loop requires --mode to be one of ${[...RUNTIME_MODES].join(', ')}.`
+    });
+  }
+
+  if (resume) {
+    return storedMode;
+  }
+
+  if (requestedMode != null && requestedMode !== storedMode) {
+    throw new ResearchLoopCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: `research-loop --mode ${requestedMode} does not match stored objective.runtimeMode ${storedMode}.`
+    });
+  }
+
+  return storedMode;
 }
 
 function resolveWakeRequest(options = {}) {
@@ -836,6 +875,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
   const handoffs = await readJsonl(objectiveHandoffsPath(projectRoot, objectiveId));
   const snapshotState = await readResumeSnapshot(projectRoot, objectiveId);
   const effectiveBudget = resolveEffectiveBudget(objectiveRecord, options);
+  const runtimeMode = resolveLoopRuntimeMode(objectiveRecord, options);
 
   const leaseClaim = await claimWakeLease(projectRoot, objectiveId, wakeRequest, sessionId, writtenAt);
   let claimedPointer = leaseClaim.activePointer;
@@ -921,7 +961,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     );
   }
 
-  if (objectiveRecord.runtimeMode === 'resume-only') {
+  if (runtimeMode === 'resume-only') {
     throw new ResearchLoopCliError({
       code: 'E_RUNTIME_MODE_EXECUTION_FORBIDDEN',
       message: 'research-loop may not execute new work while objective.runtimeMode is resume-only.'
@@ -935,7 +975,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     });
   }
 
-  if (objectiveRecord.runtimeMode === 'unattended-batch') {
+  if (runtimeMode === 'unattended-batch') {
     const firstCheckpoint = await evaluateStrategicCheckpoint({
       handshake,
       objectiveRecord,

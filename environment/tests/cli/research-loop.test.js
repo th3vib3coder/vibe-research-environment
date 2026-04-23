@@ -312,7 +312,51 @@ test('research-loop returns a structured failure when no active objective pointe
   }
 });
 
-test('research-loop blocks with E_LLM_REASONING_REQUIRED when no sanctioned next slice is derivable', async () => {
+// T4.2: human-started CLI path in stored interactive mode. The command may be
+// invoked directly by an operator, and `--mode interactive` must match the
+// durable objective mode instead of being a silent parse-and-drop flag.
+test('research-loop executes a bounded slice in interactive mode when --mode matches the stored runtimeMode', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-interactive-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-interactive-001',
+      scriptContents: SAFE_SCRIPT,
+      objectiveOverrides: {
+        runtimeMode: 'interactive',
+        wakePolicy: {
+          wakeOwner: 'manual',
+          wakeSourceId: null,
+          leaseTtlSeconds: 900,
+          duplicateWakePolicy: 'no-op'
+        }
+      }
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--max-iterations',
+      '1',
+      '--mode',
+      'interactive'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'slice-complete');
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords.map((record) => record.status), ['running', 'completed']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop blocks with E_LLM_REASONING_REQUIRED in unattended-batch mode when no sanctioned next slice is derivable', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-empty-queue-');
   try {
     await seedObjective(projectRoot, {
@@ -324,7 +368,9 @@ test('research-loop blocks with E_LLM_REASONING_REQUIRED when no sanctioned next
     const result = await runVre(projectRoot, [
       'research-loop',
       '--objective',
-      'OBJ-001'
+      'OBJ-001',
+      '--mode',
+      'unattended-batch'
     ], {
       env: FIXTURE_KERNEL_ENV
     });
@@ -346,6 +392,91 @@ test('research-loop blocks with E_LLM_REASONING_REQUIRED when no sanctioned next
 
     const objectiveRecord = await readObjectiveRecord(projectRoot, 'OBJ-001');
     assert.equal(objectiveRecord.status, 'blocked');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// T4.2 drift closure: prior to this pass, bin/vre parsed `--mode` but the
+// runtime never used or validated it. That created an operator-deceptive CLI
+// surface where `--mode interactive|unattended-batch` looked meaningful but
+// was silently ignored. Pin the durable-state rule explicitly: mode is stored
+// objective state, and a non-resume invocation may only assert that same mode.
+test('research-loop fails closed when --mode disagrees with the stored objective.runtimeMode', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-mode-mismatch-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-mode-mismatch-001',
+      scriptContents: SAFE_SCRIPT,
+      objectiveOverrides: {
+        runtimeMode: 'interactive',
+        wakePolicy: {
+          wakeOwner: 'manual',
+          wakeSourceId: null,
+          leaseTtlSeconds: 900,
+          duplicateWakePolicy: 'no-op'
+        }
+      }
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--mode',
+      'unattended-batch'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /does not match stored objective\.runtimeMode interactive/u);
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords, []);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// T4.2: `research-loop --resume` must read the stored runtimeMode and must
+// not let the caller smuggle a different mode through CLI flags or chat mood.
+// A stored `resume-only` objective therefore still refuses execution even when
+// the caller passes `--mode unattended-batch`.
+test('research-loop --resume reads the stored runtimeMode and refuses execution for resume-only objectives', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-resume-only-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-resume-only-001',
+      scriptContents: SAFE_SCRIPT,
+      objectiveOverrides: {
+        runtimeMode: 'resume-only'
+      }
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--resume',
+      '--objective',
+      context.objectiveId,
+      '--mode',
+      'unattended-batch'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 1, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.code, 'E_RUNTIME_MODE_EXECUTION_FORBIDDEN');
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords, []);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
