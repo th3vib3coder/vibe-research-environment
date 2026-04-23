@@ -349,3 +349,218 @@ test('objective doctor fails when scheduler doctor reports unsupported', async (
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 67 regression coverage: close the seq-080 / seq-081 claim-without-pin
+// gap. `objectiveDoctorCommand` has eight guard branches before it delegates to
+// `schedulerDoctorCommand`, but only the delegation happy-path was pinned by
+// the seq-080 test suite (test 'objective doctor fails when scheduler doctor
+// reports unsupported' above). Deep adversarial review enumerated each code
+// raised in `windows-task-scheduler.js` and cross-checked against every test
+// file in the suite; eight error codes raised from the objective-doctor path
+// had zero dedicated test. Round 67 adds one regression per guard branch so a
+// future refactor cannot silently drop any of them. No runtime change.
+
+test('objective doctor fails closed with E_OBJECTIVE_NOT_FOUND when the objective record is absent', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-not-found-');
+  try {
+    const deps = createFakeSchedulerDeps(projectRoot);
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-DOES-NOT-EXIST' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_OBJECTIVE_NOT_FOUND');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_ACTIVE_OBJECTIVE_POINTER_MISSING when no active pointer exists', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-no-pointer-');
+  try {
+    const raw = await readFixture('valid-active.json');
+    const injectedRecord = { ...raw, objectiveId: 'OBJ-001' };
+    const deps = createFakeSchedulerDeps(projectRoot);
+    deps.readObjectiveRecord = async () => injectedRecord;
+    deps.validateObjectiveRecord = async () => {};
+    deps.readActiveObjectivePointer = async () => null;
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_ACTIVE_OBJECTIVE_POINTER_MISSING');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_OBJECTIVE_ID_MISMATCH when the active pointer targets a different objective', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-id-mismatch-');
+  try {
+    await seedActiveObjective(projectRoot, { objectiveId: 'OBJ-001' });
+    const raw = await readFixture('valid-active.json');
+    const secondRecord = { ...raw, objectiveId: 'OBJ-002' };
+    const deps = createFakeSchedulerDeps(projectRoot);
+    deps.readObjectiveRecord = async (_root, objectiveId) => {
+      if (objectiveId === 'OBJ-002') return secondRecord;
+      throw new Error(`Unexpected objectiveId: ${objectiveId}`);
+    };
+    deps.validateObjectiveRecord = async () => {};
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-002' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_OBJECTIVE_ID_MISMATCH');
+        assert.equal(error.extra.activeObjectiveId, 'OBJ-001');
+        assert.equal(error.extra.objectiveId, 'OBJ-002');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_OBJECTIVE_STATE_INVALID when the objective status is not active', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-state-invalid-');
+  try {
+    await seedActiveObjective(projectRoot, { objectiveId: 'OBJ-001' });
+    const raw = await readFixture('valid-active.json');
+    const pausedRecord = { ...raw, objectiveId: 'OBJ-001', status: 'paused' };
+    const deps = createFakeSchedulerDeps(projectRoot);
+    deps.readObjectiveRecord = async () => pausedRecord;
+    deps.validateObjectiveRecord = async () => {};
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_OBJECTIVE_STATE_INVALID');
+        assert.equal(error.extra.status, 'paused');
+        assert.equal(error.extra.objectiveId, 'OBJ-001');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_RUNTIME_MODE_UNSUPPORTED when the persisted runtimeMode falls outside the reviewed set', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-runtime-mode-');
+  try {
+    await seedActiveObjective(projectRoot, { objectiveId: 'OBJ-001' });
+    const raw = await readFixture('valid-active.json');
+    const tamperedRecord = { ...raw, objectiveId: 'OBJ-001', runtimeMode: 'reviewed-api-preview' };
+    const deps = createFakeSchedulerDeps(projectRoot);
+    deps.readObjectiveRecord = async () => tamperedRecord;
+    deps.validateObjectiveRecord = async () => {};
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_RUNTIME_MODE_UNSUPPORTED');
+        assert.equal(error.extra.runtimeMode, 'reviewed-api-preview');
+        assert.equal(error.extra.objectiveId, 'OBJ-001');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_REASONING_MODE_UNSUPPORTED when the persisted reasoningMode is not rule-only', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-reasoning-mode-');
+  try {
+    await seedActiveObjective(projectRoot, { objectiveId: 'OBJ-001' });
+    const raw = await readFixture('valid-active.json');
+    const tamperedRecord = { ...raw, objectiveId: 'OBJ-001', reasoningMode: 'reviewed-api' };
+    const deps = createFakeSchedulerDeps(projectRoot);
+    deps.readObjectiveRecord = async () => tamperedRecord;
+    deps.validateObjectiveRecord = async () => {};
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_REASONING_MODE_UNSUPPORTED');
+        assert.equal(error.extra.reasoningMode, 'reviewed-api');
+        assert.equal(error.extra.objectiveId, 'OBJ-001');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_OBJECTIVE_ARTIFACT_PATH_MISSING when artifactsIndex references missing files', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-missing-artifact-');
+  try {
+    await seedActiveObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      artifactsIndex: {
+        experiments: ['EXP-001', 'results/never-written-artifact.json']
+      }
+    });
+    const deps = createFakeSchedulerDeps(projectRoot);
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_OBJECTIVE_ARTIFACT_PATH_MISSING');
+        assert.ok(Array.isArray(error.extra.missingArtifactPaths));
+        assert.ok(
+          error.extra.missingArtifactPaths.includes('results/never-written-artifact.json'),
+          `expected missingArtifactPaths to include the seeded missing path, got ${JSON.stringify(error.extra.missingArtifactPaths)}`
+        );
+        assert.equal(error.extra.objectiveId, 'OBJ-001');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective doctor fails closed with E_STATE_CONFLICT when events.jsonl carries an unresolved E_STATE_CONFLICT blocker', async () => {
+  const projectRoot = await createCliFixtureProject('vre-obj-doctor-state-conflict-');
+  try {
+    await seedActiveObjective(projectRoot, { objectiveId: 'OBJ-001' });
+    const deps = createFakeSchedulerDeps(projectRoot);
+    deps.readObjectiveEvents = async () => [
+      { kind: 'blocker-open', payload: { code: 'E_STATE_CONFLICT' } }
+    ];
+
+    await assert.rejects(
+      () => objectiveDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'objective doctor');
+        assert.equal(error.code, 'E_STATE_CONFLICT');
+        assert.equal(error.extra.objectiveId, 'OBJ-001');
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
