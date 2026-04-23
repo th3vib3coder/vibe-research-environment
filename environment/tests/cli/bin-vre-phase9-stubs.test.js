@@ -23,11 +23,6 @@ const FIXTURE_KERNEL_ENV = {
 const STUB_CASES = [
   { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' },
   { argv: ['objective', 'doctor', '--objective=OBJ-1'], command: 'objective doctor', optionChecks: { objective: 'OBJ-1' } },
-  {
-    argv: ['research-loop', '--resume', '--objective=OBJ-1', '--max-iterations', '1'],
-    command: 'research-loop',
-    optionChecks: { resume: true, objective: 'OBJ-1', 'max-iterations': '1' }
-  },
   { argv: ['scheduler', 'install', '--objective', 'OBJ-1'], command: 'scheduler install', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['scheduler', 'status', '--objective=OBJ-1'], command: 'scheduler status', optionChecks: { objective: 'OBJ-1' } },
   { argv: ['scheduler', 'doctor', '--objective', 'OBJ-1'], command: 'scheduler doctor', optionChecks: { objective: 'OBJ-1' } },
@@ -126,10 +121,12 @@ test('capabilities --json reports only commands that are actually wired in bin/v
     assert.equal(payload.vre.executableCommands.includes('objective resume'), true);
     assert.equal(payload.vre.executableCommands.includes('objective status'), true);
     assert.equal(payload.vre.executableCommands.includes('objective stop'), true);
+    assert.equal(payload.vre.executableCommands.includes('research-loop'), true);
     assert.equal(payload.vre.executableCommands.includes('run-analysis'), true);
     assert.equal(payload.vre.executableCommands.includes('weekly-digest'), false);
     assert.equal(payload.vre.markdownOnlyContracts.includes('weekly-digest'), true);
     assert.equal(payload.vre.missingSurfaces.includes('capabilities --json'), false);
+    assert.equal(payload.vre.missingSurfaces.includes('research-loop'), false);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

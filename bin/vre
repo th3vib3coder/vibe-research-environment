@@ -21,6 +21,7 @@ import {
   statusObjectiveCommand,
   stopObjectiveCommand
 } from '../environment/objectives/cli.js';
+import { ResearchLoopCliError, runResearchLoopCommand } from '../environment/orchestrator/autonomy-runtime.js';
 import { RunAnalysisCliError, runAnalysisCommand } from '../environment/orchestrator/execution-lane.js';
 import { getTaskRegistry } from '../environment/orchestrator/task-registry.js';
 
@@ -64,6 +65,7 @@ export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
       'objective start',
       'objective status',
       'objective stop',
+      'research-loop',
       'run-analysis',
     ])
   ].sort()
@@ -845,6 +847,46 @@ async function runRunAnalysis(repoRoot, parsed) {
   });
 }
 
+async function runResearchLoop(repoRoot, parsed) {
+  if (parsed.positionals.length > 0) {
+    throw new ResearchLoopCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: `research-loop does not accept positional arguments: ${parsed.positionals.join(' ')}`
+    });
+  }
+
+  return runResearchLoopCommand(repoRoot, {
+    objectiveId: requiredStringOption(parsed, 'objective', 'research-loop'),
+    heartbeat:
+      parsed.options.heartbeat === true ||
+      parsed.options.heartbeat === 'true',
+    wakeId: typeof parsed.options['wake-id'] === 'string'
+      ? parsed.options['wake-id']
+      : null,
+    maxIterations: parsed.options['max-iterations'] ?? null,
+    maxWallSeconds: parsed.options['max-wall-seconds'] ?? null,
+    stopOnBlocker:
+      parsed.options['stop-on-blocker'] === true ||
+      parsed.options['stop-on-blocker'] === 'true',
+    resume:
+      parsed.options.resume === true ||
+      parsed.options.resume === 'true',
+    mode: typeof parsed.options.mode === 'string' ? parsed.options.mode : null,
+    sessionId: resolvePhase9SessionId()
+  }, {
+    generateCapabilityHandshake: (projectRoot) =>
+      generateCapabilityHandshake(projectRoot, {
+        cliMetadata: {
+          DISPATCH_TABLE,
+          IMPLEMENTED_PHASE9_COMMANDS,
+          PHASE9_STUB_DEFINITIONS,
+          resolveKernelRoot
+        }
+      })
+  });
+}
+
 function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extra = {}) {
   return {
     ok: false,
@@ -1136,10 +1178,16 @@ export async function main(argv = process.argv) {
         return 0;
       }
 
+      if (phase9Invocation.definition.canonicalCommand === 'research-loop') {
+        const payload = await runResearchLoop(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
       writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
       return 0;
     } catch (error) {
-      if (error instanceof ObjectiveCliError || error instanceof RunAnalysisCliError) {
+      if (error instanceof ObjectiveCliError || error instanceof RunAnalysisCliError || error instanceof ResearchLoopCliError) {
         writeJsonPayload(
           namedPhase9ErrorPayload(
             error.command,

@@ -127,6 +127,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/autonomy-runtime.js',
+    kind: 'orchestrator-surface',
+    name: 'autonomy-runtime',
+    featureId: 'W4-AUTONOMY-RUNTIME-LOOP',
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/control/capability-handshake.js',
     kind: 'orchestrator-surface',
     name: 'capability-handshake',

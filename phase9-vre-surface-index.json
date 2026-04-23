@@ -118,6 +118,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "autonomy-runtime",
+    "paths": [
+      "environment/orchestrator/autonomy-runtime.js"
+    ],
+    "featureId": "W4-AUTONOMY-RUNTIME-LOOP",
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "capability-handshake",
     "paths": [
       "environment/control/capability-handshake.js"

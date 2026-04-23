@@ -64,7 +64,10 @@ const REVIEWED_MISSING_SURFACE_RULES = Object.freeze([
   },
   {
     surface: 'research-loop',
-    present: async () => false
+    present: async (projectRoot, cliMetadata = null) => {
+      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(projectRoot);
+      return resolvedCliMetadata.IMPLEMENTED_PHASE9_COMMANDS.includes('research-loop');
+    }
   },
   {
     surface: 'analysis-manifest schema',
