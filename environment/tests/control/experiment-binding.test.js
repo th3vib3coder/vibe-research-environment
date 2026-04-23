@@ -124,3 +124,60 @@ test('bindExperimentManifestToObjective rejects an invalid EXP id before mutatin
     await rm(projectRoot, { recursive: true, force: true });
   }
 });
+
+test('bindExperimentManifestToObjective preserves both bindings when two concurrent bind calls race on the same objective', async () => {
+  // Without the per-objective record lock in writeObjectiveArtifactsIndex,
+  // this test is expected to fail because the two concurrent bind calls
+  // would both read the same baseline (experiments: []) and the last
+  // writer would silently overwrite the first. With the Round 56 lock in
+  // place, both bindings must land and Promise.all(...) must succeed.
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-experiment-binding-concurrent-'));
+  try {
+    const objectiveRecord = await activateFixtureObjective(projectRoot, {
+      artifactsIndex: {
+        experiments: []
+      }
+    });
+    const legacyManifest = await seedLegacyExperimentManifest(projectRoot);
+
+    const secondManifest = {
+      ...legacyManifest,
+      experimentId: 'EXP-002',
+      title: 'Second legacy experiment for concurrency test'
+    };
+    await writeProjectJson(
+      projectRoot,
+      path.join(
+        '.vibe-science-environment',
+        'experiments',
+        'manifests',
+        `${secondManifest.experimentId}.json`
+      ),
+      secondManifest
+    );
+
+    const [firstResult, secondResult] = await Promise.all([
+      bindExperimentManifestToObjective(
+        projectRoot,
+        objectiveRecord.objectiveId,
+        legacyManifest.experimentId,
+        { updatedAt: '2026-04-23T16:30:00Z' }
+      ),
+      bindExperimentManifestToObjective(
+        projectRoot,
+        objectiveRecord.objectiveId,
+        secondManifest.experimentId,
+        { updatedAt: '2026-04-23T16:30:05Z' }
+      )
+    ]);
+
+    assert.equal(firstResult.createdBinding, true);
+    assert.equal(secondResult.createdBinding, true);
+
+    const persistedObjective = await readObjectiveRecord(projectRoot, objectiveRecord.objectiveId);
+    const persistedIds = [...persistedObjective.artifactsIndex.experiments].sort();
+    assert.deepEqual(persistedIds, [legacyManifest.experimentId, secondManifest.experimentId].sort());
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});

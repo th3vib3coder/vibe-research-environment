@@ -4,8 +4,8 @@ import {
   readManifest
 } from '../lib/manifest.js';
 import {
-  readObjectiveRecord,
-  writeObjectiveArtifactsIndex
+  mutateObjectiveArtifactsIndex,
+  readObjectiveRecord
 } from '../objectives/store.js';
 
 export class ExperimentManifestBindingError extends Error {
@@ -56,24 +56,34 @@ export async function resolveObjectiveExperimentManifestBinding(projectPath, obj
 }
 
 export async function bindExperimentManifestToObjective(projectPath, objectiveId, experimentId, options = {}) {
+  // Fetch the experiment manifest OUTSIDE the objective-record lock: it
+  // reads a different file and, if it fails, we want to fail BEFORE
+  // touching the objective record. This mirrors the fail-closed ordering
+  // that resume-snapshot divergence detection uses upstream.
   const experimentManifest = await readExistingExperimentManifest(projectPath, experimentId);
-  const objectiveRecord = await readObjectiveRecord(projectPath, objectiveId);
-  const existingBindings = listObjectiveExperimentBindings(objectiveRecord);
 
-  if (existingBindings.includes(experimentId)) {
-    return {
-      experimentManifest,
-      objectiveRecord,
-      createdBinding: false
-    };
-  }
-
-  const updatedRecord = await writeObjectiveArtifactsIndex(
+  // Read-modify-write the artifacts index atomically under the per-objective
+  // record lock owned by mutateObjectiveArtifactsIndex. The mutator MUST
+  // return the same reference for the no-op path so the store skips a
+  // redundant write. See Round 56 in the plan log for the concurrent-bind
+  // regression test that pins this semantic.
+  const { objectiveRecord, artifactsIndexChanged } = await mutateObjectiveArtifactsIndex(
     projectPath,
     objectiveId,
-    {
-      ...objectiveRecord.artifactsIndex,
-      experiments: [...existingBindings, experimentId]
+    (currentIndex) => {
+      const existingExperiments = Array.isArray(currentIndex?.experiments)
+        ? currentIndex.experiments.filter(
+            (candidate) => typeof candidate === 'string' && candidate.trim() !== ''
+          )
+        : [];
+      const deduped = [...new Set(existingExperiments)];
+      if (deduped.includes(experimentId)) {
+        return currentIndex;
+      }
+      return {
+        ...currentIndex,
+        experiments: [...deduped, experimentId]
+      };
     },
     {
       updatedAt: options.updatedAt
@@ -82,7 +92,7 @@ export async function bindExperimentManifestToObjective(projectPath, objectiveId
 
   return {
     experimentManifest,
-    objectiveRecord: updatedRecord,
-    createdBinding: true
+    objectiveRecord,
+    createdBinding: artifactsIndexChanged
   };
 }

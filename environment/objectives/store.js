@@ -178,16 +178,39 @@ export async function writeObjectiveRecord(projectPath, objectiveRecord) {
   return recordPath;
 }
 
-export async function writeObjectiveArtifactsIndex(projectPath, objectiveId, artifactsIndex, options = {}) {
+export async function mutateObjectiveArtifactsIndex(projectPath, objectiveId, mutator, options = {}) {
+  if (typeof mutator !== 'function') {
+    throw new TypeError('mutateObjectiveArtifactsIndex requires a mutator(currentArtifactsIndex) function');
+  }
   const projectRoot = resolveProjectRoot(projectPath);
-  const objectiveRecord = await readObjectiveRecord(projectRoot, objectiveId);
-  const updatedRecord = {
-    ...objectiveRecord,
-    artifactsIndex,
-    lastUpdatedAt: options.updatedAt ?? now()
-  };
-  await writeObjectiveRecord(projectRoot, updatedRecord);
-  return updatedRecord;
+  // Per-objective lock. Read-modify-write has to run atomically under the
+  // same lock or two concurrent callers can both read the same baseline
+  // and silently overwrite each other when they write back. atomicWriteUtf8
+  // in writeObjectiveRecord only guarantees file-level atomicity, not
+  // read-modify-write atomicity. withLock is NOT reentrant, so the lock
+  // lives here and NOT at the caller (see experiment-binding.js). Same
+  // lock-name shape used by appendObjectiveEvent in resume-snapshot.js.
+  return withLock(projectRoot, `${objectiveId}-${OBJECTIVE_RECORD_FILE}`, async () => {
+    const objectiveRecord = await readObjectiveRecord(projectRoot, objectiveId);
+    const currentIndex = objectiveRecord.artifactsIndex ?? {};
+    const nextIndex = mutator(currentIndex);
+    if (nextIndex === currentIndex) {
+      return {
+        objectiveRecord,
+        artifactsIndexChanged: false
+      };
+    }
+    const updatedRecord = {
+      ...objectiveRecord,
+      artifactsIndex: nextIndex,
+      lastUpdatedAt: options.updatedAt ?? now()
+    };
+    await writeObjectiveRecord(projectRoot, updatedRecord);
+    return {
+      objectiveRecord: updatedRecord,
+      artifactsIndexChanged: true
+    };
+  });
 }
 
 export async function createObjectiveStore(projectPath, objectiveRecord) {
