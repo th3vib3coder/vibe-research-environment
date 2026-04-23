@@ -68,6 +68,7 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'store.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'cli.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'objectives', 'resume-snapshot.js'), '// fixture\n', 'utf8');
     await writeFile(
       path.join(repoRoot, '.github', 'workflows', 'ci.yml'),
       [
@@ -111,7 +112,7 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 19);
+    assert.equal(surfaces.length, 20);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'test:phase9'), true);
@@ -120,6 +121,7 @@ test('phase9 surface-index generator runs and returns the pinned shape', async (
     assert.equal(surfaces.some((surface) => surface.name === 'approved-memory-apis'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'objective-cli'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'objective-store'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'resume-snapshot'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.objective.v1'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.role-envelope.v1'), true);
@@ -136,6 +138,7 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'capability-handshake'), true);
     assert.equal(persisted.some((surface) => surface.name === 'objective-cli'), true);
     assert.equal(persisted.some((surface) => surface.name === 'objective-store'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'resume-snapshot'), true);
     assert.equal(persisted.some((surface) => surface.name === 'scheduler doctor'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase9.resume-snapshot.v1'), true);

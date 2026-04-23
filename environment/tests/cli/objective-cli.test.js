@@ -437,6 +437,67 @@ test('objective resume --repair-snapshot rewrites the stale snapshot without mut
   }
 });
 
+test('objective resume blocks when the resume snapshot kernel fingerprint is stale or invalid', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-resume-stale-fingerprint-');
+  try {
+    const start = await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-stale-fingerprint'
+      }
+    });
+    assert.equal(start.code, 0, `start stderr=${start.stderr}`);
+    const startPayload = JSON.parse(start.stdout);
+
+    const pause = await runVre(projectRoot, [
+      'objective',
+      'pause',
+      '--objective',
+      startPayload.objectiveId,
+      '--reason',
+      'prepare stale fingerprint'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(pause.code, 0, `pause stderr=${pause.stderr}`);
+    await writeResumeSnapshotFixture(
+      projectRoot,
+      startPayload.objectiveId,
+      'invalid-stale-fingerprint.json'
+    );
+
+    const resume = await runVre(projectRoot, [
+      'objective',
+      'resume',
+      '--objective',
+      startPayload.objectiveId
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(resume.code, 1, `resume stderr=${resume.stderr}`);
+    assert.equal(resume.stderr, '');
+
+    const payload = JSON.parse(resume.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective resume');
+    assert.equal(payload.code, 'E_RESUME_SNAPSHOT_INVALID');
+    assert.match(payload.message, /must match format "date-time"/u);
+    assert.match(payload.resumeSnapshotPath, /resume-snapshot\.json$/u);
+
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', startPayload.objectiveId, 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'paused');
+
+    const events = await readJsonl(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', startPayload.objectiveId, 'events.jsonl')
+    );
+    assert.deepEqual(events.map((entry) => entry.kind), []);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 // Round 48 regression: resume error branches must return structured JSON.
 //
 // Background: the seq 062 closure claimed "Lifecycle error branches now

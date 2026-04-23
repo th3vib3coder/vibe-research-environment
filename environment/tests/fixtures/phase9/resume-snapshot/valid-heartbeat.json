@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "phase9.resume-snapshot.v1",
+  "writtenAt": "2026-04-23T10:02:00Z",
+  "writtenReason": "heartbeat",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "objectiveStatusAtSnapshot": "active",
+  "runtimeMode": "unattended-batch",
+  "reasoningMode": "rule-only",
+  "wakePolicySnapshot": {
+    "wakeOwner": "windows-task-scheduler",
+    "wakeSourceId": "TASK-OBJ-2026-04-22-001",
+    "heartbeatIntervalSeconds": 1800,
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "budgetRemaining": {
+    "maxWallSecondsLeft": 14300,
+    "maxIterationsLeft": 11,
+    "costCeilingLeft": 17.25
+  },
+  "queueVisibility": {
+    "queuePath": ".vibe-science-environment/objectives/OBJ-2026-04-22-001/queue.json",
+    "queueCursor": "cursor-2",
+    "pendingCount": 1,
+    "runningCount": 0,
+    "lastTaskId": "TASK-002"
+  },
+  "stageCursor": {
+    "current": "analysis",
+    "stageStatus": "active",
+    "lastCompleteStage": "orientation"
+  },
+  "nextAction": {
+    "kind": "enqueue-task",
+    "params": {
+      "stageId": "analysis"
+    }
+  },
+  "openBlockers": [],
+  "openHandoffs": [
+    "H-0007"
+  ],
+  "wakeLease": {
+    "wakeId": "WAKE-2026-04-23-005",
+    "leaseAcquiredAt": "2026-04-23T10:00:00Z",
+    "leaseExpiresAt": "2026-04-23T10:15:00Z",
+    "acquiredBy": "scheduler",
+    "previousWakeId": "WAKE-2026-04-23-004"
+  },
+  "kernelFingerprint": {
+    "lastClaimId": "CLM-002",
+    "lastCitationCheckId": "CIT-010",
+    "lastR2VerdictId": "R2-004",
+    "lastObserverAlertId": null,
+    "lastGateCheckId": "GATE-010",
+    "lastPatternId": null,
+    "takenAt": "2026-04-23T09:59:30Z"
+  },
+  "notes": "Heartbeat no-op snapshot; no control-flow mutation."
+}

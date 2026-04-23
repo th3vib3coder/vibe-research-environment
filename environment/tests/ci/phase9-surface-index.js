@@ -92,6 +92,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/objectives/resume-snapshot.js',
+    kind: 'orchestrator-surface',
+    name: 'resume-snapshot',
+    featureId: 'W2-RESUME-SNAPSHOT-WRITER',
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/control/capability-handshake.js',
     kind: 'orchestrator-surface',
     name: 'capability-handshake',

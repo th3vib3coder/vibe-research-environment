@@ -136,6 +136,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "resume-snapshot",
+    "paths": [
+      "environment/objectives/resume-snapshot.js"
+    ],
+    "featureId": "W2-RESUME-SNAPSHOT-WRITER",
+    "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "time-provider",
     "paths": [
       "environment/control/time-provider.js"

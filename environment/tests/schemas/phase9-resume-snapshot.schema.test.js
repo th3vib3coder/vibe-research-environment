@@ -4,7 +4,8 @@ import { expectFixtureValidity } from './phase9-schema-fixture-helper.js';
 
 for (const fixturePath of [
   'environment/tests/fixtures/phase9/resume-snapshot/valid-mid-loop.json',
-  'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-stop.json'
+  'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-stop.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/valid-heartbeat.json'
 ]) {
   test(`phase9-resume-snapshot.schema accepts ${fixturePath}`, async () => {
     await expectFixtureValidity({
@@ -17,6 +18,9 @@ for (const fixturePath of [
 
 for (const fixturePath of [
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-budget.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-queue-visibility.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-next-action.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-open-handoffs.json',
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-reasoning-mode.json',
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-reasoning-mode-diverged.json',
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-stale-fingerprint.json'

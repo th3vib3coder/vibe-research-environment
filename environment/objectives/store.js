@@ -95,7 +95,7 @@ async function pathExists(targetPath) {
   }
 }
 
-async function resolveSchemaHostRoot(projectRoot, schemaFile = OBJECTIVE_SCHEMA_FILE) {
+export async function resolveSchemaHostRoot(projectRoot, schemaFile = OBJECTIVE_SCHEMA_FILE) {
   const targetSchemaPath = path.join(
     projectRoot,
     'environment',
@@ -122,7 +122,7 @@ export function createInitialWakeLease() {
   };
 }
 
-async function validateObjectiveRecord(projectRoot, objectiveRecord) {
+export async function validateObjectiveRecord(projectRoot, objectiveRecord) {
   const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, OBJECTIVE_SCHEMA_FILE);
   const validate = await loadValidator(schemaHostRoot, OBJECTIVE_SCHEMA_FILE);
   assertValid(validate, objectiveRecord, 'phase9 objective');
@@ -167,7 +167,7 @@ export function activeObjectivePointerPath(projectPath) {
   return resolveInside(objectivesRootDir(projectPath), ACTIVE_OBJECTIVE_POINTER_FILE);
 }
 
-async function writeObjectiveRecord(projectPath, objectiveRecord) {
+export async function writeObjectiveRecord(projectPath, objectiveRecord) {
   const projectRoot = resolveProjectRoot(projectPath);
   await validateObjectiveRecord(projectRoot, objectiveRecord);
   const recordPath = objectiveRecordPath(projectRoot, objectiveRecord.objectiveId);

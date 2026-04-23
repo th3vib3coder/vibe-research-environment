@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "phase9.resume-snapshot.v1",
+  "writtenAt": "2026-04-22T22:00:00Z",
+  "writtenReason": "loop-iteration",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "objectiveStatusAtSnapshot": "active",
+  "runtimeMode": "unattended-batch",
+  "reasoningMode": "rule-only",
+  "wakePolicySnapshot": {
+    "wakeOwner": "windows-task-scheduler",
+    "wakeSourceId": "TASK-OBJ-2026-04-22-001",
+    "heartbeatIntervalSeconds": 1800,
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "budgetRemaining": {
+    "maxWallSecondsLeft": 14400,
+    "maxIterationsLeft": 12,
+    "costCeilingLeft": 17.25
+  },
+  "stageCursor": {
+    "current": "analysis",
+    "stageStatus": "active",
+    "lastCompleteStage": "orientation"
+  },
+  "nextAction": {
+    "kind": "run-analysis",
+    "params": {
+      "analysisId": "AN-001"
+    }
+  },
+  "openBlockers": [],
+  "openHandoffs": [
+    "H-0007"
+  ],
+  "wakeLease": {
+    "wakeId": "WAKE-2026-04-22-001",
+    "leaseAcquiredAt": "2026-04-22T21:59:00Z",
+    "leaseExpiresAt": "2026-04-22T22:14:00Z",
+    "acquiredBy": "scheduler",
+    "previousWakeId": null
+  },
+  "kernelFingerprint": {
+    "lastClaimId": "CLM-001",
+    "lastCitationCheckId": "CIT-004",
+    "lastR2VerdictId": "R2-001",
+    "lastObserverAlertId": null,
+    "lastGateCheckId": "GATE-002",
+    "lastPatternId": null,
+    "takenAt": "2026-04-22T21:58:30Z"
+  },
+  "notes": "Invalid because queueVisibility is required."
+}
