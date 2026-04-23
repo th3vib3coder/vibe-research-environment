@@ -436,3 +436,101 @@ test('objective resume --repair-snapshot rewrites the stale snapshot without mut
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 48 regression: resume error branches must return structured JSON.
+//
+// Background: the seq 062 closure claimed "Lifecycle error branches now
+// return structured JSON payloads through ObjectiveCliError". That claim
+// was accurate for start/pause/stop/status but NOT for resume, because
+// `resumeObjectiveCommand` in `environment/objectives/cli.js` used
+// `return withLock(...)` instead of `return await withLock(...)`. The
+// missing `await` meant the outer try/catch exited synchronously before
+// the inner withLock promise rejected, so raw Error objects thrown inside
+// the lock body (e.g. "Cannot resume objective in status active",
+// "No active objective pointer exists") bypassed
+// `coerceObjectiveCliError` and reached bin/vre as plain Error. They then
+// fell through the ObjectiveCliError branch of the dispatcher
+// (`bin/vre:1117`) and were emitted as plain-text stderr instead of the
+// contracted structured JSON. The fix is a single-line
+// `return` -> `return await` in `resumeObjectiveCommand`. These two
+// regression tests pin both affected branches.
+
+test('objective resume on an active objective returns structured JSON with E_OBJECTIVE_STATE_INVALID', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-resume-active-');
+  try {
+    const start = await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-resume-when-active'
+      }
+    });
+    assert.equal(start.code, 0, `start stderr=${start.stderr}`);
+    const startPayload = JSON.parse(start.stdout);
+
+    const resume = await runVre(projectRoot, [
+      'objective',
+      'resume',
+      '--objective',
+      startPayload.objectiveId
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(resume.code, 1, `resume stderr=${resume.stderr}`);
+    assert.equal(resume.stderr, '');
+
+    const payload = JSON.parse(resume.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective resume');
+    assert.equal(payload.code, 'E_OBJECTIVE_STATE_INVALID');
+    assert.equal(payload.transition, 'resume');
+    assert.equal(payload.status, 'active');
+    assert.match(payload.message, /Cannot resume objective in status active/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective resume after objective stop returns structured JSON with E_ACTIVE_OBJECTIVE_POINTER_MISSING', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-resume-terminal-');
+  try {
+    const start = await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-resume-terminal'
+      }
+    });
+    assert.equal(start.code, 0, `start stderr=${start.stderr}`);
+    const startPayload = JSON.parse(start.stdout);
+
+    const stop = await runVre(projectRoot, [
+      'objective',
+      'stop',
+      '--objective',
+      startPayload.objectiveId,
+      '--reason',
+      'operator stop'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(stop.code, 0, `stop stderr=${stop.stderr}`);
+
+    const resume = await runVre(projectRoot, [
+      'objective',
+      'resume',
+      '--objective',
+      startPayload.objectiveId
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(resume.code, 1, `resume stderr=${resume.stderr}`);
+    assert.equal(resume.stderr, '');
+
+    const payload = JSON.parse(resume.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective resume');
+    assert.equal(payload.code, 'E_ACTIVE_OBJECTIVE_POINTER_MISSING');
+    assert.match(payload.message, /No active objective pointer exists/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});

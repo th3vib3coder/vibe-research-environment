@@ -656,7 +656,16 @@ export async function stopObjectiveCommand(repoRoot, { objectiveId, reason }, de
 
 export async function resumeObjectiveCommand(repoRoot, { objectiveId, repairSnapshot }, deps = {}) {
   try {
-    return withLock(repoRoot, OBJECTIVE_POINTER_LOCK_NAME, async () => {
+    // Must be `return await withLock(...)` and not `return withLock(...)`,
+    // otherwise the outer try/catch exits before the inner withLock promise
+    // rejects, and errors thrown inside the lock body (for example
+    // "Cannot resume objective in status <status>" at line ~672 and
+    // "No active objective pointer exists" at line ~662) bypass
+    // coerceObjectiveCliError() and reach bin/vre as raw Error instead of
+    // ObjectiveCliError, which in turn falls through the dispatcher
+    // ObjectiveCliError branch (bin/vre:1117) and emits plain-text stderr
+    // instead of structured JSON. Closes Round 48 D4.
+    return await withLock(repoRoot, OBJECTIVE_POINTER_LOCK_NAME, async () => {
       const activePointer = await readActiveObjectivePointer(repoRoot);
       if (!activePointer) {
         throw new Error('No active objective pointer exists');
