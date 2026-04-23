@@ -525,6 +525,44 @@ test('research-loop executes one bounded safe slice, writes queue/event/snapshot
   }
 });
 
+test('research-loop replaces the heartbeat auto sentinel with a generated wake id before claiming the lease', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-auto-wake-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-auto-wake-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--heartbeat',
+      '--wake-id',
+      'auto'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'slice-complete');
+    assert.notEqual(payload.wakeId, 'auto');
+    assert.match(payload.wakeId, /^wake-/u);
+
+    const activePointer = await readActiveObjectivePointer(projectRoot);
+    assert.ok(activePointer);
+    assert.equal(activePointer.currentWakeLease.wakeId, payload.wakeId);
+
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.wakeLease.wakeId, payload.wakeId);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 test('research-loop respects stopConditions.onBudgetExhausted by pausing instead of executing another slice', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-budget-');
   try {

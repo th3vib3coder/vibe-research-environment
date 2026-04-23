@@ -198,6 +198,15 @@
     "introducedAt": "2026-04-22"
   },
   {
+    "kind": "orchestrator-surface",
+    "name": "windows-task-scheduler",
+    "paths": [
+      "environment/orchestrator/windows-task-scheduler.js"
+    ],
+    "featureId": "W4-SCHEDULER-REGISTRATION-CLI",
+    "introducedAt": "2026-04-23"
+  },
+  {
     "kind": "scheduler-command",
     "name": "scheduler install",
     "paths": [

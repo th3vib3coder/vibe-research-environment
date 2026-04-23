@@ -193,7 +193,8 @@ const activeCliTestFiles = [
   'bin-vre-phase9-stubs.test.js',
   'objective-cli.test.js',
   'run-analysis.test.js',
-  'research-loop.test.js'
+  'research-loop.test.js',
+  'scheduler-cli.test.js'
 ];
 
 const activePhase9TestFiles = [
@@ -203,6 +204,7 @@ const activePhase9TestFiles = [
   'environment/tests/cli/objective-cli.test.js',
   'environment/tests/cli/run-analysis.test.js',
   'environment/tests/cli/research-loop.test.js',
+  'environment/tests/cli/scheduler-cli.test.js',
   'environment/tests/control/time-provider.test.js',
   'environment/tests/control/approved-memory-apis.test.js',
   'environment/tests/control/capability-handshake.test.js',
@@ -212,6 +214,7 @@ const activePhase9TestFiles = [
   'environment/tests/control/objective-store.test.js',
   'environment/tests/control/objective-lock.test.js',
   'environment/tests/control/resume-snapshot.test.js',
+  'environment/tests/control/windows-task-scheduler.test.js',
   'environment/tests/lib/kernel-bridge.test.js',
   'environment/tests/integration/kernel-bridge.test.js',
   'environment/tests/schemas/phase9-runtime-budget.schema.test.js',

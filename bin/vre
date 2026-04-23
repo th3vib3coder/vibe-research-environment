@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { atomicWriteJson, now, resolveInside } from '../environment/control/_io.js';
@@ -24,6 +25,26 @@ import {
 import { ResearchLoopCliError, runResearchLoopCommand } from '../environment/orchestrator/autonomy-runtime.js';
 import { RunAnalysisCliError, runAnalysisCommand } from '../environment/orchestrator/execution-lane.js';
 import { getTaskRegistry } from '../environment/orchestrator/task-registry.js';
+import {
+  AUTO_WAKE_ID_SENTINEL,
+  objectiveDoctorCommand,
+  SchedulerCliError,
+  schedulerDoctorCommand,
+  schedulerInstallCommand,
+  schedulerRemoveCommand,
+  schedulerStatusCommand
+} from '../environment/orchestrator/windows-task-scheduler.js';
+
+function resolveHeartbeatProbeWakeId(wakeId) {
+  if (typeof wakeId !== 'string' || wakeId.trim() === '') {
+    return null;
+  }
+  const normalized = wakeId.trim();
+  if (normalized === AUTO_WAKE_ID_SENTINEL) {
+    return `wake-probe-${process.pid}-${randomUUID()}`;
+  }
+  return normalized;
+}
 
 export const DISPATCH_TABLE = Object.freeze({
   'flow-status': {
@@ -61,12 +82,17 @@ export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
     ...new Set([
       ...Object.keys(DISPATCH_TABLE).filter((commandName) => commandName.includes(' ')),
       'objective pause',
+      'objective doctor',
       'objective resume',
       'objective start',
       'objective status',
       'objective stop',
       'research-loop',
       'run-analysis',
+      'scheduler doctor',
+      'scheduler install',
+      'scheduler remove',
+      'scheduler status',
     ])
   ].sort()
 );
@@ -830,6 +856,22 @@ async function runObjectiveResume(repoRoot, parsed) {
   }
 }
 
+async function runObjectiveDoctor(repoRoot, parsed) {
+  try {
+    return objectiveDoctorCommand(
+      repoRoot,
+      {
+        objectiveId: requiredStringOption(parsed, 'objective', 'objective doctor')
+      }
+    );
+  } catch (error) {
+    if (error instanceof SchedulerCliError) {
+      throw error;
+    }
+    throw coerceObjectiveCliError('objective doctor', error);
+  }
+}
+
 async function runRunAnalysis(repoRoot, parsed) {
   if (parsed.positionals.length > 0) {
     throw new RunAnalysisCliError({
@@ -856,14 +898,52 @@ async function runResearchLoop(repoRoot, parsed) {
     });
   }
 
+  const objectiveId = requiredStringOption(parsed, 'objective', 'research-loop');
+  const jsonRequested = parsed.options.json == null
+    ? false
+    : parsed.options.json === true || parsed.options.json === 'true';
+  if (parsed.options.json != null && !jsonRequested) {
+    throw new ResearchLoopCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: 'research-loop only accepts --json as a boolean flag.'
+    });
+  }
+  const wakeId = typeof parsed.options['wake-id'] === 'string'
+    ? parsed.options['wake-id']
+    : null;
+  if (
+    process.env.VRE_HEARTBEAT_PROBE_ONLY === '1' &&
+    (parsed.options.heartbeat === true || parsed.options.heartbeat === 'true')
+  ) {
+    const probeWakeId = resolveHeartbeatProbeWakeId(wakeId);
+    if (probeWakeId == null) {
+      throw new ResearchLoopCliError({
+        code: 'PHASE9_USAGE',
+        exitCode: 3,
+        message: 'research-loop --heartbeat probe requires --wake-id.'
+      });
+    }
+    if (!jsonRequested) {
+      throw new ResearchLoopCliError({
+        code: 'PHASE9_USAGE',
+        exitCode: 3,
+        message: 'research-loop --heartbeat probe requires --json.'
+      });
+    }
+    return phase9SuccessPayload('research-loop', {
+      objectiveId,
+      probe: 'heartbeat',
+      wakeId: probeWakeId
+    });
+  }
+
   return runResearchLoopCommand(repoRoot, {
-    objectiveId: requiredStringOption(parsed, 'objective', 'research-loop'),
+    objectiveId,
     heartbeat:
       parsed.options.heartbeat === true ||
       parsed.options.heartbeat === 'true',
-    wakeId: typeof parsed.options['wake-id'] === 'string'
-      ? parsed.options['wake-id']
-      : null,
+    wakeId,
     maxIterations: parsed.options['max-iterations'] ?? null,
     maxWallSeconds: parsed.options['max-wall-seconds'] ?? null,
     // --stop-on-blocker is a spec-promised CLI surface (see blueprint file 13
@@ -891,6 +971,110 @@ async function runResearchLoop(repoRoot, parsed) {
         }
       })
   });
+}
+
+async function runSchedulerInstall(repoRoot, parsed) {
+  try {
+    if (parsed.positionals.length > 0) {
+      throw new SchedulerCliError({
+        command: 'scheduler install',
+        code: 'PHASE9_USAGE',
+        exitCode: 3,
+        message: `scheduler install does not accept positional arguments: ${parsed.positionals.join(' ')}`
+      });
+    }
+    return schedulerInstallCommand(repoRoot, {
+      objectiveId: requiredStringOption(parsed, 'objective', 'scheduler install')
+    });
+  } catch (error) {
+    if (error instanceof SchedulerCliError) {
+      throw error;
+    }
+    throw new SchedulerCliError({
+      command: 'scheduler install',
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: error?.message ?? String(error)
+    });
+  }
+}
+
+async function runSchedulerStatus(repoRoot, parsed) {
+  try {
+    if (parsed.positionals.length > 0) {
+      throw new SchedulerCliError({
+        command: 'scheduler status',
+        code: 'PHASE9_USAGE',
+        exitCode: 3,
+        message: `scheduler status does not accept positional arguments: ${parsed.positionals.join(' ')}`
+      });
+    }
+    return schedulerStatusCommand(repoRoot, {
+      objectiveId: requiredStringOption(parsed, 'objective', 'scheduler status')
+    });
+  } catch (error) {
+    if (error instanceof SchedulerCliError) {
+      throw error;
+    }
+    throw new SchedulerCliError({
+      command: 'scheduler status',
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: error?.message ?? String(error)
+    });
+  }
+}
+
+async function runSchedulerDoctor(repoRoot, parsed) {
+  try {
+    if (parsed.positionals.length > 0) {
+      throw new SchedulerCliError({
+        command: 'scheduler doctor',
+        code: 'PHASE9_USAGE',
+        exitCode: 3,
+        message: `scheduler doctor does not accept positional arguments: ${parsed.positionals.join(' ')}`
+      });
+    }
+    return schedulerDoctorCommand(repoRoot, {
+      objectiveId: requiredStringOption(parsed, 'objective', 'scheduler doctor')
+    });
+  } catch (error) {
+    if (error instanceof SchedulerCliError) {
+      throw error;
+    }
+    throw new SchedulerCliError({
+      command: 'scheduler doctor',
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: error?.message ?? String(error)
+    });
+  }
+}
+
+async function runSchedulerRemove(repoRoot, parsed) {
+  try {
+    if (parsed.positionals.length > 0) {
+      throw new SchedulerCliError({
+        command: 'scheduler remove',
+        code: 'PHASE9_USAGE',
+        exitCode: 3,
+        message: `scheduler remove does not accept positional arguments: ${parsed.positionals.join(' ')}`
+      });
+    }
+    return schedulerRemoveCommand(repoRoot, {
+      objectiveId: requiredStringOption(parsed, 'objective', 'scheduler remove')
+    });
+  } catch (error) {
+    if (error instanceof SchedulerCliError) {
+      throw error;
+    }
+    throw new SchedulerCliError({
+      command: 'scheduler remove',
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: error?.message ?? String(error)
+    });
+  }
 }
 
 function phase9Payload(definition, parsed, code = 'PHASE9_NOT_IMPLEMENTED', extra = {}) {
@@ -1172,6 +1356,12 @@ export async function main(argv = process.argv) {
         return 0;
       }
 
+      if (phase9Invocation.definition.canonicalCommand === 'objective doctor') {
+        const payload = await runObjectiveDoctor(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
       if (phase9Invocation.definition.canonicalCommand === 'objective stop') {
         const payload = await runObjectiveStop(repoRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
@@ -1190,10 +1380,34 @@ export async function main(argv = process.argv) {
         return 0;
       }
 
+      if (phase9Invocation.definition.canonicalCommand === 'scheduler install') {
+        const payload = await runSchedulerInstall(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'scheduler status') {
+        const payload = await runSchedulerStatus(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'scheduler doctor') {
+        const payload = await runSchedulerDoctor(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
+      if (phase9Invocation.definition.canonicalCommand === 'scheduler remove') {
+        const payload = await runSchedulerRemove(repoRoot, phase9Invocation.parsed);
+        writeJsonPayload(payload);
+        return 0;
+      }
+
       writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
       return 0;
     } catch (error) {
-      if (error instanceof ObjectiveCliError || error instanceof RunAnalysisCliError || error instanceof ResearchLoopCliError) {
+      if (error instanceof ObjectiveCliError || error instanceof RunAnalysisCliError || error instanceof ResearchLoopCliError || error instanceof SchedulerCliError) {
         writeJsonPayload(
           namedPhase9ErrorPayload(
             error.command,

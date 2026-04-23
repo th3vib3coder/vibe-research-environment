@@ -82,10 +82,17 @@ test('T1.4 drift classification keeps docs-only commands markdown-only and flags
     ['flow-status', 'weekly-digest'],
     PHASE9_STUB_DEFINITIONS
   );
+  const expectedOperatorCommands = PHASE9_STUB_DEFINITIONS
+    .filter((definition) => definition.kind !== 'doctor-surface')
+    .map((definition) => definition.canonicalCommand);
 
   assert.deepEqual(classification.markdownOnlyContracts, ['weekly-digest']);
   assertContainsWarning(classification.undocumentedExecutableWarnings, 'capabilities --json');
-  assert.equal(classification.operatorSurface.commands.includes('capabilities --json'), false);
+  assertExactStringSet(
+    classification.operatorSurface.commands,
+    expectedOperatorCommands,
+    'operatorSurface.commands'
+  );
 });
 
 test('T1.4 live handshake stays aligned with reviewed docs-vs-dispatch truth', async () => {
@@ -112,6 +119,20 @@ test('T1.4 live handshake stays aligned with reviewed docs-vs-dispatch truth', a
     handshake.vre.executableCommands,
     executableCommands,
     'executableCommands'
+  );
+  assertExactStringSet(
+    handshake.vre.operatorSurface.commands,
+    PHASE9_STUB_DEFINITIONS
+      .filter((definition) => definition.kind !== 'doctor-surface')
+      .map((definition) => definition.canonicalCommand),
+    'operatorSurface.commands'
+  );
+  assertExactStringSet(
+    handshake.vre.operatorSurface.doctorCommands,
+    PHASE9_STUB_DEFINITIONS
+      .filter((definition) => definition.kind === 'doctor-surface')
+      .map((definition) => definition.canonicalCommand),
+    'operatorSurface.doctorCommands'
   );
   for (const commandName of undocumentedExecutable) {
     assertContainsWarning(handshake.degradedReasons, commandName);

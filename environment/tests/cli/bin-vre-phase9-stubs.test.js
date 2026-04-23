@@ -21,12 +21,7 @@ const FIXTURE_KERNEL_ENV = {
 };
 
 const STUB_CASES = [
-  { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' },
-  { argv: ['objective', 'doctor', '--objective=OBJ-1'], command: 'objective doctor', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['scheduler', 'install', '--objective', 'OBJ-1'], command: 'scheduler install', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['scheduler', 'status', '--objective=OBJ-1'], command: 'scheduler status', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['scheduler', 'doctor', '--objective', 'OBJ-1'], command: 'scheduler doctor', optionChecks: { objective: 'OBJ-1' } },
-  { argv: ['scheduler', 'remove', '--objective', 'OBJ-1'], command: 'scheduler remove', optionChecks: { objective: 'OBJ-1' } }
+  { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' }
 ];
 
 test('Phase 9 CLI stubs are invokable and emit structured JSON instead of unknown-command failures', async () => {
@@ -117,41 +112,43 @@ test('capabilities --json reports only commands that are actually wired in bin/v
     );
     assert.equal(payload.vre.executableCommands.includes('capabilities --json'), true);
     assert.equal(payload.vre.executableCommands.includes('objective start'), true);
+    assert.equal(payload.vre.executableCommands.includes('objective doctor'), true);
     assert.equal(payload.vre.executableCommands.includes('objective pause'), true);
     assert.equal(payload.vre.executableCommands.includes('objective resume'), true);
     assert.equal(payload.vre.executableCommands.includes('objective status'), true);
     assert.equal(payload.vre.executableCommands.includes('objective stop'), true);
     assert.equal(payload.vre.executableCommands.includes('research-loop'), true);
     assert.equal(payload.vre.executableCommands.includes('run-analysis'), true);
+    assert.equal(payload.vre.executableCommands.includes('scheduler install'), true);
+    assert.equal(payload.vre.executableCommands.includes('scheduler status'), true);
+    assert.equal(payload.vre.executableCommands.includes('scheduler doctor'), true);
+    assert.equal(payload.vre.executableCommands.includes('scheduler remove'), true);
     assert.equal(payload.vre.executableCommands.includes('weekly-digest'), false);
     assert.equal(payload.vre.markdownOnlyContracts.includes('weekly-digest'), true);
     assert.equal(payload.vre.missingSurfaces.includes('capabilities --json'), false);
     assert.equal(payload.vre.missingSurfaces.includes('research-loop'), false);
+    assert.equal(payload.vre.missingSurfaces.includes('scheduler runtime'), false);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
 });
 
-test('Phase 9 parser does not reject nested stub commands merely because extra args are present', async () => {
+test('Phase 9 parser still carries long options through to the remaining doctor stub', async () => {
   const projectRoot = await createCliFixtureProject('vre-phase9-args-');
   try {
     const result = await runVre(projectRoot, [
-      'scheduler',
-      'install',
-      '--objective',
-      'OBJ-1',
-      '--wake-owner=manual',
-      '--lease-ttl-seconds',
-      '60'
+      'capabilities',
+      'doctor',
+      '--fresh-window-seconds=600',
+      '--allow-degraded=true'
     ]);
     assert.equal(result.code, 0, `stderr=${result.stderr}`);
     assert.doesNotMatch(result.stderr, /unexpected arguments/u);
 
     const payload = JSON.parse(result.stdout);
-    assert.equal(payload.command, 'scheduler install');
-    assert.equal(payload.argv.options.objective, 'OBJ-1');
-    assert.equal(payload.argv.options['wake-owner'], 'manual');
-    assert.equal(payload.argv.options['lease-ttl-seconds'], '60');
+    assert.equal(payload.command, 'capabilities doctor');
+    assert.equal(payload.argv.options['fresh-window-seconds'], '600');
+    assert.equal(payload.argv.options['allow-degraded'], 'true');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

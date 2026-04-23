@@ -134,6 +134,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/windows-task-scheduler.js',
+    kind: 'orchestrator-surface',
+    name: 'windows-task-scheduler',
+    featureId: 'W4-SCHEDULER-REGISTRATION-CLI',
+    introducedAt: '2026-04-23'
+  },
+  {
     file: 'environment/control/capability-handshake.js',
     kind: 'orchestrator-surface',
     name: 'capability-handshake',

@@ -82,7 +82,7 @@ const REVIEWED_MISSING_SURFACE_RULES = Object.freeze([
   {
     surface: 'scheduler runtime',
     present: async (projectRoot) =>
-      pathExists(path.join(projectRoot, 'environment', 'scheduler', 'windows-task-scheduler.js'))
+      pathExists(path.join(projectRoot, 'environment', 'orchestrator', 'windows-task-scheduler.js'))
   },
   {
     surface: 'reviewer-2 bridge',
@@ -274,13 +274,11 @@ function classifyCommandSurface(executableCommands, markdownContracts, stubDefin
       commands: uniqueSorted(
         stubDefinitions
           .filter((definition) => definition.kind !== 'doctor-surface')
-          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
           .map((definition) => definition.canonicalCommand)
       ),
       doctorCommands: uniqueSorted(
         stubDefinitions
           .filter((definition) => definition.kind === 'doctor-surface')
-          .filter((definition) => !executableCommandSet.has(definition.canonicalCommand))
           .map((definition) => definition.canonicalCommand)
       )
     }

@@ -402,9 +402,10 @@ function resolveWakeRequest(options = {}) {
         message: 'research-loop --heartbeat requires --wake-id.'
       });
     }
+    const requestedWakeId = options.wakeId.trim();
     return {
       heartbeat: true,
-      wakeId: options.wakeId.trim()
+      wakeId: requestedWakeId === 'auto' ? generateWakeId() : requestedWakeId
     };
   }
 

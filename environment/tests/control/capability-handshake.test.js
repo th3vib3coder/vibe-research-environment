@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { DISPATCH_TABLE, IMPLEMENTED_PHASE9_COMMANDS } from '../../../bin/vre';
+import { DISPATCH_TABLE, IMPLEMENTED_PHASE9_COMMANDS, PHASE9_STUB_DEFINITIONS } from '../../../bin/vre';
 import {
   generateCapabilityHandshake,
   HANDSHAKE_SCHEMA_FILE,
@@ -21,6 +21,14 @@ const FAKE_KERNEL_ROOT = path.join(
   'fake-kernel-sibling'
 );
 const FIXED_GENERATED_AT = '2026-04-22T18:00:00.000Z';
+const EXPECTED_OPERATOR_COMMANDS = PHASE9_STUB_DEFINITIONS
+  .filter((definition) => definition.kind !== 'doctor-surface')
+  .map((definition) => definition.canonicalCommand)
+  .sort();
+const EXPECTED_OPERATOR_DOCTOR_COMMANDS = PHASE9_STUB_DEFINITIONS
+  .filter((definition) => definition.kind === 'doctor-surface')
+  .map((definition) => definition.canonicalCommand)
+  .sort();
 
 test('capability-handshake generator produces a schema-valid full ontology payload from the live repo', async () => {
   const handshake = await generateCapabilityHandshake(PROJECT_ROOT, {
@@ -53,6 +61,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   );
   assert.equal(handshake.vre.executableCommands.includes('capabilities --json'), true);
   assert.equal(handshake.vre.executableCommands.includes('flow-status'), true);
+  assert.equal(handshake.vre.executableCommands.includes('objective doctor'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective resume'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective start'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective status'), true);
@@ -60,6 +69,10 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.executableCommands.includes('objective stop'), true);
   assert.equal(handshake.vre.executableCommands.includes('research-loop'), true);
   assert.equal(handshake.vre.executableCommands.includes('run-analysis'), true);
+  assert.equal(handshake.vre.executableCommands.includes('scheduler install'), true);
+  assert.equal(handshake.vre.executableCommands.includes('scheduler status'), true);
+  assert.equal(handshake.vre.executableCommands.includes('scheduler doctor'), true);
+  assert.equal(handshake.vre.executableCommands.includes('scheduler remove'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('weekly-digest'), true);
   assert.equal(handshake.vre.markdownOnlyContracts.includes('flow-status'), false);
   assert.equal(handshake.vre.queueableTaskKinds.length > 0, true);
@@ -83,17 +96,8 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
     handshake.vre.memoryApis.some((entry) => entry.name === 'getMemoryFreshness'),
     true
   );
-  assert.equal(handshake.vre.operatorSurface.commands.includes('research-loop'), false);
-  assert.equal(handshake.vre.operatorSurface.commands.includes('objective start'), false);
-  assert.equal(handshake.vre.operatorSurface.commands.includes('objective resume'), false);
-  assert.equal(handshake.vre.operatorSurface.commands.includes('objective status'), false);
-  assert.equal(handshake.vre.operatorSurface.commands.includes('objective pause'), false);
-  assert.equal(handshake.vre.operatorSurface.commands.includes('objective stop'), false);
-  assert.equal(handshake.vre.operatorSurface.commands.includes('run-analysis'), false);
-  assert.equal(
-    handshake.vre.operatorSurface.doctorCommands.includes('capabilities doctor'),
-    true
-  );
+  assert.deepEqual(handshake.vre.operatorSurface.commands, EXPECTED_OPERATOR_COMMANDS);
+  assert.deepEqual(handshake.vre.operatorSurface.doctorCommands, EXPECTED_OPERATOR_DOCTOR_COMMANDS);
   assert.equal(handshake.vre.operatorSurface.artifactPaths.length, 5);
   assert.equal(handshake.objective.activePointer, null);
   assert.equal(handshake.objective.activeObjectiveId, null);
@@ -145,6 +149,12 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   );
   assert.equal(
     handshake.degradedReasons.includes(
+      'executable command objective doctor is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  assert.equal(
+    handshake.degradedReasons.includes(
       'executable command research-loop is wired in bin/vre but missing a reviewed markdown contract'
     ),
     true
@@ -155,19 +165,37 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
     ),
     true
   );
-  // Round 36 invariant: operatorSurface enumerates only future/operator-only
-  // commands. A command that is actually dispatched through bin/vre (and
-  // therefore surfaced under executableCommands) MUST NOT also be reported
-  // as a pending operator stub. The two sets must be disjoint.
-  assert.equal(handshake.vre.operatorSurface.commands.includes('capabilities --json'), false);
-  const operatorExecutableIntersection = handshake.vre.operatorSurface.commands.filter(
-    (commandName) => handshake.vre.executableCommands.includes(commandName)
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command scheduler install is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
   );
-  assert.deepEqual(operatorExecutableIntersection, []);
-  const operatorDoctorExecutableIntersection = handshake.vre.operatorSurface.doctorCommands.filter(
-    (commandName) => handshake.vre.executableCommands.includes(commandName)
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command scheduler status is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
   );
-  assert.deepEqual(operatorDoctorExecutableIntersection, []);
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command scheduler doctor is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  assert.equal(
+    handshake.degradedReasons.includes(
+      'executable command scheduler remove is wired in bin/vre but missing a reviewed markdown contract'
+    ),
+    true
+  );
+  // Round 65 invariant: operatorSurface is the canonical agent-facing list from
+  // file 13, so it MUST keep listing the reviewed operator/doctor commands even
+  // after they become executable.
+  assert.equal(handshake.vre.operatorSurface.commands.includes('capabilities --json'), true);
+  assert.equal(handshake.vre.operatorSurface.commands.includes('research-loop'), true);
+  assert.equal(handshake.vre.operatorSurface.doctorCommands.includes('objective doctor'), true);
+  assert.equal(handshake.vre.operatorSurface.doctorCommands.includes('scheduler doctor'), true);
 });
 
 test('capability-handshake generator reports an honest degraded kernel when no kernel root is available', async () => {
@@ -218,6 +246,7 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
 
   for (const fixture of [fullFixture, degradedFixture]) {
     assert.equal(fixture.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(fixture.vre.executableCommands.includes('objective doctor'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective resume'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective start'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective status'), true);
@@ -225,18 +254,17 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     assert.equal(fixture.vre.executableCommands.includes('objective stop'), true);
     assert.equal(fixture.vre.executableCommands.includes('research-loop'), true);
     assert.equal(fixture.vre.executableCommands.includes('run-analysis'), true);
+    assert.equal(fixture.vre.executableCommands.includes('scheduler install'), true);
+    assert.equal(fixture.vre.executableCommands.includes('scheduler status'), true);
+    assert.equal(fixture.vre.executableCommands.includes('scheduler doctor'), true);
+    assert.equal(fixture.vre.executableCommands.includes('scheduler remove'), true);
     assert.equal(fixture.vre.missingSurfaces.includes('plugin handshake injection'), false);
     assert.equal(fixture.vre.missingSurfaces.includes('capabilities --json'), false);
     assert.equal(fixture.vre.missingSurfaces.includes('analysis-manifest schema'), false);
     assert.equal(fixture.vre.missingSurfaces.includes('research-loop'), false);
     assert.equal(fixture.vre.missingSurfaces.includes('run-analysis'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('objective start'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('objective resume'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('objective status'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('objective pause'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('objective stop'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('research-loop'), false);
-    assert.equal(fixture.vre.operatorSurface.commands.includes('run-analysis'), false);
+    assert.deepEqual(fixture.vre.operatorSurface.commands, EXPECTED_OPERATOR_COMMANDS);
+    assert.deepEqual(fixture.vre.operatorSurface.doctorCommands, EXPECTED_OPERATOR_DOCTOR_COMMANDS);
     assert.equal(
       fixture.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
       true
@@ -279,6 +307,12 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     );
     assert.equal(
       fixture.degradedReasons.includes(
+        'executable command objective doctor is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
         'executable command research-loop is wired in bin/vre but missing a reviewed markdown contract'
       ),
       true
@@ -286,6 +320,30 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     assert.equal(
       fixture.degradedReasons.includes(
         'executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command scheduler install is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command scheduler status is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command scheduler doctor is wired in bin/vre but missing a reviewed markdown contract'
+      ),
+      true
+    );
+    assert.equal(
+      fixture.degradedReasons.includes(
+        'executable command scheduler remove is wired in bin/vre but missing a reviewed markdown contract'
       ),
       true
     );

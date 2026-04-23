@@ -7,14 +7,14 @@ const expectedCounts = {
   evalTasks: 25,
   evalMetrics: 5,
   evalBenchmarks: 5,
-  controlTests: 19,
+  controlTests: 20,
   compatibilityTests: 5,
   flowTests: 8,
   libTests: 23,
   evalTests: 2,
   installTests: 5,
   integrationTests: 15,
-  cliTests: 9,
+  cliTests: 10,
   schemaTests: 53,
   ciValidators: 14
 };

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "phase9.capability-handshake.v1",
-  "generatedAt": "2026-04-22T18:00:00Z",
+  "generatedAt": "2026-04-22T18:00:00.000Z",
   "vrePresent": true,
-  "vrePath": "C:/vre",
+  "vrePath": "C:\\Users\\Test-User\\Desktop\\Tesi_Python_scRNA\\nuove_skill\\vibe-research-environment",
   "kernel": {
     "mode": "full",
     "dbAvailable": true,
@@ -13,7 +13,7 @@
           "name": "listClaimHeads",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": "2026-04-17T00:00:00.000Z",
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -21,7 +21,7 @@
           "name": "listUnresolvedClaims",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": null,
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -29,7 +29,7 @@
           "name": "listCitationChecks",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": null,
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -37,7 +37,7 @@
           "name": "getProjectOverview",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": "2026-04-17T00:00:00.000Z",
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -45,7 +45,7 @@
           "name": "listLiteratureSearches",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": null,
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -53,7 +53,7 @@
           "name": "listObserverAlerts",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": null,
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -61,7 +61,7 @@
           "name": "listGateChecks",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": null,
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
@@ -69,7 +69,7 @@
           "name": "getStateSnapshot",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
-          "sourceTimestamp": "2026-04-22T18:00:00Z",
+          "sourceTimestamp": "2026-04-17T00:00:00.000Z",
           "degradedReason": null,
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         }
@@ -88,12 +88,13 @@
     },
     "alertsCount": 0,
     "unresolvedR2Count": 0,
-    "lastKernelActivity": "2026-04-22T18:00:00Z"
+    "lastKernelActivity": "2026-04-17T00:00:00.000Z"
   },
   "vre": {
     "executableCommands": [
       "capabilities --json",
       "flow-status",
+      "objective doctor",
       "objective pause",
       "objective resume",
       "objective start",
@@ -102,6 +103,10 @@
       "orchestrator-status",
       "research-loop",
       "run-analysis",
+      "scheduler doctor",
+      "scheduler install",
+      "scheduler remove",
+      "scheduler status",
       "sync-memory"
     ],
     "markdownOnlyContracts": [
@@ -126,10 +131,241 @@
     ],
     "schemas": [
       {
-        "name": "phase9.capability-handshake.v1",
-        "schemaVersion": "phase9.capability-handshake.v1",
-        "path": "environment/schemas/phase9-capability-handshake.schema.json",
-        "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-full.json",
+        "name": "vibe-env/assembled-continuity-payload.schema.json",
+        "schemaVersion": "vibe-env/assembled-continuity-payload.schema.json",
+        "path": "environment/schemas/assembled-continuity-payload.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/attempt-record.schema.json",
+        "schemaVersion": "vibe-env/attempt-record.schema.json",
+        "path": "environment/schemas/attempt-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/automation-definition.schema.json",
+        "schemaVersion": "vibe-env/automation-definition.schema.json",
+        "path": "environment/schemas/automation-definition.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/automation-run-record.schema.json",
+        "schemaVersion": "vibe-env/automation-run-record.schema.json",
+        "path": "environment/schemas/automation-run-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/capabilities-snapshot.schema.json",
+        "schemaVersion": "vibe-env/capabilities-snapshot.schema.json",
+        "path": "environment/schemas/capabilities-snapshot.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/connector-manifest.schema.json",
+        "schemaVersion": "vibe-env/connector-manifest.schema.json",
+        "path": "environment/schemas/connector-manifest.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/connector-run-record.schema.json",
+        "schemaVersion": "vibe-env/connector-run-record.schema.json",
+        "path": "environment/schemas/connector-run-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/connector-status.schema.json",
+        "schemaVersion": "vibe-env/connector-status.schema.json",
+        "path": "environment/schemas/connector-status.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/continuity-profile-history.schema.json",
+        "schemaVersion": "vibe-env/continuity-profile-history.schema.json",
+        "path": "environment/schemas/continuity-profile-history.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/continuity-profile.schema.json",
+        "schemaVersion": "vibe-env/continuity-profile.schema.json",
+        "path": "environment/schemas/continuity-profile.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/costs-record.schema.json",
+        "schemaVersion": "vibe-env/costs-record.schema.json",
+        "path": "environment/schemas/costs-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/decision-record.schema.json",
+        "schemaVersion": "vibe-env/decision-record.schema.json",
+        "path": "environment/schemas/decision-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/domain-config.schema.json",
+        "schemaVersion": "vibe-env/domain-config.schema.json",
+        "path": "environment/schemas/domain-config.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/domain-pack.schema.json",
+        "schemaVersion": "vibe-env/domain-pack.schema.json",
+        "path": "environment/schemas/domain-pack.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/escalation-record.schema.json",
+        "schemaVersion": "vibe-env/escalation-record.schema.json",
+        "path": "environment/schemas/escalation-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/event-record.schema.json",
+        "schemaVersion": "vibe-env/event-record.schema.json",
+        "path": "environment/schemas/event-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/experiment-bundle-manifest.schema.json",
+        "schemaVersion": "vibe-env/experiment-bundle-manifest.schema.json",
+        "path": "environment/schemas/experiment-bundle-manifest.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/experiment-flow-state.schema.json",
+        "schemaVersion": "vibe-env/experiment-flow-state.schema.json",
+        "path": "environment/schemas/experiment-flow-state.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/experiment-manifest.schema.json",
+        "schemaVersion": "vibe-env/experiment-manifest.schema.json",
+        "path": "environment/schemas/experiment-manifest.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/experiment-register-input.schema.json",
+        "schemaVersion": "vibe-env/experiment-register-input.schema.json",
+        "path": "environment/schemas/experiment-register-input.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/export-alert-record.schema.json",
+        "schemaVersion": "vibe-env/export-alert-record.schema.json",
+        "path": "environment/schemas/export-alert-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/export-record.schema.json",
+        "schemaVersion": "vibe-env/export-record.schema.json",
+        "path": "environment/schemas/export-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/export-snapshot.schema.json",
+        "schemaVersion": "vibe-env/export-snapshot.schema.json",
+        "path": "environment/schemas/export-snapshot.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/external-review-record.schema.json",
+        "schemaVersion": "vibe-env/external-review-record.schema.json",
+        "path": "environment/schemas/external-review-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/flow-index.schema.json",
+        "schemaVersion": "vibe-env/flow-index.schema.json",
+        "path": "environment/schemas/flow-index.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/install-state.schema.json",
+        "schemaVersion": "vibe-env/install-state.schema.json",
+        "path": "environment/schemas/install-state.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/lane-policy.schema.json",
+        "schemaVersion": "vibe-env/lane-policy.schema.json",
+        "path": "environment/schemas/lane-policy.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/lane-run-record.schema.json",
+        "schemaVersion": "vibe-env/lane-run-record.schema.json",
+        "path": "environment/schemas/lane-run-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/literature-flow-state.schema.json",
+        "schemaVersion": "vibe-env/literature-flow-state.schema.json",
+        "path": "environment/schemas/literature-flow-state.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/literature-register-input.schema.json",
+        "schemaVersion": "vibe-env/literature-register-input.schema.json",
+        "path": "environment/schemas/literature-register-input.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/memory-mark-record.schema.json",
+        "schemaVersion": "vibe-env/memory-mark-record.schema.json",
+        "path": "environment/schemas/memory-mark-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/memory-sync-state.schema.json",
+        "schemaVersion": "vibe-env/memory-sync-state.schema.json",
+        "path": "environment/schemas/memory-sync-state.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env.operator-validation-artifact.v1",
+        "schemaVersion": "vibe-env.operator-validation-artifact.v1",
+        "path": "environment/schemas/operator-validation-artifact.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.active-objective-pointer.v1",
+        "schemaVersion": "phase9.active-objective-pointer.v1",
+        "path": "environment/schemas/phase9-active-objective-pointer.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/active-objective-pointer/valid-active.json",
         "owner": "vre"
       },
       {
@@ -137,6 +373,132 @@
         "schemaVersion": "phase9.analysis-manifest.v1",
         "path": "environment/schemas/phase9-analysis-manifest.schema.json",
         "fixturePath": "environment/tests/fixtures/phase9/analysis-manifest/valid-python.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.capability-handshake.v1",
+        "schemaVersion": "phase9.capability-handshake.v1",
+        "path": "environment/schemas/phase9-capability-handshake.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-full.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.handoff.v1",
+        "schemaVersion": "phase9.handoff.v1",
+        "path": "environment/schemas/phase9-handoff.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/handoff/valid-basic.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.lane-run-record.v1",
+        "schemaVersion": "phase9.lane-run-record.v1",
+        "path": "environment/schemas/phase9-lane-run-record.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/lane-run-record/valid-complete.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.objective-event.v1",
+        "schemaVersion": "phase9.objective-event.v1",
+        "path": "environment/schemas/phase9-objective-event.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.objective.v1",
+        "schemaVersion": "phase9.objective.v1",
+        "path": "environment/schemas/phase9-objective.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/objective/valid-active.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.resume-snapshot.v1",
+        "schemaVersion": "phase9.resume-snapshot.v1",
+        "path": "environment/schemas/phase9-resume-snapshot.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/resume-snapshot/valid-mid-loop.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.role-envelope.v1",
+        "schemaVersion": "phase9.role-envelope.v1",
+        "path": "environment/schemas/phase9-role-envelope.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/role-envelope/valid-subprocess.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.runtime-budget.v1",
+        "schemaVersion": "phase9.runtime-budget.v1",
+        "path": "environment/schemas/phase9-runtime-budget.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/runtime-budget/valid-basic.json",
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/recovery-record.schema.json",
+        "schemaVersion": "vibe-env/recovery-record.schema.json",
+        "path": "environment/schemas/recovery-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/results-bundle-discover-input.schema.json",
+        "schemaVersion": "vibe-env/results-bundle-discover-input.schema.json",
+        "path": "environment/schemas/results-bundle-discover-input.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/router-session.schema.json",
+        "schemaVersion": "vibe-env/router-session.schema.json",
+        "path": "environment/schemas/router-session.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/run-queue-record.schema.json",
+        "schemaVersion": "vibe-env/run-queue-record.schema.json",
+        "path": "environment/schemas/run-queue-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/schema-validation-record.schema.json",
+        "schemaVersion": "vibe-env/schema-validation-record.schema.json",
+        "path": "environment/schemas/schema-validation-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/session-digest-review-input.schema.json",
+        "schemaVersion": "vibe-env/session-digest-review-input.schema.json",
+        "path": "environment/schemas/session-digest-review-input.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/session-digest.schema.json",
+        "schemaVersion": "vibe-env/session-digest.schema.json",
+        "path": "environment/schemas/session-digest.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/session-snapshot.schema.json",
+        "schemaVersion": "vibe-env/session-snapshot.schema.json",
+        "path": "environment/schemas/session-snapshot.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/task-registry-entry.schema.json",
+        "schemaVersion": "vibe-env/task-registry-entry.schema.json",
+        "path": "environment/schemas/task-registry-entry.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/writing-export-finalize-input.schema.json",
+        "schemaVersion": "vibe-env/writing-export-finalize-input.schema.json",
+        "path": "environment/schemas/writing-export-finalize-input.schema.json",
+        "fixturePath": null,
         "owner": "vre"
       }
     ],
@@ -200,6 +562,42 @@
     ],
     "memoryApis": [
       {
+        "name": "buildMarkIndex",
+        "modulePath": "environment/memory/marks.js",
+        "exportName": "buildMarkIndex",
+        "status": "available",
+        "summary": "Build an in-memory lookup of reviewed memory marks by target.",
+        "safeToExpose": true,
+        "category": "mark-index"
+      },
+      {
+        "name": "getMemoryMarks",
+        "modulePath": "environment/memory/marks.js",
+        "exportName": "getMemoryMarks",
+        "status": "available",
+        "summary": "Read and validate durable memory mark records from disk.",
+        "safeToExpose": true,
+        "category": "read-status"
+      },
+      {
+        "name": "getTargetMarks",
+        "modulePath": "environment/memory/marks.js",
+        "exportName": "getTargetMarks",
+        "status": "available",
+        "summary": "Return reviewed marks for one target from a mark index.",
+        "safeToExpose": true,
+        "category": "mark-index"
+      },
+      {
+        "name": "prioritizeByMarks",
+        "modulePath": "environment/memory/marks.js",
+        "exportName": "prioritizeByMarks",
+        "status": "available",
+        "summary": "Sort candidate records so marked memory targets surface first.",
+        "safeToExpose": true,
+        "category": "prioritization"
+      },
+      {
         "name": "getMemoryFreshness",
         "modulePath": "environment/memory/status.js",
         "exportName": "getMemoryFreshness",
@@ -207,10 +605,72 @@
         "summary": "Read sync-state freshness and report whether memory mirrors are stale.",
         "safeToExpose": true,
         "category": "read-status"
+      },
+      {
+        "name": "MEMORY_STATUS_UNAVAILABLE_WARNING",
+        "modulePath": "environment/memory/status.js",
+        "exportName": "MEMORY_STATUS_UNAVAILABLE_WARNING",
+        "status": "available",
+        "summary": "Reviewed warning text for unavailable memory freshness truth.",
+        "safeToExpose": true,
+        "category": "warning-constant"
+      },
+      {
+        "name": "STALE_MEMORY_WARNING",
+        "modulePath": "environment/memory/status.js",
+        "exportName": "STALE_MEMORY_WARNING",
+        "status": "available",
+        "summary": "Reviewed warning text for stale memory freshness state.",
+        "safeToExpose": true,
+        "category": "warning-constant"
+      },
+      {
+        "name": "getMemorySyncState",
+        "modulePath": "environment/memory/sync.js",
+        "exportName": "getMemorySyncState",
+        "status": "available",
+        "summary": "Read the last persisted memory sync-state artifact.",
+        "safeToExpose": true,
+        "category": "read-status"
+      },
+      {
+        "name": "renderDecisionLogMirror",
+        "modulePath": "environment/memory/sync.js",
+        "exportName": "renderDecisionLogMirror",
+        "status": "available",
+        "summary": "Render the reviewed decision-log mirror from structured inputs.",
+        "safeToExpose": true,
+        "category": "render-helper"
+      },
+      {
+        "name": "renderProjectOverviewMirror",
+        "modulePath": "environment/memory/sync.js",
+        "exportName": "renderProjectOverviewMirror",
+        "status": "available",
+        "summary": "Render the reviewed project-overview mirror from structured inputs.",
+        "safeToExpose": true,
+        "category": "render-helper"
+      },
+      {
+        "name": "syncMemory",
+        "modulePath": "environment/memory/sync.js",
+        "exportName": "syncMemory",
+        "status": "available",
+        "summary": "Write the durable memory mirror surface and validated sync-state file.",
+        "safeToExpose": true,
+        "category": "write-memory"
       }
     ],
     "operatorSurface": {
       "commands": [
+        "capabilities --json",
+        "objective pause",
+        "objective resume",
+        "objective start",
+        "objective status",
+        "objective stop",
+        "research-loop",
+        "run-analysis",
         "scheduler install",
         "scheduler remove",
         "scheduler status"
@@ -229,8 +689,7 @@
       ]
     },
     "missingSurfaces": [
-      "reviewer-2 bridge",
-      "scheduler runtime"
+      "reviewer-2 bridge"
     ]
   },
   "objective": {
@@ -239,10 +698,11 @@
     "status": null
   },
   "memory": {
-    "fresh": true,
-    "lastSyncAt": "2026-04-22T17:55:00Z"
+    "fresh": false,
+    "lastSyncAt": "2026-04-18T23:31:55.251Z"
   },
   "degradedReasons": [
+    "STALE — run /sync-memory to refresh",
     "automation export-warning-digest is degraded: automation-core bundle is not installed",
     "automation stale-memory-reminder is degraded: automation-core bundle is not installed",
     "automation weekly-research-digest is degraded: automation-core bundle is not installed",
@@ -250,6 +710,7 @@
     "connector obsidian-export is degraded: connectors-core bundle is not installed",
     "domain pack omics is degraded: domain-packs-core bundle is not installed",
     "executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command objective doctor is wired in bin/vre but missing a reviewed markdown contract",
     "executable command objective pause is wired in bin/vre but missing a reviewed markdown contract",
     "executable command objective resume is wired in bin/vre but missing a reviewed markdown contract",
     "executable command objective start is wired in bin/vre but missing a reviewed markdown contract",
@@ -257,6 +718,10 @@
     "executable command objective stop is wired in bin/vre but missing a reviewed markdown contract",
     "executable command research-loop is wired in bin/vre but missing a reviewed markdown contract",
     "executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command scheduler doctor is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command scheduler install is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command scheduler remove is wired in bin/vre but missing a reviewed markdown contract",
+    "executable command scheduler status is wired in bin/vre but missing a reviewed markdown contract",
     "kernel unresolvedR2Count is currently derived from listUnresolvedClaims until a dedicated R2 projection lands"
   ]
 }
