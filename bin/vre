@@ -866,9 +866,15 @@ async function runResearchLoop(repoRoot, parsed) {
       : null,
     maxIterations: parsed.options['max-iterations'] ?? null,
     maxWallSeconds: parsed.options['max-wall-seconds'] ?? null,
-    stopOnBlocker:
-      parsed.options['stop-on-blocker'] === true ||
-      parsed.options['stop-on-blocker'] === 'true',
+    // --stop-on-blocker is a spec-promised CLI surface (see blueprint file 13
+    // `13-user-journey-and-cli-surface.md:140`) but T4.2 v1 deliberately does
+    // not enforce a separate stop-on-blocker gate because the frozen v1 loop
+    // runs at most ONE slice per invocation, so any blocker already halts
+    // the loop. Round 64 removes the dead `stopOnBlocker` extraction that
+    // was parsed into the options object but never read by
+    // autonomy-runtime.js; the broader onBlocker stopCondition enforcement
+    // surface (including this flag's multi-slice semantic) is tracked as a
+    // Wave 4.5+ follow-up and is transparently deferred in seq 079.
     resume:
       parsed.options.resume === true ||
       parsed.options.resume === 'true',
