@@ -286,3 +286,185 @@ test('activateObjective rolls back the objective directory and leaves no active 
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 44 coverage hardening: the following tests close T2.2 branches
+// that were implemented by seq 059-060 but left without dedicated tests.
+// They do not change any reviewed contract; they pin implemented behavior
+// against silent regression.
+
+test('objective stop without an active pointer fails with a clear error message and leaves no pointer behind', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-lock-stop-no-pointer-');
+  try {
+    const result = await runVre(projectRoot, [
+      'objective',
+      'stop',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      'operator stop'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(result.code, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /No active objective pointer exists/u);
+    assert.equal(
+      await pathExists(
+        path.join(projectRoot, '.vibe-science-environment', 'objectives', 'active-objective.json')
+      ),
+      false
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective stop with a mismatched objectiveId preserves the active pointer and reports the mismatch', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-lock-stop-mismatch-');
+  try {
+    const start = await runVre(projectRoot, objectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-mismatch'
+      }
+    });
+    assert.equal(start.code, 0, `stderr=${start.stderr}`);
+
+    const stop = await runVre(projectRoot, [
+      'objective',
+      'stop',
+      '--objective',
+      'OBJ-999',
+      '--reason',
+      'wrong id'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(stop.code, 1);
+    assert.equal(stop.stdout, '');
+    assert.match(stop.stderr, /references OBJ-001, not OBJ-999/u);
+
+    // Pointer MUST still exist: a mismatched stop cannot silently release
+    // the lock.
+    assert.equal(
+      await pathExists(
+        path.join(projectRoot, '.vibe-science-environment', 'objectives', 'active-objective.json')
+      ),
+      true
+    );
+
+    // The handshake artifact MUST still show the original active objective.
+    const handshake = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'control', 'capability-handshake.json')
+    );
+    assert.equal(handshake.objective.activeObjectiveId, 'OBJ-001');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective pause on an already-paused objective fails instead of silently re-pausing', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-lock-pause-already-paused-');
+  try {
+    await runVre(projectRoot, objectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-pause-twice'
+      }
+    });
+
+    const firstPause = await runVre(projectRoot, [
+      'objective',
+      'pause',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      'first pause'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(firstPause.code, 0, `stderr=${firstPause.stderr}`);
+
+    const secondPause = await runVre(projectRoot, [
+      'objective',
+      'pause',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      'second pause'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(secondPause.code, 1);
+    assert.equal(secondPause.stdout, '');
+    assert.match(secondPause.stderr, /Cannot pause objective in status paused/u);
+
+    // Pointer must still be there and objective must still be paused, not
+    // accidentally reset to active.
+    assert.equal(
+      await pathExists(
+        path.join(projectRoot, '.vibe-science-environment', 'objectives', 'active-objective.json')
+      ),
+      true
+    );
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'paused');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective stop called a second time after a successful stop fails because the pointer is already released', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-lock-double-stop-');
+  try {
+    await runVre(projectRoot, objectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-double-stop'
+      }
+    });
+
+    const firstStop = await runVre(projectRoot, [
+      'objective',
+      'stop',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      'first stop'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(firstStop.code, 0, `stderr=${firstStop.stderr}`);
+
+    const secondStop = await runVre(projectRoot, [
+      'objective',
+      'stop',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      'second stop'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(secondStop.code, 1);
+    assert.equal(secondStop.stdout, '');
+    assert.match(secondStop.stderr, /No active objective pointer exists/u);
+
+    // After both calls the pointer stays released (idempotent safety).
+    assert.equal(
+      await pathExists(
+        path.join(projectRoot, '.vibe-science-environment', 'objectives', 'active-objective.json')
+      ),
+      false
+    );
+    // The objective record remains at its terminal state, not overwritten.
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'abandoned');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
