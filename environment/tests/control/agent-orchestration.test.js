@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 import {
   AgentOrchestrationError,
   dispatchRoleAssignment,
+  getRoleDispatchContract,
   listSupportedAgentRoles,
   prepareRoleDispatch,
+  validateReviewedSpawnRequest,
 } from '../../orchestrator/agent-orchestration.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -412,5 +414,310 @@ test('dispatchRoleAssignment refuses chat-only reviewed dispatch when durable ob
       continuityProfile: { runtime: { defaultAllowApiFallback: false } },
     }),
     'E_CHAT_ONLY_DISPATCH_FORBIDDEN',
+  );
+});
+
+// Round 81 seq-097 claim-without-pin closure: seq 097 landed the T4.5.1
+// dispatcher with 17 direct tests but adversarial enumeration of every
+// `fail(...)` call and every exported symbol found ~14 error-code branches
+// and 2 exported functions (`getRoleDispatchContract`, `validateReviewedSpawnRequest`)
+// with no dedicated test. Under a silent refactor any of those branches
+// could flip into its neighbor without a test noticing. The regressions
+// below close that gap.
+
+test('Round 81: prepareRoleDispatch fails closed when a required Wave 4.5 VRE surface is missing', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest(), {
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      surfaceExists: async (absolutePath) => {
+        if (absolutePath.endsWith('provider-gateway.js')) {
+          return false;
+        }
+        return true;
+      },
+    }),
+    'E_VRE_SURFACE_MISSING',
+  );
+});
+
+test('Round 81: prepareRoleDispatch rejects an inline-only role that requests a non-inline dispatch mode', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'literature-mode',
+      contextSource: 'objective-state',
+      taskKind: undefined,
+      taskId: undefined,
+      requestedDispatchMode: 'queue-task',
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'E_ROLE_INLINE_ONLY',
+  );
+});
+
+test('Round 81: prepareRoleDispatch rejects an inline-only role that requests provider-gateway transport', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'literature-mode',
+      contextSource: 'objective-state',
+      taskKind: undefined,
+      taskId: undefined,
+      requestedTransport: 'provider-gateway',
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'E_ROLE_INLINE_ONLY',
+  );
+});
+
+test('Round 81: prepareRoleDispatch rejects a queue-task-or-inline-only role that requests an unsupported dispatch mode', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'continuity-agent',
+      taskKind: 'memory-sync-refresh',
+      requestedDispatchMode: 'review-lane',
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'E_ROLE_DISPATCH_MODE_UNSUPPORTED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch rejects a queue-task role that requests a mismatching dispatch mode', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'experiment-agent',
+      requestedDispatchMode: 'inline-only',
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'E_ROLE_DISPATCH_MODE_UNSUPPORTED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when a queue-task role dispatch omits taskKind', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      taskKind: undefined,
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_TASK_KIND_REQUIRED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when the task kind is not registered in the task registry', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      taskKind: 'definitely-not-a-registered-task',
+    }), {
+      skipSurfaceCheck: true,
+      getTaskEntry: async () => null,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_TASK_KIND_UNSUPPORTED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when the task kind is not allowed for the requested role', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'experiment-agent',
+      taskKind: 'writing-export-finalize',
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_TASK_KIND_NOT_ALLOWED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when the registered task lane does not match the role contract', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'experiment-agent',
+      taskKind: 'experiment-flow-register',
+    }), {
+      skipSurfaceCheck: true,
+      getTaskEntry: async () => ({
+        taskKind: 'experiment-flow-register',
+        lane: 'review',
+        requiredCapability: 'programmatic',
+      }),
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_TASK_KIND_LANE_MISMATCH',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when the resolved executor class is outside the role allowlist', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'experiment-agent',
+      taskKind: 'experiment-flow-register',
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      // Inject a binding whose integrationKind resolves to an executor class
+      // outside the experiment-agent allowlist so we hit the dedicated guard
+      // in agent-orchestration.js rather than the provider-gateway validator
+      // that fires first on unknown integration kinds.
+      selectLaneBinding: () => ({
+        integrationKind: 'mystery-executor',
+        providerRef: null,
+        laneId: 'execution',
+      }),
+    }),
+    'E_EXECUTOR_CLASS_NOT_ALLOWED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when a queue-task dispatch omits taskId', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      taskId: undefined,
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_TASK_ID_REQUIRED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when sessionIsolation.inheritChatHistory is not explicitly false', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      sessionIsolation: {
+        workspaceRoot: repoRoot,
+        inheritChatHistory: true,
+      },
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_SESSION_ISOLATION_REQUIRED',
+  );
+});
+
+test('Round 81: prepareRoleDispatch fails closed when an explicit scratchRoot escapes the workspace root', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      sessionIsolation: {
+        workspaceRoot: repoRoot,
+        inheritChatHistory: false,
+        scratchRoot: path.resolve(repoRoot, '..', 'escape-scratch'),
+      },
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_WORKSPACE_WRITE_ESCAPE',
+  );
+});
+
+test('Round 81: continuity-agent with a taskKind routes to the execution lane as a reviewed subprocess plan', async () => {
+  const request = buildRequest({
+    roleId: 'continuity-agent',
+    taskKind: 'memory-sync-refresh',
+    allowedActions: ['refresh-memory', 'verify-resume-state', 'propose-handoff'],
+  });
+  try {
+    const result = await prepareRoleDispatch(repoRoot, request, {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    });
+    assert.equal(result.dispatchMode, 'queue-task');
+    assert.equal(result.laneId, 'execution');
+    assert.equal(result.transport, 'reviewed-subprocess');
+    assert.equal(result.taskKind, 'memory-sync-refresh');
+  } finally {
+    await cleanupObjectiveArtifacts(request.objectiveId);
+  }
+});
+
+test('Round 81: continuity-agent without a taskKind stays inline-only under queue-task-or-inline-only semantics', async () => {
+  const request = buildRequest({
+    roleId: 'continuity-agent',
+    taskKind: undefined,
+    taskId: undefined,
+    contextSource: 'objective-state',
+    allowedActions: ['refresh-memory', 'verify-resume-state', 'propose-handoff'],
+  });
+  const result = await prepareRoleDispatch(repoRoot, request, {
+    skipSurfaceCheck: true,
+  });
+  assert.equal(result.dispatchMode, 'inline-only');
+  assert.equal(result.transport, 'inline-role-mode');
+  assert.equal(result.laneId, null);
+});
+
+test('Round 81: dispatchRoleAssignment returns an un-executed inline plan even when execute=true is requested for an inline role', async () => {
+  const request = buildRequest({
+    roleId: 'literature-mode',
+    contextSource: 'objective-state',
+    taskKind: undefined,
+    taskId: undefined,
+  });
+  const result = await dispatchRoleAssignment(repoRoot, request, {
+    skipSurfaceCheck: true,
+    execute: true,
+  });
+  assert.equal(result.executed, false);
+  assert.equal(result.result, null);
+  assert.equal(result.transport, 'inline-role-mode');
+});
+
+test('Round 81: getRoleDispatchContract returns the frozen Phase 9 v1 matrix for known roles and null for unsupported roles', () => {
+  const leadContract = getRoleDispatchContract('lead-researcher');
+  assert.ok(leadContract, 'lead-researcher must have a frozen role contract');
+  assert.equal(leadContract.dispatchMode, 'inline-only');
+  assert.equal(leadContract.canMutateObjective, true);
+  assert.deepEqual(leadContract.allowedTaskKinds, []);
+
+  const reviewerContract = getRoleDispatchContract('reviewer-2');
+  assert.equal(reviewerContract.dispatchMode, 'review-lane');
+  assert.equal(reviewerContract.laneId, 'review');
+  assert.deepEqual(reviewerContract.allowedTaskKinds, ['session-digest-review']);
+
+  assert.equal(getRoleDispatchContract('not-a-real-role'), null);
+});
+
+test('Round 81: validateReviewedSpawnRequest rejects reviewed-session env prefixes and foreign allowlist entries directly', () => {
+  const envelope = {
+    sessionIsolation: { workspaceRoot: repoRoot },
+  };
+  const envelopePath = path.resolve(repoRoot, '.vibe-science-environment/tmp/envelope.json');
+
+  assert.throws(
+    () => validateReviewedSpawnRequest({
+      command: 'reviewed-role-runner',
+      argv: ['--envelope', envelopePath],
+      cwd: repoRoot,
+      env: { CLAUDE_API_KEY: 'leaked' },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }, envelope, envelopePath),
+    (error) => error instanceof AgentOrchestrationError && error.code === 'E_ENV_LEAK',
+  );
+
+  assert.throws(
+    () => validateReviewedSpawnRequest({
+      command: 'reviewed-role-runner',
+      argv: ['--envelope', envelopePath],
+      cwd: repoRoot,
+      env: { FOREIGN_KEY: 'anything' },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }, envelope, envelopePath),
+    (error) => error instanceof AgentOrchestrationError && error.code === 'E_ENV_ALLOWLIST_VIOLATED',
   );
 });
