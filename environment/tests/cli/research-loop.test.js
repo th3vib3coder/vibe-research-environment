@@ -17,6 +17,7 @@ import { appendObjectiveEvent, readResumeSnapshot } from '../../objectives/resum
 import { runResearchLoopCommand } from '../../orchestrator/autonomy-runtime.js';
 import { listPhase9LaneRuns } from '../../orchestrator/ledgers.js';
 import { bindExperimentManifestToObjective } from '../../orchestrator/experiment-binding.js';
+import { evaluateDeterministicStrategicCheckpoint } from '../../orchestrator/semantic-drift-checkpoint.js';
 import {
   cleanupCliFixtureProject,
   createCliFixtureProject,
@@ -269,6 +270,30 @@ async function readObjectiveHandoffs(projectRoot, objectiveId = 'OBJ-001') {
   return readJsonl(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'handoffs.jsonl'));
 }
 
+async function seedObjectiveHandoff(projectRoot, objectiveId, options = {}) {
+  const handoff = await readFixtureJson('handoff', 'valid-basic.json');
+  const nextRecord = {
+    ...handoff,
+    objectiveId,
+    ts: options.ts ?? '2026-04-23T21:04:00Z',
+    recordSeq: options.recordSeq ?? 1,
+    handoffId: options.handoffId ?? 'H-RESEARCH-LOOP-001',
+    fromAgentRole: options.fromAgentRole ?? handoff.fromAgentRole,
+    toAgentRole: options.toAgentRole ?? handoff.toAgentRole,
+    artifactPaths: options.artifactPaths ?? handoff.artifactPaths,
+    summary: options.summary ?? handoff.summary,
+    openBlockers: options.openBlockers ?? handoff.openBlockers,
+    closesHandoffId: options.closesHandoffId ?? null,
+    writerSession: options.writerSession ?? 'sess-research-loop'
+  };
+  await writeProjectFile(
+    projectRoot,
+    path.join('.vibe-science-environment', 'objectives', objectiveId, 'handoffs.jsonl'),
+    `${JSON.stringify(nextRecord)}\n`
+  );
+  return nextRecord;
+}
+
 async function readBlockerText(projectRoot, objectiveId = 'OBJ-001') {
   return readFile(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'BLOCKER.flag'), 'utf8');
 }
@@ -311,6 +336,108 @@ await new Promise((resolve) => setTimeout(resolve, 500));
 await mkdir(path.dirname(output), { recursive: true });
 await writeFile(output, JSON.stringify({ ok: true }) + '\\n', 'utf8');
 `;
+
+test('deterministic strategic checkpoint returns aligned when recent evidence overlaps the objective and active stage intent', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'pre-slice',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: [{
+        taskKind: 'analysis-execution-run',
+        taskId: 'analysis-execution-run:ANL-001',
+        analysisId: 'ANL-001',
+        resultArtifactPaths: ['artifacts/perturbation-z-differential-signatures.json']
+      }]
+    },
+    events: [{
+      kind: 'loop-iteration',
+      payload: {
+        message: 'analysis of perturbation Z differential signatures'
+      }
+    }],
+    handoffs: [{
+      summary: 'Continue analysis of perturbation Z signatures in the active dataset.'
+    }],
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 4 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'aligned');
+  assert.equal(result.phase, 'pre-slice');
+});
+
+test('deterministic strategic checkpoint returns drifted when recent handoffs introduce a tangential dataset shift', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'pre-slice',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: []
+    },
+    handoffs: [{
+      summary: 'New unrelated dataset triage for an orthogonal atlas outside the sanctioned scope.'
+    }],
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 4 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'drifted');
+  assert.equal(result.phase, 'pre-slice');
+  assert.match(result.message, /contradiction|drifted|handoff/u);
+});
+
+test('deterministic strategic checkpoint returns uncertain in the final quarter when overlap is too weak to continue unattended', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'final-quarter',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: []
+    },
+    handoffs: [{
+      summary: 'Prepare notes for signatures before the next step.'
+    }],
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 1 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'uncertain');
+  assert.equal(result.phase, 'final-quarter');
+});
 
 test('research-loop returns a structured failure when no active objective pointer exists', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-no-pointer-');
@@ -654,6 +781,8 @@ test('research-loop executes one bounded safe slice, writes queue/event/snapshot
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
     assert.equal(events.some((entry) => entry.kind === 'loop-iteration'), true);
     assert.equal(events.some((entry) => entry.kind === 'analysis-run' && entry.payload.phase === 'started'), true);
+    assert.equal(events.some((entry) => entry.kind === 'semantic-drift-detected'), false);
+    assert.equal(events.some((entry) => entry.kind === 'r2-request'), false);
     const loopEvent = events.find((entry) => entry.kind === 'loop-iteration');
     assert.equal(loopEvent.payload.memorySync.status, 'synced');
     // Round 72 symmetry coverage: the failed-case test below at
@@ -1191,6 +1320,7 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
     assert.ok(driftEvent, 'semantic drift must append a drift event');
     assert.equal(driftEvent.payload.wakeId, 'WAKE-DRIFT');
     assert.equal(driftEvent.payload.wakeCaller, 'windows-task-scheduler');
+    assert.equal(driftEvent.payload.phase, 'pre-slice');
 
     // Round 74 T4.4 drift closure: `handleSemanticDrift` previously wrote
     // `BLOCKER.flag` but bypassed `writeObjectiveDigest`, so the morning
@@ -1205,6 +1335,245 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
     assert.match(driftDigest, /Event Log Path:/u);
     assert.match(driftDigest, /Handoff Ledger Path:/u);
     assert.match(driftDigest, /Queue Path:/u);
+
+    // Round 78 pin: seq 094 `handleSemanticDrift` now explicitly passes an
+    // in-memory `blocker: { exists: true, code, message, writtenAt }` into
+    // `writeRuntimeResumeSnapshot` so the drift-paused snapshot already names
+    // the drift as an open blocker instead of silently showing
+    // `openBlockers: []` until the subsequent `writeObjectiveBlockerFlag`
+    // produces the same truth on disk. That coherence between the snapshot and
+    // the BLOCKER.flag matters for the morning operator and was otherwise a
+    // claim-without-pin: reverting the explicit `blocker` option would leave
+    // the snapshot briefly inconsistent with BLOCKER.flag without any test
+    // failing.
+    const driftSnapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(driftSnapshotState.exists, true);
+    assert.equal(driftSnapshotState.snapshot.openBlockers.length, 1);
+    assert.equal(driftSnapshotState.snapshot.openBlockers[0].code, 'SEMANTIC_DRIFT_DETECTED');
+    assert.match(
+      String(driftSnapshotState.snapshot.openBlockers[0].message ?? ''),
+      /drift|objective/iu
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop blocks tangential handoff evidence with SEMANTIC_DRIFT_DETECTED under the deterministic strategic checkpoint', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-drift-default-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-drift-default-001',
+      scriptContents: SAFE_SCRIPT
+    });
+    await seedObjectiveHandoff(projectRoot, context.objectiveId, {
+      summary: 'New unrelated dataset triage for an orthogonal atlas outside the sanctioned scope.'
+    });
+
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-DRIFT-DEFAULT',
+      sessionId: 'sess-drift-default'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'paused');
+    assert.equal(result.stopReason, 'semantic-drift');
+    assert.equal(result.checkpoint, 'drifted');
+    assert.deepEqual(await readQueueRecords(projectRoot, context.objectiveId), []);
+    assert.match(await readBlockerText(projectRoot, context.objectiveId), /SEMANTIC_DRIFT_DETECTED/u);
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const driftEvent = events.find((entry) => entry.kind === 'semantic-drift-detected');
+    assert.ok(driftEvent, 'deterministic drift must append a drift event');
+    assert.equal(driftEvent.payload.phase, 'pre-slice');
+    assert.equal(driftEvent.payload.wakeId, 'WAKE-DRIFT-DEFAULT');
+    assert.equal(driftEvent.payload.wakeCaller, 'windows-task-scheduler');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop pauses for review when the strategic checkpoint returns uncertain', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-uncertain-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-uncertain-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-UNCERTAIN',
+      sessionId: 'sess-uncertain'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+      strategicCheckpoint: async () => ({
+        status: 'uncertain',
+        message: 'Weak overlap requires Reviewer-2 or lead review before another unattended slice.'
+      })
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'paused');
+    assert.equal(result.stopReason, 'r2-review-pending');
+    assert.equal(result.checkpoint, 'uncertain');
+    assert.equal(result.digestPath ?? null, null);
+    assert.deepEqual(await readQueueRecords(projectRoot, context.objectiveId), []);
+
+    const objectiveRecord = await readObjectiveRecord(projectRoot, context.objectiveId);
+    assert.equal(objectiveRecord.status, 'paused');
+    assert.equal(await pathExists(context.blockerPath), false);
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const reviewRequest = events.find((entry) => entry.kind === 'r2-request');
+    assert.ok(reviewRequest, 'uncertain checkpoint must append an r2-request event');
+    assert.equal(reviewRequest.payload.code, 'E_R2_REVIEW_PENDING');
+    assert.equal(reviewRequest.payload.phase, 'pre-slice');
+    assert.equal(reviewRequest.payload.wakeId, 'WAKE-UNCERTAIN');
+    assert.equal(reviewRequest.payload.wakeCaller, 'windows-task-scheduler');
+    // Round 78 pin: spec file 11 line 222 says `uncertain` requests "Reviewer-2
+    // or lead review before more unattended work". Pin the r2-request payload
+    // metadata that communicates this request so silent refactors cannot drop
+    // the reviewer target or the checkpoint source without breaking a test.
+    assert.equal(reviewRequest.payload.checkpoint, 'uncertain');
+    assert.equal(reviewRequest.payload.requestedReviewer, 'reviewer-2-or-lead');
+    assert.match(
+      String(reviewRequest.payload.message ?? ''),
+      /Reviewer-2 or lead review/u
+    );
+
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.nextAction.kind, 'await-operator');
+    assert.equal(snapshotState.snapshot.nextAction.params.reason, 'E_R2_REVIEW_PENDING');
+    assert.equal(snapshotState.snapshot.nextAction.params.checkpoint, 'uncertain');
+    assert.equal(snapshotState.snapshot.nextAction.params.phase, 'pre-slice');
+    assert.deepEqual(snapshotState.snapshot.openBlockers, []);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// Round 78 regression: seq 094 landed the runtime-side defensive validator
+// `STRATEGIC_CHECKPOINT_VERDICTS` which rejects any verdict outside
+// `aligned | uncertain | drifted` and falls back to `uncertain` with a
+// diagnostic message. That branch is safety-critical — it prevents a
+// regressed or externally-replaced strategic checkpoint from silently
+// degrading into `aligned` — but seq 094 shipped without a dedicated pin.
+// This regression exercises the fallback so a silent relaxation of the
+// verdict allowlist cannot pass unnoticed.
+test('research-loop falls back to the uncertain review path when the strategic checkpoint returns an unsupported verdict', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-unsupported-verdict-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-unsupported-verdict-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-UNSUPPORTED',
+      sessionId: 'sess-unsupported'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+      strategicCheckpoint: async () => ({
+        status: 'not-a-real-verdict',
+        message: 'Injected regression: verdict outside the reviewed allowlist.'
+      })
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'paused');
+    assert.equal(result.stopReason, 'r2-review-pending');
+    assert.equal(result.checkpoint, 'uncertain');
+    assert.equal(await pathExists(context.blockerPath), false);
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const reviewRequest = events.find((entry) => entry.kind === 'r2-request');
+    assert.ok(reviewRequest, 'unsupported verdict must degrade into r2-request');
+    assert.equal(reviewRequest.payload.code, 'E_R2_REVIEW_PENDING');
+    assert.equal(reviewRequest.payload.checkpoint, 'uncertain');
+    assert.match(
+      String(reviewRequest.payload.message ?? ''),
+      /unsupported verdict/iu
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+// Round 78 regression: seq 094 wired the final-quarter strategic checkpoint
+// dispatch for both `drifted` (pinned by
+// `research-loop pauses when the final-quarter strategic checkpoint phase
+// returns drifted even if pre-slice is aligned`) and `uncertain`, but only
+// the drifted variant was pinned end-to-end. The final-quarter-uncertain
+// dispatch is a distinct spec-mandated path (spec file 11 line 213-214:
+// "before every unattended slice AND before consuming the final budget
+// tranche") and deserves its own regression so the phase threading from
+// `normalizeCheckpointResult` is pinned on the uncertain branch too.
+test('research-loop pauses for review when the final-quarter strategic checkpoint returns uncertain even if pre-slice is aligned', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-final-quarter-uncertain-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-fq-uncertain-001',
+      scriptContents: SAFE_SCRIPT,
+      budget: {
+        maxIterations: 1
+      }
+    });
+
+    const phaseLog = [];
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-FQ-UNCERTAIN',
+      sessionId: 'sess-fq-uncertain'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+      strategicCheckpoint: async (ctx) => {
+        phaseLog.push(ctx.phase);
+        if (ctx.phase === 'final-quarter') {
+          return {
+            status: 'uncertain',
+            message: 'Final-quarter checkpoint requires Reviewer-2 or lead review before consuming the last budget tranche.'
+          };
+        }
+        return { status: 'aligned' };
+      }
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'paused');
+    assert.equal(result.stopReason, 'r2-review-pending');
+    assert.equal(result.checkpoint, 'uncertain');
+    // Pre-slice must run BEFORE final-quarter, and final-quarter must be
+    // reached only because pre-slice was aligned.
+    assert.deepEqual(phaseLog, ['pre-slice', 'final-quarter']);
+    assert.equal(await pathExists(context.blockerPath), false);
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const reviewRequest = events.find((entry) => entry.kind === 'r2-request');
+    assert.ok(reviewRequest, 'final-quarter uncertain must append an r2-request event');
+    assert.equal(reviewRequest.payload.code, 'E_R2_REVIEW_PENDING');
+    assert.equal(reviewRequest.payload.phase, 'final-quarter');
+    assert.equal(reviewRequest.payload.checkpoint, 'uncertain');
+    assert.equal(reviewRequest.payload.requestedReviewer, 'reviewer-2-or-lead');
+    assert.equal(reviewRequest.payload.wakeId, 'WAKE-FQ-UNCERTAIN');
+    assert.equal(reviewRequest.payload.wakeCaller, 'windows-task-scheduler');
+
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.nextAction.kind, 'await-operator');
+    assert.equal(snapshotState.snapshot.nextAction.params.reason, 'E_R2_REVIEW_PENDING');
+    assert.equal(snapshotState.snapshot.nextAction.params.checkpoint, 'uncertain');
+    assert.equal(snapshotState.snapshot.nextAction.params.phase, 'final-quarter');
+    assert.deepEqual(snapshotState.snapshot.openBlockers, []);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -1491,6 +1860,10 @@ test('research-loop pauses when the final-quarter strategic checkpoint phase ret
       await readBlockerText(projectRoot, context.objectiveId),
       /SEMANTIC_DRIFT_DETECTED/u
     );
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const driftEvent = events.find((entry) => entry.kind === 'semantic-drift-detected');
+    assert.ok(driftEvent, 'final-quarter drift must append a drift event');
+    assert.equal(driftEvent.payload.phase, 'final-quarter');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

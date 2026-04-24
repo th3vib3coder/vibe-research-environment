@@ -41,6 +41,7 @@ import { writeObjectiveBlockerFlag } from '../objectives/blocker-flag.js';
 import { writeObjectiveDigest } from '../objectives/digest-writer.js';
 import { readAndValidateAnalysisManifest, ANALYSIS_MANIFEST_TASK_KIND } from './analysis-manifest.js';
 import { runAnalysisCommand } from './execution-lane.js';
+import { evaluateDeterministicStrategicCheckpoint } from './semantic-drift-checkpoint.js';
 import {
   appendObjectiveQueueRecord,
   deriveObjectiveQueueState,
@@ -56,6 +57,7 @@ const RESEARCH_LOOP_COMMAND = 'research-loop';
 const DEFAULT_SESSION_PREFIX = 'sess-loop';
 const DEFAULT_WAKE_PREFIX = 'wake-loop';
 const RUNTIME_MODES = new Set(['interactive', 'attended-batch', 'unattended-batch', 'resume-only']);
+const STRATEGIC_CHECKPOINT_VERDICTS = new Set(['aligned', 'uncertain', 'drifted']);
 const WAKE_CALLER_IDENTITIES = new Set([
   'windows-task-scheduler',
   'plugin-loop-wake',
@@ -779,25 +781,48 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
 }
 
 async function evaluateStrategicCheckpoint(context, deps = {}, phase = 'pre-slice') {
-  const checkpoint = deps.strategicCheckpoint ?? (async () => ({ status: 'aligned' }));
+  const checkpoint = deps.strategicCheckpoint ?? evaluateDeterministicStrategicCheckpoint;
   const result = await checkpoint({
     ...context,
     phase
   });
-  if (typeof result === 'string') {
+  const normalized = typeof result === 'string'
+    ? {
+        status: result,
+        phase
+      }
+    : {
+        ...(result ?? {}),
+        phase: result?.phase ?? phase
+      };
+  if (normalized.status == null) {
     return {
-      status: result
+      status: 'aligned',
+      phase
     };
   }
-  return result ?? { status: 'aligned' };
+  if (!STRATEGIC_CHECKPOINT_VERDICTS.has(normalized.status)) {
+    return {
+      status: 'uncertain',
+      phase,
+      message: `Strategic checkpoint returned unsupported verdict ${normalized.status}.`
+    };
+  }
+  return normalized;
 }
 
-async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, checkpointResult, writtenAt, wakeCaller = null, wakeId = null) {
+async function handleStrategicUncertain(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, checkpointResult, writtenAt, wakeCaller = null, wakeId = null) {
+  const reviewCode = 'E_R2_REVIEW_PENDING';
+  const reviewMessage = checkpointResult.message
+    ?? 'The deterministic strategic relevance checkpoint requires Reviewer-2 or lead review before another unattended slice.';
+  const reviewPhase = checkpointResult.phase ?? 'pre-slice';
   const paused = await pauseObjective(projectRoot, objectiveRecord.objectiveId, { updatedAt: writtenAt });
-  await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'semantic-drift-detected', {
-    code: 'SEMANTIC_DRIFT_DETECTED',
-    message: checkpointResult.message ?? 'The deterministic strategic relevance checkpoint marked the objective as drifted.',
-    phase: checkpointResult.phase ?? 'pre-slice',
+  await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'r2-request', {
+    code: reviewCode,
+    message: reviewMessage,
+    phase: reviewPhase,
+    checkpoint: 'uncertain',
+    requestedReviewer: 'reviewer-2-or-lead',
     wakeId,
     wakeCaller
   }, writtenAt);
@@ -813,16 +838,67 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
       nextAction: {
         kind: 'await-operator',
         params: {
-          reason: 'SEMANTIC_DRIFT_DETECTED'
+          reason: reviewCode,
+          checkpoint: 'uncertain',
+          phase: reviewPhase
         }
       },
-      notes: checkpointResult.message ?? 'Paused by the deterministic strategic relevance checkpoint.'
+      notes: reviewMessage
     }
   );
-  const snapshotRelativePath = toRepoRelative(projectRoot, snapshot.snapshotPath);
+  return {
+    ok: true,
+    command: RESEARCH_LOOP_COMMAND,
+    phase9: true,
+    objectiveId: objectiveRecord.objectiveId,
+    status: 'paused',
+    stopReason: 'r2-review-pending',
+    wakeCaller,
+    checkpoint: 'uncertain',
+    snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath)
+  };
+}
+
+async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, checkpointResult, writtenAt, wakeCaller = null, wakeId = null) {
+  const driftCode = 'SEMANTIC_DRIFT_DETECTED';
+  const driftMessage = checkpointResult.message ?? 'The deterministic strategic relevance checkpoint marked the objective as drifted.';
+  const driftPhase = checkpointResult.phase ?? 'pre-slice';
+  const paused = await pauseObjective(projectRoot, objectiveRecord.objectiveId, { updatedAt: writtenAt });
+  await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'semantic-drift-detected', {
+    code: driftCode,
+    message: driftMessage,
+    phase: driftPhase,
+    wakeId,
+    wakeCaller
+  }, writtenAt);
+  const snapshotRelativePath = toRepoRelative(projectRoot, resumeSnapshotPath(projectRoot, objectiveRecord.objectiveId));
+  const snapshot = await writeRuntimeResumeSnapshot(
+    projectRoot,
+    paused.objectiveRecord,
+    paused.activeObjectivePointer,
+    queueState,
+    {
+      writtenAt,
+      writtenReason: 'heartbeat',
+      effectiveBudget,
+      blocker: {
+        exists: true,
+        code: driftCode,
+        message: driftMessage,
+        writtenAt
+      },
+      nextAction: {
+        kind: 'await-operator',
+        params: {
+          reason: driftCode
+        }
+      },
+      notes: driftMessage
+    }
+  );
   await writeObjectiveBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
-    code: 'SEMANTIC_DRIFT_DETECTED',
-    message: checkpointResult.message ?? 'The deterministic strategic relevance checkpoint marked the objective as drifted.',
+    code: driftCode,
+    message: driftMessage,
     snapshotPath: snapshotRelativePath,
     writtenAt
   });
@@ -845,7 +921,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     handoffLedgerPath: toRepoRelative(projectRoot, objectiveHandoffsPath(projectRoot, paused.objectiveRecord.objectiveId)),
     queuePath: toRepoRelative(projectRoot, objectiveQueuePath(projectRoot, paused.objectiveRecord.objectiveId)),
     digestKind: 'semantic-drift',
-    notes: checkpointResult.message ?? 'Paused by the deterministic strategic relevance checkpoint.'
+    notes: driftMessage
   });
   return {
     ok: true,
@@ -857,7 +933,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     wakeCaller,
     digestPath: toRepoRelative(projectRoot, driftDigest.latestPath),
     checkpoint: 'drifted',
-    snapshotPath: snapshotRelativePath
+    snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath)
   };
 }
 
@@ -1243,6 +1319,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       handshake,
       objectiveRecord,
       queueState,
+      events: existingEvents,
       handoffs,
       snapshotState
     }, deps, 'pre-slice');
@@ -1259,6 +1336,19 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
           wakeRequest.wakeId
         );
     }
+    if (firstCheckpoint.status === 'uncertain') {
+      return handleStrategicUncertain(
+        projectRoot,
+        objectiveRecord,
+        claimedPointer,
+        queueState,
+        effectiveBudget,
+        firstCheckpoint,
+        writtenAt,
+        wakeCaller,
+        wakeRequest.wakeId
+      );
+    }
 
     const enteringFinalQuarter = (iterationsCompleted + 1) > Math.floor(effectiveBudget.maxIterations * 0.75);
     if (enteringFinalQuarter) {
@@ -1266,11 +1356,25 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
         handshake,
         objectiveRecord,
         queueState,
+        events: existingEvents,
         handoffs,
         snapshotState
       }, deps, 'final-quarter');
       if (finalQuarterCheckpoint.status === 'drifted') {
         return handleSemanticDrift(
+          projectRoot,
+          objectiveRecord,
+          claimedPointer,
+          queueState,
+          effectiveBudget,
+          finalQuarterCheckpoint,
+          writtenAt,
+          wakeCaller,
+          wakeRequest.wakeId
+        );
+      }
+      if (finalQuarterCheckpoint.status === 'uncertain') {
+        return handleStrategicUncertain(
           projectRoot,
           objectiveRecord,
           claimedPointer,

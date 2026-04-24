@@ -18,7 +18,8 @@ for (const fixturePath of [
 
 for (const fixturePath of [
   'environment/tests/fixtures/phase9/objective-event/invalid-missing-record-seq.json',
-  'environment/tests/fixtures/phase9/objective-event/invalid-state-repair-missing-repaired-layer.json'
+  'environment/tests/fixtures/phase9/objective-event/invalid-state-repair-missing-repaired-layer.json',
+  'environment/tests/fixtures/phase9/objective-event/invalid-semantic-drift-missing-phase.json'
 ]) {
   test(`phase9-objective-event.schema rejects ${fixturePath}`, async () => {
     await expectFixtureValidity({

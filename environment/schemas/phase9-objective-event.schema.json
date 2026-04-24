@@ -65,6 +65,59 @@
       "if": {
         "properties": {
           "kind": {
+            "const": "semantic-drift-detected"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "message",
+              "phase"
+            ],
+            "properties": {
+              "code": {
+                "const": "SEMANTIC_DRIFT_DETECTED"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "type": "string",
+                "enum": [
+                  "pre-slice",
+                  "final-quarter"
+                ]
+              },
+              "wakeId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "wakeCaller": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
             "const": "state-repair"
           }
         },

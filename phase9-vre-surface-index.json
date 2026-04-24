@@ -217,6 +217,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "semantic-drift-checkpoint",
+    "paths": [
+      "environment/orchestrator/semantic-drift-checkpoint.js"
+    ],
+    "featureId": "W4-AUTONOMY-RUNTIME-LOOP",
+    "introducedAt": "2026-04-24"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "time-provider",
     "paths": [
       "environment/control/time-provider.js"

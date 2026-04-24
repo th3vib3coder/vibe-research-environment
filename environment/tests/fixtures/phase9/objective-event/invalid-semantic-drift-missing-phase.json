@@ -7,9 +7,6 @@
   "kind": "semantic-drift-detected",
   "payload": {
     "code": "SEMANTIC_DRIFT_DETECTED",
-    "message": "Queue drifted away from the objective question.",
-    "phase": "pre-slice",
-    "wakeId": "WAKE-0008",
-    "wakeCaller": "windows-task-scheduler"
+    "message": "Queue drifted away from the objective question."
   }
 }

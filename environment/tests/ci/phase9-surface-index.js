@@ -148,6 +148,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/semantic-drift-checkpoint.js',
+    kind: 'orchestrator-surface',
+    name: 'semantic-drift-checkpoint',
+    featureId: 'W4-AUTONOMY-RUNTIME-LOOP',
+    introducedAt: '2026-04-24'
+  },
+  {
     file: 'environment/orchestrator/queue-adapter.js',
     kind: 'orchestrator-surface',
     name: 'queue-adapter',
