@@ -439,6 +439,143 @@ test('deterministic strategic checkpoint returns uncertain in the final quarter 
   assert.equal(result.phase, 'final-quarter');
 });
 
+// Round 78 scorer-branch coverage closure: the deterministic scorer has 7
+// distinct decision branches but seq 094 shipped with only 3 direct unit
+// tests (the `aligned via overlap` final branch, the `drifted via explicit
+// contradiction` branch, and the `uncertain in final-quarter` branch). The
+// remaining 4 branches were silently unpinned; the tests below pin each of
+// them explicitly so a silent refactor or logic inversion inside
+// `semantic-drift-checkpoint.js` cannot slip past the test suite.
+test('deterministic strategic checkpoint returns drifted when a recent queue record uses a task kind outside the current stage intent', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'pre-slice',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: [{
+        taskKind: 'writing-export-finalize',
+        taskId: 'writing-export-finalize:DOC-001',
+        resultArtifactPaths: []
+      }]
+    },
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 4 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'drifted');
+  assert.equal(result.phase, 'pre-slice');
+  assert.match(result.message, /writing-export-finalize|outside the analysis stage intent/u);
+  assert.deepEqual(result.signals.taskKindsOutsideStage, ['writing-export-finalize']);
+});
+
+test('deterministic strategic checkpoint returns aligned when there is no recent unattended evidence at all', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'pre-slice',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: []
+    },
+    events: [],
+    handoffs: [],
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 4 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'aligned');
+  assert.equal(result.phase, 'pre-slice');
+  assert.match(result.message, /no contradictory unattended evidence/iu);
+});
+
+test('deterministic strategic checkpoint returns drifted when recent handoffs share no tokens with either the objective or the stage intent but carry no explicit contradiction', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'pre-slice',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: []
+    },
+    events: [],
+    handoffs: [{
+      summary: 'Travel logistics update for next quarter conference bookings.'
+    }],
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 4 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'drifted');
+  assert.equal(result.phase, 'pre-slice');
+  assert.match(result.message, /no longer overlap the objective question|current stage intent/u);
+  assert.deepEqual(result.signals.contradictionFlags, []);
+  assert.equal(result.signals.objectiveOverlap, 0);
+  assert.equal(result.signals.stageOverlap, 0);
+});
+
+test('deterministic strategic checkpoint returns uncertain in the pre-slice phase when overlap with the objective is weak but evidence is not outright contradictory', () => {
+  const result = evaluateDeterministicStrategicCheckpoint({
+    phase: 'pre-slice',
+    objectiveRecord: {
+      title: 'Perturbation Z overnight objective',
+      question: 'Which differential signatures remain after perturbation Z?',
+      stages: [
+        { stageId: 'orientation', status: 'completed' },
+        { stageId: 'analysis', status: 'active' }
+      ]
+    },
+    queueState: {
+      latestRecords: []
+    },
+    events: [],
+    handoffs: [{
+      summary: 'Ran analysis scaffolding and refreshed the environment for the next step.'
+    }],
+    snapshotState: {
+      snapshot: {
+        stageCursor: { current: 'analysis' },
+        budgetRemaining: { maxIterationsLeft: 4 },
+        openBlockers: []
+      }
+    }
+  });
+
+  assert.equal(result.status, 'uncertain');
+  assert.equal(result.phase, 'pre-slice');
+  assert.match(result.message, /weak overlap/iu);
+});
+
 test('research-loop returns a structured failure when no active objective pointer exists', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-no-pointer-');
   try {
