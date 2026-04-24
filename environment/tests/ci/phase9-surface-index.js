@@ -99,6 +99,20 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/objectives/blocker-flag.js',
+    kind: 'orchestrator-surface',
+    name: 'blocker-flag',
+    featureId: 'W4-BLOCKER-AND-MORNING-DIGEST',
+    introducedAt: '2026-04-24'
+  },
+  {
+    file: 'environment/objectives/digest-writer.js',
+    kind: 'orchestrator-surface',
+    name: 'objective-digest',
+    featureId: 'W4-BLOCKER-AND-MORNING-DIGEST',
+    introducedAt: '2026-04-24'
+  },
+  {
     file: 'environment/orchestrator/experiment-binding.js',
     kind: 'orchestrator-surface',
     name: 'experiment-binding',

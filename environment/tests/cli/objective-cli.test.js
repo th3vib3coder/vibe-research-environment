@@ -3,7 +3,12 @@ import { access, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
-import { activateObjective } from '../../objectives/store.js';
+import {
+  activateObjective,
+  createActiveObjectivePointer
+} from '../../objectives/store.js';
+import { writeObjectiveBlockerFlag } from '../../objectives/blocker-flag.js';
+import { writeObjectiveDigest } from '../../objectives/digest-writer.js';
 import { readJsonl } from '../../control/_io.js';
 import {
   cleanupCliFixtureProject,
@@ -110,26 +115,12 @@ async function installBlockedObjective(projectRoot) {
 
 async function writeBlockerFlag(projectRoot, objectiveId) {
   const relativeSnapshotPath = `.vibe-science-environment/objectives/${objectiveId}/resume-snapshot.json`;
-  const blockerPath = path.join(
-    projectRoot,
-    '.vibe-science-environment',
-    'objectives',
-    objectiveId,
-    'BLOCKER.flag'
-  );
-  await writeFile(
-    blockerPath,
-    [
-      'BLOCKER_CODE=E_LLM_REASONING_REQUIRED',
-      'BLOCKER_MESSAGE=Operator approval is required before the next slice.',
-      `OBJECTIVE_ID=${objectiveId}`,
-      `SNAPSHOT_PATH=${relativeSnapshotPath}`,
-      'WRITTEN_AT=2026-04-23T08:30:00Z',
-      ''
-    ].join('\n'),
-    'utf8'
-  );
-  return blockerPath;
+  return writeObjectiveBlockerFlag(projectRoot, objectiveId, {
+    code: 'E_LLM_REASONING_REQUIRED',
+    message: 'Operator approval is required before the next slice.',
+    snapshotPath: relativeSnapshotPath,
+    writtenAt: '2026-04-23T08:30:00Z'
+  });
 }
 
 test('objective start rejects unattended-batch without a wake policy and emits structured JSON', async () => {
@@ -240,6 +231,96 @@ test('objective status --json returns the canonical structured summary for the c
     assert.match(payload.handoffLedgerPath, /handoffs\.jsonl$/u);
     assert.equal(typeof payload.capabilitySummary.kernelMode, 'string');
     assert.equal(Array.isArray(payload.capabilitySummary.degradedReasons), true);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective status surfaces wake health and the newest immutable digest for morning review', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-morning-status-');
+  try {
+    await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-morning-status'
+      }
+    });
+
+    const objectiveId = 'OBJ-001';
+    const objectiveRecordRelativePath = `.vibe-science-environment/objectives/${objectiveId}/objective.json`;
+    const wakeLease = {
+      wakeId: 'WAKE-MORNING-001',
+      leaseAcquiredAt: '2026-04-24T06:30:00Z',
+      leaseExpiresAt: '2099-04-24T06:31:30Z',
+      acquiredBy: 'windows-task-scheduler',
+      previousWakeId: 'WAKE-MORNING-000'
+    };
+    await createActiveObjectivePointer(projectRoot, {
+      objectiveId,
+      objectiveRecordPath: objectiveRecordRelativePath,
+      lockAcquiredBySession: 'sess-morning-status',
+      currentWakeLease: wakeLease
+    });
+
+    const digestSummary = {
+      wakeId: wakeLease.wakeId,
+      status: 'blocked',
+      queueCursor: '2',
+      lastTaskId: 'analysis-execution-run:ANL-morning-002',
+      snapshotPath: `.vibe-science-environment/objectives/${objectiveId}/resume-snapshot.json`,
+      eventLogPath: `.vibe-science-environment/objectives/${objectiveId}/events.jsonl`,
+      handoffLedgerPath: `.vibe-science-environment/objectives/${objectiveId}/handoffs.jsonl`,
+      queuePath: `.vibe-science-environment/objectives/${objectiveId}/queue.jsonl`,
+      digestKind: 'morning-blocker',
+      stopReason: 'E_LLM_REASONING_REQUIRED',
+      notes: null
+    };
+    const firstDigest = await writeObjectiveDigest(projectRoot, objectiveId, {
+      ...digestSummary,
+      writtenAt: '2026-04-24T06:31:00Z'
+    });
+    const secondDigest = await writeObjectiveDigest(projectRoot, objectiveId, {
+      ...digestSummary,
+      writtenAt: '2026-04-24T06:32:00Z'
+    });
+
+    const firstDigestText = await readFile(firstDigest.immutablePath, 'utf8');
+    const secondDigestText = await readFile(secondDigest.immutablePath, 'utf8');
+    const latestDigestText = await readFile(secondDigest.latestPath, 'utf8');
+    assert.notEqual(firstDigestText, secondDigestText);
+    assert.equal(latestDigestText, secondDigestText);
+    assert.match(latestDigestText, /Snapshot Path: .*resume-snapshot\.json/u);
+    assert.match(latestDigestText, /Event Log Path: .*events\.jsonl/u);
+    assert.match(latestDigestText, /Handoff Ledger Path: .*handoffs\.jsonl/u);
+    assert.match(latestDigestText, /Queue Path: .*queue\.jsonl/u);
+    assert.doesNotMatch(latestDigestText, /implementation-complete with saved evidence|verified against documentation|all saved/iu);
+
+    const result = await runVre(projectRoot, [
+      'objective',
+      'status',
+      '--objective',
+      objectiveId,
+      '--json'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.objectiveId, objectiveId);
+    assert.equal(payload.status, 'active');
+    assert.equal(payload.wakePolicy.lastWakeId, wakeLease.wakeId);
+    assert.equal(payload.wakePolicy.leaseStatus, 'held');
+    assert.equal(typeof payload.wakePolicy.nextUnattendedSliceArmed, 'boolean');
+    assert.deepEqual(payload.wakePolicy.currentWakeLease, wakeLease);
+    assert.equal(payload.latestDigestExists, true);
+    assert.equal(payload.latestDigestPath, secondDigest.immutablePath.replaceAll('\\', '/').replace(`${projectRoot.replaceAll('\\', '/')}/`, ''));
+    assert.match(payload.latestDigestPath, /digest-2026-04-24T06-32-00Z\.md$/u);
+    assert.equal(payload.capabilitySummary.vrePresent, true);
+    assert.equal(typeof payload.capabilitySummary.memoryFresh, 'boolean');
+    assert.equal(Array.isArray(payload.capabilitySummary.missingSurfaces), true);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

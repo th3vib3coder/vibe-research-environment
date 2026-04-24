@@ -69,7 +69,7 @@ function atomicTempPath(filePath) {
   );
 }
 
-async function atomicWriteUtf8(filePath, content) {
+export async function atomicWriteUtf8(filePath, content) {
   const directoryPath = path.dirname(filePath);
   await mkdir(directoryPath, { recursive: true });
 

@@ -16,7 +16,6 @@ import {
   createActiveObjectivePointer,
   createInitialWakeLease,
   objectiveDir,
-  objectiveDigestsDir,
   objectiveEventsPath,
   objectiveHandoffsPath,
   objectiveRecordPath,
@@ -31,7 +30,6 @@ import {
 } from '../objectives/store.js';
 import {
   appendObjectiveEvent,
-  BLOCKER_FLAG_FILE,
   countIterations,
   OBJECTIVE_EVENT_SCHEMA_FILE,
   readBlockerFlag,
@@ -39,6 +37,8 @@ import {
   RESUME_SNAPSHOT_SCHEMA_FILE,
   resumeSnapshotPath
 } from '../objectives/resume-snapshot.js';
+import { writeObjectiveBlockerFlag } from '../objectives/blocker-flag.js';
+import { writeObjectiveDigest } from '../objectives/digest-writer.js';
 import { readAndValidateAnalysisManifest, ANALYSIS_MANIFEST_TASK_KIND } from './analysis-manifest.js';
 import { runAnalysisCommand } from './execution-lane.js';
 import {
@@ -292,95 +292,6 @@ async function writeRuntimeResumeSnapshot(projectRoot, objectiveRecord, activePo
   };
 }
 
-async function writeBlockerFlag(projectRoot, objectiveId, { code, message, snapshotPath, writtenAt }) {
-  const targetPath = path.join(objectiveDir(projectRoot, objectiveId), BLOCKER_FLAG_FILE);
-  const lines = [
-    `BLOCKER_CODE=${code}`,
-    `BLOCKER_MESSAGE=${message}`,
-    `OBJECTIVE_ID=${objectiveId}`,
-    `WRITTEN_AT=${writtenAt}`
-  ];
-  if (snapshotPath) {
-    lines.push(`SNAPSHOT_PATH=${snapshotPath}`);
-  }
-  await atomicWriteUtf8(targetPath, `${lines.join('\n')}\n`);
-  return targetPath;
-}
-
-function normalizeTimestampForFileName(timestamp) {
-  return timestamp.replaceAll(':', '-').replaceAll('.', '-');
-}
-
-function objectiveDigestLatestPath(projectRoot, objectiveId) {
-  return path.join(objectiveDir(projectRoot, objectiveId), 'digest-latest.md');
-}
-
-function renderObjectiveDigestMarkdown(summary) {
-  const lines = [
-    '# Objective Digest',
-    '',
-    `- Objective: ${summary.objectiveId}`,
-    `- Written At: ${summary.writtenAt}`,
-    `- Wake Id: ${summary.wakeId ?? 'n/a'}`,
-    `- Runtime Status: ${summary.status}`,
-    `- Queue Cursor: ${summary.queueCursor == null ? 'n/a' : String(summary.queueCursor)}`,
-    `- Last Task Id: ${summary.lastTaskId ?? 'n/a'}`,
-    `- Snapshot Path: ${summary.snapshotPath ?? 'n/a'}`,
-    `- Digest Kind: ${summary.digestKind ?? 'loop-state'}`
-  ];
-
-  if (summary.stopReason) {
-    lines.push(`- Stop Reason: ${summary.stopReason}`);
-  }
-
-  if (summary.taskAttemptId) {
-    lines.push(`- Task Attempt Id: ${summary.taskAttemptId}`);
-  }
-
-  if (summary.taskId) {
-    lines.push(`- Task Id: ${summary.taskId}`);
-  }
-
-  if (summary.analysisId) {
-    lines.push(`- Analysis Id: ${summary.analysisId}`);
-  }
-
-  if (summary.memorySyncStatus) {
-    lines.push(`- Memory Sync: ${summary.memorySyncStatus}`);
-  }
-
-  if (summary.handoffId) {
-    lines.push(`- Handoff Id: ${summary.handoffId}`);
-  }
-
-  if (summary.notes) {
-    lines.push('', '## Notes', summary.notes);
-  }
-
-  return `${lines.join('\n')}\n`;
-}
-
-async function writeObjectiveDigest(projectRoot, objectiveRecord, summary) {
-  const writtenAt = summary.writtenAt ?? now();
-  const digestFileName = `digest-${normalizeTimestampForFileName(writtenAt)}.md`;
-  const digestsDir = objectiveDigestsDir(projectRoot, objectiveRecord.objectiveId);
-  const immutablePath = path.join(digestsDir, digestFileName);
-  const latestPath = objectiveDigestLatestPath(projectRoot, objectiveRecord.objectiveId);
-  const content = renderObjectiveDigestMarkdown({
-    ...summary,
-    objectiveId: objectiveRecord.objectiveId,
-    writtenAt
-  });
-  await atomicWriteUtf8(immutablePath, content);
-  await atomicWriteUtf8(latestPath, content);
-  return {
-    immutablePath,
-    latestPath,
-    immutableRelativePath: toRepoRelative(projectRoot, immutablePath),
-    latestRelativePath: toRepoRelative(projectRoot, latestPath)
-  };
-}
-
 async function appendObjectiveHandoff(projectRoot, objectiveId, handoff, writtenAt) {
   const validator = await loadHandoffValidator(projectRoot);
   const handoffsPath = objectiveHandoffsPath(projectRoot, objectiveId);
@@ -444,7 +355,7 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
     }
   );
   const snapshotRelativePath = toRepoRelative(projectRoot, snapshot.snapshotPath);
-  await writeBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
+  await writeObjectiveBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
     code: blocker.code,
     message: blocker.message,
     snapshotPath: snapshotRelativePath,
@@ -469,7 +380,7 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
 
   let digestResult = null;
   if (options.writeDigest === true) {
-    digestResult = await writeObjectiveDigest(projectRoot, blocked.objectiveRecord, {
+    digestResult = await writeObjectiveDigest(projectRoot, blocked.objectiveRecord.objectiveId, {
       writtenAt,
       wakeId: options.wakeId ?? null,
       status: 'blocked',
@@ -477,6 +388,9 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
       queueCursor: queueState.queueCursor,
       lastTaskId: queueState.lastTaskId,
       snapshotPath: snapshotRelativePath,
+      eventLogPath: toRepoRelative(projectRoot, objectiveEventsPath(projectRoot, blocked.objectiveRecord.objectiveId)),
+      handoffLedgerPath: toRepoRelative(projectRoot, objectiveHandoffsPath(projectRoot, blocked.objectiveRecord.objectiveId)),
+      queuePath: toRepoRelative(projectRoot, objectiveQueuePath(projectRoot, blocked.objectiveRecord.objectiveId)),
       taskAttemptId: blocker.taskAttemptId ?? null,
       taskId: blocker.taskId ?? null,
       analysisId: blocker.analysisId ?? null,
@@ -484,6 +398,11 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
       digestKind: options.digestKind ?? 'loop-state',
       notes: blocker.message
     });
+    digestResult = {
+      ...digestResult,
+      immutableRelativePath: toRepoRelative(projectRoot, digestResult.immutablePath),
+      latestRelativePath: toRepoRelative(projectRoot, digestResult.latestPath)
+    };
   }
 
   return {
@@ -763,7 +682,7 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
       notes: 'Loop blocked because the effective runtime budget is exhausted.'
     }
   );
-  await writeBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
+  await writeObjectiveBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
     code: reasonCode,
     message: 'The effective runtime budget is exhausted.',
     snapshotPath: snapshotRelativePath,
@@ -825,7 +744,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     }
   );
   const snapshotRelativePath = toRepoRelative(projectRoot, snapshot.snapshotPath);
-  await writeBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
+  await writeObjectiveBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
     code: 'SEMANTIC_DRIFT_DETECTED',
     message: checkpointResult.message ?? 'The deterministic strategic relevance checkpoint marked the objective as drifted.',
     snapshotPath: snapshotRelativePath,
@@ -1251,7 +1170,12 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
         code: candidate.code,
         message: candidate.message
       },
-      writtenAt
+      writtenAt,
+      {
+        wakeId: wakeRequest.wakeId,
+        writeDigest: true,
+        digestKind: 'morning-blocker'
+      }
     );
   }
 
@@ -1392,7 +1316,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     }
   );
   const snapshotRelativePath = toRepoRelative(projectRoot, finalSnapshot.snapshotPath);
-  const digestResult = await writeObjectiveDigest(projectRoot, objectiveRecord, {
+  let digestResult = await writeObjectiveDigest(projectRoot, objectiveRecord.objectiveId, {
     writtenAt: now(),
     wakeId: wakeRequest.wakeId,
     status: executionPayload.ok ? 'slice-complete' : executionPayload.status,
@@ -1400,6 +1324,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     queueCursor: queueState.queueCursor,
     lastTaskId: queueState.lastTaskId,
     snapshotPath: snapshotRelativePath,
+    eventLogPath: toRepoRelative(projectRoot, objectiveEventsPath(projectRoot, objectiveId)),
+    handoffLedgerPath: toRepoRelative(projectRoot, objectiveHandoffsPath(projectRoot, objectiveId)),
+    queuePath: toRepoRelative(projectRoot, objectiveQueuePath(projectRoot, objectiveId)),
     taskAttemptId,
     taskId,
     analysisId: candidate.validated.manifest.analysisId,
@@ -1407,6 +1334,11 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     digestKind: 'loop-state',
     notes
   });
+  digestResult = {
+    ...digestResult,
+    immutableRelativePath: toRepoRelative(projectRoot, digestResult.immutablePath),
+    latestRelativePath: toRepoRelative(projectRoot, digestResult.latestPath)
+  };
 
   if (!executionPayload.ok) {
     throw new ResearchLoopCliError({

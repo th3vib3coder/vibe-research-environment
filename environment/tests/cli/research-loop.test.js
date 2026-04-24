@@ -404,6 +404,24 @@ test('research-loop blocks with E_LLM_REASONING_REQUIRED in unattended-batch mod
 
     const blockerText = await readBlockerText(projectRoot, 'OBJ-001');
     assert.match(blockerText, /E_LLM_REASONING_REQUIRED/u);
+    assert.match(String(payload.digestPath ?? ''), /digest-latest\.md$/u);
+
+    const digestFiles = await listObjectiveDigestFiles(projectRoot, 'OBJ-001');
+    assert.equal(digestFiles.length, 1);
+    const latestDigest = await readFile(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'digest-latest.md'),
+      'utf8'
+    );
+    const immutableDigest = await readFile(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'digests', digestFiles[0]),
+      'utf8'
+    );
+    assert.equal(latestDigest, immutableDigest);
+    assert.match(latestDigest, /Snapshot Path: .*resume-snapshot\.json/u);
+    assert.match(latestDigest, /Event Log Path: .*events\.jsonl/u);
+    assert.match(latestDigest, /Handoff Ledger Path: .*handoffs\.jsonl/u);
+    assert.match(latestDigest, /Queue Path: .*queue\.jsonl/u);
+    assert.doesNotMatch(latestDigest, /implementation-complete with saved evidence|verified against documentation|all saved/iu);
 
     const events = await readObjectiveEvents(projectRoot, 'OBJ-001');
     assert.equal(
@@ -628,6 +646,10 @@ test('research-loop executes one bounded safe slice, writes queue/event/snapshot
     assert.equal(latestDigest, immutableDigest);
     assert.match(latestDigest, /Analysis Id: ANL-loop-safe-001/u);
     assert.match(latestDigest, /Queue Cursor: 2/u);
+    assert.match(latestDigest, /Snapshot Path: .*resume-snapshot\.json/u);
+    assert.match(latestDigest, /Event Log Path: .*events\.jsonl/u);
+    assert.match(latestDigest, /Handoff Ledger Path: .*handoffs\.jsonl/u);
+    assert.match(latestDigest, /Queue Path: .*queue\.jsonl/u);
 
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
     assert.equal(events.some((entry) => entry.kind === 'loop-iteration'), true);

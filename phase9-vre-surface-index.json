@@ -127,6 +127,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "blocker-flag",
+    "paths": [
+      "environment/objectives/blocker-flag.js"
+    ],
+    "featureId": "W4-BLOCKER-AND-MORNING-DIGEST",
+    "introducedAt": "2026-04-24"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "capability-handshake",
     "paths": [
       "environment/control/capability-handshake.js"
@@ -160,6 +169,15 @@
     ],
     "featureId": "W2-OBJECTIVE-CLI",
     "introducedAt": "2026-04-23"
+  },
+  {
+    "kind": "orchestrator-surface",
+    "name": "objective-digest",
+    "paths": [
+      "environment/objectives/digest-writer.js"
+    ],
+    "featureId": "W4-BLOCKER-AND-MORNING-DIGEST",
+    "introducedAt": "2026-04-24"
   },
   {
     "kind": "orchestrator-surface",
