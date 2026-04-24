@@ -1025,6 +1025,17 @@ test('research-loop reports incomplete-at-crash, writes a handoff with objective
     assert.deepEqual(queueRecords.map((record) => record.status), ['running']);
     assert.equal(new Set(queueRecords.map((record) => record.taskAttemptId)).size, 1);
 
+    // Round 71: spec-side row 95 cites that the incomplete-at-crash path keeps
+    // the original objectiveId / sessionId / wakeId lineage rather than
+    // duplicating under the resume wake. Before Round 71 this was implicit:
+    // the queue only contained the pre-crash 'running' record, so the
+    // invariant held trivially, but no assertion pinned the sessionId/wakeId
+    // fields. Pin them explicitly so a future regression that silently
+    // re-issues a running row under the resume wake is caught at test time.
+    assert.equal(queueRecords[0].sessionId, 'sess-incomplete-crash');
+    assert.equal(queueRecords[0].wakeId, 'WAKE-INCOMPLETE-CRASH');
+    assert.equal(queueRecords[0].objectiveId, context.objectiveId);
+
     const handoffs = await readObjectiveHandoffs(projectRoot, context.objectiveId);
     assert.equal(handoffs.length, 1);
     assert.equal(handoffs[0].objectiveId, context.objectiveId);

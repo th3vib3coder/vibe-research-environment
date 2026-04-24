@@ -168,3 +168,127 @@ test('objective queue adapter rejects queue lines whose objectiveId does not mat
     await rm(projectRoot, { recursive: true, force: true });
   }
 });
+
+// Round 71 adversarial coverage: `assertValidObjectiveQueueRecord`
+// (queue-adapter.js:72-109) has ~15 defensive validator branches. seq 086
+// pinned only 2 of them (missing taskId + mismatched objectiveId). The rest
+// were claim-without-pin gaps since the seq-086 ledger asserted "queue line
+// validates required fields and objective id" without evidence for every
+// enforced field. Round 71 closes three of the most regression-prone
+// branches: the status enum membership check (line 96), the resumeCursor
+// shape check (lines 52-62), and the strictly-monotonic recordSeq guard in
+// `readObjectiveQueueRecords` (lines 131-133). These are the branches
+// whose silent regression would cause the hardest failures downstream
+// (stale status accepted, resumeCursor corruption accepted, backward-moving
+// recordSeq accepted). Remaining validator branches (taskKind,
+// taskAttemptId, sessionId, wakeId, dates, sourceArtifactPaths,
+// resultArtifactPaths, handoffId, recordSeq positive-integer) are tracked
+// as an explicit out-of-scope follow-up in seq 087 because they follow the
+// same `assertNonEmptyString`/`assertIsoDateTime`/`assertStringArray`
+// pattern already pinned by the taskId regression.
+
+test('objective queue adapter rejects queue lines whose status is outside the reviewed enum', async () => {
+  const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+  try {
+    const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+    await writeFile(queuePath, `${JSON.stringify({
+      recordSeq: 1,
+      objectiveId,
+      taskId: 'analysis-execution-run:ANL-BAD-STATUS',
+      taskKind: 'analysis-execution-run',
+      status: 'zombie',
+      taskAttemptId: 'TASK-BAD-STATUS',
+      createdAt: '2026-04-24T10:00:00Z',
+      updatedAt: '2026-04-24T10:00:00Z',
+      sessionId: 'sess-bad-status',
+      wakeId: 'WAKE-BAD-STATUS',
+      handoffId: null,
+      sourceArtifactPaths: ['analysis/manifests/bad-status.json'],
+      resultArtifactPaths: [],
+      resumeCursor: {
+        manifestPath: 'analysis/manifests/bad-status.json',
+        queueRecordSeq: null
+      }
+    })}\n`, 'utf8');
+
+    await assert.rejects(
+      readObjectiveQueueRecords(projectRoot, objectiveId),
+      /status must be one of/u
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test('objective queue adapter rejects queue lines whose resumeCursor is not an object', async () => {
+  const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+  try {
+    const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+    await writeFile(queuePath, `${JSON.stringify({
+      recordSeq: 1,
+      objectiveId,
+      taskId: 'analysis-execution-run:ANL-BAD-CURSOR',
+      taskKind: 'analysis-execution-run',
+      status: 'running',
+      taskAttemptId: 'TASK-BAD-CURSOR',
+      createdAt: '2026-04-24T10:00:00Z',
+      updatedAt: '2026-04-24T10:00:00Z',
+      sessionId: 'sess-bad-cursor',
+      wakeId: 'WAKE-BAD-CURSOR',
+      handoffId: null,
+      sourceArtifactPaths: ['analysis/manifests/bad-cursor.json'],
+      resultArtifactPaths: [],
+      resumeCursor: 'not-an-object'
+    })}\n`, 'utf8');
+
+    await assert.rejects(
+      readObjectiveQueueRecords(projectRoot, objectiveId),
+      /resumeCursor must be an object/u
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test('objective queue adapter rejects queue.jsonl whose recordSeq is not strictly monotonic', async () => {
+  const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+  try {
+    const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+    const first = {
+      recordSeq: 1,
+      objectiveId,
+      taskId: 'analysis-execution-run:ANL-MONOTONIC',
+      taskKind: 'analysis-execution-run',
+      status: 'running',
+      taskAttemptId: 'TASK-MONOTONIC-A',
+      createdAt: '2026-04-24T10:00:00Z',
+      updatedAt: '2026-04-24T10:00:00Z',
+      sessionId: 'sess-monotonic',
+      wakeId: 'WAKE-MONOTONIC',
+      handoffId: null,
+      sourceArtifactPaths: ['analysis/manifests/monotonic.json'],
+      resultArtifactPaths: [],
+      resumeCursor: {
+        manifestPath: 'analysis/manifests/monotonic.json',
+        queueRecordSeq: null
+      }
+    };
+    // Append a second record with the same recordSeq value to simulate a
+    // corrupted or hand-edited queue file where the append-only monotonic
+    // invariant has been violated. `readObjectiveQueueRecords` must fail
+    // closed rather than accept it and silently degrade later downstream.
+    const duplicate = { ...first, taskAttemptId: 'TASK-MONOTONIC-B' };
+    await writeFile(
+      queuePath,
+      `${JSON.stringify(first)}\n${JSON.stringify(duplicate)}\n`,
+      'utf8'
+    );
+
+    await assert.rejects(
+      readObjectiveQueueRecords(projectRoot, objectiveId),
+      /recordSeq must be strictly monotonic/u
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
