@@ -200,6 +200,7 @@ const activeCliTestFiles = [
 const activePhase9TestFiles = [
   'environment/tests/ci/check-phase9-ledger.test.js',
   'environment/tests/ci/phase9-surface-index.test.js',
+  'environment/tests/ci/validate-no-personal-paths.test.js',
   'environment/tests/cli/bin-vre-phase9-stubs.test.js',
   'environment/tests/cli/objective-cli.test.js',
   'environment/tests/cli/run-analysis.test.js',

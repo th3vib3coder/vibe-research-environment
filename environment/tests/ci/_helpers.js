@@ -26,11 +26,24 @@ export async function collectFiles(rootRelative, options = {}) {
   const skipDirs = new Set(options.skipDirs ?? ['.git', 'node_modules']);
   const files = [];
 
+  function shouldSkipDirectory(name) {
+    return skipDirs.has(name) || name.startsWith('.tmp-');
+  }
+
   async function walk(dirPath) {
-    const entries = await readdir(dirPath, { withFileTypes: true });
+    let entries;
+    try {
+      entries = await readdir(dirPath, { withFileTypes: true });
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        return;
+      }
+      throw error;
+    }
+
     for (const entry of entries) {
       if (entry.isDirectory()) {
-        if (!skipDirs.has(entry.name)) {
+        if (!shouldSkipDirectory(entry.name)) {
           await walk(path.join(dirPath, entry.name));
         }
         continue;
