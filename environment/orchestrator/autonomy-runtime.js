@@ -693,6 +693,30 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
     message: 'The effective runtime budget is exhausted.',
     snapshotPath: snapshotRelativePath
   }, writtenAt);
+  // Round 74 T4.4 drift closure: `applyBudgetStopCondition` writes
+  // `BLOCKER.flag` on the blocked branch but used to skip the canonical
+  // digest writer, so the morning operator flow only saw the raw flag and
+  // events.jsonl (no immutable digest with pointers to
+  // snapshot/events/handoffs/queue). Seq 089 claimed "wiring blocker
+  // transitions through them" but this path was not rewired. Route through
+  // `writeObjectiveDigest` so the budget-exhausted blocker produces the
+  // same morning-digest evidence bundle as the empty-queue / incomplete-at-crash
+  // blocker paths, and surface `digestPath` in the CLI payload so the
+  // operator can open it directly without grepping events.
+  const budgetDigest = await writeObjectiveDigest(projectRoot, blocked.objectiveRecord.objectiveId, {
+    writtenAt,
+    wakeId: null,
+    status: 'blocked',
+    stopReason: 'budget-exhausted',
+    queueCursor: queueState.queueCursor,
+    lastTaskId: queueState.lastTaskId,
+    snapshotPath: snapshotRelativePath,
+    eventLogPath: toRepoRelative(projectRoot, objectiveEventsPath(projectRoot, blocked.objectiveRecord.objectiveId)),
+    handoffLedgerPath: toRepoRelative(projectRoot, objectiveHandoffsPath(projectRoot, blocked.objectiveRecord.objectiveId)),
+    queuePath: toRepoRelative(projectRoot, objectiveQueuePath(projectRoot, blocked.objectiveRecord.objectiveId)),
+    digestKind: 'budget-exhausted',
+    notes: 'Loop blocked because the effective runtime budget is exhausted.'
+  });
   return {
     ok: true,
     command: RESEARCH_LOOP_COMMAND,
@@ -700,7 +724,8 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
     objectiveId: objectiveRecord.objectiveId,
     status: 'blocked',
     stopReason: 'budget-exhausted',
-    snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath)
+    snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath),
+    digestPath: toRepoRelative(projectRoot, budgetDigest.latestPath)
   };
 }
 
@@ -750,6 +775,27 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     snapshotPath: snapshotRelativePath,
     writtenAt
   });
+  // Round 74 T4.4 drift closure: `handleSemanticDrift` writes `BLOCKER.flag`
+  // with `SEMANTIC_DRIFT_DETECTED` but bypassed the canonical digest writer.
+  // Seq 089 claim "wiring blocker transitions through them" was not complete
+  // for this path. Route through `writeObjectiveDigest` so the strategic
+  // drift pause produces the same morning-operator digest evidence as the
+  // other blocker flows (snapshot/events/handoffs/queue pointers + kind
+  // `semantic-drift`) and surface `digestPath` in the CLI payload.
+  const driftDigest = await writeObjectiveDigest(projectRoot, paused.objectiveRecord.objectiveId, {
+    writtenAt,
+    wakeId: null,
+    status: 'paused',
+    stopReason: 'semantic-drift',
+    queueCursor: queueState.queueCursor,
+    lastTaskId: queueState.lastTaskId,
+    snapshotPath: snapshotRelativePath,
+    eventLogPath: toRepoRelative(projectRoot, objectiveEventsPath(projectRoot, paused.objectiveRecord.objectiveId)),
+    handoffLedgerPath: toRepoRelative(projectRoot, objectiveHandoffsPath(projectRoot, paused.objectiveRecord.objectiveId)),
+    queuePath: toRepoRelative(projectRoot, objectiveQueuePath(projectRoot, paused.objectiveRecord.objectiveId)),
+    digestKind: 'semantic-drift',
+    notes: checkpointResult.message ?? 'Paused by the deterministic strategic relevance checkpoint.'
+  });
   return {
     ok: true,
     command: RESEARCH_LOOP_COMMAND,
@@ -757,6 +803,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     objectiveId: objectiveRecord.objectiveId,
     status: 'paused',
     stopReason: 'semantic-drift',
+    digestPath: toRepoRelative(projectRoot, driftDigest.latestPath),
     checkpoint: 'drifted',
     snapshotPath: snapshotRelativePath
   };

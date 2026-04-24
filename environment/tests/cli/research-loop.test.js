@@ -1107,6 +1107,20 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
     assert.equal(objectiveRecord.status, 'paused');
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
     assert.equal(events.some((entry) => entry.kind === 'semantic-drift-detected'), true);
+
+    // Round 74 T4.4 drift closure: `handleSemanticDrift` previously wrote
+    // `BLOCKER.flag` but bypassed `writeObjectiveDigest`, so the morning
+    // operator had no digest for strategic-drift pauses. Pin digest presence
+    // + morning-digest pointers explicitly.
+    assert.match(String(result.digestPath ?? ''), /digest-latest\.md$/u);
+    assert.equal(await pathExists(context.digestLatestPath), true);
+    const driftDigest = await readFile(context.digestLatestPath, 'utf8');
+    assert.match(driftDigest, /Digest Kind: semantic-drift/u);
+    assert.match(driftDigest, /Stop Reason: semantic-drift/u);
+    assert.match(driftDigest, /Snapshot Path:/u);
+    assert.match(driftDigest, /Event Log Path:/u);
+    assert.match(driftDigest, /Handoff Ledger Path:/u);
+    assert.match(driftDigest, /Queue Path:/u);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -1164,6 +1178,20 @@ test('research-loop blocks the objective and writes BLOCKER.flag when stopCondit
     const blockerOpen = events.find((entry) => entry.kind === 'blocker-open');
     assert.ok(blockerOpen, 'blocker-open event must be appended on block branch');
     assert.equal(blockerOpen.payload.code, 'E_BUDGET_EXHAUSTED');
+
+    // Round 74 T4.4 drift closure: `applyBudgetStopCondition` blocked branch
+    // previously wrote `BLOCKER.flag` but bypassed `writeObjectiveDigest`,
+    // so the budget-exhausted morning-operator had no digest summary. Pin
+    // digest presence + morning-digest pointers explicitly.
+    assert.match(String(payload.digestPath ?? ''), /digest-latest\.md$/u);
+    assert.equal(await pathExists(context.digestLatestPath), true);
+    const budgetDigest = await readFile(context.digestLatestPath, 'utf8');
+    assert.match(budgetDigest, /Digest Kind: budget-exhausted/u);
+    assert.match(budgetDigest, /Stop Reason: budget-exhausted/u);
+    assert.match(budgetDigest, /Snapshot Path:/u);
+    assert.match(budgetDigest, /Event Log Path:/u);
+    assert.match(budgetDigest, /Handoff Ledger Path:/u);
+    assert.match(budgetDigest, /Queue Path:/u);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
