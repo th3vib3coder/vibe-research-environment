@@ -757,16 +757,62 @@ test('research-loop replaces the heartbeat auto sentinel with a generated wake i
     const payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.status, 'slice-complete');
+    assert.equal(payload.wakeCaller, 'windows-task-scheduler');
     assert.notEqual(payload.wakeId, 'auto');
     assert.match(payload.wakeId, /^wake-/u);
 
     const activePointer = await readActiveObjectivePointer(projectRoot);
     assert.ok(activePointer);
     assert.equal(activePointer.currentWakeLease.wakeId, payload.wakeId);
+    assert.equal(activePointer.currentWakeLease.acquiredBy, 'windows-task-scheduler');
 
     const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
     assert.equal(snapshotState.exists, true);
     assert.equal(snapshotState.snapshot.wakeLease.wakeId, payload.wakeId);
+    assert.equal(snapshotState.snapshot.wakeLease.acquiredBy, 'windows-task-scheduler');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop records an explicit external wake caller identity when a compatibility adapter invokes the heartbeat', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-plugin-wake-caller-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-plugin-wake-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--heartbeat',
+      '--wake-id',
+      'WAKE-PLUGIN'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_EXTERNAL_WAKE_CALLER: 'plugin-loop-wake'
+      }
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'slice-complete');
+    assert.equal(payload.wakeCaller, 'plugin-loop-wake');
+    assert.equal(payload.wakeId, 'WAKE-PLUGIN');
+
+    const activePointer = await readActiveObjectivePointer(projectRoot);
+    assert.ok(activePointer);
+    assert.equal(activePointer.currentWakeLease.wakeId, 'WAKE-PLUGIN');
+    assert.equal(activePointer.currentWakeLease.acquiredBy, 'plugin-loop-wake');
+
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.wakeLease.wakeId, 'WAKE-PLUGIN');
+    assert.equal(snapshotState.snapshot.wakeLease.acquiredBy, 'plugin-loop-wake');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -808,12 +854,19 @@ test('research-loop respects stopConditions.onBudgetExhausted by pausing instead
     assert.equal(objectiveRecord.status, 'paused');
     const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
     assert.deepEqual(queueRecords, []);
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const pauseEvent = events.find(
+      (entry) => entry.kind === 'stop' && entry.payload.disposition === 'pause'
+    );
+    assert.ok(pauseEvent, 'stop event with disposition=pause must be appended on pause branch');
+    assert.equal(pauseEvent.payload.wakeId, 'WAKE-BUDGET');
+    assert.equal(pauseEvent.payload.wakeCaller, 'windows-task-scheduler');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
 });
 
-test('research-loop treats duplicate wake ids as a no-op and only refreshes the snapshot', async () => {
+test('research-loop treats duplicate wake ids as a no-op, records a heartbeat event, and refreshes the snapshot', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-duplicate-');
   try {
     const context = await seedBoundResearchContext(projectRoot, {
@@ -844,10 +897,26 @@ test('research-loop treats duplicate wake ids as a no-op and only refreshes the 
     assert.equal(payload.ok, true);
     assert.equal(payload.status, 'no-op');
     assert.equal(payload.reason, 'duplicate-wake-id');
+    assert.equal(payload.wakeCaller, 'windows-task-scheduler');
 
     assert.equal(await pathExists(context.snapshotPath), true);
     const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
     assert.deepEqual(queueRecords, []);
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.match(snapshotState.snapshot.notes, /Heartbeat WAKE-DUP produced no new slice/u);
+    assert.equal(snapshotState.snapshot.wakeLease.acquiredBy, 'sess-dup');
+    assert.equal(snapshotState.snapshot.nextAction.params.wakeId, 'WAKE-DUP');
+    assert.equal(snapshotState.snapshot.nextAction.params.wakeCaller, 'windows-task-scheduler');
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const heartbeatEvent = events.find(
+      (entry) => entry.kind === 'heartbeat' && entry.payload.reason === 'duplicate-wake-id'
+    );
+    assert.ok(heartbeatEvent, 'duplicate wake no-op must append a heartbeat event');
+    assert.equal(heartbeatEvent.payload.wakeId, 'WAKE-DUP');
+    assert.equal(heartbeatEvent.payload.wakeCaller, 'windows-task-scheduler');
+    assert.equal(heartbeatEvent.payload.activeLeaseWakeId, 'WAKE-DUP');
+    assert.equal(heartbeatEvent.payload.activeLeaseAcquiredBy, 'sess-dup');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -885,7 +954,11 @@ test('research-loop reclaims an expired wake lease, records the stale event, and
     assert.equal(payload.staleLeaseRecovered, true);
 
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
-    assert.equal(events.some((entry) => entry.kind === 'stale-wake-lease-reclaimed'), true);
+    const staleEvent = events.find((entry) => entry.kind === 'stale-wake-lease-reclaimed');
+    assert.ok(staleEvent, 'stale lease reclaim must append an objective event');
+    assert.equal(staleEvent.payload.wakeId, 'WAKE-NEW');
+    assert.equal(staleEvent.payload.reclaimedByWakeId, 'WAKE-NEW');
+    assert.equal(staleEvent.payload.wakeCaller, 'windows-task-scheduler');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -945,7 +1018,10 @@ test('research-loop can repair a missing final resume snapshot from durable queu
     assert.deepEqual(laneRuns.map((record) => record.recordSeq), [2, 1]);
 
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
-    assert.equal(events.some((entry) => entry.kind === 'state-repair'), true);
+    const repairEvent = events.find((entry) => entry.kind === 'state-repair');
+    assert.ok(repairEvent, 'state repair must append a repair event');
+    assert.equal(repairEvent.payload.wakeId, 'WAKE-REPAIR');
+    assert.equal(repairEvent.payload.wakeCaller, 'windows-task-scheduler');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -1056,6 +1132,11 @@ test('research-loop reports incomplete-at-crash, writes a handoff with objective
     const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
     assert.deepEqual(queueRecords.map((record) => record.status), ['running']);
     assert.equal(new Set(queueRecords.map((record) => record.taskAttemptId)).size, 1);
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const blockerEvent = events.find((entry) => entry.kind === 'blocker-open');
+    assert.ok(blockerEvent, 'incomplete-at-crash recovery must append blocker-open');
+    assert.equal(blockerEvent.payload.wakeId, 'WAKE-INCOMPLETE-RESUME');
+    assert.equal(blockerEvent.payload.wakeCaller, 'windows-task-scheduler');
 
     // Round 71: spec-side row 95 cites that the incomplete-at-crash path keeps
     // the original objectiveId / sessionId / wakeId lineage rather than
@@ -1106,7 +1187,10 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
     const objectiveRecord = await readObjectiveRecord(projectRoot, context.objectiveId);
     assert.equal(objectiveRecord.status, 'paused');
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
-    assert.equal(events.some((entry) => entry.kind === 'semantic-drift-detected'), true);
+    const driftEvent = events.find((entry) => entry.kind === 'semantic-drift-detected');
+    assert.ok(driftEvent, 'semantic drift must append a drift event');
+    assert.equal(driftEvent.payload.wakeId, 'WAKE-DRIFT');
+    assert.equal(driftEvent.payload.wakeCaller, 'windows-task-scheduler');
 
     // Round 74 T4.4 drift closure: `handleSemanticDrift` previously wrote
     // `BLOCKER.flag` but bypassed `writeObjectiveDigest`, so the morning
@@ -1178,6 +1262,8 @@ test('research-loop blocks the objective and writes BLOCKER.flag when stopCondit
     const blockerOpen = events.find((entry) => entry.kind === 'blocker-open');
     assert.ok(blockerOpen, 'blocker-open event must be appended on block branch');
     assert.equal(blockerOpen.payload.code, 'E_BUDGET_EXHAUSTED');
+    assert.equal(blockerOpen.payload.wakeId, 'WAKE-BUDGET-BLOCK');
+    assert.equal(blockerOpen.payload.wakeCaller, 'windows-task-scheduler');
 
     // Round 74 T4.4 drift closure: `applyBudgetStopCondition` blocked branch
     // previously wrote `BLOCKER.flag` but bypassed `writeObjectiveDigest`,
@@ -1246,6 +1332,8 @@ test('research-loop stops the objective terminally when stopConditions.onBudgetE
       (entry) => entry.kind === 'stop' && entry.payload.disposition === 'stop'
     );
     assert.ok(stopEvent, 'stop event with disposition=stop must be appended on terminal stop branch');
+    assert.equal(stopEvent.payload.wakeId, 'WAKE-BUDGET-STOP');
+    assert.equal(stopEvent.payload.wakeCaller, 'windows-task-scheduler');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -1290,10 +1378,24 @@ test('research-loop refuses to acquire the lease when a different wake owns an u
     assert.equal(payload.ok, true);
     assert.equal(payload.status, 'no-op');
     assert.equal(payload.reason, 'wake-lease-still-active');
+    assert.equal(payload.wakeCaller, 'windows-task-scheduler');
 
     // Queue and snapshot should NOT have been mutated by slice execution.
     const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
     assert.deepEqual(queueRecords, []);
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.nextAction.params.wakeId, 'WAKE-CONTENDER');
+    assert.equal(snapshotState.snapshot.nextAction.params.wakeCaller, 'windows-task-scheduler');
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const heartbeatEvent = events.find(
+      (entry) => entry.kind === 'heartbeat' && entry.payload.reason === 'wake-lease-still-active'
+    );
+    assert.ok(heartbeatEvent, 'contended wake no-op must append a heartbeat event');
+    assert.equal(heartbeatEvent.payload.wakeId, 'WAKE-CONTENDER');
+    assert.equal(heartbeatEvent.payload.wakeCaller, 'windows-task-scheduler');
+    assert.equal(heartbeatEvent.payload.activeLeaseWakeId, 'WAKE-OWNED-BY-OTHER');
+    assert.equal(heartbeatEvent.payload.activeLeaseAcquiredBy, 'sess-other');
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

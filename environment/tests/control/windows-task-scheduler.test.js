@@ -113,14 +113,16 @@ function createFakeSchedulerDeps(projectRoot, options = {}) {
   };
 }
 
-async function runHeartbeatAction(taskDefinition, projectRoot) {
+async function runHeartbeatAction(taskDefinition, projectRoot, envOverrides = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(taskDefinition.execute, taskDefinition.argv, {
       cwd: taskDefinition.workingDirectory,
       env: {
         ...process.env,
         VRE_HEARTBEAT_PROBE_ONLY: '1',
-        VRE_KERNEL_PATH: path.join('environment', 'tests', 'fixtures', 'fake-kernel-sibling')
+        VRE_EXTERNAL_WAKE_CALLER: 'windows-task-scheduler',
+        VRE_KERNEL_PATH: path.join('environment', 'tests', 'fixtures', 'fake-kernel-sibling'),
+        ...envOverrides
       },
       stdio: ['ignore', 'pipe', 'pipe']
     });
@@ -160,6 +162,10 @@ test('scheduler install emits deterministic task definition and scheduler status
     assert.equal(installPayload.supportMode, 'full');
     assert.equal(installPayload.taskName, expectedTaskName);
     assert.equal(installPayload.taskDefinition.execute, process.execPath);
+    assert.equal(
+      installPayload.taskDefinition.argv[0],
+      path.join(projectRoot, 'bin', 'vre')
+    );
     assert.deepEqual(
       installPayload.taskDefinition.argv.slice(-7),
       ['research-loop', '--objective', 'OBJ-001', '--heartbeat', '--wake-id', AUTO_WAKE_ID_SENTINEL, '--json']
@@ -258,11 +264,34 @@ test('manual schtasks /Run-style invocation reaches the VRE CLI through the hear
     assert.equal(secondPayload.probe, 'heartbeat');
     assert.equal(firstPayload.objectiveId, 'OBJ-001');
     assert.equal(secondPayload.objectiveId, 'OBJ-001');
+    assert.equal(firstPayload.wakeCaller, 'windows-task-scheduler');
+    assert.equal(secondPayload.wakeCaller, 'windows-task-scheduler');
     assert.notEqual(firstPayload.wakeId, AUTO_WAKE_ID_SENTINEL);
     assert.notEqual(secondPayload.wakeId, AUTO_WAKE_ID_SENTINEL);
     assert.notEqual(firstPayload.wakeId, taskDefinition.taskName);
     assert.notEqual(secondPayload.wakeId, taskDefinition.taskName);
     assert.notEqual(firstPayload.wakeId, secondPayload.wakeId);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('heartbeat probe fails closed when the scheduler caller env is not a recognized wake identity', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-probe-invalid-caller-');
+  try {
+    const objectiveRecord = await seedActiveObjective(projectRoot);
+    const taskDefinition = SCHEDULER_INTERNALS.expectedTaskDefinition(projectRoot, objectiveRecord);
+    const result = await runHeartbeatAction(taskDefinition, projectRoot, {
+      VRE_EXTERNAL_WAKE_CALLER: 'not-a-real-caller'
+    });
+
+    assert.equal(result.code, 3, `stdout=${result.stdout}\nstderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'research-loop');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /does not recognize wake caller identity not-a-real-caller/u);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

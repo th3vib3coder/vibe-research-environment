@@ -22,7 +22,11 @@ import {
   statusObjectiveCommand,
   stopObjectiveCommand
 } from '../environment/objectives/cli.js';
-import { ResearchLoopCliError, runResearchLoopCommand } from '../environment/orchestrator/autonomy-runtime.js';
+import {
+  normalizeWakeCallerIdentity,
+  ResearchLoopCliError,
+  runResearchLoopCommand
+} from '../environment/orchestrator/autonomy-runtime.js';
 import { RunAnalysisCliError, runAnalysisCommand } from '../environment/orchestrator/execution-lane.js';
 import { getTaskRegistry } from '../environment/orchestrator/task-registry.js';
 import {
@@ -44,6 +48,16 @@ function resolveHeartbeatProbeWakeId(wakeId) {
     return `wake-probe-${process.pid}-${randomUUID()}`;
   }
   return normalized;
+}
+
+const EXTERNAL_WAKE_CALLER_ENV = 'VRE_EXTERNAL_WAKE_CALLER';
+
+function resolveExternalWakeCaller() {
+  return normalizeWakeCallerIdentity(process.env[EXTERNAL_WAKE_CALLER_ENV]);
+}
+
+function resolveHeartbeatProbeWakeCaller() {
+  return resolveExternalWakeCaller() ?? 'windows-task-scheduler';
 }
 
 export const DISPATCH_TABLE = Object.freeze({
@@ -934,7 +948,8 @@ async function runResearchLoop(repoRoot, parsed) {
     return phase9SuccessPayload('research-loop', {
       objectiveId,
       probe: 'heartbeat',
-      wakeId: probeWakeId
+      wakeId: probeWakeId,
+      wakeCaller: resolveHeartbeatProbeWakeCaller()
     });
   }
 
@@ -959,7 +974,8 @@ async function runResearchLoop(repoRoot, parsed) {
       parsed.options.resume === true ||
       parsed.options.resume === 'true',
     mode: typeof parsed.options.mode === 'string' ? parsed.options.mode : null,
-    sessionId: resolvePhase9SessionId()
+    sessionId: resolvePhase9SessionId(),
+    wakeCaller: resolveExternalWakeCaller()
   }, {
     generateCapabilityHandshake: (projectRoot) =>
       generateCapabilityHandshake(projectRoot, {

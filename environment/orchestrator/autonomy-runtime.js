@@ -56,6 +56,14 @@ const RESEARCH_LOOP_COMMAND = 'research-loop';
 const DEFAULT_SESSION_PREFIX = 'sess-loop';
 const DEFAULT_WAKE_PREFIX = 'wake-loop';
 const RUNTIME_MODES = new Set(['interactive', 'attended-batch', 'unattended-batch', 'resume-only']);
+const WAKE_CALLER_IDENTITIES = new Set([
+  'windows-task-scheduler',
+  'plugin-loop-wake',
+  'codex-app',
+  'vre-automation',
+  'external-runner',
+  'manual'
+]);
 const HANDOFF_SCHEMA_FILE = 'phase9-handoff.schema.json';
 
 export class ResearchLoopCliError extends Error {
@@ -67,6 +75,24 @@ export class ResearchLoopCliError extends Error {
     this.exitCode = exitCode;
     this.extra = extra;
   }
+}
+
+export function normalizeWakeCallerIdentity(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const normalized = value.trim();
+  if (normalized === '') {
+    return null;
+  }
+  if (!WAKE_CALLER_IDENTITIES.has(normalized)) {
+    throw new ResearchLoopCliError({
+      code: 'PHASE9_USAGE',
+      exitCode: 3,
+      message: `research-loop does not recognize wake caller identity ${normalized}.`
+    });
+  }
+  return normalized;
 }
 
 function normalizeSlashes(value) {
@@ -364,7 +390,9 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
   await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'blocker-open', {
     code: blocker.code,
     message: blocker.message,
-    snapshotPath: snapshotRelativePath
+    snapshotPath: snapshotRelativePath,
+    wakeId: options.wakeId ?? null,
+    wakeCaller: options.wakeCaller ?? null
   }, writtenAt);
 
   let handoffResult = null;
@@ -412,6 +440,7 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
     objectiveId: objectiveRecord.objectiveId,
     status: 'blocked',
     stopReason: blocker.stopReason ?? blocker.code,
+    wakeCaller: options.wakeCaller ?? null,
     snapshotPath: snapshotRelativePath,
     handoffId: handoffResult?.handoff.handoffId ?? null,
     digestPath: digestResult?.latestRelativePath ?? null
@@ -495,12 +524,23 @@ function resolveWakeRequest(options = {}) {
   };
 }
 
+function resolveWakeCallerIdentity(objectiveRecord, options = {}) {
+  const explicit = normalizeWakeCallerIdentity(options.wakeCaller);
+  if (explicit != null) {
+    return explicit;
+  }
+  if (coerceBoolean(options.heartbeat)) {
+    return objectiveRecord.wakePolicy?.wakeOwner ?? 'manual';
+  }
+  return null;
+}
+
 function parseLeaseTimestamp(value) {
   const parsed = Date.parse(value ?? '');
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-async function claimWakeLease(projectRoot, objectiveId, wakeRequest, sessionId, writtenAt) {
+async function claimWakeLease(projectRoot, objectiveId, wakeRequest, wakeCaller, sessionId, writtenAt) {
   return withLock(projectRoot, OBJECTIVE_POINTER_LOCK_NAME, async () => {
     const activePointer = await readActiveObjectivePointer(projectRoot);
     if (!activePointer) {
@@ -550,7 +590,7 @@ async function claimWakeLease(projectRoot, objectiveId, wakeRequest, sessionId, 
       leaseExpiresAt: new Date(
         writtenAtMs + (objectiveRecord.wakePolicy.leaseTtlSeconds * 1000)
       ).toISOString(),
-      acquiredBy: sessionId,
+      acquiredBy: wakeCaller ?? sessionId,
       previousWakeId: currentLease.wakeId ?? null
     };
 
@@ -589,14 +629,16 @@ async function updateObjectiveStatus(projectRoot, objectiveId, nextStatus, updat
   });
 }
 
-async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, reasonCode, writtenAt) {
+async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, reasonCode, writtenAt, wakeCaller = null, wakeId = null) {
   const snapshotRelativePath = normalizeSlashes(path.join('.vibe-science-environment', 'objectives', objectiveRecord.objectiveId, 'resume-snapshot.json'));
   if (objectiveRecord.stopConditions.onBudgetExhausted === 'pause') {
     const paused = await pauseObjective(projectRoot, objectiveRecord.objectiveId, { updatedAt: writtenAt });
     await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'stop', {
       reason: 'budget-exhausted',
       code: reasonCode,
-      disposition: 'pause'
+      disposition: 'pause',
+      wakeId,
+      wakeCaller
     }, writtenAt);
     const snapshot = await writeRuntimeResumeSnapshot(
       projectRoot,
@@ -623,6 +665,7 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
       objectiveId: objectiveRecord.objectiveId,
       status: 'paused',
       stopReason: 'budget-exhausted',
+      wakeCaller,
       snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath)
     };
   }
@@ -632,7 +675,9 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
     await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'stop', {
       reason: 'budget-exhausted',
       code: reasonCode,
-      disposition: 'stop'
+      disposition: 'stop',
+      wakeId,
+      wakeCaller
     }, writtenAt);
     const snapshot = await writeRuntimeResumeSnapshot(
       projectRoot,
@@ -659,6 +704,7 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
       objectiveId: objectiveRecord.objectiveId,
       status: 'stopped',
       stopReason: 'budget-exhausted',
+      wakeCaller,
       snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath)
     };
   }
@@ -691,7 +737,9 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
   await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'blocker-open', {
     code: reasonCode,
     message: 'The effective runtime budget is exhausted.',
-    snapshotPath: snapshotRelativePath
+    snapshotPath: snapshotRelativePath,
+    wakeId,
+    wakeCaller
   }, writtenAt);
   // Round 74 T4.4 drift closure: `applyBudgetStopCondition` writes
   // `BLOCKER.flag` on the blocked branch but used to skip the canonical
@@ -705,7 +753,7 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
   // operator can open it directly without grepping events.
   const budgetDigest = await writeObjectiveDigest(projectRoot, blocked.objectiveRecord.objectiveId, {
     writtenAt,
-    wakeId: null,
+    wakeId,
     status: 'blocked',
     stopReason: 'budget-exhausted',
     queueCursor: queueState.queueCursor,
@@ -724,6 +772,7 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
     objectiveId: objectiveRecord.objectiveId,
     status: 'blocked',
     stopReason: 'budget-exhausted',
+    wakeCaller,
     snapshotPath: toRepoRelative(projectRoot, snapshot.snapshotPath),
     digestPath: toRepoRelative(projectRoot, budgetDigest.latestPath)
   };
@@ -743,12 +792,14 @@ async function evaluateStrategicCheckpoint(context, deps = {}, phase = 'pre-slic
   return result ?? { status: 'aligned' };
 }
 
-async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, checkpointResult, writtenAt) {
+async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, checkpointResult, writtenAt, wakeCaller = null, wakeId = null) {
   const paused = await pauseObjective(projectRoot, objectiveRecord.objectiveId, { updatedAt: writtenAt });
   await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'semantic-drift-detected', {
     code: 'SEMANTIC_DRIFT_DETECTED',
     message: checkpointResult.message ?? 'The deterministic strategic relevance checkpoint marked the objective as drifted.',
-    phase: checkpointResult.phase ?? 'pre-slice'
+    phase: checkpointResult.phase ?? 'pre-slice',
+    wakeId,
+    wakeCaller
   }, writtenAt);
   const snapshot = await writeRuntimeResumeSnapshot(
     projectRoot,
@@ -784,7 +835,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
   // `semantic-drift`) and surface `digestPath` in the CLI payload.
   const driftDigest = await writeObjectiveDigest(projectRoot, paused.objectiveRecord.objectiveId, {
     writtenAt,
-    wakeId: null,
+    wakeId,
     status: 'paused',
     stopReason: 'semantic-drift',
     queueCursor: queueState.queueCursor,
@@ -803,6 +854,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     objectiveId: objectiveRecord.objectiveId,
     status: 'paused',
     stopReason: 'semantic-drift',
+    wakeCaller,
     digestPath: toRepoRelative(projectRoot, driftDigest.latestPath),
     checkpoint: 'drifted',
     snapshotPath: snapshotRelativePath
@@ -867,7 +919,7 @@ async function deriveNextAnalysisCandidate(projectRoot, objectiveRecord, queueSt
   };
 }
 
-async function maybeRepairSnapshotFromDurableState(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, writtenAt) {
+async function maybeRepairSnapshotFromDurableState(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, writtenAt, wakeId = null, wakeCaller = null) {
   const latestTerminal = latestTerminalQueueRecord(queueState);
   if (!latestTerminal) {
     return null;
@@ -889,7 +941,9 @@ async function maybeRepairSnapshotFromDurableState(projectRoot, objectiveRecord,
     repairedLayer: 'snapshot',
     observedDivergence: 'queue/event state advanced past resume-snapshot.json',
     repairedTo: 'resume-snapshot regenerated from durable queue/event state',
-    reason: 'research-loop fresh-process recovery'
+    reason: 'research-loop fresh-process recovery',
+    wakeId,
+    wakeCaller
   }, writtenAt);
 
   const repaired = await writeRuntimeResumeSnapshot(
@@ -991,6 +1045,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
   }
 
   let objectiveRecord = await readObjectiveRecord(projectRoot, objectiveId);
+  const wakeCaller = resolveWakeCallerIdentity(objectiveRecord, options);
   const queueRecords = await readObjectiveQueueRecords(projectRoot, objectiveId);
   let queueState = deriveObjectiveQueueState(queueRecords);
   const handoffs = await readJsonl(objectiveHandoffsPath(projectRoot, objectiveId));
@@ -998,10 +1053,18 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
   const effectiveBudget = resolveEffectiveBudget(objectiveRecord, options);
   const runtimeMode = resolveLoopRuntimeMode(objectiveRecord, options);
 
-  const leaseClaim = await claimWakeLease(projectRoot, objectiveId, wakeRequest, sessionId, writtenAt);
+  const leaseClaim = await claimWakeLease(projectRoot, objectiveId, wakeRequest, wakeCaller, sessionId, writtenAt);
   let claimedPointer = leaseClaim.activePointer;
 
   if (!leaseClaim.acquired) {
+    const noopEvent = await appendObjectiveEvent(projectRoot, objectiveId, 'heartbeat', {
+      wakeId: wakeRequest.wakeId,
+      wakeCaller,
+      outcome: 'no-op',
+      reason: leaseClaim.noOpReason,
+      activeLeaseWakeId: claimedPointer?.currentWakeLease?.wakeId ?? null,
+      activeLeaseAcquiredBy: claimedPointer?.currentWakeLease?.acquiredBy ?? null
+    }, writtenAt);
     const noopSnapshot = await writeRuntimeResumeSnapshot(
       projectRoot,
       objectiveRecord,
@@ -1014,10 +1077,12 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
         nextAction: {
           kind: 'await-operator',
           params: {
-            reason: leaseClaim.noOpReason
+            reason: leaseClaim.noOpReason,
+            wakeId: wakeRequest.wakeId,
+            wakeCaller
           }
         },
-        notes: `Heartbeat produced no new slice because ${leaseClaim.noOpReason}.`
+        notes: `Heartbeat ${wakeRequest.wakeId} produced no new slice because ${leaseClaim.noOpReason}. Wake caller: ${wakeCaller ?? 'unknown'}.`
       }
     );
     return {
@@ -1027,7 +1092,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       objectiveId,
       status: 'no-op',
       reason: leaseClaim.noOpReason,
+      wakeCaller,
       wakeId: wakeRequest.wakeId,
+      eventId: noopEvent.event.eventId,
       snapshotPath: toRepoRelative(projectRoot, noopSnapshot.snapshotPath)
     };
   }
@@ -1035,9 +1102,11 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
   if (leaseClaim.staleReclaimed) {
     await appendObjectiveEvent(projectRoot, objectiveId, 'stale-wake-lease-reclaimed', {
       code: 'STALE_WAKE_LEASE_RECLAIMED',
+      wakeId: wakeRequest.wakeId,
       previousWakeId: leaseClaim.previousLease?.wakeId ?? null,
       previousLeaseExpiresAt: leaseClaim.previousLease?.leaseExpiresAt ?? null,
-      reclaimedByWakeId: wakeRequest.wakeId
+      reclaimedByWakeId: wakeRequest.wakeId,
+      wakeCaller
     }, writtenAt);
   }
 
@@ -1061,6 +1130,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       writtenAt,
       {
         wakeId: wakeRequest.wakeId,
+        wakeCaller,
         writeDigest: true,
         digestKind: 'crash-recovery'
       }
@@ -1086,6 +1156,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       writtenAt,
       {
         wakeId: wakeRequest.wakeId,
+        wakeCaller,
         writeDigest: true,
         digestKind: 'crash-recovery',
         handoff: {
@@ -1114,11 +1185,14 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     claimedPointer,
     queueState,
     effectiveBudget,
-    writtenAt
+    writtenAt,
+    wakeRequest.wakeId,
+    wakeCaller
   );
   if (repaired) {
     return {
       ...repaired,
+      wakeCaller,
       wakeId: wakeRequest.wakeId,
       staleLeaseRecovered: leaseClaim.staleReclaimed
     };
@@ -1144,7 +1218,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       queueState,
       effectiveBudget,
       'E_BUDGET_EXHAUSTED',
-      writtenAt
+      writtenAt,
+      wakeCaller,
+      wakeRequest.wakeId
     );
   }
 
@@ -1175,11 +1251,13 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
         projectRoot,
         objectiveRecord,
         claimedPointer,
-        queueState,
-        effectiveBudget,
-        firstCheckpoint,
-        writtenAt
-      );
+          queueState,
+          effectiveBudget,
+          firstCheckpoint,
+          writtenAt,
+          wakeCaller,
+          wakeRequest.wakeId
+        );
     }
 
     const enteringFinalQuarter = (iterationsCompleted + 1) > Math.floor(effectiveBudget.maxIterations * 0.75);
@@ -1199,7 +1277,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
           queueState,
           effectiveBudget,
           finalQuarterCheckpoint,
-          writtenAt
+          writtenAt,
+          wakeCaller,
+          wakeRequest.wakeId
         );
       }
     }
@@ -1220,6 +1300,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       writtenAt,
       {
         wakeId: wakeRequest.wakeId,
+        wakeCaller,
         writeDigest: true,
         digestKind: 'morning-blocker'
       }
@@ -1260,7 +1341,8 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     taskAttemptId,
     manifestPath: candidate.manifestPath,
     queueRecordSeq: runningQueueRecord.recordSeq,
-    wakeId: wakeRequest.wakeId
+    wakeId: wakeRequest.wakeId,
+    wakeCaller
   }, writtenAt);
 
   if (typeof deps.afterTaskIntentPersisted === 'function') {
@@ -1332,7 +1414,8 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     queueRecordSeq: resultRecord.recordSeq,
     status: executionPayload.ok ? 'complete' : executionPayload.status,
     resultCode: executionPayload.ok ? null : executionPayload.code,
-    memorySync: memorySyncState
+    memorySync: memorySyncState,
+    wakeCaller
   }, now());
 
   if (typeof deps.afterLoopEventPersisted === 'function') {
@@ -1394,6 +1477,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       extra: {
         objectiveId,
         wakeId: wakeRequest.wakeId,
+        wakeCaller,
         queueRecordSeq: resultRecord.recordSeq,
         eventId: loopEvent.event.eventId,
         snapshotPath: snapshotRelativePath,
@@ -1409,6 +1493,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     phase9: true,
     objectiveId,
     wakeId: wakeRequest.wakeId,
+    wakeCaller,
     status: 'slice-complete',
     taskKind: ANALYSIS_MANIFEST_TASK_KIND,
     taskId,

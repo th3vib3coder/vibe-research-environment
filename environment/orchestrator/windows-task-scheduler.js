@@ -13,6 +13,7 @@ import {
 } from '../objectives/store.js';
 
 const HEARTBEAT_PROBE_ENV = 'VRE_HEARTBEAT_PROBE_ONLY';
+const HEARTBEAT_CALLER_ENV = 'VRE_EXTERNAL_WAKE_CALLER';
 export const AUTO_WAKE_ID_SENTINEL = 'auto';
 const WINDOWS_SCHEDULER_COMMANDS = new Set([
   'scheduler install',
@@ -356,7 +357,8 @@ async function defaultRunHeartbeatProbe(taskDefinition) {
   const result = await runProcess(taskDefinition.execute, taskDefinition.argv, {
     cwd: taskDefinition.workingDirectory,
     env: {
-      [HEARTBEAT_PROBE_ENV]: '1'
+      [HEARTBEAT_PROBE_ENV]: '1',
+      [HEARTBEAT_CALLER_ENV]: 'windows-task-scheduler'
     }
   });
 

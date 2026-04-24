@@ -103,6 +103,18 @@
               "reason": {
                 "type": "string",
                 "minLength": 1
+              },
+              "wakeId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "wakeCaller": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           }
