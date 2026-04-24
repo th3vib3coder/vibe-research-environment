@@ -83,10 +83,20 @@ async function writeProjectFile(projectRoot, repoRelativePath, contents) {
 
 async function seedObjective(projectRoot, options = {}) {
   const objectiveRecord = await readFixtureJson('objective', 'valid-active.json');
+  // Round 68 time-dependency fix: autonomy-runtime.js:943-952 computes
+  // `wallSecondsConsumed = now - objectiveRecord.createdAt` and blocks the
+  // slice when it exceeds `budget.maxWallSeconds` (28800s=8h default). A
+  // hard-coded 2026-04-23T20:00:00Z `createdAt` made every test fail with
+  // `status: 'blocked'` once the system clock rolled past 2026-04-24T04:00Z.
+  // Seed a recent timestamp so tests stay idempotent regardless of wall-clock
+  // drift; callers that need a specific createdAt still get it via options.
+  const nowMs = Date.now();
+  const defaultCreatedAt = new Date(nowMs - 60 * 60 * 1000).toISOString();
+  const defaultLastUpdatedAt = new Date(nowMs - 30 * 60 * 1000).toISOString();
   const merged = {
     ...objectiveRecord,
     objectiveId: options.objectiveId ?? 'OBJ-001',
-    createdAt: options.createdAt ?? '2026-04-23T20:00:00Z',
+    createdAt: options.createdAt ?? defaultCreatedAt,
     budget: {
       ...objectiveRecord.budget,
       allowedTaskKinds: ['analysis-execution-run'],
@@ -101,7 +111,7 @@ async function seedObjective(projectRoot, options = {}) {
       experiments: [],
       ...(options.artifactsIndex ?? {})
     },
-    lastUpdatedAt: options.lastUpdatedAt ?? '2026-04-23T20:15:00Z',
+    lastUpdatedAt: options.lastUpdatedAt ?? defaultLastUpdatedAt,
     ...(options.overrides ?? {})
   };
 

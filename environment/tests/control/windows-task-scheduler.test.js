@@ -564,3 +564,112 @@ test('objective doctor fails closed with E_STATE_CONFLICT when events.jsonl carr
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 68 regression coverage: close the residual claim-without-pin gap for
+// `validateWakeOwner` (windows-task-scheduler.js:479-488). Round 67 closed the
+// eight objective-doctor guard branches but explicitly deferred the shared
+// `validateWakeOwner` guard as "a smaller single-function gap tracked for
+// post-T4.3 hygiene". Pressure re-review confirmed that deferral was wrong:
+// validateWakeOwner is called from all four scheduler commands
+// (install/status/doctor/remove), raises `PHASE9_USAGE` when the objective's
+// `wakePolicy.wakeOwner` is not `windows-task-scheduler`, and had ZERO
+// dedicated test at any of the four call-sites. Round 68 pins each call-site
+// explicitly with schema-valid alternate wake owners (`manual`, `codex-app`,
+// `vre-automation`, `external-runner`) so the guard cannot silently regress
+// into a no-op for any of the four scheduler commands.
+
+test('scheduler install fails closed with PHASE9_USAGE when the objective wakeOwner is not windows-task-scheduler', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-install-wake-owner-');
+  try {
+    await seedActiveObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      wakePolicy: { wakeOwner: 'manual' }
+    });
+    const deps = createFakeSchedulerDeps(projectRoot);
+
+    await assert.rejects(
+      () => schedulerInstallCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'scheduler install');
+        assert.equal(error.code, 'PHASE9_USAGE');
+        assert.match(error.message, /requires objective OBJ-001 to declare wakeOwner=windows-task-scheduler/u);
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler status fails closed with PHASE9_USAGE when the objective wakeOwner is not windows-task-scheduler', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-status-wake-owner-');
+  try {
+    await seedActiveObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      wakePolicy: { wakeOwner: 'codex-app' }
+    });
+    const deps = createFakeSchedulerDeps(projectRoot);
+
+    await assert.rejects(
+      () => schedulerStatusCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'scheduler status');
+        assert.equal(error.code, 'PHASE9_USAGE');
+        assert.match(error.message, /requires objective OBJ-001 to declare wakeOwner=windows-task-scheduler/u);
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler doctor fails closed with PHASE9_USAGE when the objective wakeOwner is not windows-task-scheduler', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-doctor-wake-owner-');
+  try {
+    await seedActiveObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      wakePolicy: { wakeOwner: 'vre-automation' }
+    });
+    const deps = createFakeSchedulerDeps(projectRoot);
+
+    await assert.rejects(
+      () => schedulerDoctorCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'scheduler doctor');
+        assert.equal(error.code, 'PHASE9_USAGE');
+        assert.match(error.message, /requires objective OBJ-001 to declare wakeOwner=windows-task-scheduler/u);
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler remove fails closed with PHASE9_USAGE when the objective wakeOwner is not windows-task-scheduler', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-remove-wake-owner-');
+  try {
+    await seedActiveObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      wakePolicy: { wakeOwner: 'external-runner' }
+    });
+    const deps = createFakeSchedulerDeps(projectRoot);
+
+    await assert.rejects(
+      () => schedulerRemoveCommand(projectRoot, { objectiveId: 'OBJ-001' }, deps),
+      (error) => {
+        assert.equal(error instanceof SchedulerCliError, true);
+        assert.equal(error.command, 'scheduler remove');
+        assert.equal(error.code, 'PHASE9_USAGE');
+        assert.match(error.message, /requires objective OBJ-001 to declare wakeOwner=windows-task-scheduler/u);
+        return true;
+      }
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});

@@ -140,3 +140,134 @@ test('objective doctor delegates to scheduler doctor and fails on unsupported sc
     await cleanupCliFixtureProject(projectRoot);
   }
 });
+
+// Round 68 CLI symmetry: close the --objective-missing and positional-argument
+// claim-without-pin gaps. Round 67 left `scheduler install fails closed with
+// structured PHASE9_USAGE when --objective is omitted` as the ONLY CLI usage
+// regression; the symmetric paths for status/doctor/remove and the positional
+// arguments check (bin/vre:978, 1004, 1030, 1056) were not pinned. Round 68
+// adds one regression per call-site so the outer try/catch contract + the
+// positional-args fast-path guard cannot silently regress per command.
+
+test('scheduler status fails closed with structured PHASE9_USAGE when --objective is omitted', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-status-usage-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'status']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler status');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /requires --objective/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler doctor fails closed with structured PHASE9_USAGE when --objective is omitted', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-doctor-usage-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'doctor']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler doctor');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /requires --objective/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler remove fails closed with structured PHASE9_USAGE when --objective is omitted', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-remove-usage-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'remove']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler remove');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /requires --objective/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler install fails closed with structured PHASE9_USAGE when unexpected positional arguments are supplied', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-install-positional-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'install', 'unexpected-positional-arg', '--objective', 'OBJ-001']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler install');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /does not accept positional arguments/u);
+    assert.match(payload.message, /unexpected-positional-arg/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler status fails closed with structured PHASE9_USAGE when unexpected positional arguments are supplied', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-status-positional-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'status', 'unexpected-positional-arg', '--objective', 'OBJ-001']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler status');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /does not accept positional arguments/u);
+    assert.match(payload.message, /unexpected-positional-arg/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler doctor fails closed with structured PHASE9_USAGE when unexpected positional arguments are supplied', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-doctor-positional-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'doctor', 'unexpected-positional-arg', '--objective', 'OBJ-001']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler doctor');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /does not accept positional arguments/u);
+    assert.match(payload.message, /unexpected-positional-arg/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('scheduler remove fails closed with structured PHASE9_USAGE when unexpected positional arguments are supplied', async () => {
+  const projectRoot = await createCliFixtureProject('vre-scheduler-remove-positional-');
+  try {
+    const result = await runVre(projectRoot, ['scheduler', 'remove', 'unexpected-positional-arg', '--objective', 'OBJ-001']);
+    assert.equal(result.code, 3, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'scheduler remove');
+    assert.equal(payload.code, 'PHASE9_USAGE');
+    assert.match(payload.message, /does not accept positional arguments/u);
+    assert.match(payload.message, /unexpected-positional-arg/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
