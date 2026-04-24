@@ -211,6 +211,7 @@ const activePhase9TestFiles = [
   'environment/tests/control/capability-handshake.test.js',
   'environment/tests/control/capability-handshake-drift.test.js',
   'environment/tests/control/analysis-manifest.test.js',
+  'environment/tests/control/agent-orchestration.test.js',
   'environment/tests/control/experiment-binding.test.js',
   'environment/tests/control/objective-store.test.js',
   'environment/tests/control/queue-adapter.test.js',

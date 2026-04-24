@@ -77,6 +77,7 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'execution-lane.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'ledgers.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'autonomy-runtime.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'agent-orchestration.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'semantic-drift-checkpoint.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'queue-adapter.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'windows-task-scheduler.js'), '// fixture\n', 'utf8');
@@ -124,7 +125,7 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 31);
+    assert.equal(surfaces.length, 32);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'test:phase9'), true);
@@ -141,6 +142,7 @@ test('phase9 surface-index generator runs and returns the pinned shape', async (
     assert.equal(surfaces.some((surface) => surface.name === 'execution-lane'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'orchestrator-ledgers'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'autonomy-runtime'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'agent-orchestration'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'semantic-drift-checkpoint'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'queue-adapter'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'windows-task-scheduler'), true);
@@ -168,6 +170,7 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'execution-lane'), true);
     assert.equal(persisted.some((surface) => surface.name === 'orchestrator-ledgers'), true);
     assert.equal(persisted.some((surface) => surface.name === 'autonomy-runtime'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'agent-orchestration'), true);
     assert.equal(persisted.some((surface) => surface.name === 'semantic-drift-checkpoint'), true);
     assert.equal(persisted.some((surface) => surface.name === 'queue-adapter'), true);
     assert.equal(persisted.some((surface) => surface.name === 'windows-task-scheduler'), true);

@@ -148,6 +148,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/agent-orchestration.js',
+    kind: 'orchestrator-surface',
+    name: 'agent-orchestration',
+    featureId: 'W45-ROLE-BOUNDED-DISPATCH',
+    introducedAt: '2026-04-24'
+  },
+  {
     file: 'environment/orchestrator/semantic-drift-checkpoint.js',
     kind: 'orchestrator-surface',
     name: 'semantic-drift-checkpoint',
