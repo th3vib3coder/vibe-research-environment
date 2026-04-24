@@ -721,3 +721,56 @@ test('Round 81: validateReviewedSpawnRequest rejects reviewed-session env prefix
     (error) => error instanceof AgentOrchestrationError && error.code === 'E_ENV_ALLOWLIST_VIOLATED',
   );
 });
+
+// Round 82 seq-098 residual claim-without-pin closure: Round 81 pinned 18
+// fail-closed paths in `agent-orchestration.js`, but a second adversarial
+// enumeration of the exact line numbers where each error-code is raised
+// showed 2 more requireString-guarded call sites without dedicated tests —
+// line 324 (empty/missing `sessionIsolation.workspaceRoot` via
+// `requireString` -> `E_SESSION_ISOLATION_REQUIRED`, RED-first verified)
+// and line 344 (non-string `sessionIsolation.scratchRoot` when the field is
+// explicitly provided via `requireString` -> `E_SESSION_ISOLATION_REQUIRED`).
+// The existing `E_SESSION_ISOLATION_REQUIRED` tests fire the line-308
+// isolation-null and line-316 inheritChatHistory variants, so these two
+// call sites were silently unpinned. A third candidate — the line-518
+// `requireString` for an empty/missing roleId — was investigated and
+// consciously NOT added here, because an empty-string roleId lands on the
+// line-521 matrix-miss guard with the same `E_UNSUPPORTED_ROLE` code, so
+// the line-518 requireString is defensively redundant rather than a
+// distinct branch with observable behavior.
+
+test('Round 82: prepareRoleDispatch fails closed with E_SESSION_ISOLATION_REQUIRED when sessionIsolation.workspaceRoot is missing', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      sessionIsolation: {
+        inheritChatHistory: false,
+        // workspaceRoot intentionally omitted — must fail closed at the
+        // requireString guard before any cwd resolution attempt.
+      },
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_SESSION_ISOLATION_REQUIRED',
+  );
+});
+
+test('Round 82: prepareRoleDispatch fails closed with E_SESSION_ISOLATION_REQUIRED when sessionIsolation.scratchRoot is explicitly non-string', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      sessionIsolation: {
+        workspaceRoot: repoRoot,
+        inheritChatHistory: false,
+        // scratchRoot explicitly set to a non-string must fail closed at the
+        // requireString guard rather than fall through to resolvePathInsideProject.
+        scratchRoot: 42,
+      },
+    }), {
+      skipSurfaceCheck: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    }),
+    'E_SESSION_ISOLATION_REQUIRED',
+  );
+});
