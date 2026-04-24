@@ -634,6 +634,16 @@ test('research-loop executes one bounded safe slice, writes queue/event/snapshot
     assert.equal(events.some((entry) => entry.kind === 'analysis-run' && entry.payload.phase === 'started'), true);
     const loopEvent = events.find((entry) => entry.kind === 'loop-iteration');
     assert.equal(loopEvent.payload.memorySync.status, 'synced');
+    // Round 72 symmetry coverage: the failed-case test below at
+    // `loopEvent.payload.status === 'failed'` pinned the result-status field
+    // for the non-success branch. The happy-path success case implicitly
+    // relied on schema validation at write time + the CLI-level
+    // `payload.status === 'slice-complete'` assertion above. Pin the
+    // event-level success status explicitly so a future silent regression
+    // that drops the `'complete'` result field from `loop-iteration`
+    // payload is caught at test time rather than via downstream failure.
+    assert.equal(loopEvent.payload.status, 'complete');
+    assert.equal(loopEvent.payload.resultCode, null);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

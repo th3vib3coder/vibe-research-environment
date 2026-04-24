@@ -292,3 +292,144 @@ test('objective queue adapter rejects queue.jsonl whose recordSeq is not strictl
     await rm(projectRoot, { recursive: true, force: true });
   }
 });
+
+// Round 72 symmetry coverage: pin the 10 remaining `assertValidObjectiveQueueRecord`
+// (queue-adapter.js:72-109) defensive validator branches that Round 71 seq 087
+// transparently deferred as "pure symmetry following the taskId pattern already
+// pinned by seq 086". These regressions are pure coverage hardening — they do
+// not close a claim-without-pin gap from any ledger row, but they prevent silent
+// regression across every validator path so a future refactor cannot silently
+// drop any individual guard without at least one test catching it. Round 72 is
+// labeled honestly in seq 088 as symmetry-only, not drift closure.
+//
+// The remaining 10 branches split by error-message family:
+//   - 4 non-empty-string fields: taskKind, taskAttemptId, sessionId, wakeId
+//   - 2 ISO-datetime fields: createdAt, updatedAt
+//   - 2 string-array fields: sourceArtifactPaths, resultArtifactPaths
+//   - 1 conditional-non-null-string field: handoffId
+//   - 1 positive-integer field: recordSeq
+
+function buildValidObjectiveQueueRecord(objectiveId, overrides = {}) {
+  return {
+    recordSeq: 1,
+    objectiveId,
+    taskId: 'analysis-execution-run:ANL-SYMMETRY-001',
+    taskKind: 'analysis-execution-run',
+    status: 'running',
+    taskAttemptId: 'TASK-SYMMETRY-001-A',
+    createdAt: '2026-04-24T10:00:00Z',
+    updatedAt: '2026-04-24T10:00:00Z',
+    sessionId: 'sess-symmetry',
+    wakeId: 'WAKE-SYMMETRY',
+    handoffId: null,
+    sourceArtifactPaths: ['analysis/manifests/symmetry.json'],
+    resultArtifactPaths: [],
+    resumeCursor: {
+      manifestPath: 'analysis/manifests/symmetry.json',
+      queueRecordSeq: null
+    },
+    ...overrides
+  };
+}
+
+test('objective queue adapter rejects queue lines that miss each individually required string field', async () => {
+  const requiredStringFields = ['taskKind', 'taskAttemptId', 'sessionId', 'wakeId'];
+  for (const field of requiredStringFields) {
+    const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+    try {
+      const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+      const record = buildValidObjectiveQueueRecord(objectiveId);
+      delete record[field];
+      await writeFile(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
+
+      await assert.rejects(
+        readObjectiveQueueRecords(projectRoot, objectiveId),
+        new RegExp(`${field} must be a non-empty string`, 'u'),
+        `expected rejection for missing ${field}, but adapter did not throw the canonical error`
+      );
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+    }
+  }
+});
+
+test('objective queue adapter rejects queue lines whose ISO date-time fields are not parseable', async () => {
+  const dateFields = ['createdAt', 'updatedAt'];
+  for (const field of dateFields) {
+    const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+    try {
+      const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+      const record = buildValidObjectiveQueueRecord(objectiveId, { [field]: 'not-an-iso-datetime' });
+      await writeFile(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
+
+      await assert.rejects(
+        readObjectiveQueueRecords(projectRoot, objectiveId),
+        new RegExp(`${field} must be an ISO-8601 date-time string`, 'u'),
+        `expected rejection for invalid ${field} ISO value`
+      );
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+    }
+  }
+});
+
+test('objective queue adapter rejects queue lines whose artifact-path fields are not arrays', async () => {
+  const arrayFields = ['sourceArtifactPaths', 'resultArtifactPaths'];
+  for (const field of arrayFields) {
+    const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+    try {
+      const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+      // Pass a non-array value (string) to trigger the `assertStringArray`
+      // top-level branch; a separate test below covers the per-entry
+      // non-empty-string guard for entries inside the array.
+      const record = buildValidObjectiveQueueRecord(objectiveId, { [field]: 'not-an-array' });
+      await writeFile(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
+
+      await assert.rejects(
+        readObjectiveQueueRecords(projectRoot, objectiveId),
+        new RegExp(`${field} must be an array`, 'u'),
+        `expected rejection for non-array ${field}`
+      );
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+    }
+  }
+});
+
+test('objective queue adapter rejects queue lines whose handoffId is a non-null empty string', async () => {
+  const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+  try {
+    const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+    const record = buildValidObjectiveQueueRecord(objectiveId, { handoffId: '' });
+    await writeFile(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
+
+    await assert.rejects(
+      readObjectiveQueueRecords(projectRoot, objectiveId),
+      /handoffId must be a non-empty string/u,
+      'expected rejection for empty handoffId (non-null path)'
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test('objective queue adapter rejects queue lines whose recordSeq is not a positive integer', async () => {
+  const { projectRoot, objectiveId } = await createObjectiveFixtureProject();
+  try {
+    const queuePath = objectiveQueuePath(projectRoot, objectiveId);
+    // recordSeq must be Number.isInteger AND > 0. Zero is the clearest
+    // rejection case: it is a finite integer that violates the
+    // positive-integer guard without ambiguity with undefined/null
+    // handling, which the JSON parser would normalize differently.
+    const record = buildValidObjectiveQueueRecord(objectiveId, { recordSeq: 0 });
+    await writeFile(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
+
+    await assert.rejects(
+      readObjectiveQueueRecords(projectRoot, objectiveId),
+      /recordSeq must be a positive integer/u,
+      'expected rejection for recordSeq=0'
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
