@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -250,7 +250,10 @@ async function seedBoundResearchContext(projectRoot, options = {}) {
     manifestPath,
     queuePath: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'queue.jsonl'),
     snapshotPath: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'resume-snapshot.json'),
-    blockerPath: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'BLOCKER.flag')
+    blockerPath: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'BLOCKER.flag'),
+    handoffsPath: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'handoffs.jsonl'),
+    digestLatestPath: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'digest-latest.md'),
+    digestsDir: path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'digests')
   };
 }
 
@@ -262,8 +265,16 @@ async function readObjectiveEvents(projectRoot, objectiveId = 'OBJ-001') {
   return readJsonl(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'events.jsonl'));
 }
 
+async function readObjectiveHandoffs(projectRoot, objectiveId = 'OBJ-001') {
+  return readJsonl(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'handoffs.jsonl'));
+}
+
 async function readBlockerText(projectRoot, objectiveId = 'OBJ-001') {
   return readFile(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'BLOCKER.flag'), 'utf8');
+}
+
+async function listObjectiveDigestFiles(projectRoot, objectiveId = 'OBJ-001') {
+  return readdir(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'digests'));
 }
 
 async function setPointerWakeLease(projectRoot, objectiveId, lease) {
@@ -407,6 +418,41 @@ test('research-loop blocks with E_LLM_REASONING_REQUIRED in unattended-batch mod
   }
 });
 
+test('research-loop blocks with E_TASK_KIND_NOT_ALLOWED when the objective budget disallows analysis-execution-run', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-task-kind-block-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-task-kind-block-001',
+      scriptContents: SAFE_SCRIPT,
+      budget: {
+        allowedTaskKinds: ['package-results']
+      }
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--mode',
+      'unattended-batch'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'blocked');
+    assert.equal(payload.stopReason, 'E_TASK_KIND_NOT_ALLOWED');
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords, []);
+    assert.match(await readBlockerText(projectRoot, context.objectiveId), /E_TASK_KIND_NOT_ALLOWED/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 // T4.2 drift closure: prior to this pass, bin/vre parsed `--mode` but the
 // runtime never used or validated it. That created an operator-deceptive CLI
 // surface where `--mode interactive|unattended-batch` looked meaningful but
@@ -516,20 +562,141 @@ test('research-loop executes one bounded safe slice, writes queue/event/snapshot
     assert.equal(payload.ok, true);
     assert.equal(payload.status, 'slice-complete');
     assert.equal(payload.taskKind, 'analysis-execution-run');
+    assert.match(payload.digestPath, /digest-latest\.md$/u);
 
     const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
     assert.deepEqual(queueRecords.map((record) => record.status), ['running', 'completed']);
+    assert.equal(queueRecords.length, 2);
+    const [runningRecord, completedRecord] = queueRecords;
+    assert.equal(runningRecord.objectiveId, context.objectiveId);
+    assert.equal(completedRecord.objectiveId, context.objectiveId);
+    assert.equal(runningRecord.taskId, 'analysis-execution-run:ANL-loop-safe-001');
+    assert.equal(completedRecord.taskId, runningRecord.taskId);
+    assert.equal(runningRecord.taskKind, 'analysis-execution-run');
+    assert.equal(completedRecord.taskKind, 'analysis-execution-run');
+    assert.equal(runningRecord.analysisId, 'ANL-loop-safe-001');
+    assert.equal(completedRecord.analysisId, 'ANL-loop-safe-001');
+    assert.match(String(runningRecord.taskAttemptId), /^TASK-ANL-loop-safe-001-/u);
+    assert.equal(completedRecord.taskAttemptId, runningRecord.taskAttemptId);
+    assert.match(String(runningRecord.sessionId), /^sess-/u);
+    assert.equal(completedRecord.sessionId, runningRecord.sessionId);
+    assert.equal(runningRecord.wakeId, 'WAKE-001');
+    assert.equal(completedRecord.wakeId, 'WAKE-001');
+    assert.equal(runningRecord.handoffId, null);
+    assert.equal(completedRecord.handoffId, null);
+    assert.equal(Array.isArray(runningRecord.sourceArtifactPaths), true);
+    assert.equal(Array.isArray(completedRecord.sourceArtifactPaths), true);
+    assert.equal(Array.isArray(runningRecord.resultArtifactPaths), true);
+    assert.equal(Array.isArray(completedRecord.resultArtifactPaths), true);
+    assert.deepEqual(runningRecord.sourceArtifactPaths, [
+      context.manifestPath,
+      context.manifest.inputs[0].path
+    ]);
+    assert.deepEqual(completedRecord.sourceArtifactPaths, runningRecord.sourceArtifactPaths);
+    assert.deepEqual(runningRecord.resultArtifactPaths, []);
+    assert.deepEqual(completedRecord.resultArtifactPaths, [
+      context.manifest.outputs[0].path
+    ]);
+    assert.deepEqual(runningRecord.resumeCursor, {
+      manifestPath: context.manifestPath,
+      queueRecordSeq: null
+    });
+    assert.deepEqual(completedRecord.resumeCursor, {
+      manifestPath: context.manifestPath,
+      queueRecordSeq: runningRecord.recordSeq
+    });
+    assert.match(String(runningRecord.createdAt), /^\d{4}-\d{2}-\d{2}T/u);
+    assert.match(String(runningRecord.updatedAt), /^\d{4}-\d{2}-\d{2}T/u);
+    assert.match(String(completedRecord.createdAt), /^\d{4}-\d{2}-\d{2}T/u);
+    assert.match(String(completedRecord.updatedAt), /^\d{4}-\d{2}-\d{2}T/u);
     assert.equal(await pathExists(context.snapshotPath), true);
 
     const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
     assert.equal(snapshotState.exists, true);
     assert.equal(snapshotState.snapshot.writtenReason, 'loop-iteration');
     assert.equal(snapshotState.snapshot.queueVisibility.queueCursor, '2');
+    assert.equal(snapshotState.snapshot.queueVisibility.pendingCount, 0);
+    assert.equal(snapshotState.snapshot.queueVisibility.runningCount, 0);
+    assert.equal(snapshotState.snapshot.queueVisibility.lastTaskId, 'analysis-execution-run:ANL-loop-safe-001');
     assert.equal(snapshotState.snapshot.wakeLease.wakeId, 'WAKE-001');
+    assert.equal(await pathExists(context.digestLatestPath), true);
+    const digestFiles = await listObjectiveDigestFiles(projectRoot, context.objectiveId);
+    assert.equal(digestFiles.length, 1);
+    assert.match(digestFiles[0], /^digest-.*\.md$/u);
+    const latestDigest = await readFile(context.digestLatestPath, 'utf8');
+    const immutableDigest = await readFile(path.join(context.digestsDir, digestFiles[0]), 'utf8');
+    assert.equal(latestDigest, immutableDigest);
+    assert.match(latestDigest, /Analysis Id: ANL-loop-safe-001/u);
+    assert.match(latestDigest, /Queue Cursor: 2/u);
 
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
     assert.equal(events.some((entry) => entry.kind === 'loop-iteration'), true);
     assert.equal(events.some((entry) => entry.kind === 'analysis-run' && entry.payload.phase === 'started'), true);
+    const loopEvent = events.find((entry) => entry.kind === 'loop-iteration');
+    assert.equal(loopEvent.payload.memorySync.status, 'synced');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop persists a failed terminal queue result, loop event, and digest when bounded execution fails', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-failed-result-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-failed-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    await assert.rejects(
+      runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        heartbeat: true,
+        wakeId: 'WAKE-FAIL',
+        sessionId: 'sess-fail'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+        runAnalysisCommand: async () => ({
+          ok: false,
+          code: 'E_ANALYSIS_CHILD_FAILED',
+          status: 'failed',
+          message: 'fixture child failed',
+          outputPaths: []
+        })
+      }),
+      (error) => {
+        assert.equal(error.code, 'E_ANALYSIS_CHILD_FAILED');
+        assert.equal(error.extra.status, 'failed');
+        return true;
+      }
+    );
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords.map((record) => record.status), ['running', 'failed']);
+    assert.equal(queueRecords[0].wakeId, 'WAKE-FAIL');
+    assert.equal(queueRecords[1].wakeId, 'WAKE-FAIL');
+    assert.equal(queueRecords[1].resumeCursor.queueRecordSeq, queueRecords[0].recordSeq);
+    assert.deepEqual(queueRecords[1].resultArtifactPaths, []);
+
+    const events = await readObjectiveEvents(projectRoot, context.objectiveId);
+    const loopEvent = events.find((entry) => entry.kind === 'loop-iteration');
+    assert.ok(loopEvent);
+    assert.equal(loopEvent.payload.status, 'failed');
+    assert.equal(loopEvent.payload.resultCode, 'E_ANALYSIS_CHILD_FAILED');
+
+    const snapshotState = await readResumeSnapshot(projectRoot, context.objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.queueVisibility.queueCursor, '2');
+    assert.equal(snapshotState.snapshot.queueVisibility.pendingCount, 0);
+    assert.equal(snapshotState.snapshot.queueVisibility.runningCount, 0);
+    assert.equal(snapshotState.snapshot.queueVisibility.lastTaskId, 'analysis-execution-run:ANL-loop-failed-001');
+
+    const digestFiles = await listObjectiveDigestFiles(projectRoot, context.objectiveId);
+    assert.equal(digestFiles.length, 1);
+    const latestDigest = await readFile(context.digestLatestPath, 'utf8');
+    const immutableDigest = await readFile(path.join(context.digestsDir, digestFiles[0]), 'utf8');
+    assert.equal(latestDigest, immutableDigest);
+    assert.match(latestDigest, /Stop Reason: E_ANALYSIS_CHILD_FAILED/u);
+    assert.match(latestDigest, /Runtime Status: failed/u);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -703,15 +870,15 @@ test('research-loop can repair a missing final resume snapshot from durable queu
     await assert.rejects(
       runResearchLoopCommand(projectRoot, {
         objectiveId: context.objectiveId,
-        heartbeat: true,
-        wakeId: 'WAKE-CRASH',
-        sessionId: 'sess-crash'
-      }, {
-        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
-        afterQueueResultPersisted: async () => {
-          throw new Error('simulated crash before final resume snapshot');
-        }
-      }),
+      heartbeat: true,
+      wakeId: 'WAKE-CRASH',
+      sessionId: 'sess-crash'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+      afterLoopEventPersisted: async () => {
+        throw new Error('simulated crash before final resume snapshot');
+      }
+    }),
       /simulated crash before final resume snapshot/u
     );
 
@@ -747,6 +914,120 @@ test('research-loop can repair a missing final resume snapshot from durable queu
 
     const events = await readObjectiveEvents(projectRoot, context.objectiveId);
     assert.equal(events.some((entry) => entry.kind === 'state-repair'), true);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop blocks with E_QUEUE_TERMINAL_WITHOUT_EVENT when a prior wake crashed after the terminal queue line but before the terminal objective event', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-terminal-without-event-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-terminal-without-event-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    await assert.rejects(
+      runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        heartbeat: true,
+        wakeId: 'WAKE-QWOE-CRASH',
+        sessionId: 'sess-qwoe-crash'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+        afterQueueResultPersisted: async () => {
+          throw new Error('simulated crash after terminal queue line');
+        }
+      }),
+      /simulated crash after terminal queue line/u
+    );
+
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-QWOE-CRASH',
+      leaseAcquiredAt: '2026-04-22T19:00:00Z',
+      leaseExpiresAt: '2026-04-22T19:01:00Z',
+      acquiredBy: 'sess-qwoe-crash',
+      previousWakeId: null
+    });
+
+    const result = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-QWOE-RESUME',
+      sessionId: 'sess-qwoe-resume'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'blocked');
+    assert.equal(result.stopReason, 'queue-terminal-without-event');
+    assert.match(await readBlockerText(projectRoot, context.objectiveId), /E_QUEUE_TERMINAL_WITHOUT_EVENT/u);
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords.map((record) => record.status), ['running', 'completed']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop reports incomplete-at-crash, writes a handoff with objective id, and does not duplicate a non-idempotent running task automatically', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-incomplete-at-crash-');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-incomplete-at-crash-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    await assert.rejects(
+      runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        heartbeat: true,
+        wakeId: 'WAKE-INCOMPLETE-CRASH',
+        sessionId: 'sess-incomplete-crash'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+        afterTaskIntentPersisted: async () => {
+          throw new Error('simulated crash after task-intent');
+        }
+      }),
+      /simulated crash after task-intent/u
+    );
+
+    const crashedQueue = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(crashedQueue.map((record) => record.status), ['running']);
+
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-INCOMPLETE-CRASH',
+      leaseAcquiredAt: '2026-04-22T19:00:00Z',
+      leaseExpiresAt: '2026-04-22T19:01:00Z',
+      acquiredBy: 'sess-incomplete-crash',
+      previousWakeId: null
+    });
+
+    const resumed = await runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-INCOMPLETE-RESUME',
+      sessionId: 'sess-incomplete-resume'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    });
+
+    assert.equal(resumed.ok, true);
+    assert.equal(resumed.status, 'blocked');
+    assert.equal(resumed.stopReason, 'incomplete-at-crash');
+    assert.match(String(resumed.digestPath ?? ''), /digest-latest\.md$/u);
+    assert.match(String(resumed.handoffId ?? ''), /^H-/u);
+    assert.equal(await pathExists(context.digestLatestPath), true);
+
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords.map((record) => record.status), ['running']);
+    assert.equal(new Set(queueRecords.map((record) => record.taskAttemptId)).size, 1);
+
+    const handoffs = await readObjectiveHandoffs(projectRoot, context.objectiveId);
+    assert.equal(handoffs.length, 1);
+    assert.equal(handoffs[0].objectiveId, context.objectiveId);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

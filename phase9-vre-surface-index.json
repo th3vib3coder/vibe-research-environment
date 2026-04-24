@@ -181,6 +181,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "queue-adapter",
+    "paths": [
+      "environment/orchestrator/queue-adapter.js"
+    ],
+    "featureId": "W4-QUEUE-AND-TASK-SELECTION",
+    "introducedAt": "2026-04-24"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "resume-snapshot",
     "paths": [
       "environment/objectives/resume-snapshot.js"

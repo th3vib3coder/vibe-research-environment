@@ -134,6 +134,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-23'
   },
   {
+    file: 'environment/orchestrator/queue-adapter.js',
+    kind: 'orchestrator-surface',
+    name: 'queue-adapter',
+    featureId: 'W4-QUEUE-AND-TASK-SELECTION',
+    introducedAt: '2026-04-24'
+  },
+  {
     file: 'environment/orchestrator/windows-task-scheduler.js',
     kind: 'orchestrator-surface',
     name: 'windows-task-scheduler',

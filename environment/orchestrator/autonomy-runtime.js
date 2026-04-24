@@ -16,8 +16,11 @@ import {
   createActiveObjectivePointer,
   createInitialWakeLease,
   objectiveDir,
+  objectiveDigestsDir,
+  objectiveEventsPath,
   objectiveHandoffsPath,
   objectiveRecordPath,
+  OBJECTIVE_HANDOFFS_FILE,
   OBJECTIVE_POINTER_LOCK_NAME,
   pauseObjective,
   readActiveObjectivePointer,
@@ -38,13 +41,22 @@ import {
 } from '../objectives/resume-snapshot.js';
 import { readAndValidateAnalysisManifest, ANALYSIS_MANIFEST_TASK_KIND } from './analysis-manifest.js';
 import { runAnalysisCommand } from './execution-lane.js';
+import {
+  appendObjectiveQueueRecord,
+  deriveObjectiveQueueState,
+  findIncompleteAttempt,
+  latestTerminalQueueRecord,
+  OBJECTIVE_QUEUE_FILE,
+  objectiveQueuePath,
+  readObjectiveQueueRecords,
+  TERMINAL_OBJECTIVE_QUEUE_STATUSES
+} from './queue-adapter.js';
 
 const RESEARCH_LOOP_COMMAND = 'research-loop';
-const OBJECTIVE_QUEUE_FILE = 'queue.jsonl';
 const DEFAULT_SESSION_PREFIX = 'sess-loop';
 const DEFAULT_WAKE_PREFIX = 'wake-loop';
-const TERMINAL_QUEUE_STATUSES = new Set(['completed', 'failed', 'blocked', 'interrupted']);
 const RUNTIME_MODES = new Set(['interactive', 'attended-batch', 'unattended-batch', 'resume-only']);
+const HANDOFF_SCHEMA_FILE = 'phase9-handoff.schema.json';
 
 export class ResearchLoopCliError extends Error {
   constructor({ code, message, exitCode = 1, extra = {} }) {
@@ -115,56 +127,6 @@ async function atomicWriteUtf8(filePath, content) {
   }
 }
 
-function objectiveQueuePath(projectRoot, objectiveId) {
-  return path.join(objectiveDir(projectRoot, objectiveId), OBJECTIVE_QUEUE_FILE);
-}
-
-function queueLockName(objectiveId) {
-  return `${objectiveId}-${OBJECTIVE_QUEUE_FILE}`;
-}
-
-async function appendQueueRecord(projectRoot, objectiveId, record) {
-  const queuePath = objectiveQueuePath(projectRoot, objectiveId);
-  return withLock(projectRoot, queueLockName(objectiveId), async () => {
-    await mkdir(path.dirname(queuePath), { recursive: true });
-    const existing = await readJsonl(queuePath);
-    const nextRecord = {
-      recordSeq: (existing.at(-1)?.recordSeq ?? 0) + 1,
-      ...record
-    };
-    await appendFile(queuePath, `${JSON.stringify(nextRecord)}\n`, 'utf8');
-    return nextRecord;
-  });
-}
-
-async function readQueueRecords(projectRoot, objectiveId) {
-  return readJsonl(objectiveQueuePath(projectRoot, objectiveId));
-}
-
-function deriveQueueState(records) {
-  const latestByAttempt = new Map();
-  for (const record of records) {
-    const current = latestByAttempt.get(record.taskAttemptId);
-    if (!current || (record.recordSeq ?? 0) > (current.recordSeq ?? 0)) {
-      latestByAttempt.set(record.taskAttemptId, record);
-    }
-  }
-
-  const latestRecords = [...latestByAttempt.values()].sort((left, right) => (left.recordSeq ?? 0) - (right.recordSeq ?? 0));
-  const pendingCount = latestRecords.filter((record) => record.status === 'queued').length;
-  const runningCount = latestRecords.filter((record) => record.status === 'running').length;
-  const lastTaskId = latestRecords.at(-1)?.taskId ?? null;
-
-  return {
-    records,
-    latestRecords,
-    pendingCount,
-    runningCount,
-    lastTaskId,
-    queueCursor: records.at(-1)?.recordSeq ?? null
-  };
-}
-
 async function listAnalysisManifestPaths(projectRoot) {
   const manifestsRoot = path.join(projectRoot, 'analysis', 'manifests');
   const discovered = [];
@@ -222,6 +184,11 @@ function deriveOpenHandoffs(handoffs) {
 async function loadResumeSnapshotValidator(projectRoot) {
   const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, RESUME_SNAPSHOT_SCHEMA_FILE);
   return loadValidator(schemaHostRoot, RESUME_SNAPSHOT_SCHEMA_FILE);
+}
+
+async function loadHandoffValidator(projectRoot) {
+  const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, HANDOFF_SCHEMA_FILE);
+  return loadValidator(schemaHostRoot, HANDOFF_SCHEMA_FILE);
 }
 
 async function buildRuntimeResumeSnapshot(
@@ -338,6 +305,198 @@ async function writeBlockerFlag(projectRoot, objectiveId, { code, message, snaps
   }
   await atomicWriteUtf8(targetPath, `${lines.join('\n')}\n`);
   return targetPath;
+}
+
+function normalizeTimestampForFileName(timestamp) {
+  return timestamp.replaceAll(':', '-').replaceAll('.', '-');
+}
+
+function objectiveDigestLatestPath(projectRoot, objectiveId) {
+  return path.join(objectiveDir(projectRoot, objectiveId), 'digest-latest.md');
+}
+
+function renderObjectiveDigestMarkdown(summary) {
+  const lines = [
+    '# Objective Digest',
+    '',
+    `- Objective: ${summary.objectiveId}`,
+    `- Written At: ${summary.writtenAt}`,
+    `- Wake Id: ${summary.wakeId ?? 'n/a'}`,
+    `- Runtime Status: ${summary.status}`,
+    `- Queue Cursor: ${summary.queueCursor == null ? 'n/a' : String(summary.queueCursor)}`,
+    `- Last Task Id: ${summary.lastTaskId ?? 'n/a'}`,
+    `- Snapshot Path: ${summary.snapshotPath ?? 'n/a'}`,
+    `- Digest Kind: ${summary.digestKind ?? 'loop-state'}`
+  ];
+
+  if (summary.stopReason) {
+    lines.push(`- Stop Reason: ${summary.stopReason}`);
+  }
+
+  if (summary.taskAttemptId) {
+    lines.push(`- Task Attempt Id: ${summary.taskAttemptId}`);
+  }
+
+  if (summary.taskId) {
+    lines.push(`- Task Id: ${summary.taskId}`);
+  }
+
+  if (summary.analysisId) {
+    lines.push(`- Analysis Id: ${summary.analysisId}`);
+  }
+
+  if (summary.memorySyncStatus) {
+    lines.push(`- Memory Sync: ${summary.memorySyncStatus}`);
+  }
+
+  if (summary.handoffId) {
+    lines.push(`- Handoff Id: ${summary.handoffId}`);
+  }
+
+  if (summary.notes) {
+    lines.push('', '## Notes', summary.notes);
+  }
+
+  return `${lines.join('\n')}\n`;
+}
+
+async function writeObjectiveDigest(projectRoot, objectiveRecord, summary) {
+  const writtenAt = summary.writtenAt ?? now();
+  const digestFileName = `digest-${normalizeTimestampForFileName(writtenAt)}.md`;
+  const digestsDir = objectiveDigestsDir(projectRoot, objectiveRecord.objectiveId);
+  const immutablePath = path.join(digestsDir, digestFileName);
+  const latestPath = objectiveDigestLatestPath(projectRoot, objectiveRecord.objectiveId);
+  const content = renderObjectiveDigestMarkdown({
+    ...summary,
+    objectiveId: objectiveRecord.objectiveId,
+    writtenAt
+  });
+  await atomicWriteUtf8(immutablePath, content);
+  await atomicWriteUtf8(latestPath, content);
+  return {
+    immutablePath,
+    latestPath,
+    immutableRelativePath: toRepoRelative(projectRoot, immutablePath),
+    latestRelativePath: toRepoRelative(projectRoot, latestPath)
+  };
+}
+
+async function appendObjectiveHandoff(projectRoot, objectiveId, handoff, writtenAt) {
+  const validator = await loadHandoffValidator(projectRoot);
+  const handoffsPath = objectiveHandoffsPath(projectRoot, objectiveId);
+  return withLock(projectRoot, `${objectiveId}-${OBJECTIVE_HANDOFFS_FILE}`, async () => {
+    await mkdir(path.dirname(handoffsPath), { recursive: true });
+    const existing = await readJsonl(handoffsPath);
+    const nextRecord = {
+      schemaVersion: 'phase9.handoff.v1',
+      objectiveId,
+      ts: writtenAt,
+      recordSeq: (existing.at(-1)?.recordSeq ?? 0) + 1,
+      handoffId: handoff.handoffId,
+      fromAgentRole: handoff.fromAgentRole,
+      toAgentRole: handoff.toAgentRole,
+      artifactPaths: handoff.artifactPaths,
+      summary: handoff.summary,
+      openBlockers: handoff.openBlockers,
+      closesHandoffId: handoff.closesHandoffId ?? null,
+      writerSession: handoff.writerSession
+    };
+    assertValid(validator, nextRecord, 'phase9 handoff');
+    await appendFile(handoffsPath, `${JSON.stringify(nextRecord)}\n`, 'utf8');
+    return {
+      handoff: nextRecord,
+      handoffsPath
+    };
+  });
+}
+
+function findMatchingTerminalOutcomeEvent(events, record) {
+  return events.find((entry) => {
+    if (entry.kind !== 'loop-iteration') {
+      return false;
+    }
+    const payload = entry.payload ?? {};
+    return (
+      payload.taskAttemptId === record.taskAttemptId ||
+      (payload.taskId === record.taskId && payload.analysisId === record.analysisId)
+    );
+  }) ?? null;
+}
+
+async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, blocker, writtenAt, options = {}) {
+  const blocked = await updateObjectiveStatus(projectRoot, objectiveRecord.objectiveId, 'blocked', writtenAt);
+  const snapshot = await writeRuntimeResumeSnapshot(
+    projectRoot,
+    blocked.objectiveRecord,
+    blocked.activePointer,
+    queueState,
+    {
+      writtenAt,
+      writtenReason: 'heartbeat',
+      effectiveBudget,
+      nextAction: {
+        kind: 'await-operator',
+        params: {
+          reason: blocker.code
+        }
+      },
+      notes: blocker.message
+    }
+  );
+  const snapshotRelativePath = toRepoRelative(projectRoot, snapshot.snapshotPath);
+  await writeBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
+    code: blocker.code,
+    message: blocker.message,
+    snapshotPath: snapshotRelativePath,
+    writtenAt
+  });
+  await appendObjectiveEvent(projectRoot, objectiveRecord.objectiveId, 'blocker-open', {
+    code: blocker.code,
+    message: blocker.message,
+    snapshotPath: snapshotRelativePath
+  }, writtenAt);
+
+  let handoffResult = null;
+  if (options.handoff != null) {
+    handoffResult = await appendObjectiveHandoff(projectRoot, objectiveRecord.objectiveId, {
+      ...options.handoff,
+      artifactPaths: [
+        ...options.handoff.artifactPaths,
+        snapshotRelativePath
+      ]
+    }, writtenAt);
+  }
+
+  let digestResult = null;
+  if (options.writeDigest === true) {
+    digestResult = await writeObjectiveDigest(projectRoot, blocked.objectiveRecord, {
+      writtenAt,
+      wakeId: options.wakeId ?? null,
+      status: 'blocked',
+      stopReason: blocker.stopReason ?? blocker.code,
+      queueCursor: queueState.queueCursor,
+      lastTaskId: queueState.lastTaskId,
+      snapshotPath: snapshotRelativePath,
+      taskAttemptId: blocker.taskAttemptId ?? null,
+      taskId: blocker.taskId ?? null,
+      analysisId: blocker.analysisId ?? null,
+      handoffId: handoffResult?.handoff.handoffId ?? null,
+      digestKind: options.digestKind ?? 'loop-state',
+      notes: blocker.message
+    });
+  }
+
+  return {
+    ok: true,
+    command: RESEARCH_LOOP_COMMAND,
+    phase9: true,
+    objectiveId: objectiveRecord.objectiveId,
+    status: 'blocked',
+    stopReason: blocker.stopReason ?? blocker.code,
+    snapshotPath: snapshotRelativePath,
+    handoffId: handoffResult?.handoff.handoffId ?? null,
+    digestPath: digestResult?.latestRelativePath ?? null
+  };
 }
 
 function resolveEffectiveBudget(objectiveRecord, options = {}) {
@@ -688,7 +847,7 @@ function candidateAlreadyHandled(queueState, analysisId) {
   return queueState.latestRecords.some((record) =>
     record.taskKind === ANALYSIS_MANIFEST_TASK_KIND &&
     record.analysisId === analysisId &&
-    TERMINAL_QUEUE_STATUSES.has(record.status)
+    TERMINAL_OBJECTIVE_QUEUE_STATUSES.has(record.status)
   );
 }
 
@@ -740,11 +899,6 @@ async function deriveNextAnalysisCandidate(projectRoot, objectiveRecord, queueSt
     code: 'E_LLM_REASONING_REQUIRED',
     message: 'No sanctioned next slice is mechanically derivable under rule-only unattended mode.'
   };
-}
-
-function latestTerminalQueueRecord(queueState) {
-  const terminalRecords = queueState.latestRecords.filter((record) => TERMINAL_QUEUE_STATUSES.has(record.status));
-  return terminalRecords.at(-1) ?? null;
 }
 
 async function maybeRepairSnapshotFromDurableState(projectRoot, objectiveRecord, activePointer, queueState, effectiveBudget, writtenAt) {
@@ -871,8 +1025,8 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
   }
 
   let objectiveRecord = await readObjectiveRecord(projectRoot, objectiveId);
-  const queueRecords = await readQueueRecords(projectRoot, objectiveId);
-  let queueState = deriveQueueState(queueRecords);
+  const queueRecords = await readObjectiveQueueRecords(projectRoot, objectiveId);
+  let queueState = deriveObjectiveQueueState(queueRecords);
   const handoffs = await readJsonl(objectiveHandoffsPath(projectRoot, objectiveId));
   const snapshotState = await readResumeSnapshot(projectRoot, objectiveId);
   const effectiveBudget = resolveEffectiveBudget(objectiveRecord, options);
@@ -921,6 +1075,73 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     }, writtenAt);
   }
 
+  const existingEvents = await readJsonl(objectiveEventsPath(projectRoot, objectiveId));
+  const latestTerminal = latestTerminalQueueRecord(queueState);
+  if (latestTerminal && !findMatchingTerminalOutcomeEvent(existingEvents, latestTerminal)) {
+    return blockResearchLoop(
+      projectRoot,
+      objectiveRecord,
+      claimedPointer,
+      queueState,
+      effectiveBudget,
+      {
+        code: 'E_QUEUE_TERMINAL_WITHOUT_EVENT',
+        stopReason: 'queue-terminal-without-event',
+        message: `Queue shows terminal task ${latestTerminal.taskId} without a matching terminal objective event.`,
+        taskAttemptId: latestTerminal.taskAttemptId,
+        taskId: latestTerminal.taskId,
+        analysisId: latestTerminal.analysisId ?? null
+      },
+      writtenAt,
+      {
+        wakeId: wakeRequest.wakeId,
+        writeDigest: true,
+        digestKind: 'crash-recovery'
+      }
+    );
+  }
+
+  const incompleteAttempt = findIncompleteAttempt(queueState);
+  if (incompleteAttempt) {
+    return blockResearchLoop(
+      projectRoot,
+      objectiveRecord,
+      claimedPointer,
+      queueState,
+      effectiveBudget,
+      {
+        code: 'E_TASK_INCOMPLETE_AT_CRASH',
+        stopReason: 'incomplete-at-crash',
+        message: `Task ${incompleteAttempt.taskId} was left in ${incompleteAttempt.status} state after a prior wake; operator review is required before resume.`,
+        taskAttemptId: incompleteAttempt.taskAttemptId,
+        taskId: incompleteAttempt.taskId,
+        analysisId: incompleteAttempt.analysisId ?? null
+      },
+      writtenAt,
+      {
+        wakeId: wakeRequest.wakeId,
+        writeDigest: true,
+        digestKind: 'crash-recovery',
+        handoff: {
+          handoffId: `H-${objectiveId}-${Date.now()}`,
+          fromAgentRole: objectiveRecord.ownerAgentRole ?? 'lead-researcher',
+          toAgentRole: 'operator',
+          artifactPaths: [
+            toRepoRelative(projectRoot, objectiveQueuePath(projectRoot, objectiveId)),
+            toRepoRelative(projectRoot, objectiveEventsPath(projectRoot, objectiveId))
+          ],
+          summary: `Operator review required for incomplete task attempt ${incompleteAttempt.taskAttemptId}.`,
+          openBlockers: [{
+            code: 'E_TASK_INCOMPLETE_AT_CRASH',
+            message: `Task ${incompleteAttempt.taskId} was left in ${incompleteAttempt.status} state after a prior wake.`,
+            openedAt: writtenAt
+          }],
+          writerSession: sessionId
+        }
+      }
+    );
+  }
+
   const repaired = await maybeRepairSnapshotFromDurableState(
     projectRoot,
     objectiveRecord,
@@ -937,9 +1158,8 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     };
   }
 
-  const existingEvents = await readJsonl(path.join(objectiveDir(projectRoot, objectiveId), 'events.jsonl'));
   const iterationsCompleted = countIterations(existingEvents);
-  const terminalTaskCount = queueState.latestRecords.filter((record) => TERMINAL_QUEUE_STATUSES.has(record.status)).length;
+  const terminalTaskCount = queueState.latestRecords.filter((record) => TERMINAL_OBJECTIVE_QUEUE_STATUSES.has(record.status)).length;
   const createdAtMs = Date.parse(objectiveRecord.createdAt);
   const writtenAtMs = Date.parse(writtenAt);
   const wallSecondsConsumed = Number.isFinite(createdAtMs) && Number.isFinite(writtenAtMs)
@@ -1021,52 +1241,23 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
 
   const candidate = await deriveNextAnalysisCandidate(projectRoot, objectiveRecord, queueState, deps);
   if (candidate.kind !== 'analysis') {
-    const blocked = await updateObjectiveStatus(projectRoot, objectiveId, 'blocked', writtenAt);
-    const blockedQueueState = deriveQueueState(await readQueueRecords(projectRoot, objectiveId));
-    const snapshot = await writeRuntimeResumeSnapshot(
+    return blockResearchLoop(
       projectRoot,
-      blocked.objectiveRecord,
-      blocked.activePointer,
-      blockedQueueState,
+      objectiveRecord,
+      claimedPointer,
+      queueState,
+      effectiveBudget,
       {
-        writtenAt,
-        writtenReason: 'heartbeat',
-        effectiveBudget,
-        nextAction: {
-          kind: 'await-operator',
-          params: {
-            reason: candidate.code
-          }
-        },
-        notes: candidate.message
-      }
-    );
-    const snapshotRelativePath = toRepoRelative(projectRoot, snapshot.snapshotPath);
-    await writeBlockerFlag(projectRoot, objectiveId, {
-      code: candidate.code,
-      message: candidate.message,
-      snapshotPath: snapshotRelativePath,
+        code: candidate.code,
+        message: candidate.message
+      },
       writtenAt
-    });
-    await appendObjectiveEvent(projectRoot, objectiveId, 'blocker-open', {
-      code: candidate.code,
-      message: candidate.message,
-      snapshotPath: snapshotRelativePath
-    }, writtenAt);
-    return {
-      ok: true,
-      command: RESEARCH_LOOP_COMMAND,
-      phase9: true,
-      objectiveId,
-      status: 'blocked',
-      stopReason: candidate.code,
-      snapshotPath: snapshotRelativePath
-    };
+    );
   }
 
   const taskAttemptId = `TASK-${candidate.validated.manifest.analysisId}-${Date.now()}`;
   const taskId = `${ANALYSIS_MANIFEST_TASK_KIND}:${candidate.validated.manifest.analysisId}`;
-  const runningQueueRecord = await appendQueueRecord(projectRoot, objectiveId, {
+  const runningQueueRecord = await appendObjectiveQueueRecord(projectRoot, objectiveId, {
     objectiveId,
     taskId,
     taskKind: ANALYSIS_MANIFEST_TASK_KIND,
@@ -1088,9 +1279,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       queueRecordSeq: null
     }
   });
-  queueState = deriveQueueState(await readQueueRecords(projectRoot, objectiveId));
+  queueState = deriveObjectiveQueueState(await readObjectiveQueueRecords(projectRoot, objectiveId));
 
-  await appendObjectiveEvent(projectRoot, objectiveId, 'analysis-run', {
+  const startedEvent = await appendObjectiveEvent(projectRoot, objectiveId, 'analysis-run', {
     phase: 'started',
     analysisId: candidate.validated.manifest.analysisId,
     experimentId: candidate.validated.manifest.experimentId,
@@ -1100,6 +1291,17 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     queueRecordSeq: runningQueueRecord.recordSeq,
     wakeId: wakeRequest.wakeId
   }, writtenAt);
+
+  if (typeof deps.afterTaskIntentPersisted === 'function') {
+    await deps.afterTaskIntentPersisted({
+      objectiveRecord,
+      queueState,
+      runningQueueRecord,
+      startedEvent,
+      taskId,
+      taskAttemptId
+    });
+  }
 
   let executionPayload;
   try {
@@ -1111,7 +1313,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     executionPayload = coerceRunAnalysisFailure(error);
   }
 
-  const resultRecord = await appendQueueRecord(projectRoot, objectiveId, {
+  const resultRecord = await appendObjectiveQueueRecord(projectRoot, objectiveId, {
     objectiveId,
     taskId,
     taskKind: ANALYSIS_MANIFEST_TASK_KIND,
@@ -1133,7 +1335,7 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       queueRecordSeq: runningQueueRecord.recordSeq
     }
   });
-  queueState = deriveQueueState(await readQueueRecords(projectRoot, objectiveId));
+  queueState = deriveObjectiveQueueState(await readObjectiveQueueRecords(projectRoot, objectiveId));
 
   if (typeof deps.afterQueueResultPersisted === 'function') {
     await deps.afterQueueResultPersisted({
@@ -1162,6 +1364,15 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     memorySync: memorySyncState
   }, now());
 
+  if (typeof deps.afterLoopEventPersisted === 'function') {
+    await deps.afterLoopEventPersisted({
+      objectiveRecord,
+      queueState,
+      resultRecord,
+      loopEvent
+    });
+  }
+
   const finalSnapshot = await writeRuntimeResumeSnapshot(
     projectRoot,
     objectiveRecord,
@@ -1180,6 +1391,22 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       notes
     }
   );
+  const snapshotRelativePath = toRepoRelative(projectRoot, finalSnapshot.snapshotPath);
+  const digestResult = await writeObjectiveDigest(projectRoot, objectiveRecord, {
+    writtenAt: now(),
+    wakeId: wakeRequest.wakeId,
+    status: executionPayload.ok ? 'slice-complete' : executionPayload.status,
+    stopReason: executionPayload.ok ? null : executionPayload.code,
+    queueCursor: queueState.queueCursor,
+    lastTaskId: queueState.lastTaskId,
+    snapshotPath: snapshotRelativePath,
+    taskAttemptId,
+    taskId,
+    analysisId: candidate.validated.manifest.analysisId,
+    memorySyncStatus: memorySyncState.status,
+    digestKind: 'loop-state',
+    notes
+  });
 
   if (!executionPayload.ok) {
     throw new ResearchLoopCliError({
@@ -1190,8 +1417,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
         wakeId: wakeRequest.wakeId,
         queueRecordSeq: resultRecord.recordSeq,
         eventId: loopEvent.event.eventId,
-        snapshotPath: toRepoRelative(projectRoot, finalSnapshot.snapshotPath),
-        status: executionPayload.status
+        snapshotPath: snapshotRelativePath,
+        status: executionPayload.status,
+        digestPath: digestResult.latestRelativePath
       }
     });
   }
@@ -1210,17 +1438,18 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     queueRecordSeq: resultRecord.recordSeq,
     eventId: loopEvent.event.eventId,
     staleLeaseRecovered: leaseClaim.staleReclaimed,
-    snapshotPath: toRepoRelative(projectRoot, finalSnapshot.snapshotPath),
+    snapshotPath: snapshotRelativePath,
     queuePath: normalizeSlashes(path.join('.vibe-science-environment', 'objectives', objectiveId, OBJECTIVE_QUEUE_FILE)),
-    memorySync: memorySyncState
+    memorySync: memorySyncState,
+    digestPath: digestResult.latestRelativePath
   };
 }
 
 export const INTERNALS = Object.freeze({
   objectiveQueuePath,
-  appendQueueRecord,
-  readQueueRecords,
-  deriveQueueState,
+  appendObjectiveQueueRecord,
+  readObjectiveQueueRecords,
+  deriveObjectiveQueueState,
   resolveEffectiveBudget,
   buildRuntimeResumeSnapshot,
   writeRuntimeResumeSnapshot,

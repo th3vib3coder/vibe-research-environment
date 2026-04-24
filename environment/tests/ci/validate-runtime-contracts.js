@@ -213,6 +213,7 @@ const activePhase9TestFiles = [
   'environment/tests/control/analysis-manifest.test.js',
   'environment/tests/control/experiment-binding.test.js',
   'environment/tests/control/objective-store.test.js',
+  'environment/tests/control/queue-adapter.test.js',
   'environment/tests/control/objective-lock.test.js',
   'environment/tests/control/resume-snapshot.test.js',
   'environment/tests/control/windows-task-scheduler.test.js',
