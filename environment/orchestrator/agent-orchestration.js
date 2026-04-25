@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { access, mkdir } from 'node:fs/promises';
+import { access, mkdir, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -160,6 +160,35 @@ function requireString(value, label, code) {
   return value.trim();
 }
 
+function isPathInside(baseDir, candidatePath) {
+  const relativePath = path.relative(baseDir, candidatePath);
+  return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath));
+}
+
+async function realpathOrResolved(targetPath) {
+  const resolvedTarget = path.resolve(targetPath);
+  try {
+    return await realpath(resolvedTarget);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return resolvedTarget;
+    }
+    throw error;
+  }
+}
+
+async function resolveRealpathInsideProject(projectRoot, targetPath, label, code) {
+  const canonicalProjectRoot = await realpathOrResolved(projectRoot);
+  const canonicalTarget = await realpathOrResolved(targetPath);
+  if (!isPathInside(canonicalProjectRoot, canonicalTarget)) {
+    fail(code, `${label} must stay inside the workspace root.`, {
+      label,
+      candidate: canonicalTarget,
+    });
+  }
+  return canonicalTarget;
+}
+
 async function pathExists(targetPath) {
   try {
     await access(targetPath);
@@ -302,7 +331,7 @@ function resolvePathInsideProject(projectRoot, absoluteCandidate, label, code) {
   return resolved;
 }
 
-function buildSessionIsolation(projectRoot, request, options = {}) {
+async function buildSessionIsolation(projectRoot, request, options = {}) {
   const isolation = request.sessionIsolation;
   if (isolation == null || typeof isolation !== 'object') {
     fail(
@@ -320,9 +349,14 @@ function buildSessionIsolation(projectRoot, request, options = {}) {
     );
   }
 
-  const workspaceRoot = resolvePathInsideProject(
+  const workspaceRoot = await resolveRealpathInsideProject(
     projectRoot,
-    requireString(isolation.workspaceRoot, 'sessionIsolation.workspaceRoot', 'E_SESSION_ISOLATION_REQUIRED'),
+    resolvePathInsideProject(
+      projectRoot,
+      requireString(isolation.workspaceRoot, 'sessionIsolation.workspaceRoot', 'E_SESSION_ISOLATION_REQUIRED'),
+      'sessionIsolation.workspaceRoot',
+      'E_CWD_ESCAPE',
+    ),
     'sessionIsolation.workspaceRoot',
     'E_CWD_ESCAPE',
   );
@@ -330,7 +364,7 @@ function buildSessionIsolation(projectRoot, request, options = {}) {
     typeof isolation.childSessionId === 'string' && isolation.childSessionId.trim() !== ''
       ? isolation.childSessionId.trim()
       : `child-${request.taskId}-${randomUUID()}`;
-  const scratchRoot = isolation.scratchRoot == null
+  const lexicalScratchRoot = isolation.scratchRoot == null
     ? resolveInside(
       projectRoot,
       '.vibe-science-environment',
@@ -346,6 +380,12 @@ function buildSessionIsolation(projectRoot, request, options = {}) {
       'sessionIsolation.scratchRoot',
       'E_WORKSPACE_WRITE_ESCAPE',
     );
+  const scratchRoot = await resolveRealpathInsideProject(
+    projectRoot,
+    lexicalScratchRoot,
+    'sessionIsolation.scratchRoot',
+    'E_WORKSPACE_WRITE_ESCAPE',
+  );
 
   return Object.freeze({
     childSessionId,
@@ -479,7 +519,7 @@ function deriveLeadContinuation(handoff) {
   };
 }
 
-export function validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath) {
+export async function validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath) {
   for (const [key, value] of Object.entries(spawnRequest.env ?? {})) {
     if (DENY_REGEX.test(key) || (typeof value === 'string' && DENY_REGEX.test(value))) {
       fail('E_ENV_LEAK', `Spawn env contains forbidden reviewed-session material in ${key}.`, {
@@ -510,8 +550,8 @@ export function validateReviewedSpawnRequest(spawnRequest, envelope, envelopePat
     }
   }
 
-  const expectedCwd = path.resolve(envelope.sessionIsolation.workspaceRoot);
-  const actualCwd = path.resolve(spawnRequest.cwd);
+  const expectedCwd = await realpathOrResolved(envelope.sessionIsolation.workspaceRoot);
+  const actualCwd = await realpathOrResolved(spawnRequest.cwd);
   if (actualCwd !== expectedCwd) {
     fail('E_CWD_ESCAPE', 'Reviewed subprocess cwd must equal the resolved workspaceRoot.', {
       expectedCwd,
@@ -611,7 +651,7 @@ export async function prepareRoleDispatch(projectPath, request = {}, options = {
     roleId,
     taskId,
   }, options);
-  const sessionIsolation = buildSessionIsolation(projectRoot, {
+  const sessionIsolation = await buildSessionIsolation(projectRoot, {
     ...request,
     objectiveId,
     taskId,
@@ -644,7 +684,7 @@ export async function prepareRoleDispatch(projectPath, request = {}, options = {
     objectiveId,
     taskId,
   });
-  validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath);
+  await validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath);
 
   return {
     roleId,
@@ -693,7 +733,7 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
     objectiveId: plan.objectiveId,
     taskId: plan.taskId,
   });
-  validateReviewedSpawnRequest(finalSpawnRequest, finalEnvelope, plan.envelopePath);
+  await validateReviewedSpawnRequest(finalSpawnRequest, finalEnvelope, plan.envelopePath);
 
   const result = await (options.invokeLaneBinding ?? invokeLaneBinding)(
     plan.binding,

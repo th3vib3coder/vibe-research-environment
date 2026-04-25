@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -1006,13 +1007,13 @@ test('Round 81: getRoleDispatchContract returns the frozen Phase 9 v1 matrix for
   assert.equal(getRoleDispatchContract('not-a-real-role'), null);
 });
 
-test('Round 81: validateReviewedSpawnRequest rejects reviewed-session env prefixes and foreign allowlist entries directly', () => {
+test('Round 81: validateReviewedSpawnRequest rejects reviewed-session env prefixes and foreign allowlist entries directly', async () => {
   const envelope = {
     sessionIsolation: { workspaceRoot: repoRoot },
   };
   const envelopePath = path.resolve(repoRoot, '.vibe-science-environment/tmp/envelope.json');
 
-  assert.throws(
+  await assert.rejects(
     () => validateReviewedSpawnRequest({
       command: 'reviewed-role-runner',
       argv: ['--envelope', envelopePath],
@@ -1023,7 +1024,7 @@ test('Round 81: validateReviewedSpawnRequest rejects reviewed-session env prefix
     (error) => error instanceof AgentOrchestrationError && error.code === 'E_ENV_LEAK',
   );
 
-  assert.throws(
+  await assert.rejects(
     () => validateReviewedSpawnRequest({
       command: 'reviewed-role-runner',
       argv: ['--envelope', envelopePath],
@@ -1086,4 +1087,33 @@ test('Round 82: prepareRoleDispatch fails closed with E_SESSION_ISOLATION_REQUIR
     }),
     'E_SESSION_ISOLATION_REQUIRED',
   );
+});
+
+test('Round 86: prepareRoleDispatch fails closed when sessionIsolation.workspaceRoot resolves outside the workspace via a symlink', async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-agent-orch-symlink-'));
+  const outsideRoot = await mkdtemp(path.join(tmpdir(), 'vre-agent-orch-outside-'));
+  const linkedWorkspaceRoot = path.join(projectRoot, 'workspace-link');
+
+  try {
+    await mkdir(path.join(projectRoot, '.vibe-science-environment', 'objectives'), { recursive: true });
+    await symlink(outsideRoot, linkedWorkspaceRoot, process.platform === 'win32' ? 'junction' : 'dir');
+
+    await expectAgentError(
+      () => prepareRoleDispatch(projectRoot, buildRequest({
+        objectiveId: 'OBJ-T452-SYMLINK-CWD',
+        sessionIsolation: {
+          workspaceRoot: linkedWorkspaceRoot,
+          inheritChatHistory: false,
+        },
+      }), {
+        skipSurfaceCheck: true,
+        lanePolicies: buildLanePolicies(),
+        continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      }),
+      'E_CWD_ESCAPE',
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+    await rm(outsideRoot, { recursive: true, force: true });
+  }
 });

@@ -2,13 +2,20 @@ import { assert, collectFiles, isDirectRun, pathExists, readJson, readText } fro
 
 const DEFAULT_ALLOWLIST_PATH = 'environment/tests/ci/phase9-write-sandbox-allowlist.json';
 const REVIEWED_PREFIXES = ['environment/orchestrator/', 'environment/objectives/'];
-const RAW_IMPORT_PATTERN = /from\s+['"](node:fs(?:\/promises)?|fs(?:\/promises)?|node:child_process|child_process)['"]/gu;
+const RAW_IMPORT_PATTERNS = [
+  /from\s+['"](node:fs(?:\/promises)?|fs(?:\/promises)?|node:child_process|child_process)['"]/gu,
+  /import\s*\(\s*['"](node:fs(?:\/promises)?|fs(?:\/promises)?|node:child_process|child_process)['"]\s*\)/gu,
+  /require\s*\(\s*['"](node:fs(?:\/promises)?|fs(?:\/promises)?|node:child_process|child_process)['"]\s*\)/gu,
+];
 
 function collectRawImports(content) {
   const imports = new Set();
-  let match;
-  while ((match = RAW_IMPORT_PATTERN.exec(content)) !== null) {
-    imports.add(match[1]);
+  for (const pattern of RAW_IMPORT_PATTERNS) {
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(content)) !== null) {
+      imports.add(match[1]);
+    }
   }
   return imports;
 }

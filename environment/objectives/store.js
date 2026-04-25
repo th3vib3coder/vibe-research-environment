@@ -116,11 +116,50 @@ async function realpathForWrite(targetPath) {
   return resolvedTarget;
 }
 
+function failWriteEscape(objectiveId, label, candidate, resolvedPath) {
+  failStore(
+    'E_WORKSPACE_WRITE_ESCAPE',
+    `${label} must stay inside workspaceRoot union scratchRoot union objective-artifacts root.`,
+    {
+      objectiveId,
+      candidate,
+      resolvedPath,
+    }
+  );
+}
+
+async function resolveClosureRoot(projectRoot, objectiveId, targetPath, label) {
+  const canonicalProjectRoot = await realpathForWrite(projectRoot);
+  const canonicalTarget = await realpathForWrite(targetPath);
+  if (!isPathInside(canonicalProjectRoot, canonicalTarget)) {
+    failWriteEscape(objectiveId, label, targetPath, canonicalTarget);
+  }
+  return canonicalTarget;
+}
+
+async function resolveWriteTargetInsideRoots(objectiveId, targetPath, allowedRoots, label) {
+  const resolvedTarget = await realpathForWrite(targetPath);
+  const insideClosure = allowedRoots.some((root) => isPathInside(root, resolvedTarget));
+  if (!insideClosure) {
+    failWriteEscape(objectiveId, label, targetPath, resolvedTarget);
+  }
+  return resolvedTarget;
+}
+
 async function normalizeHandoffArtifactPaths(projectRoot, objectiveId, artifactPaths, options = {}) {
   const canonicalProjectRoot = await realpathForWrite(projectRoot);
-  const workspaceRoot = options.workspaceRoot != null ? await realpathForWrite(options.workspaceRoot) : null;
-  const scratchRoot = options.scratchRoot != null ? await realpathForWrite(options.scratchRoot) : null;
-  const objectiveRoot = await realpathForWrite(objectiveDir(projectRoot, objectiveId));
+  const workspaceRoot = options.workspaceRoot != null
+    ? await resolveClosureRoot(projectRoot, objectiveId, options.workspaceRoot, 'workspaceRoot')
+    : null;
+  const scratchRoot = options.scratchRoot != null
+    ? await resolveClosureRoot(projectRoot, objectiveId, options.scratchRoot, 'scratchRoot')
+    : null;
+  const objectiveRoot = await resolveClosureRoot(
+    projectRoot,
+    objectiveId,
+    objectiveDir(projectRoot, objectiveId),
+    'objective-artifacts root',
+  );
   const allowedRoots = [workspaceRoot, scratchRoot, objectiveRoot].filter(Boolean);
 
   const normalized = [];
@@ -138,20 +177,12 @@ async function normalizeHandoffArtifactPaths(projectRoot, objectiveId, artifactP
     const absoluteCandidate = path.isAbsolute(trimmed)
       ? trimmed
       : path.resolve(resolveBase, trimmed);
-    const resolvedCandidate = await realpathForWrite(absoluteCandidate);
-    const insideClosure = allowedRoots.some((root) => isPathInside(root, resolvedCandidate));
-
-    if (!insideClosure) {
-      failStore(
-        'E_WORKSPACE_WRITE_ESCAPE',
-        'Handoff artifact path must stay inside workspaceRoot union scratchRoot union objective-artifacts root.',
-        {
-          objectiveId,
-          artifactPath: trimmed,
-          resolvedPath: resolvedCandidate
-        }
-      );
-    }
+    const resolvedCandidate = await resolveWriteTargetInsideRoots(
+      objectiveId,
+      absoluteCandidate,
+      allowedRoots,
+      'Handoff artifact path',
+    );
 
     normalized.push(toRepoRelative(canonicalProjectRoot, resolvedCandidate));
   }
@@ -357,11 +388,22 @@ export async function readObjectiveHandoffs(projectPath, objectiveId) {
 
 export async function appendObjectiveHandoff(projectPath, objectiveId, handoff, options = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
-  const handoffsPath = objectiveHandoffsPath(projectRoot, objectiveId);
   const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, OBJECTIVE_HANDOFF_SCHEMA_FILE);
   const validate = await loadValidator(schemaHostRoot, OBJECTIVE_HANDOFF_SCHEMA_FILE);
 
   return withLock(projectRoot, `${objectiveId}-${OBJECTIVE_HANDOFFS_FILE}`, async () => {
+    const objectiveRoot = await resolveClosureRoot(
+      projectRoot,
+      objectiveId,
+      objectiveDir(projectRoot, objectiveId),
+      'objective-artifacts root',
+    );
+    const handoffsPath = await resolveWriteTargetInsideRoots(
+      objectiveId,
+      objectiveHandoffsPath(projectRoot, objectiveId),
+      [objectiveRoot],
+      'handoffs.jsonl',
+    );
     await mkdir(path.dirname(handoffsPath), { recursive: true });
     const existingHandoffs = await readJsonl(handoffsPath);
     const recordSeq = (existingHandoffs.at(-1)?.recordSeq ?? 0) + 1;

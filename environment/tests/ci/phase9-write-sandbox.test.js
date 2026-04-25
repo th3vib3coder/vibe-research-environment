@@ -50,3 +50,41 @@ test('phase9 write-sandbox rejects stale allowlist imports that no longer match 
     /Stale write-sandbox allowlist import node:fs\/promises for environment\/objectives\/store\.js/u
   );
 });
+
+test('phase9 write-sandbox rejects reviewed dynamic imports that bypass the static from-clause pattern', async () => {
+  const contents = new Map([
+    ['environment/orchestrator/raw-dynamic-import.js', "const fs = await import('node:fs/promises');\nexport default fs;\n"]
+  ]);
+
+  await assert.rejects(
+    validatePhase9WriteSandbox({
+      files: [...contents.keys()],
+      allowMissingFiles: true,
+      allowlist: {
+        version: 1,
+        entries: []
+      },
+      readTextImpl: async (file) => contents.get(file)
+    }),
+    /Reviewed write-sandbox allowlist is missing environment\/orchestrator\/raw-dynamic-import\.js/u
+  );
+});
+
+test('phase9 write-sandbox rejects reviewed CommonJS requires of raw child-process paths', async () => {
+  const contents = new Map([
+    ['environment/orchestrator/raw-require.js', "const cp = require('node:child_process');\nexport default cp;\n"]
+  ]);
+
+  await assert.rejects(
+    validatePhase9WriteSandbox({
+      files: [...contents.keys()],
+      allowMissingFiles: true,
+      allowlist: {
+        version: 1,
+        entries: []
+      },
+      readTextImpl: async (file) => contents.get(file)
+    }),
+    /Reviewed write-sandbox allowlist is missing environment\/orchestrator\/raw-require\.js/u
+  );
+});

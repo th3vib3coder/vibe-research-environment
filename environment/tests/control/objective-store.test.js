@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { access, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -363,6 +363,45 @@ describe('objective-store', () => {
       );
     } finally {
       await rm(outsideRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed when the canonical objective-artifacts root resolves outside the workspace via a symlink', async () => {
+    const objectiveId = 'OBJ-T452-SYMLINK-ROOT';
+    const outsideObjectiveRoot = await mkdtemp(path.join(tmpdir(), 'vre-objective-store-linked-root-'));
+    const objectiveRoot = path.join(
+      projectRoot,
+      '.vibe-science-environment',
+      'objectives',
+      objectiveId
+    );
+    const outsideArtifact = path.join(outsideObjectiveRoot, 'artifact.md');
+
+    await mkdir(path.dirname(objectiveRoot), { recursive: true });
+    await symlink(outsideObjectiveRoot, objectiveRoot, process.platform === 'win32' ? 'junction' : 'dir');
+    await writeFile(outsideArtifact, 'outside objective root\n', 'utf8');
+
+    try {
+      await assert.rejects(
+        appendObjectiveHandoff(
+          projectRoot,
+          objectiveId,
+          await buildHandoff(objectiveId, {
+            handoffId: 'H-SYMLINK-ROOT-001',
+            fromAgentRole: 'results-agent',
+            toAgentRole: 'lead-researcher',
+            artifactPaths: [outsideArtifact],
+            summary: 'This should fail because the objective root resolves outside the workspace.',
+            writerSession: 'sess-symlink-root'
+          }),
+          {
+            workspaceRoot: projectRoot
+          }
+        ),
+        (error) => error?.code === 'E_WORKSPACE_WRITE_ESCAPE'
+      );
+    } finally {
+      await rm(outsideObjectiveRoot, { recursive: true, force: true });
     }
   });
 });
