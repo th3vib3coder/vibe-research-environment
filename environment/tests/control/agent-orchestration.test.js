@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -12,8 +12,14 @@ import {
   prepareRoleDispatch,
   validateReviewedSpawnRequest,
 } from '../../orchestrator/agent-orchestration.js';
+import {
+  createObjectiveStore,
+  deleteObjectiveStore,
+  readObjectiveHandoffs,
+} from '../../objectives/store.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const OBJECTIVE_FIXTURES_DIR = path.join(repoRoot, 'environment', 'tests', 'fixtures', 'phase9', 'objective');
 
 function buildLanePolicies() {
   return {
@@ -75,6 +81,29 @@ async function cleanupObjectiveArtifacts(objectiveId) {
     'dispatch',
   );
   await rm(target, { recursive: true, force: true });
+}
+
+async function readObjectiveFixture(fileName = 'valid-active.json') {
+  return JSON.parse(await readFile(path.join(OBJECTIVE_FIXTURES_DIR, fileName), 'utf8'));
+}
+
+async function seedObjectiveStore(objectiveId, overrides = {}) {
+  const fixture = await readObjectiveFixture('valid-active.json');
+  const objectiveRecord = {
+    ...fixture,
+    objectiveId,
+    artifactsIndex: {
+      ...(fixture.artifactsIndex ?? {}),
+      ...(overrides.artifactsIndex ?? {}),
+    },
+    ...overrides,
+  };
+  await createObjectiveStore(repoRoot, objectiveRecord);
+  return objectiveRecord;
+}
+
+async function cleanupObjectiveStore(objectiveId) {
+  await deleteObjectiveStore(repoRoot, objectiveId).catch(() => {});
 }
 
 async function expectAgentError(fn, expectedCode) {
@@ -357,8 +386,18 @@ test('prepareRoleDispatch blocks web-required inline role-modes from forbidden T
   );
 });
 
-test('dispatchRoleAssignment executes reviewed subprocess dispatch through invokeLaneBinding with the patched envelope', async () => {
+test('dispatchRoleAssignment executes reviewed subprocess dispatch through invokeLaneBinding with the patched envelope and persists the returned handoff', async () => {
+  const objectiveId = `OBJ-T452-DISPATCH-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'results',
+    'dispatch-bundle.json',
+  );
   const request = buildRequest({
+    objectiveId,
     roleId: 'results-agent',
     taskKind: 'results-bundle-discover',
     allowedActions: ['package-artifacts', 'write-artifact', 'propose-handoff'],
@@ -366,6 +405,10 @@ test('dispatchRoleAssignment executes reviewed subprocess dispatch through invok
   const seen = [];
 
   try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, '{"dispatch":true}\n', 'utf8');
+
     const response = await dispatchRoleAssignment(repoRoot, request, {
       execute: true,
       spawnParentPid: 424242,
@@ -374,9 +417,14 @@ test('dispatchRoleAssignment executes reviewed subprocess dispatch through invok
       invokeLaneBinding: async (binding, providerExecutors, payload) => {
         seen.push({ binding, providerExecutors, payload });
         return {
-          status: 'queued',
+          status: 'complete',
           laneId: binding.laneId,
           taskKind: payload.taskKind,
+          handoff: {
+            toAgentRole: 'lead-researcher',
+            artifactPaths: [artifactPath],
+            summary: 'Dispatch completed and the bundle is ready for the lead.',
+          },
         };
       },
     });
@@ -389,7 +437,10 @@ test('dispatchRoleAssignment executes reviewed subprocess dispatch through invok
     assert.equal(response.spawnRequest.env.PHASE9_ENVELOPE_PATH, response.envelopePath);
     assert.equal(response.spawnRequest.env.VRE_ROOT, repoRoot);
     assert.deepEqual(response.spawnRequest.argv, ['--envelope', response.envelopePath]);
-    assert.equal(response.result.status, 'queued');
+    assert.equal(response.result.status, 'complete');
+    assert.equal(response.handoff.recordSeq, 1);
+    assert.equal(response.handoff.summary, 'Dispatch completed and the bundle is ready for the lead.');
+    assert.equal(response.leadContinuation.status, 'ready');
     assert.equal(seen.length, 1);
     assert.equal(seen[0].binding.laneId, 'execution');
     assert.equal(seen[0].payload.roleEnvelope.dispatchParentPid, 424242);
@@ -399,8 +450,12 @@ test('dispatchRoleAssignment executes reviewed subprocess dispatch through invok
     const persisted = JSON.parse(await readFile(response.envelopePath, 'utf8'));
     assert.equal(persisted.dispatchParentPid, 424242);
     assert.equal(persisted.sessionIsolation.workspaceRoot, repoRoot);
+    assert.deepEqual(
+      await readObjectiveHandoffs(repoRoot, objectiveId),
+      [response.handoff],
+    );
   } finally {
-    await cleanupObjectiveArtifacts(request.objectiveId);
+    await cleanupObjectiveStore(objectiveId);
   }
 });
 
@@ -415,6 +470,264 @@ test('dispatchRoleAssignment refuses chat-only reviewed dispatch when durable ob
     }),
     'E_CHAT_ONLY_DISPATCH_FORBIDDEN',
   );
+});
+
+test('dispatchRoleAssignment appends two terminal role outputs as durable handoff records before the lead may continue', async () => {
+  const objectiveId = `OBJ-T452-${Date.now()}`;
+  const artifactOne = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'results',
+    'bundle-001.json',
+  );
+  const artifactTwo = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'digest-001.md',
+  );
+  const requestOne = buildRequest({
+    objectiveId,
+    roleId: 'results-agent',
+    taskKind: 'results-bundle-discover',
+    allowedActions: ['package-artifacts', 'write-artifact', 'propose-handoff'],
+  });
+  const requestTwo = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactOne), { recursive: true });
+    await mkdir(path.dirname(artifactTwo), { recursive: true });
+    await writeFile(artifactOne, '{"ok":true}\n', 'utf8');
+    await writeFile(artifactTwo, '# reviewer digest\n', 'utf8');
+
+    const first = await dispatchRoleAssignment(repoRoot, requestOne, {
+      execute: true,
+      spawnParentPid: 10101,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactOne],
+          summary: 'Results bundle is ready for the lead.',
+        },
+      }),
+    });
+
+    const second = await dispatchRoleAssignment(repoRoot, requestTwo, {
+      execute: true,
+      spawnParentPid: 20202,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactTwo],
+          summary: 'Reviewer-2 digest is ready for the lead.',
+        },
+      }),
+    });
+
+    assert.equal(first.handoff.recordSeq, 1);
+    assert.equal(first.handoff.fromAgentRole, 'results-agent');
+    assert.equal(first.handoff.toAgentRole, 'lead-researcher');
+    assert.equal(first.leadContinuation.status, 'ready');
+    assert.equal(first.handoff.writerSession, first.envelope.sessionIsolation.childSessionId);
+    assert.match(first.handoffLedgerPath, /handoffs\.jsonl$/u);
+
+    assert.equal(second.handoff.recordSeq, 2);
+    assert.equal(second.handoff.fromAgentRole, 'reviewer-2');
+    assert.equal(second.handoff.toAgentRole, 'lead-researcher');
+    assert.equal(second.leadContinuation.status, 'ready');
+
+    const handoffs = await readObjectiveHandoffs(repoRoot, objectiveId);
+    assert.equal(handoffs.length, 2);
+    assert.deepEqual(
+      handoffs.map((entry) => [entry.recordSeq, entry.fromAgentRole, entry.summary]),
+      [
+        [1, 'results-agent', 'Results bundle is ready for the lead.'],
+        [2, 'reviewer-2', 'Reviewer-2 digest is ready for the lead.'],
+      ],
+    );
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('dispatchRoleAssignment fails closed when a terminal role result omits a handoff payload', async () => {
+  const objectiveId = `OBJ-T452-MISSING-${Date.now()}`;
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'results-agent',
+    taskKind: 'results-bundle-discover',
+    allowedActions: ['package-artifacts', 'write-artifact', 'propose-handoff'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await expectAgentError(
+      () => dispatchRoleAssignment(repoRoot, request, {
+        execute: true,
+        lanePolicies: buildLanePolicies(),
+        continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+        invokeLaneBinding: async () => ({
+          status: 'complete',
+          outputPaths: [],
+        }),
+      }),
+      'E_ROLE_RESULT_HANDOFF_REQUIRED',
+    );
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('dispatchRoleAssignment fails closed when a reviewed subprocess returns a nonterminal result without a handoff', async () => {
+  const objectiveId = `OBJ-T452-QUEUED-${Date.now()}`;
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'results-agent',
+    taskKind: 'results-bundle-discover',
+    allowedActions: ['package-artifacts', 'write-artifact', 'propose-handoff'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await expectAgentError(
+      () => dispatchRoleAssignment(repoRoot, request, {
+        execute: true,
+        lanePolicies: buildLanePolicies(),
+        continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+        invokeLaneBinding: async () => ({
+          status: 'queued',
+          queueRecordId: 'QUEUE-001',
+        }),
+      }),
+      'E_ROLE_RESULT_HANDOFF_REQUIRED',
+    );
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('dispatchRoleAssignment persists conflict-marked handoffs and blocks lead continuation', async () => {
+  const objectiveId = `OBJ-T452-CONFLICT-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'conflict-001.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, 'conflicting review\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 found a conflict that must block lead continuation.',
+          openBlockers: [{
+            code: 'E_STATE_CONFLICT',
+            message: 'Conflicting role suggestions require review before continuation.',
+            openedAt: '2026-04-25T08:00:00Z',
+          }],
+        },
+      }),
+    });
+
+    assert.equal(response.handoff.recordSeq, 1);
+    assert.equal(response.leadContinuation.status, 'blocked');
+    assert.equal(response.leadContinuation.blockerCode, 'E_STATE_CONFLICT');
+    assert.equal(response.handoff.openBlockers[0].code, 'E_STATE_CONFLICT');
+
+    const handoffs = await readObjectiveHandoffs(repoRoot, objectiveId);
+    assert.equal(handoffs.length, 1);
+    assert.equal(handoffs[0].openBlockers[0].code, 'E_STATE_CONFLICT');
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('dispatchRoleAssignment persists reviewer-2 escalation handoffs and marks lead continuation as review-required', async () => {
+  const objectiveId = `OBJ-T452-R2-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'r2-request-001.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, 'r2 escalation\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 escalation requires review before continuation.',
+          openBlockers: [{
+            code: 'E_R2_REVIEW_PENDING',
+            message: 'Reviewer-2 or the lead must resolve the escalation before continuation.',
+            openedAt: '2026-04-25T08:30:00Z',
+          }],
+        },
+      }),
+    });
+
+    assert.equal(response.handoff.recordSeq, 1);
+    assert.equal(response.leadContinuation.status, 'review-required');
+    assert.equal(response.leadContinuation.blockerCode, 'E_R2_REVIEW_PENDING');
+    assert.equal(response.leadContinuation.requestedReviewer, 'reviewer-2-or-lead');
+
+    const handoffs = await readObjectiveHandoffs(repoRoot, objectiveId);
+    assert.equal(handoffs.length, 1);
+    assert.equal(handoffs[0].openBlockers[0].code, 'E_R2_REVIEW_PENDING');
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
 });
 
 // Round 81 seq-097 claim-without-pin closure: seq 097 landed the T4.5.1

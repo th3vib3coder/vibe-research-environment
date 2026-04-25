@@ -1,4 +1,4 @@
-import { access, mkdir, readdir, rename, rm, unlink, writeFile } from 'node:fs/promises';
+import { access, appendFile, mkdir, readdir, realpath, rename, rm, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +10,7 @@ import {
   resolveInside,
   resolveProjectRoot,
   readJson,
+  readJsonl,
   withLock
 } from '../control/_io.js';
 
@@ -19,6 +20,7 @@ export const OBJECTIVE_EVENTS_FILE = 'events.jsonl';
 export const OBJECTIVE_HANDOFFS_FILE = 'handoffs.jsonl';
 export const OBJECTIVE_DIGESTS_DIR = 'digests';
 export const OBJECTIVE_SCHEMA_FILE = 'phase9-objective.schema.json';
+export const OBJECTIVE_HANDOFF_SCHEMA_FILE = 'phase9-handoff.schema.json';
 export const ACTIVE_OBJECTIVE_POINTER_FILE = 'active-objective.json';
 export const ACTIVE_OBJECTIVE_POINTER_SCHEMA_FILE = 'phase9-active-objective-pointer.schema.json';
 export const ACTIVE_OBJECTIVE_POINTER_RELATIVE_PATH = `${OBJECTIVES_ROOT_RELATIVE_PATH}/${ACTIVE_OBJECTIVE_POINTER_FILE}`;
@@ -45,6 +47,19 @@ export class ObjectiveLockHeldError extends Error {
   }
 }
 
+export class ObjectiveStoreError extends Error {
+  constructor({ code, message, extra = {} }) {
+    super(message);
+    this.name = 'ObjectiveStoreError';
+    this.code = code;
+    this.extra = extra;
+  }
+}
+
+function failStore(code, message, extra = {}) {
+  throw new ObjectiveStoreError({ code, message, extra });
+}
+
 function assertSafeObjectiveId(objectiveId) {
   if (typeof objectiveId !== 'string' || objectiveId.trim() === '') {
     throw new TypeError('objectiveId must be a non-empty string');
@@ -67,6 +82,81 @@ function atomicTempPath(filePath) {
       .toString(16)
       .slice(2)}.tmp`
   );
+}
+
+function isPathInside(baseDir, candidatePath) {
+  const relativePath = path.relative(baseDir, candidatePath);
+  return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath));
+}
+
+async function realpathForWrite(targetPath) {
+  const resolvedTarget = path.resolve(targetPath);
+  try {
+    return await realpath(resolvedTarget);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
+  let ancestor = path.dirname(resolvedTarget);
+  while (ancestor !== path.dirname(ancestor)) {
+    try {
+      const realAncestor = await realpath(ancestor);
+      const suffix = path.relative(ancestor, resolvedTarget);
+      return path.join(realAncestor, suffix);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') {
+        throw error;
+      }
+      ancestor = path.dirname(ancestor);
+    }
+  }
+
+  return resolvedTarget;
+}
+
+async function normalizeHandoffArtifactPaths(projectRoot, objectiveId, artifactPaths, options = {}) {
+  const canonicalProjectRoot = await realpathForWrite(projectRoot);
+  const workspaceRoot = options.workspaceRoot != null ? await realpathForWrite(options.workspaceRoot) : null;
+  const scratchRoot = options.scratchRoot != null ? await realpathForWrite(options.scratchRoot) : null;
+  const objectiveRoot = await realpathForWrite(objectiveDir(projectRoot, objectiveId));
+  const allowedRoots = [workspaceRoot, scratchRoot, objectiveRoot].filter(Boolean);
+
+  const normalized = [];
+  for (const artifactPath of artifactPaths) {
+    if (typeof artifactPath !== 'string' || artifactPath.trim() === '') {
+      normalized.push(artifactPath);
+      continue;
+    }
+
+    const trimmed = artifactPath.trim();
+    const resolveBase = trimmed.startsWith('.vibe-science-environment/')
+      || trimmed.startsWith('.vibe-science-environment\\')
+      ? projectRoot
+      : (workspaceRoot ?? projectRoot);
+    const absoluteCandidate = path.isAbsolute(trimmed)
+      ? trimmed
+      : path.resolve(resolveBase, trimmed);
+    const resolvedCandidate = await realpathForWrite(absoluteCandidate);
+    const insideClosure = allowedRoots.some((root) => isPathInside(root, resolvedCandidate));
+
+    if (!insideClosure) {
+      failStore(
+        'E_WORKSPACE_WRITE_ESCAPE',
+        'Handoff artifact path must stay inside workspaceRoot union scratchRoot union objective-artifacts root.',
+        {
+          objectiveId,
+          artifactPath: trimmed,
+          resolvedPath: resolvedCandidate
+        }
+      );
+    }
+
+    normalized.push(toRepoRelative(canonicalProjectRoot, resolvedCandidate));
+  }
+
+  return normalized;
 }
 
 export async function atomicWriteUtf8(filePath, content) {
@@ -259,6 +349,49 @@ export async function createObjectiveStore(projectPath, objectiveRecord) {
 
 export async function readObjectiveRecord(projectPath, objectiveId) {
   return readJson(objectiveRecordPath(projectPath, objectiveId));
+}
+
+export async function readObjectiveHandoffs(projectPath, objectiveId) {
+  return readJsonl(objectiveHandoffsPath(projectPath, objectiveId));
+}
+
+export async function appendObjectiveHandoff(projectPath, objectiveId, handoff, options = {}) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const handoffsPath = objectiveHandoffsPath(projectRoot, objectiveId);
+  const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, OBJECTIVE_HANDOFF_SCHEMA_FILE);
+  const validate = await loadValidator(schemaHostRoot, OBJECTIVE_HANDOFF_SCHEMA_FILE);
+
+  return withLock(projectRoot, `${objectiveId}-${OBJECTIVE_HANDOFFS_FILE}`, async () => {
+    await mkdir(path.dirname(handoffsPath), { recursive: true });
+    const existingHandoffs = await readJsonl(handoffsPath);
+    const recordSeq = (existingHandoffs.at(-1)?.recordSeq ?? 0) + 1;
+    const timestamp = options.writtenAt ?? now();
+    const nextRecord = {
+      schemaVersion: 'phase9.handoff.v1',
+      objectiveId,
+      ts: timestamp,
+      recordSeq,
+      handoffId: handoff.handoffId ?? `H-${objectiveId}-${String(recordSeq).padStart(4, '0')}`,
+      fromAgentRole: handoff.fromAgentRole,
+      toAgentRole: handoff.toAgentRole,
+      artifactPaths: await normalizeHandoffArtifactPaths(
+        projectRoot,
+        objectiveId,
+        Array.isArray(handoff.artifactPaths) ? handoff.artifactPaths : [],
+        options,
+      ),
+      summary: handoff.summary,
+      openBlockers: Array.isArray(handoff.openBlockers) ? handoff.openBlockers : [],
+      closesHandoffId: handoff.closesHandoffId ?? null,
+      writerSession: handoff.writerSession
+    };
+    assertValid(validate, nextRecord, 'phase9 handoff');
+    await appendFile(handoffsPath, `${JSON.stringify(nextRecord)}\n`, 'utf8');
+    return {
+      handoff: nextRecord,
+      handoffsPath
+    };
+  });
 }
 
 export async function deleteObjectiveStore(projectPath, objectiveId) {

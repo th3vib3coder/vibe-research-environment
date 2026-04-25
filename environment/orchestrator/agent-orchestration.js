@@ -10,6 +10,7 @@ import {
   resolveInside,
   resolveProjectRoot,
 } from '../control/_io.js';
+import { appendObjectiveHandoff } from '../objectives/store.js';
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
@@ -417,6 +418,67 @@ function buildSpawnRequest(projectRoot, envelopePath, envelope, request) {
   });
 }
 
+function extractHandoffCandidate(result) {
+  if (result == null || typeof result !== 'object' || Array.isArray(result)) {
+    return null;
+  }
+
+  if (result.handoff != null && typeof result.handoff === 'object' && !Array.isArray(result.handoff)) {
+    return result.handoff;
+  }
+
+  if (Array.isArray(result.artifactPaths) || typeof result.summary === 'string') {
+    return result;
+  }
+
+  return null;
+}
+
+function normalizeRoleResultToHandoff(plan, envelope, result) {
+  const candidate = extractHandoffCandidate(result);
+  if (!candidate) {
+    fail(
+      'E_ROLE_RESULT_HANDOFF_REQUIRED',
+      `Role ${plan.roleId} must return a phase9.handoff.v1 payload before the lead may continue.`,
+      {
+        roleId: plan.roleId,
+        taskId: plan.taskId
+      },
+    );
+  }
+
+  return {
+    handoffId: candidate.handoffId ?? `H-${plan.taskId}`,
+    fromAgentRole: candidate.fromAgentRole ?? plan.roleId,
+    toAgentRole: candidate.toAgentRole ?? 'lead-researcher',
+    artifactPaths: Array.isArray(candidate.artifactPaths) ? [...candidate.artifactPaths] : [],
+    summary: candidate.summary,
+    openBlockers: Array.isArray(candidate.openBlockers) ? [...candidate.openBlockers] : [],
+    closesHandoffId: candidate.closesHandoffId ?? null,
+    writerSession: candidate.writerSession ?? envelope.sessionIsolation.childSessionId,
+  };
+}
+
+function deriveLeadContinuation(handoff) {
+  const firstBlocker = Array.isArray(handoff?.openBlockers) ? handoff.openBlockers[0] : null;
+  if (!firstBlocker) {
+    return {
+      status: 'ready',
+      blockerCode: null,
+      requestedReviewer: null,
+    };
+  }
+
+  const blockerCode = typeof firstBlocker === 'string'
+    ? firstBlocker
+    : firstBlocker.code ?? 'UNKNOWN_BLOCKER';
+  return {
+    status: blockerCode === 'E_R2_REVIEW_PENDING' ? 'review-required' : 'blocked',
+    blockerCode,
+    requestedReviewer: blockerCode === 'E_R2_REVIEW_PENDING' ? 'reviewer-2-or-lead' : null,
+  };
+}
+
 export function validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath) {
   for (const [key, value] of Object.entries(spawnRequest.env ?? {})) {
     if (DENY_REGEX.test(key) || (typeof value === 'string' && DENY_REGEX.test(value))) {
@@ -648,11 +710,26 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
     },
   );
 
+  const handoff = normalizeRoleResultToHandoff(plan, finalEnvelope, result);
+  const persistedHandoff = await appendObjectiveHandoff(
+    resolveProjectRoot(projectPath),
+    plan.objectiveId,
+    handoff,
+    {
+      writtenAt: options.now ?? ioNow(),
+      workspaceRoot: finalEnvelope.sessionIsolation.workspaceRoot,
+      scratchRoot: finalEnvelope.sessionIsolation.scratchRoot,
+    },
+  );
+
   return {
     ...plan,
     envelope: finalEnvelope,
     spawnRequest: finalSpawnRequest,
     executed: true,
+    handoff: persistedHandoff?.handoff ?? null,
+    handoffLedgerPath: persistedHandoff?.handoffsPath ?? null,
+    leadContinuation: persistedHandoff ? deriveLeadContinuation(persistedHandoff.handoff) : null,
     result,
   };
 }

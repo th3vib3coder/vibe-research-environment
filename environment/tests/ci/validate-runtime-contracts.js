@@ -200,6 +200,7 @@ const activeCliTestFiles = [
 const activePhase9TestFiles = [
   'environment/tests/ci/check-phase9-ledger.test.js',
   'environment/tests/ci/phase9-surface-index.test.js',
+  'environment/tests/ci/phase9-write-sandbox.test.js',
   'environment/tests/ci/validate-no-personal-paths.test.js',
   'environment/tests/cli/bin-vre-phase9-stubs.test.js',
   'environment/tests/cli/objective-cli.test.js',
@@ -249,6 +250,10 @@ export default async function validateRuntimeContracts() {
       `package.json test:phase9 is missing ${testFile}`
     );
   }
+  assert(
+    await pathExists('environment/tests/ci/phase9-write-sandbox-allowlist.json'),
+    'Missing Phase 9 write-sandbox allowlist: environment/tests/ci/phase9-write-sandbox-allowlist.json'
+  );
 
   for (const schemaFile of activeSchemaFiles) {
     assert(await pathExists(`environment/schemas/${schemaFile}`), `Missing active schema: ${schemaFile}`);

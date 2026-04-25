@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "path": "environment/objectives/cli.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Objective lifecycle CLI reads and deletes reviewed artifacts."
+    },
+    {
+      "path": "environment/objectives/resume-snapshot.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Canonical resume-snapshot writer uses reviewed JSONL append/read IO."
+    },
+    {
+      "path": "environment/objectives/store.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Canonical objective/handoff store owns reviewed lock, realpath, and append primitives."
+    },
+    {
+      "path": "environment/orchestrator/_io.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Shared reviewed orchestrator IO helpers implement atomic writes and locks."
+    },
+    {
+      "path": "environment/orchestrator/agent-orchestration.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Role dispatch prepares reviewed scratch roots and checks surface existence before dispatch."
+    },
+    {
+      "path": "environment/orchestrator/analysis-manifest.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Manifest validation reads reviewed manifest files from disk."
+    },
+    {
+      "path": "environment/orchestrator/autonomy-runtime.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Autonomy runtime appends durable queue/handoff/digest artifacts through reviewed paths."
+    },
+    {
+      "path": "environment/orchestrator/execution-lane.js",
+      "imports": ["node:child_process", "node:fs/promises"],
+      "reason": "Execution lane runs the sanctioned subprocess corridor and captures reviewed logs/artifacts."
+    },
+    {
+      "path": "environment/orchestrator/executors/claude-cli.js",
+      "imports": ["node:child_process"],
+      "reason": "Reviewed executor launches Claude CLI as a bounded subprocess."
+    },
+    {
+      "path": "environment/orchestrator/executors/codex-cli.js",
+      "imports": ["node:child_process", "node:fs/promises"],
+      "reason": "Reviewed executor launches Codex CLI and writes bounded envelope/config files."
+    },
+    {
+      "path": "environment/orchestrator/executors/local-subprocess.js",
+      "imports": ["node:child_process"],
+      "reason": "Reviewed executor launches local subprocesses under the provider-gateway contract."
+    },
+    {
+      "path": "environment/orchestrator/ledgers.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Lane-run ledgers append reviewed JSONL records."
+    },
+    {
+      "path": "environment/orchestrator/query.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Operator query surface stats reviewed artifacts on disk."
+    },
+    {
+      "path": "environment/orchestrator/queue-adapter.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Queue adapter appends and validates reviewed queue JSONL."
+    },
+    {
+      "path": "environment/orchestrator/task-registry.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Task registry reads reviewed task definitions and helper metadata from disk."
+    },
+    {
+      "path": "environment/orchestrator/windows-task-scheduler.js",
+      "imports": ["node:child_process", "node:fs/promises"],
+      "reason": "Scheduler adapter probes schtasks and validates the reviewed heartbeat boundary."
+    }
+  ]
+}
