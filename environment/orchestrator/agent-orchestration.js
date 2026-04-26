@@ -727,14 +727,6 @@ function normalizeReviewer2Verdict(plan, persistedHandoff, result) {
 
   const rawVerdict = result?.r2Verdict ?? result?.verdict ?? null;
 
-  // T4.5.3 Round 87 spec compliance:
-  // A reviewer-2 dispatch is a contract: the reviewer MUST close with EITHER
-  //   (a) an r2Verdict in {ACCEPT, REJECT, DEFER}, OR
-  //   (b) an escalation blocker (E_R2_REVIEW_PENDING / *R2*REVIEW*) on the handoff.
-  // The strategic gate (claim-promotion, objective-completion, final-digest-export,
-  // semantic-drift-resolution, handoff-conflict-continuation) is enforced via
-  // assertReviewer2Gate at the decision point, not here. This function only
-  // validates the dispatch's local contract.
   if (rawVerdict == null) {
     // T4.5.3 spec is conditional: "Reviewer-2 verdict is persisted as
     // objective event `r2-verdict` and, if tied to a role handoff, references
