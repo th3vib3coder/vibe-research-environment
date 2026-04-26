@@ -23,8 +23,8 @@
     },
     {
       "path": "environment/orchestrator/agent-orchestration.js",
-      "imports": ["node:fs/promises"],
-      "reason": "Role dispatch prepares reviewed scratch roots and checks surface existence before dispatch."
+      "imports": ["node:child_process", "node:fs/promises"],
+      "reason": "Role dispatch prepares reviewed scratch roots and invokes the reviewed plugin r2-bridge-writer.js subprocess after persisting r2-verdict events."
     },
     {
       "path": "environment/orchestrator/analysis-manifest.js",

@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { execFile } from 'node:child_process';
 import { access, mkdir, realpath } from 'node:fs/promises';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 import {
   atomicWriteJson,
@@ -23,6 +25,20 @@ import {
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
+
+const execFileAsync = promisify(execFile);
+const R2_BRIDGE_TIMEOUT_MS = 15_000;
+const R2_BRIDGE_ENV_WHITELIST = Object.freeze([
+  'PATH',
+  'Path',
+  'PATHEXT',
+  'SystemRoot',
+  'SYSTEMROOT',
+  'TEMP',
+  'TMP',
+  'USERPROFILE',
+  'VIBE_SCIENCE_DB_PATH',
+]);
 
 const ROLE_RUNTIME_MATRIX = Object.freeze({
   'lead-researcher': Object.freeze({
@@ -147,6 +163,83 @@ export class AgentOrchestrationError extends Error {
 
 function fail(code, message, extra = {}) {
   throw new AgentOrchestrationError({ code, message, extra });
+}
+
+function defaultR2BridgeScriptPath(projectRoot) {
+  return path.join(
+    path.dirname(projectRoot),
+    'vibe-science',
+    'plugin',
+    'scripts',
+    'r2-bridge-writer.js',
+  );
+}
+
+function buildR2BridgeEnv(overrideEnv = {}) {
+  const env = {};
+  for (const key of R2_BRIDGE_ENV_WHITELIST) {
+    if (process.env[key] !== undefined) {
+      env[key] = process.env[key];
+    }
+  }
+  return {
+    ...env,
+    ...overrideEnv,
+  };
+}
+
+async function writeR2BridgeEvent(request, options = {}) {
+  if (typeof options.writeR2Bridge === 'function') {
+    return await options.writeR2Bridge(request);
+  }
+
+  const scriptPath = options.r2BridgeScriptPath ?? defaultR2BridgeScriptPath(request.projectRoot);
+  try {
+    await access(scriptPath);
+  } catch {
+    fail(
+      'E_R2_BRIDGE_REQUIRED',
+      'Reviewer-2 verdict was persisted in VRE but the plugin r2-bridge-writer.js surface is missing.',
+      { scriptPath, eventId: request.eventId, claimId: request.claimId },
+    );
+  }
+
+  const argv = [
+    scriptPath,
+    '--event-log',
+    request.eventLogPath,
+    '--event-id',
+    request.eventId,
+    '--session',
+    request.sessionId,
+    '--json',
+  ];
+  if (options.r2BridgeDbPath) {
+    argv.push('--db-path', options.r2BridgeDbPath);
+  }
+
+  try {
+    const result = await execFileAsync(process.execPath, argv, {
+      cwd: path.dirname(path.dirname(path.dirname(scriptPath))),
+      encoding: 'utf-8',
+      env: buildR2BridgeEnv(options.r2BridgeEnv ?? {}),
+      timeout: options.r2BridgeTimeoutMs ?? R2_BRIDGE_TIMEOUT_MS,
+      windowsHide: true,
+    });
+    return JSON.parse(String(result.stdout || '{}'));
+  } catch (error) {
+    fail(
+      'E_R2_BRIDGE_REQUIRED',
+      'Reviewer-2 verdict could not be bridged into plugin claim_events; promotion must remain blocked.',
+      {
+        eventId: request.eventId,
+        claimId: request.claimId,
+        stderr: error?.stderr ? String(error.stderr).slice(0, 1000) : null,
+        message: error?.message ?? null,
+        scriptPath,
+      },
+    );
+  }
 }
 
 function defaultAllowedActions(roleId) {
@@ -937,6 +1030,7 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
   let r2VerdictEvent = null;
   let r2Snapshot = null;
   let r2Digest = null;
+  let r2Bridge = null;
 
   if (r2Verdict != null) {
     const projectRoot = resolveProjectRoot(projectPath);
@@ -970,6 +1064,15 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
       claimId: r2Verdict.claimId,
       notes: r2Verdict.summary,
     });
+    r2Bridge = await writeR2BridgeEvent({
+      projectRoot,
+      objectiveId: plan.objectiveId,
+      eventId: r2VerdictEvent.eventId,
+      eventLogPath: objectiveEventsPath(projectRoot, plan.objectiveId),
+      claimId: r2Verdict.claimId,
+      sessionId: finalEnvelope.generatedBySession,
+      verdict: r2Verdict.verdict,
+    }, options);
   }
 
   return {
@@ -982,6 +1085,7 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
     leadContinuation: persistedRecord ? deriveLeadContinuation(persistedRecord) : null,
     r2Verdict,
     r2VerdictEvent,
+    r2Bridge,
     resumeSnapshotPath: r2Snapshot ? toRepoRelative(resolveProjectRoot(projectPath), r2Snapshot.snapshotPath) : null,
     digestPath: r2Digest ? toRepoRelative(resolveProjectRoot(projectPath), r2Digest.latestPath) : null,
     result,

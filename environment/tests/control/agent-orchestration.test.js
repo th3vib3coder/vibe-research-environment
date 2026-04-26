@@ -867,6 +867,7 @@ test('T4.5.3: reviewer-2 dispatch persists an r2-verdict event and makes it visi
       spawnParentPid: 30303,
       lanePolicies: buildLanePolicies(),
       continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      writeR2Bridge: async () => ({ status: 'bridged', inserted: 1, skipped: 0 }),
       invokeLaneBinding: async () => ({
         status: 'complete',
         handoff: {
@@ -904,6 +905,66 @@ test('T4.5.3: reviewer-2 dispatch persists an r2-verdict event and makes it visi
     assert.match(digestText, /R2 Verdict: ACCEPT/u);
     assert.match(digestText, /Claim Id: C-001/u);
     assert.match(digestText, new RegExp(`Handoff Id: ${response.handoff.handoffId}`, 'u'));
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('T4.5.3.1: reviewer-2 r2-verdict dispatch calls the plugin bridge writer with the objective event id', async () => {
+  const objectiveId = `OBJ-T4531-R2-BRIDGE-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'r2-verdict-bridge.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    generatedBySession: 'sess-t4531-r2-bridge',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+  const bridgeCalls = [];
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, '# R2 bridge verdict\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      spawnParentPid: 30303,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      writeR2Bridge: async (bridgeRequest) => {
+        bridgeCalls.push(bridgeRequest);
+        return { status: 'bridged', inserted: 1, skipped: 0 };
+      },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 accepted the claim promotion evidence.',
+        },
+        r2Verdict: {
+          claimId: 'C-001',
+          verdict: 'ACCEPT',
+          summary: 'Evidence supports promotion after bridge write.',
+        },
+      }),
+    });
+
+    assert.equal(bridgeCalls.length, 1);
+    assert.equal(bridgeCalls[0].eventId, response.r2VerdictEvent.eventId);
+    assert.equal(bridgeCalls[0].objectiveId, objectiveId);
+    assert.equal(bridgeCalls[0].claimId, 'C-001');
+    assert.equal(bridgeCalls[0].sessionId, 'sess-t4531-r2-bridge');
+    assert.match(bridgeCalls[0].eventLogPath, /events\.jsonl$/u);
+    assert.deepEqual(response.r2Bridge, { status: 'bridged', inserted: 1, skipped: 0 });
   } finally {
     await cleanupObjectiveStore(objectiveId);
   }
