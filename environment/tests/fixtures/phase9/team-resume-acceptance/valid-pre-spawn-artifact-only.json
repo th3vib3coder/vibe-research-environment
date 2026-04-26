@@ -1,0 +1,90 @@
+{
+  "objectiveIdPrefix": "OBJ-T454-TEAM-RESUME",
+  "leadSessionId": "sess-t454-lead",
+  "startedAt": "2026-04-26T08:00:00Z",
+  "resumeAt": "2026-04-26T09:10:00Z",
+  "resumeWakeId": "WAKE-T454-FRESH-LEAD",
+  "resolvedHandoffId": "H-T454-RESULTS",
+  "unresolvedBlocker": {
+    "code": "E_STATE_CONFLICT",
+    "message": "Reviewer-2 conflict remains unresolved for the lead resume.",
+    "openedAt": "2026-04-26T08:45:00Z",
+    "handoffId": "H-T454-R2-CONFLICT"
+  },
+  "roles": [
+    {
+      "roleId": "results-agent",
+      "stageId": "analysis",
+      "taskId": "task-t454-results",
+      "taskKind": "results-bundle-discover",
+      "taskAttemptId": "TASK-T454-RESULTS-A",
+      "generatedBySession": "sess-t454-results-child",
+      "allowedActions": ["package-artifacts", "write-artifact", "propose-handoff"],
+      "activeGates": [],
+      "spawnParentPid": 454101,
+      "dispatchedAt": "2026-04-26T08:20:00Z",
+      "queueUpdatedAt": "2026-04-26T08:21:00Z",
+      "queueStatus": "completed",
+      "wakeId": "WAKE-T454-RESULTS",
+      "handoffId": "H-T454-RESULTS",
+      "handoffSummary": "Results bundle persisted for artifact-only lead reconstruction.",
+      "queueSourceArtifactPaths": ["analysis/manifests/team-resume-results.json"],
+      "artifact": {
+        "relativePath": "results/bundle-001.json",
+        "content": "{\"bundle\":\"results\",\"objective\":\"artifact-only\"}\n"
+      }
+    },
+    {
+      "roleId": "reviewer-2",
+      "stageId": "review",
+      "taskId": "task-t454-reviewer-2",
+      "taskKind": "session-digest-review",
+      "taskAttemptId": "TASK-T454-R2-A",
+      "generatedBySession": "sess-t454-r2-child",
+      "allowedActions": ["review-artifacts", "return-r2-verdict"],
+      "activeGates": ["PROMOTION_REQUIRES_R2_REVIEW"],
+      "spawnParentPid": 454202,
+      "dispatchedAt": "2026-04-26T08:35:00Z",
+      "queueUpdatedAt": "2026-04-26T08:40:00Z",
+      "queueStatus": "blocked",
+      "wakeId": "WAKE-T454-R2",
+      "handoffId": "H-T454-R2-CONFLICT",
+      "handoffSummary": "Reviewer-2 found a state conflict that must remain visible on fresh lead resume.",
+      "queueSourceArtifactPaths": ["digests/session-digest.md"],
+      "openBlockers": [
+        {
+          "code": "E_STATE_CONFLICT",
+          "message": "Conflicting reviewed role output requires lead or Reviewer-2 resolution.",
+          "openedAt": "2026-04-26T08:40:00Z"
+        }
+      ],
+      "artifact": {
+        "relativePath": "review/r2-conflict.md",
+        "content": "# Reviewer-2 conflict\nThe reviewed state conflict is unresolved and must be reconstructed from this artifact.\n"
+      }
+    },
+    {
+      "roleId": "continuity-agent",
+      "stageId": "resume",
+      "taskId": "task-t454-continuity",
+      "taskKind": "memory-sync-refresh",
+      "taskAttemptId": "TASK-T454-CONTINUITY-A",
+      "generatedBySession": "sess-t454-continuity-child",
+      "allowedActions": ["refresh-memory", "verify-resume-state", "propose-handoff"],
+      "activeGates": [],
+      "spawnParentPid": 454303,
+      "dispatchedAt": "2026-04-26T08:55:00Z",
+      "queueUpdatedAt": "2026-04-26T08:56:00Z",
+      "queueStatus": "completed",
+      "wakeId": "WAKE-T454-CONTINUITY",
+      "handoffId": "H-T454-CONTINUITY-CLOSES-RESULTS",
+      "handoffSummary": "Continuity check closes the results handoff while leaving the Reviewer-2 conflict open.",
+      "closesHandoffId": "H-T454-RESULTS",
+      "queueSourceArtifactPaths": ["handoffs/H-T454-RESULTS"],
+      "artifact": {
+        "relativePath": "continuity/resume-check.md",
+        "content": "# Continuity resume check\nThe lead can reconstruct the closed results handoff and the still-open Reviewer-2 conflict from artifacts.\n"
+      }
+    }
+  ]
+}
