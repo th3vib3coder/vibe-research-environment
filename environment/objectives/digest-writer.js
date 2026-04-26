@@ -51,6 +51,18 @@ export function renderObjectiveDigestMarkdown(summary) {
     lines.push(`- Handoff Id: ${summary.handoffId}`);
   }
 
+  if (summary.latestR2VerdictId) {
+    lines.push(`- Latest R2 Verdict Id: ${summary.latestR2VerdictId}`);
+  }
+
+  if (summary.r2Verdict) {
+    lines.push(`- R2 Verdict: ${summary.r2Verdict}`);
+  }
+
+  if (summary.claimId) {
+    lines.push(`- Claim Id: ${summary.claimId}`);
+  }
+
   if (summary.notes) {
     lines.push('', '## Notes', summary.notes);
   }

@@ -36,6 +36,7 @@ import {
   resumeSnapshotPath,
   writeResumeSnapshot
 } from './resume-snapshot.js';
+import { assertReviewer2Gate } from '../orchestrator/agent-orchestration.js';
 
 function toRepoRelative(projectRoot, targetPath) {
   return normalizeSlashes(path.relative(projectRoot, targetPath));
@@ -85,6 +86,15 @@ export class ObjectiveCliError extends Error {
 export function coerceObjectiveCliError(command, error) {
   if (error instanceof ObjectiveCliError) {
     return error;
+  }
+
+  if (error?.name === 'AgentOrchestrationError' && typeof error.code === 'string') {
+    return new ObjectiveCliError({
+      command,
+      code: error.code,
+      message: error.message,
+      extra: error.extra ?? {},
+    });
   }
 
   if (error instanceof ObjectiveLockHeldError) {
@@ -427,9 +437,17 @@ export async function resumeObjectiveCommand(repoRoot, { objectiveId, repairSnap
         });
       }
 
+      const eventsBeforeResume = await readJsonl(objectiveEventsPath(repoRoot, objectiveId));
       const blocker = await readBlockerFlag(repoRoot, objectiveId);
       let blockerResolved = false;
       if (blocker.exists) {
+        if (blocker.code === 'SEMANTIC_DRIFT_DETECTED') {
+          const latestR2Verdict = latestEvent(eventsBeforeResume, 'r2-verdict');
+          assertReviewer2Gate('semantic-drift-resolution', {
+            latestR2VerdictEventId: latestR2Verdict?.eventId ?? null,
+            r2Verdict: latestR2Verdict?.payload ?? null,
+          });
+        }
         await appendObjectiveEvent(repoRoot, objectiveId, 'blocker-resolve', {
           code: blocker.code,
           message: blocker.message,

@@ -173,6 +173,79 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "r2-verdict"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "gateId",
+              "verdict",
+              "summary",
+              "reviewerRole",
+              "handoffId",
+              "reviewedArtifactPaths",
+              "resolvedBlockerCodes"
+            ],
+            "properties": {
+              "gateId": {
+                "const": "PROMOTION_REQUIRES_R2_REVIEW"
+              },
+              "claimId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "verdict": {
+                "type": "string",
+                "enum": [
+                  "ACCEPT",
+                  "REJECT",
+                  "DEFER"
+                ]
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewerRole": {
+                "const": "reviewer-2"
+              },
+              "handoffId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewedArtifactPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "resolvedBlockerCodes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

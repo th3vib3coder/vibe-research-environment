@@ -31,6 +31,7 @@ import {
 import {
   appendObjectiveEvent,
   countIterations,
+  latestEvent,
   OBJECTIVE_EVENT_SCHEMA_FILE,
   readBlockerFlag,
   readResumeSnapshot,
@@ -244,6 +245,7 @@ async function buildRuntimeResumeSnapshot(
         openedAt: blocker.writtenAt ?? timestamp
       }]
     : [];
+  const latestR2Verdict = latestEvent(events, 'r2-verdict');
 
   return {
     schemaVersion: 'phase9.resume-snapshot.v1',
@@ -298,7 +300,7 @@ async function buildRuntimeResumeSnapshot(
     kernelFingerprint: options.kernelFingerprint ?? {
       lastClaimId: null,
       lastCitationCheckId: null,
-      lastR2VerdictId: null,
+      lastR2VerdictId: latestR2Verdict?.eventId ?? null,
       lastObserverAlertId: null,
       lastGateCheckId: null,
       lastPatternId: null,

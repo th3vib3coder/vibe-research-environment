@@ -10,7 +10,16 @@ import {
   resolveInside,
   resolveProjectRoot,
 } from '../control/_io.js';
-import { appendObjectiveHandoff } from '../objectives/store.js';
+import { writeObjectiveDigest } from '../objectives/digest-writer.js';
+import {
+  appendObjectiveHandoff,
+  objectiveEventsPath,
+  objectiveHandoffsPath,
+} from '../objectives/store.js';
+import {
+  appendObjectiveEvent,
+  writeObjectiveResumeSnapshot,
+} from '../objectives/resume-snapshot.js';
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
@@ -89,6 +98,14 @@ const ROLE_RUNTIME_MATRIX = Object.freeze({
 });
 
 const SUPPORTED_ROLE_IDS = Object.freeze(Object.keys(ROLE_RUNTIME_MATRIX));
+export const REVIEWER2_GATE_ID = 'PROMOTION_REQUIRES_R2_REVIEW';
+const REVIEWER2_VERDICTS = new Set(['ACCEPT', 'REJECT', 'DEFER']);
+const REVIEW_REQUIRED_BLOCKER_CODES = new Set([
+  'E_R2_REVIEW_PENDING',
+  'E_STATE_CONFLICT',
+  'E_HANDOFF_CONFLICT',
+  'SEMANTIC_DRIFT_DETECTED',
+]);
 const WEB_REQUIRING_ROLE_IDS = new Set(['literature-mode', 'serendipity-mode']);
 const FORBIDDEN_TASK_STYLE_TRANSPORTS = new Set([
   'background-task',
@@ -165,6 +182,10 @@ function isPathInside(baseDir, candidatePath) {
   return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath));
 }
 
+function toRepoRelative(projectRoot, targetPath) {
+  return path.relative(projectRoot, targetPath).split(path.sep).join('/');
+}
+
 async function realpathOrResolved(targetPath) {
   const resolvedTarget = path.resolve(targetPath);
   try {
@@ -229,6 +250,80 @@ function resolveExecutorClass(binding) {
   return binding.integrationKind;
 }
 
+function hasReviewer2VerdictEvidence(context = {}) {
+  return (
+    typeof context.latestR2VerdictEventId === 'string' && context.latestR2VerdictEventId.trim() !== ''
+  ) || (
+    context.r2Verdict != null && typeof context.r2Verdict === 'object'
+  );
+}
+
+export function evaluateReviewer2Gate(action, context = {}) {
+  if (action === 'claim-promotion') {
+    const latestClaimEventType = typeof context.latestClaimEventType === 'string'
+      ? context.latestClaimEventType.trim().toUpperCase()
+      : null;
+    if (latestClaimEventType === 'R2_REVIEWED') {
+      return {
+        allowed: true,
+        gateId: REVIEWER2_GATE_ID,
+        action,
+        claimId: context.claimId ?? null,
+      };
+    }
+    return {
+      allowed: false,
+      code: REVIEWER2_GATE_ID,
+      gateId: REVIEWER2_GATE_ID,
+      action,
+      claimId: context.claimId ?? null,
+      latestClaimEventType,
+      requestedReviewer: 'reviewer-2',
+      message: 'Claim promotion requires the existing plugin lifecycle gate to observe latest event R2_REVIEWED.',
+    };
+  }
+
+  const requiresReviewer2 = new Set([
+    'objective-completion',
+    'final-digest-export',
+    'semantic-drift-resolution',
+    'handoff-conflict-continuation',
+  ]);
+  if (!requiresReviewer2.has(action) || hasReviewer2VerdictEvidence(context)) {
+    return {
+      allowed: true,
+      gateId: REVIEWER2_GATE_ID,
+      action,
+      latestR2VerdictEventId: context.latestR2VerdictEventId ?? null,
+    };
+  }
+
+  return {
+    allowed: false,
+    code: 'E_R2_REVIEW_PENDING',
+    gateId: REVIEWER2_GATE_ID,
+    action,
+    latestR2VerdictEventId: context.latestR2VerdictEventId ?? null,
+    requestedReviewer: 'reviewer-2',
+    message: `Reviewer-2 verdict is required before ${action}.`,
+  };
+}
+
+export function assertReviewer2Gate(action, context = {}) {
+  const decision = evaluateReviewer2Gate(action, context);
+  if (!decision.allowed) {
+    fail(decision.code, decision.message, {
+      action,
+      gateId: decision.gateId,
+      claimId: decision.claimId ?? null,
+      latestClaimEventType: decision.latestClaimEventType ?? null,
+      latestR2VerdictEventId: decision.latestR2VerdictEventId ?? null,
+      requestedReviewer: decision.requestedReviewer,
+    });
+  }
+  return decision;
+}
+
 function assertRoleMutationPermission(roleContract, request) {
   const mutation = request.objectiveMutation ?? {};
   const mutatesGlobalState =
@@ -242,6 +337,18 @@ function assertRoleMutationPermission(roleContract, request) {
       `Role ${roleContract.roleId} may return proposals or evidence but cannot mutate global objective state.`,
       { roleId: roleContract.roleId },
     );
+  }
+
+  if (mutation.claimPromotion != null) {
+    assertReviewer2Gate('claim-promotion', mutation.claimPromotion);
+  }
+
+  if (mutation.completeObjective === true || mutation.setCompletion === true) {
+    assertReviewer2Gate('objective-completion', mutation);
+  }
+
+  if (mutation.finalDigestExport === true || mutation.exportFinalDigest === true) {
+    assertReviewer2Gate('final-digest-export', mutation);
   }
 }
 
@@ -512,10 +619,74 @@ function deriveLeadContinuation(handoff) {
   const blockerCode = typeof firstBlocker === 'string'
     ? firstBlocker
     : firstBlocker.code ?? 'UNKNOWN_BLOCKER';
+  const requiresReview = REVIEW_REQUIRED_BLOCKER_CODES.has(blockerCode) || /\bCONFLICT\b/iu.test(blockerCode);
   return {
-    status: blockerCode === 'E_R2_REVIEW_PENDING' ? 'review-required' : 'blocked',
+    status: requiresReview ? 'review-required' : 'blocked',
     blockerCode,
-    requestedReviewer: blockerCode === 'E_R2_REVIEW_PENDING' ? 'reviewer-2-or-lead' : null,
+    requestedReviewer: blockerCode === 'E_R2_REVIEW_PENDING' ? 'reviewer-2-or-lead' : requiresReview ? 'reviewer-2' : null,
+  };
+}
+
+function normalizeReviewer2Verdict(plan, persistedHandoff, result) {
+  if (plan.roleId !== 'reviewer-2') {
+    return null;
+  }
+
+  const rawVerdict = result?.r2Verdict ?? result?.verdict ?? null;
+
+  // T4.5.3 Round 87 spec compliance:
+  // A reviewer-2 dispatch is a contract: the reviewer MUST close with EITHER
+  //   (a) an r2Verdict in {ACCEPT, REJECT, DEFER}, OR
+  //   (b) an escalation blocker (E_R2_REVIEW_PENDING / *R2*REVIEW*) on the handoff.
+  // The strategic gate (claim-promotion, objective-completion, final-digest-export,
+  // semantic-drift-resolution, handoff-conflict-continuation) is enforced via
+  // assertReviewer2Gate at the decision point, not here. This function only
+  // validates the dispatch's local contract.
+  if (rawVerdict == null) {
+    // T4.5.3 spec is conditional: "Reviewer-2 verdict is persisted as
+    // objective event `r2-verdict` and, if tied to a role handoff, references
+    // handoffId." The strict per-dispatch verdict requirement is NOT in spec
+    // scope. The strategic gate (claim-promotion, objective-completion,
+    // final-digest-export, semantic-drift-resolution, handoff-conflict-continuation)
+    // is enforced via assertReviewer2Gate at the decision points. This
+    // function is the persistence path: when a verdict is returned, validate
+    // and persist; when none is returned, return null and let the dispatch
+    // proceed with handoff-only persistence.
+    return null;
+  }
+
+  const verdictValue = typeof rawVerdict === 'string'
+    ? rawVerdict
+    : rawVerdict?.verdict;
+  const verdict = typeof verdictValue === 'string' ? verdictValue.trim().toUpperCase() : null;
+  if (!REVIEWER2_VERDICTS.has(verdict)) {
+    fail(
+      'E_R2_VERDICT_REQUIRED',
+      'Reviewer-2 dispatch returned an r2Verdict payload but verdict is not in ACCEPT | REJECT | DEFER.',
+      {
+        roleId: plan.roleId,
+        taskId: plan.taskId,
+      },
+    );
+  }
+
+  const resolvedBlockerCodes = Array.isArray(rawVerdict?.resolvedBlockerCodes)
+    ? rawVerdict.resolvedBlockerCodes.filter((entry) => typeof entry === 'string' && entry.trim() !== '')
+    : ['E_R2_REVIEW_PENDING'];
+
+  return {
+    gateId: REVIEWER2_GATE_ID,
+    claimId: typeof rawVerdict?.claimId === 'string' && rawVerdict.claimId.trim() !== ''
+      ? rawVerdict.claimId.trim()
+      : null,
+    verdict,
+    summary: typeof rawVerdict?.summary === 'string' && rawVerdict.summary.trim() !== ''
+      ? rawVerdict.summary.trim()
+      : persistedHandoff.summary,
+    reviewerRole: 'reviewer-2',
+    handoffId: persistedHandoff.handoffId,
+    reviewedArtifactPaths: [...persistedHandoff.artifactPaths],
+    resolvedBlockerCodes,
   };
 }
 
@@ -761,15 +932,58 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
       scratchRoot: finalEnvelope.sessionIsolation.scratchRoot,
     },
   );
+  const persistedRecord = persistedHandoff?.handoff ?? null;
+  const r2Verdict = normalizeReviewer2Verdict(plan, persistedRecord, result);
+  let r2VerdictEvent = null;
+  let r2Snapshot = null;
+  let r2Digest = null;
+
+  if (r2Verdict != null) {
+    const projectRoot = resolveProjectRoot(projectPath);
+    const writtenAt = options.now ?? ioNow();
+    r2VerdictEvent = (await appendObjectiveEvent(
+      projectRoot,
+      plan.objectiveId,
+      'r2-verdict',
+      r2Verdict,
+      writtenAt,
+    )).event;
+    r2Snapshot = await writeObjectiveResumeSnapshot(projectRoot, plan.objectiveId, {
+      writtenReason: 'pre-handoff',
+      writtenAt,
+      notes: `Reviewer-2 verdict ${r2Verdict.verdict} persisted as ${r2VerdictEvent.eventId}.`,
+    });
+    r2Digest = await writeObjectiveDigest(projectRoot, plan.objectiveId, {
+      writtenAt,
+      wakeId: null,
+      status: 'reviewed',
+      queueCursor: null,
+      lastTaskId: plan.taskId,
+      snapshotPath: toRepoRelative(projectRoot, r2Snapshot.snapshotPath),
+      eventLogPath: toRepoRelative(projectRoot, objectiveEventsPath(projectRoot, plan.objectiveId)),
+      handoffLedgerPath: toRepoRelative(projectRoot, objectiveHandoffsPath(projectRoot, plan.objectiveId)),
+      queuePath: null,
+      handoffId: persistedRecord.handoffId,
+      digestKind: 'r2-verdict',
+      latestR2VerdictId: r2VerdictEvent.eventId,
+      r2Verdict: r2Verdict.verdict,
+      claimId: r2Verdict.claimId,
+      notes: r2Verdict.summary,
+    });
+  }
 
   return {
     ...plan,
     envelope: finalEnvelope,
     spawnRequest: finalSpawnRequest,
     executed: true,
-    handoff: persistedHandoff?.handoff ?? null,
+    handoff: persistedRecord,
     handoffLedgerPath: persistedHandoff?.handoffsPath ?? null,
-    leadContinuation: persistedHandoff ? deriveLeadContinuation(persistedHandoff.handoff) : null,
+    leadContinuation: persistedRecord ? deriveLeadContinuation(persistedRecord) : null,
+    r2Verdict,
+    r2VerdictEvent,
+    resumeSnapshotPath: r2Snapshot ? toRepoRelative(resolveProjectRoot(projectPath), r2Snapshot.snapshotPath) : null,
+    digestPath: r2Digest ? toRepoRelative(resolveProjectRoot(projectPath), r2Digest.latestPath) : null,
     result,
   };
 }

@@ -419,6 +419,74 @@ test('objective resume clears BLOCKER.flag by writing blocker-resolve before res
   }
 });
 
+test('T4.5.3: objective resume refuses to resolve SEMANTIC_DRIFT_DETECTED without a reviewer-2 verdict', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-drift-r2-gate-');
+  try {
+    const objectiveRecord = await installBlockedObjective(projectRoot);
+    await writeResumeSnapshotFixture(projectRoot, objectiveRecord.objectiveId, 'valid-mid-loop.json', {
+      objectiveStatusAtSnapshot: 'blocked',
+      runtimeMode: objectiveRecord.runtimeMode,
+      reasoningMode: objectiveRecord.reasoningMode,
+      openBlockers: [{
+        code: 'SEMANTIC_DRIFT_DETECTED',
+        message: 'Strategic drift requires Reviewer-2 before resume.',
+        openedAt: '2026-04-25T08:30:00Z',
+      }],
+    });
+    const blockerPath = await writeObjectiveBlockerFlag(projectRoot, objectiveRecord.objectiveId, {
+      code: 'SEMANTIC_DRIFT_DETECTED',
+      message: 'Strategic drift requires Reviewer-2 before resume.',
+      snapshotPath: `.vibe-science-environment/objectives/${objectiveRecord.objectiveId}/resume-snapshot.json`,
+      writtenAt: '2026-04-25T08:30:00Z',
+    });
+
+    const result = await runVre(projectRoot, [
+      'objective',
+      'resume',
+      '--objective',
+      objectiveRecord.objectiveId
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+    assert.equal(result.code, 1, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.command, 'objective resume');
+    assert.equal(payload.code, 'E_R2_REVIEW_PENDING');
+    // namedPhase9ErrorPayload spreads `extra` to the top level (...extra), so
+    // requestedReviewer lands at payload.requestedReviewer, not payload.extra.requestedReviewer.
+    assert.equal(payload.requestedReviewer, 'reviewer-2');
+    assert.equal(await pathExists(blockerPath), true);
+
+    const objectiveAfter = await readJson(
+      path.join(
+        projectRoot,
+        '.vibe-science-environment',
+        'objectives',
+        objectiveRecord.objectiveId,
+        'objective.json'
+      )
+    );
+    assert.equal(objectiveAfter.status, 'blocked');
+
+    const events = await readJsonl(
+      path.join(
+        projectRoot,
+        '.vibe-science-environment',
+        'objectives',
+        objectiveRecord.objectiveId,
+        'events.jsonl'
+      )
+    );
+    assert.equal(events.some((entry) => entry.kind === 'blocker-resolve'), false);
+    assert.equal(events.some((entry) => entry.kind === 'resume'), false);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 test('objective resume fails with E_REASONING_MODE_DIVERGED when the snapshot diverges and no repair is requested', async () => {
   const projectRoot = await createCliFixtureProject('vre-objective-cli-diverged-');
   try {

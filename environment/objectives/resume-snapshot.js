@@ -248,6 +248,7 @@ export async function buildResumeSnapshot(projectRoot, objectiveRecord, activePo
         openedAt: blocker.writtenAt ?? timestamp
       }]
     : [];
+  const latestR2Verdict = latestEvent(events, 'r2-verdict');
 
   return {
     schemaVersion: 'phase9.resume-snapshot.v1',
@@ -306,7 +307,7 @@ export async function buildResumeSnapshot(projectRoot, objectiveRecord, activePo
     kernelFingerprint: {
       lastClaimId: null,
       lastCitationCheckId: null,
-      lastR2VerdictId: null,
+      lastR2VerdictId: latestR2Verdict?.eventId ?? null,
       lastObserverAlertId: null,
       lastGateCheckId: null,
       lastPatternId: null,

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "phase9.objective-event.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "eventId": "EV-0008",
+  "ts": "2026-04-22T22:20:00Z",
+  "recordSeq": 8,
+  "kind": "r2-verdict",
+  "payload": {
+    "gateId": "PROMOTION_REQUIRES_R2_REVIEW",
+    "claimId": "C-001",
+    "verdict": "ACCEPT",
+    "summary": "Reviewer-2 accepted the claim after checking evidence and method limits.",
+    "reviewerRole": "reviewer-2",
+    "handoffId": "H-0007",
+    "reviewedArtifactPaths": [
+      ".vibe-science-environment/objectives/OBJ-2026-04-22-001/review/claim-001.md"
+    ],
+    "resolvedBlockerCodes": [
+      "E_R2_REVIEW_PENDING"
+    ]
+  }
+}

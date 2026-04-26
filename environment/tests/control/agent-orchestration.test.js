@@ -8,16 +8,20 @@ import { fileURLToPath } from 'node:url';
 import {
   AgentOrchestrationError,
   dispatchRoleAssignment,
+  evaluateReviewer2Gate,
   getRoleDispatchContract,
   listSupportedAgentRoles,
   prepareRoleDispatch,
+  REVIEWER2_GATE_ID,
   validateReviewedSpawnRequest,
 } from '../../orchestrator/agent-orchestration.js';
 import {
   createObjectiveStore,
   deleteObjectiveStore,
+  objectiveEventsPath,
   readObjectiveHandoffs,
 } from '../../objectives/store.js';
+import { readResumeSnapshot } from '../../objectives/resume-snapshot.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const OBJECTIVE_FIXTURES_DIR = path.join(repoRoot, 'environment', 'tests', 'fixtures', 'phase9', 'objective');
@@ -86,6 +90,13 @@ async function cleanupObjectiveArtifacts(objectiveId) {
 
 async function readObjectiveFixture(fileName = 'valid-active.json') {
   return JSON.parse(await readFile(path.join(OBJECTIVE_FIXTURES_DIR, fileName), 'utf8'));
+}
+
+async function readObjectiveEvents(projectRoot, objectiveId) {
+  const raw = await readFile(objectiveEventsPath(projectRoot, objectiveId), 'utf8');
+  return raw.trim() === ''
+    ? []
+    : raw.trim().split(/\r?\n/u).map((line) => JSON.parse(line));
 }
 
 async function seedObjectiveStore(objectiveId, overrides = {}) {
@@ -665,8 +676,9 @@ test('dispatchRoleAssignment persists conflict-marked handoffs and blocks lead c
     });
 
     assert.equal(response.handoff.recordSeq, 1);
-    assert.equal(response.leadContinuation.status, 'blocked');
+    assert.equal(response.leadContinuation.status, 'review-required');
     assert.equal(response.leadContinuation.blockerCode, 'E_STATE_CONFLICT');
+    assert.equal(response.leadContinuation.requestedReviewer, 'reviewer-2');
     assert.equal(response.handoff.openBlockers[0].code, 'E_STATE_CONFLICT');
 
     const handoffs = await readObjectiveHandoffs(repoRoot, objectiveId);
@@ -730,6 +742,187 @@ test('dispatchRoleAssignment persists reviewer-2 escalation handoffs and marks l
     await cleanupObjectiveStore(objectiveId);
   }
 });
+
+test('T4.5.3: reviewer-2 gate matches the existing plugin promotion precondition name and blocks claim promotion before R2_REVIEWED', () => {
+  const blocked = evaluateReviewer2Gate('claim-promotion', {
+    claimId: 'C-001',
+    latestClaimEventType: 'CREATED',
+  });
+  assert.equal(blocked.allowed, false);
+  assert.equal(blocked.code, 'PROMOTION_REQUIRES_R2_REVIEW');
+  assert.equal(blocked.gateId, REVIEWER2_GATE_ID);
+  assert.equal(blocked.requestedReviewer, 'reviewer-2');
+  assert.equal(blocked.claimId, 'C-001');
+
+  const allowed = evaluateReviewer2Gate('claim-promotion', {
+    claimId: 'C-001',
+    latestClaimEventType: 'R2_REVIEWED',
+  });
+  assert.equal(allowed.allowed, true);
+  assert.equal(allowed.gateId, REVIEWER2_GATE_ID);
+});
+
+test('T4.5.3: prepareRoleDispatch blocks lead claim promotion unless the plugin lifecycle gate has latest R2_REVIEWED evidence', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'lead-researcher',
+      taskId: undefined,
+      taskKind: undefined,
+      objectiveMutation: {
+        claimPromotion: {
+          claimId: 'C-001',
+          latestClaimEventType: 'CREATED',
+        },
+      },
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'PROMOTION_REQUIRES_R2_REVIEW',
+  );
+
+  const allowed = await prepareRoleDispatch(repoRoot, buildRequest({
+    roleId: 'lead-researcher',
+    taskId: undefined,
+    taskKind: undefined,
+    objectiveMutation: {
+      claimPromotion: {
+        claimId: 'C-001',
+        latestClaimEventType: 'R2_REVIEWED',
+      },
+    },
+  }), {
+    skipSurfaceCheck: true,
+  });
+  assert.equal(allowed.dispatchMode, 'inline-only');
+  assert.equal(allowed.transport, 'inline-role-mode');
+});
+
+test('T4.5.3: prepareRoleDispatch blocks objective completion and final digest export without a reviewer-2 verdict', async () => {
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'lead-researcher',
+      taskId: undefined,
+      taskKind: undefined,
+      objectiveMutation: {
+        completeObjective: true,
+      },
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'E_R2_REVIEW_PENDING',
+  );
+
+  await expectAgentError(
+    () => prepareRoleDispatch(repoRoot, buildRequest({
+      roleId: 'lead-researcher',
+      taskId: undefined,
+      taskKind: undefined,
+      objectiveMutation: {
+        finalDigestExport: true,
+      },
+    }), {
+      skipSurfaceCheck: true,
+    }),
+    'E_R2_REVIEW_PENDING',
+  );
+
+  const allowed = await prepareRoleDispatch(repoRoot, buildRequest({
+    roleId: 'lead-researcher',
+    taskId: undefined,
+    taskKind: undefined,
+    objectiveMutation: {
+      completeObjective: true,
+      latestR2VerdictEventId: 'EV-0042',
+    },
+  }), {
+    skipSurfaceCheck: true,
+  });
+  assert.equal(allowed.dispatchMode, 'inline-only');
+});
+
+test('T4.5.3: reviewer-2 dispatch persists an r2-verdict event and makes it visible in the resume snapshot and digest', async () => {
+  const objectiveId = `OBJ-T453-R2-VERDICT-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'r2-verdict-001.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, '# R2 verdict\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      spawnParentPid: 30303,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 accepted the claim promotion evidence with documented method limits.',
+        },
+        r2Verdict: {
+          claimId: 'C-001',
+          verdict: 'ACCEPT',
+          summary: 'Evidence supports promotion after R2 review.',
+        },
+      }),
+    });
+
+    assert.equal(response.r2VerdictEvent.kind, 'r2-verdict');
+    assert.equal(response.r2VerdictEvent.payload.claimId, 'C-001');
+    assert.equal(response.r2VerdictEvent.payload.verdict, 'ACCEPT');
+    assert.equal(response.r2VerdictEvent.payload.gateId, REVIEWER2_GATE_ID);
+    assert.equal(response.r2VerdictEvent.payload.handoffId, response.handoff.handoffId);
+    assert.match(String(response.digestPath ?? ''), /digest-latest\.md$/u);
+
+    const events = await readObjectiveEvents(repoRoot, objectiveId);
+    const verdictEvent = events.find((entry) => entry.kind === 'r2-verdict');
+    assert.ok(verdictEvent, 'reviewer-2 dispatch must append r2-verdict');
+    assert.equal(verdictEvent.eventId, response.r2VerdictEvent.eventId);
+    assert.equal(verdictEvent.payload.handoffId, response.handoff.handoffId);
+
+    const snapshotState = await readResumeSnapshot(repoRoot, objectiveId);
+    assert.equal(snapshotState.exists, true);
+    assert.equal(snapshotState.snapshot.kernelFingerprint.lastR2VerdictId, verdictEvent.eventId);
+
+    const digestText = await readFile(path.join(repoRoot, response.digestPath), 'utf8');
+    assert.match(digestText, new RegExp(`Latest R2 Verdict Id: ${verdictEvent.eventId}`, 'u'));
+    assert.match(digestText, /R2 Verdict: ACCEPT/u);
+    assert.match(digestText, /Claim Id: C-001/u);
+    assert.match(digestText, new RegExp(`Handoff Id: ${response.handoff.handoffId}`, 'u'));
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+// T4.5.3 Round 87 adversarial-review removal: the previous version of this
+// test ("reviewer-2 dispatch fails closed when the reviewed result omits
+// r2Verdict") enforced a stricter per-dispatch contract than the frozen spec
+// (file 13 §05a-T4.5.3) requires. The spec is conditional ("Reviewer-2
+// verdict is persisted as objective event `r2-verdict` and, if tied to a
+// role handoff, references handoffId.") and the strategic gate is enforced
+// via assertReviewer2Gate at the decision points (claim-promotion,
+// objective-completion, final-digest-export, semantic-drift-resolution,
+// handoff-conflict-continuation). The over-aggressive per-dispatch contract
+// broke pre-existing reviewer-2 escalation and conflict tests (lines ~510,
+// ~637, ~692 of this file) that legitimately return without a verdict. The
+// permissive normalizeReviewer2Verdict + assertReviewer2Gate split is
+// spec-faithful; the strict per-dispatch test was Codex over-engineering and
+// is removed here per Round 87 adversarial review.
 
 // Round 81 seq-097 claim-without-pin closure: seq 097 landed the T4.5.1
 // dispatcher with 17 direct tests but adversarial enumeration of every
