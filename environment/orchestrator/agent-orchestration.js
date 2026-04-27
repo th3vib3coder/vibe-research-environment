@@ -1300,15 +1300,22 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
       claimId: r2Verdict.claimId,
       notes: r2Verdict.summary,
     });
-    r2Bridge = await writeR2BridgeEvent({
-      projectRoot,
-      objectiveId: plan.objectiveId,
-      eventId: r2VerdictEvent.eventId,
-      eventLogPath: objectiveEventsPath(projectRoot, plan.objectiveId),
-      claimId: r2Verdict.claimId,
-      sessionId: finalEnvelope.generatedBySession,
-      verdict: r2Verdict.verdict,
-    }, options);
+    if (typeof r2Verdict.claimId === 'string' && r2Verdict.claimId.trim() !== '') {
+      r2Bridge = await writeR2BridgeEvent({
+        projectRoot,
+        objectiveId: plan.objectiveId,
+        eventId: r2VerdictEvent.eventId,
+        eventLogPath: objectiveEventsPath(projectRoot, plan.objectiveId),
+        claimId: r2Verdict.claimId,
+        sessionId: finalEnvelope.generatedBySession,
+        verdict: r2Verdict.verdict,
+      }, options);
+    } else {
+      r2Bridge = {
+        status: 'skipped',
+        reason: 'r2-verdict-without-claim-id',
+      };
+    }
   }
 
   return {

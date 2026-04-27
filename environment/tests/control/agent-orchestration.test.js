@@ -1229,6 +1229,66 @@ test('T4.5.3.1: reviewer-2 r2-verdict dispatch calls the plugin bridge writer wi
   }
 });
 
+test('T4.5.3.1: reviewer-2 objective-level verdict without claimId does not call the plugin claim bridge', async () => {
+  const objectiveId = `OBJ-T4531-R2-NO-CLAIM-BRIDGE-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'objective-r2-verdict.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    generatedBySession: 'sess-t4531-r2-no-claim',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+  const bridgeCalls = [];
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, '# Objective R2 verdict\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      spawnParentPid: 30303,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      writeR2Bridge: async (bridgeRequest) => {
+        bridgeCalls.push(bridgeRequest);
+        return { status: 'bridged', inserted: 1, skipped: 0 };
+      },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 accepted objective-level continuation evidence.',
+        },
+        r2Verdict: {
+          verdict: 'ACCEPT',
+          summary: 'Objective-level review accepted with no claim promotion target.',
+          resolvedBlockerCodes: ['SEMANTIC_DRIFT_DETECTED'],
+        },
+      }),
+    });
+
+    assert.equal(response.r2VerdictEvent.kind, 'r2-verdict');
+    assert.equal(response.r2VerdictEvent.payload.claimId, null);
+    assert.equal(bridgeCalls.length, 0);
+    assert.deepEqual(response.r2Bridge, {
+      status: 'skipped',
+      reason: 'r2-verdict-without-claim-id',
+    });
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
 // T4.5.3 Round 87 adversarial-review removal: the previous version of this
 // test ("reviewer-2 dispatch fails closed when the reviewed result omits
 // r2Verdict") enforced a stricter per-dispatch contract than the frozen spec
