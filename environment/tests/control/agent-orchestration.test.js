@@ -16,12 +16,16 @@ import {
   validateReviewedSpawnRequest,
 } from '../../orchestrator/agent-orchestration.js';
 import {
+  appendObjectiveHandoff,
   createObjectiveStore,
   deleteObjectiveStore,
   objectiveEventsPath,
   readObjectiveHandoffs,
 } from '../../objectives/store.js';
-import { readResumeSnapshot } from '../../objectives/resume-snapshot.js';
+import {
+  appendObjectiveEvent,
+  readResumeSnapshot,
+} from '../../objectives/resume-snapshot.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const OBJECTIVE_FIXTURES_DIR = path.join(repoRoot, 'environment', 'tests', 'fixtures', 'phase9', 'objective');
@@ -218,6 +222,248 @@ test('prepareRoleDispatch keeps inline-only role-modes inline and does not fabri
   ]);
   assert.ok(!('envelope' in result));
   assert.ok(!('spawnRequest' in result));
+});
+
+test('T4.5.5 context-pressure compact trigger fires only above the 60 percent model limit boundary', async () => {
+  const triggered = [];
+  const highObjectiveId = `OBJ-T455-HIGH-${Date.now()}`;
+  const lowObjectiveId = `OBJ-T455-LOW-${Date.now()}`;
+  const highArtifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    highObjectiveId,
+    'literature',
+    'context-pressure.md',
+  );
+
+  try {
+    await seedObjectiveStore(highObjectiveId);
+    await seedObjectiveStore(lowObjectiveId);
+    await mkdir(path.dirname(highArtifactPath), { recursive: true });
+    await writeFile(highArtifactPath, '# literature checkpoint\n', 'utf8');
+
+    const high = await dispatchRoleAssignment(repoRoot, buildRequest({
+      objectiveId: highObjectiveId,
+      roleId: 'literature-mode',
+      taskId: undefined,
+      taskKind: undefined,
+      contextSource: 'objective-artifacts',
+      generatedBySession: 'sess-t455-high',
+      contextBudget: {
+        usedTokens: 600_001,
+        modelLimitTokens: 1_000_000,
+      },
+      preCompactHandoffs: [{
+        handoffId: 'H-T455-HIGH',
+        summary: 'Inline literature findings are durable before context compaction.',
+        artifactPaths: [highArtifactPath],
+      }],
+    }), {
+      execute: true,
+      skipSurfaceCheck: true,
+      now: '2026-04-26T09:00:00.000Z',
+      readCapabilityHandshake: async () => ({
+        schemaVersion: 'phase9.capability-handshake.v1',
+        objective: { activeObjectiveId: highObjectiveId },
+      }),
+      triggerCompact: async (payload) => {
+        triggered.push(payload);
+        return { status: 'compact-fired' };
+      },
+    });
+
+    assert.equal(triggered.length, 1);
+    assert.equal(high.executed, false);
+    assert.equal(high.contextPressure.triggered, true);
+    assert.equal(high.contextPressure.action, 'compact-then-resume');
+    assert.equal(high.contextPressure.usedTokens, 600_001);
+    assert.equal(high.contextPressure.modelLimitTokens, 1_000_000);
+    assert.equal(high.preCompact.snapshot.snapshot.writtenReason, 'pre-compact');
+
+    const low = await dispatchRoleAssignment(repoRoot, buildRequest({
+      objectiveId: lowObjectiveId,
+      roleId: 'literature-mode',
+      taskId: undefined,
+      taskKind: undefined,
+      contextSource: 'objective-artifacts',
+      generatedBySession: 'sess-t455-low',
+      contextBudget: {
+        usedTokens: 599_999,
+        modelLimitTokens: 1_000_000,
+      },
+    }), {
+      execute: true,
+      skipSurfaceCheck: true,
+      triggerCompact: async (payload) => {
+        triggered.push(payload);
+        return { status: 'compact-fired' };
+      },
+    });
+
+    assert.equal(triggered.length, 1);
+    assert.equal(low.executed, false);
+    assert.equal(low.contextPressure.triggered, false);
+    assert.equal(low.contextPressure.action, 'continue-inline');
+    assert.equal(low.preCompact, null);
+  } finally {
+    await cleanupObjectiveStore(highObjectiveId);
+    await cleanupObjectiveStore(lowObjectiveId);
+  }
+});
+
+test('T4.5.5 persists objective events and handoffs before invoking compact', async () => {
+  const objectiveId = `OBJ-T455-ORDER-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'serendipity',
+    'candidate.md',
+  );
+  const observations = [];
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, '# serendipity candidate\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, buildRequest({
+      objectiveId,
+      roleId: 'serendipity-mode',
+      taskId: undefined,
+      taskKind: undefined,
+      contextSource: 'objective-artifacts',
+      generatedBySession: 'sess-t455-order',
+      contextBudget: {
+        usedTokens: 601,
+        modelLimitTokens: 1_000,
+      },
+      preCompactHandoffs: [{
+        handoffId: 'H-T455-ORDER',
+        summary: 'Serendipity-mode candidate is safely handed off before compact.',
+        artifactPaths: [artifactPath],
+      }],
+    }), {
+      execute: true,
+      skipSurfaceCheck: true,
+      now: '2026-04-26T09:10:00.000Z',
+      readCapabilityHandshake: async () => ({
+        schemaVersion: 'phase9.capability-handshake.v1',
+        objective: { activeObjectiveId: objectiveId },
+      }),
+      triggerCompact: async () => {
+        const eventsAtCompact = await readObjectiveEvents(repoRoot, objectiveId);
+        const handoffsAtCompact = await readObjectiveHandoffs(repoRoot, objectiveId);
+        const snapshotAtCompact = await readResumeSnapshot(repoRoot, objectiveId);
+        observations.push({ eventsAtCompact, handoffsAtCompact, snapshotAtCompact });
+        return { status: 'compact-fired' };
+      },
+    });
+
+    assert.equal(observations.length, 1);
+    assert.ok(
+      observations[0].eventsAtCompact.some((entry) => entry.kind === 'budget-threshold'),
+      'budget-threshold event must be on disk before compact action runs',
+    );
+    assert.ok(
+      observations[0].handoffsAtCompact.some((entry) => entry.handoffId === 'H-T455-ORDER'),
+      'pre-compact handoff must be on disk before compact action runs',
+    );
+    assert.equal(observations[0].snapshotAtCompact.snapshot.writtenReason, 'pre-compact');
+    assert.equal(response.preCompact.compact.status, 'compact-fired');
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('T4.5.5 post-compact resume reloads only durable artifacts and preserves pre-compact handoffs', async () => {
+  const objectiveId = `OBJ-T455-RESUME-${Date.now()}`;
+  const durableArtifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'results',
+    'existing-handoff.json',
+  );
+  const preCompactArtifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'literature',
+    'inline-handoff.md',
+  );
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(durableArtifactPath), { recursive: true });
+    await mkdir(path.dirname(preCompactArtifactPath), { recursive: true });
+    await writeFile(durableArtifactPath, '{"durable":true}\n', 'utf8');
+    await writeFile(preCompactArtifactPath, '# inline handoff\n', 'utf8');
+    await appendObjectiveHandoff(repoRoot, objectiveId, {
+      handoffId: 'H-T455-DURABLE-BEFORE',
+      fromAgentRole: 'results-agent',
+      toAgentRole: 'lead-researcher',
+      artifactPaths: [durableArtifactPath],
+      summary: 'Existing durable handoff must survive the context compact boundary.',
+      openBlockers: [],
+      writerSession: 'sess-durable-before',
+    }, {
+      writtenAt: '2026-04-26T09:19:00.000Z',
+      workspaceRoot: repoRoot,
+    });
+    await appendObjectiveEvent(repoRoot, objectiveId, 'handoff', {
+      handoffId: 'H-T455-DURABLE-BEFORE',
+      roleId: 'results-agent',
+    }, '2026-04-26T09:19:00.000Z');
+
+    const response = await dispatchRoleAssignment(repoRoot, buildRequest({
+      objectiveId,
+      roleId: 'literature-mode',
+      taskId: undefined,
+      taskKind: undefined,
+      contextSource: 'objective-artifacts',
+      generatedBySession: 'sess-t455-resume',
+      chatState: {
+        midThought: 'CHAT_ONLY_SECRET_DO_NOT_RESUME',
+      },
+      contextBudget: {
+        usedTokens: 61,
+        modelLimitTokens: 100,
+      },
+      preCompactHandoffs: [{
+        handoffId: 'H-T455-PRE-COMPACT',
+        summary: 'Inline literature handoff lands before compact.',
+        artifactPaths: [preCompactArtifactPath],
+      }],
+    }), {
+      execute: true,
+      skipSurfaceCheck: true,
+      now: '2026-04-26T09:20:00.000Z',
+      readCapabilityHandshake: async () => ({
+        schemaVersion: 'phase9.capability-handshake.v1',
+        objective: { activeObjectiveId: objectiveId },
+        freshAfterCompact: true,
+      }),
+      triggerCompact: async () => ({ status: 'compact-fired' }),
+    });
+
+    assert.equal(response.postCompactResume.source, 'durable-artifacts');
+    assert.equal(response.postCompactResume.handshake.freshAfterCompact, true);
+    assert.equal(response.postCompactResume.activeObjective.objectiveId, objectiveId);
+    assert.deepEqual(
+      response.postCompactResume.openHandoffs.map((entry) => entry.handoffId),
+      ['H-T455-DURABLE-BEFORE', 'H-T455-PRE-COMPACT'],
+    );
+    assert.ok(response.postCompactResume.latestEvents.some((entry) => entry.kind === 'handoff'));
+    assert.ok(response.postCompactResume.latestEvents.some((entry) => entry.kind === 'budget-threshold'));
+    assert.equal(JSON.stringify(response).includes('CHAT_ONLY_SECRET_DO_NOT_RESUME'), false);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
 });
 
 test('prepareRoleDispatch fails when the objective id is missing', async () => {

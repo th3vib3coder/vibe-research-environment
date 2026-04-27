@@ -9,17 +9,22 @@ import {
   assertValid,
   loadValidator,
   now as ioNow,
+  readJsonl,
   resolveInside,
   resolveProjectRoot,
 } from '../control/_io.js';
+import { generateCapabilityHandshake } from '../control/capability-handshake.js';
 import { writeObjectiveDigest } from '../objectives/digest-writer.js';
 import {
   appendObjectiveHandoff,
   objectiveEventsPath,
   objectiveHandoffsPath,
+  readObjectiveHandoffs,
+  readObjectiveRecord,
 } from '../objectives/store.js';
 import {
   appendObjectiveEvent,
+  readResumeSnapshot,
   writeObjectiveResumeSnapshot,
 } from '../objectives/resume-snapshot.js';
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
@@ -122,6 +127,11 @@ const REVIEW_REQUIRED_BLOCKER_CODES = new Set([
   'E_HANDOFF_CONFLICT',
   'SEMANTIC_DRIFT_DETECTED',
 ]);
+const CONTEXT_PRESSURE_THRESHOLD_NUMERATOR = 3;
+const CONTEXT_PRESSURE_THRESHOLD_DENOMINATOR = 5;
+const CONTEXT_PRESSURE_THRESHOLD_RATIO =
+  CONTEXT_PRESSURE_THRESHOLD_NUMERATOR / CONTEXT_PRESSURE_THRESHOLD_DENOMINATOR;
+const CONTEXT_PRESSURE_SAFE_BOUNDARY = 'pre-inline-turn';
 const WEB_REQUIRING_ROLE_IDS = new Set(['literature-mode', 'serendipity-mode']);
 const FORBIDDEN_TASK_STYLE_TRANSPORTS = new Set([
   'background-task',
@@ -263,6 +273,50 @@ function defaultAllowedActions(roleId) {
   }
 }
 
+function toFiniteNumber(value) {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    return Number(value);
+  }
+  return Number.NaN;
+}
+
+function evaluateContextPressure(contextBudget) {
+  if (contextBudget == null) {
+    return null;
+  }
+  if (typeof contextBudget !== 'object' || Array.isArray(contextBudget)) {
+    fail(
+      'E_CONTEXT_BUDGET_INVALID',
+      'contextBudget must provide usedTokens and modelLimitTokens for inline context-pressure checks.',
+    );
+  }
+
+  const usedTokens = toFiniteNumber(contextBudget.usedTokens);
+  const modelLimitTokens = toFiniteNumber(contextBudget.modelLimitTokens);
+  if (!Number.isFinite(usedTokens) || usedTokens < 0) {
+    fail('E_CONTEXT_BUDGET_INVALID', 'contextBudget.usedTokens must be a finite non-negative number.');
+  }
+  if (!Number.isFinite(modelLimitTokens) || modelLimitTokens <= 0) {
+    fail('E_CONTEXT_BUDGET_INVALID', 'contextBudget.modelLimitTokens must be a finite positive number.');
+  }
+
+  const triggered =
+    usedTokens * CONTEXT_PRESSURE_THRESHOLD_DENOMINATOR
+      > modelLimitTokens * CONTEXT_PRESSURE_THRESHOLD_NUMERATOR;
+  return {
+    triggered,
+    action: triggered ? 'compact-then-resume' : 'continue-inline',
+    boundary: CONTEXT_PRESSURE_SAFE_BOUNDARY,
+    usedTokens,
+    modelLimitTokens,
+    usedRatio: usedTokens / modelLimitTokens,
+    thresholdRatio: CONTEXT_PRESSURE_THRESHOLD_RATIO,
+  };
+}
+
 function requireString(value, label, code) {
   if (typeof value !== 'string' || value.trim() === '') {
     fail(code, `${label} must be a non-empty string.`);
@@ -277,6 +331,91 @@ function isPathInside(baseDir, candidatePath) {
 
 function toRepoRelative(projectRoot, targetPath) {
   return path.relative(projectRoot, targetPath).split(path.sep).join('/');
+}
+
+function collectPreCompactHandoffCandidates(request) {
+  if (Array.isArray(request.preCompactHandoffs)) {
+    return request.preCompactHandoffs;
+  }
+  if (request.preCompactHandoff != null) {
+    return [request.preCompactHandoff];
+  }
+  return [];
+}
+
+function normalizePreCompactHandoff(roleId, request, candidate) {
+  if (candidate == null || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    fail('E_PRE_COMPACT_HANDOFF_REQUIRED', 'preCompactHandoffs entries must be handoff objects.');
+  }
+
+  return {
+    handoffId: typeof candidate.handoffId === 'string' && candidate.handoffId.trim() !== ''
+      ? candidate.handoffId.trim()
+      : undefined,
+    fromAgentRole: typeof candidate.fromAgentRole === 'string' && candidate.fromAgentRole.trim() !== ''
+      ? candidate.fromAgentRole.trim()
+      : roleId,
+    toAgentRole: typeof candidate.toAgentRole === 'string' && candidate.toAgentRole.trim() !== ''
+      ? candidate.toAgentRole.trim()
+      : 'lead-researcher',
+    artifactPaths: Array.isArray(candidate.artifactPaths) ? [...candidate.artifactPaths] : [],
+    summary: requireString(candidate.summary, 'preCompactHandoff.summary', 'E_PRE_COMPACT_HANDOFF_REQUIRED'),
+    openBlockers: Array.isArray(candidate.openBlockers) ? [...candidate.openBlockers] : [],
+    closesHandoffId: candidate.closesHandoffId ?? null,
+    writerSession: typeof candidate.writerSession === 'string' && candidate.writerSession.trim() !== ''
+      ? candidate.writerSession.trim()
+      : requireString(
+        request.generatedBySession,
+        'generatedBySession',
+        'E_PRE_COMPACT_HANDOFF_REQUIRED',
+      ),
+  };
+}
+
+function deriveOpenHandoffRecords(handoffs) {
+  const closedIds = new Set(
+    handoffs
+      .map((entry) => entry.closesHandoffId)
+      .filter((value) => typeof value === 'string' && value.trim() !== ''),
+  );
+  return handoffs.filter((entry) => !closedIds.has(entry.handoffId));
+}
+
+async function reloadPostCompactResume(projectRoot, objectiveId, options = {}) {
+  const [
+    handshake,
+    activeObjective,
+    allHandoffs,
+    latestEvents,
+    resumeSnapshot,
+  ] = await Promise.all([
+    (options.readCapabilityHandshake ?? generateCapabilityHandshake)(
+      projectRoot,
+      options.capabilityHandshakeOptions ?? {},
+    ),
+    readObjectiveRecord(projectRoot, objectiveId),
+    readObjectiveHandoffs(projectRoot, objectiveId),
+    readJsonl(objectiveEventsPath(projectRoot, objectiveId)),
+    readResumeSnapshot(projectRoot, objectiveId),
+  ]);
+
+  return {
+    source: 'durable-artifacts',
+    handshake,
+    activeObjective,
+    openHandoffs: deriveOpenHandoffRecords(allHandoffs),
+    latestEvents: latestEvents.slice(-25),
+    resumeSnapshot,
+  };
+}
+
+async function defaultTriggerCompact(payload) {
+  return {
+    status: 'compact-requested',
+    action: 'compact-then-resume',
+    objectiveId: payload.objectiveId,
+    boundary: payload.boundary,
+  };
 }
 
 async function realpathOrResolved(targetPath) {
@@ -658,6 +797,87 @@ function buildSpawnRequest(projectRoot, envelopePath, envelope, request) {
   });
 }
 
+async function resolveInlineContextPressureBoundary(projectRoot, roleId, objectiveId, request, options = {}) {
+  const contextPressure = evaluateContextPressure(request.contextBudget);
+  if (contextPressure == null) {
+    return {
+      contextPressure: null,
+      preCompact: null,
+      postCompactResume: null,
+    };
+  }
+  if (!contextPressure.triggered) {
+    return {
+      contextPressure,
+      preCompact: null,
+      postCompactResume: null,
+    };
+  }
+
+  const writtenAt = options.now ?? ioNow();
+  const eventWrite = await appendObjectiveEvent(
+    projectRoot,
+    objectiveId,
+    'budget-threshold',
+    {
+      reason: 'context-pressure',
+      action: 'compact-then-resume',
+      boundary: contextPressure.boundary,
+      roleId,
+      usedTokens: contextPressure.usedTokens,
+      modelLimitTokens: contextPressure.modelLimitTokens,
+      usedRatio: contextPressure.usedRatio,
+      thresholdRatio: contextPressure.thresholdRatio,
+    },
+    writtenAt,
+  );
+
+  const handoffWrites = [];
+  for (const candidate of collectPreCompactHandoffCandidates(request)) {
+    handoffWrites.push(await appendObjectiveHandoff(
+      projectRoot,
+      objectiveId,
+      normalizePreCompactHandoff(roleId, request, candidate),
+      {
+        writtenAt,
+        workspaceRoot: request.sessionIsolation?.workspaceRoot ?? projectRoot,
+        scratchRoot: request.sessionIsolation?.scratchRoot ?? null,
+      },
+    ));
+  }
+
+  const snapshotWrite = await writeObjectiveResumeSnapshot(projectRoot, objectiveId, {
+    writtenReason: 'pre-compact',
+    writtenAt,
+    notes: `Inline context pressure ${(contextPressure.usedRatio * 100).toFixed(4)}% exceeded the 60% model limit threshold.`,
+  });
+
+  const compact = await (options.triggerCompact ?? defaultTriggerCompact)({
+    objectiveId,
+    roleId,
+    boundary: contextPressure.boundary,
+    eventId: eventWrite.event.eventId,
+    eventLogPath: eventWrite.eventsPath,
+    handoffLedgerPath: objectiveHandoffsPath(projectRoot, objectiveId),
+    snapshotPath: snapshotWrite.snapshotPath,
+    contextPressure,
+  });
+  const postCompactResume = await reloadPostCompactResume(projectRoot, objectiveId, options);
+
+  return {
+    contextPressure,
+    preCompact: {
+      event: eventWrite.event,
+      eventsPath: eventWrite.eventsPath,
+      handoffs: handoffWrites.map((entry) => entry.handoff),
+      handoffLedgerPath: objectiveHandoffsPath(projectRoot, objectiveId),
+      snapshot: snapshotWrite,
+      compact,
+    },
+    postCompactResume,
+  };
+}
+
 function extractHandoffCandidate(result) {
   if (result == null || typeof result !== 'object' || Array.isArray(result)) {
     return null;
@@ -885,6 +1105,16 @@ export async function prepareRoleDispatch(projectPath, request = {}, options = {
   const objectiveId = assertObjectiveScope(request, dispatchMode);
 
   if (dispatchMode === 'inline-only') {
+    const allowedActions = Array.isArray(request.allowedActions)
+      ? [...request.allowedActions]
+      : defaultAllowedActions(roleId);
+    const boundary = await resolveInlineContextPressureBoundary(
+      projectRoot,
+      roleId,
+      objectiveId,
+      request,
+      options,
+    );
     return {
       roleId,
       objectiveId,
@@ -893,10 +1123,9 @@ export async function prepareRoleDispatch(projectPath, request = {}, options = {
       canMutateObjective: roleContract.canMutateObjective,
       resultContract: roleContract.resultContract,
       allowedTaskKinds: [...roleContract.allowedTaskKinds],
-      allowedActions: Array.isArray(request.allowedActions)
-        ? [...request.allowedActions]
-        : defaultAllowedActions(roleId),
+      allowedActions,
       transport: 'inline-role-mode',
+      ...boundary,
     };
   }
 
