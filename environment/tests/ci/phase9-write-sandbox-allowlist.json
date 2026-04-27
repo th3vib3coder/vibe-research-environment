@@ -27,6 +27,21 @@
       "reason": "Role dispatch prepares reviewed scratch roots and invokes the reviewed plugin r2-bridge-writer.js subprocess after persisting r2-verdict events."
     },
     {
+      "path": "environment/orchestrator/cold-child-validator.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Cold-child severance validator realpath-canonicalizes cwd against workspaceRoot for axis 4 (working-directory) per spec file 07 lines 54-56."
+    },
+    {
+      "path": "environment/orchestrator/reviewed-io.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Reviewed IO write-sandbox wrapper enforces the workspace closure (E_WORKSPACE_WRITE_ESCAPE) by realpathing every write target before opening the handle."
+    },
+    {
+      "path": "environment/orchestrator/reviewed-role-runner.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Reviewed role runner is the child-side cold-child severance binary; it reads the role envelope and calls cold-child-validator before role work."
+    },
+    {
       "path": "environment/orchestrator/analysis-manifest.js",
       "imports": ["node:fs/promises"],
       "reason": "Manifest validation reads reviewed manifest files from disk."

@@ -160,7 +160,12 @@ test('prepareRoleDispatch builds a reviewed subprocess plan for execution-lane r
     assert.match(result.envelope.sessionIsolation.childSessionId, /^child-/u);
     assert.match(result.envelopePath, /phase9-role-envelope\.json$/u);
     assert.deepEqual(result.spawnRequest.stdio, ['pipe', 'pipe', 'pipe']);
-    assert.deepEqual(result.spawnRequest.argv, ['--envelope', result.envelopePath]);
+    // T4.5.6 / seq 108: default argv now prepends the absolute reviewed-role-runner.js
+    // path so the spawned child runs the cold-child severance validator before role work.
+    assert.equal(result.spawnRequest.argv.length, 3);
+    assert.equal(result.spawnRequest.argv[0].endsWith('reviewed-role-runner.js'), true);
+    assert.deepEqual(result.spawnRequest.argv.slice(1), ['--envelope', result.envelopePath]);
+    assert.equal(result.spawnRequest.command, process.execPath);
 
     const persisted = JSON.parse(await readFile(result.envelopePath, 'utf8'));
     assert.equal(persisted.roleId, 'experiment-agent');
@@ -694,7 +699,15 @@ test('dispatchRoleAssignment executes reviewed subprocess dispatch through invok
     assert.equal(response.spawnRequest.env.PHASE9_TASK_ID, request.taskId);
     assert.equal(response.spawnRequest.env.PHASE9_ENVELOPE_PATH, response.envelopePath);
     assert.equal(response.spawnRequest.env.VRE_ROOT, repoRoot);
-    assert.deepEqual(response.spawnRequest.argv, ['--envelope', response.envelopePath]);
+    // T4.5.6 / seq 108: default argv prepends the absolute reviewed-role-runner.js
+    // path so reviewed subprocess dispatch boots a real cold-child severance
+    // validator before role work, instead of the historical placeholder
+    // 'reviewed-role-runner' string. Tests may still override request.spawn.argv.
+    assert.equal(response.spawnRequest.argv.length, 3);
+    assert.equal(response.spawnRequest.argv[0].endsWith('reviewed-role-runner.js'), true);
+    assert.equal(response.spawnRequest.argv[1], '--envelope');
+    assert.equal(response.spawnRequest.argv[2], response.envelopePath);
+    assert.equal(response.spawnRequest.command, process.execPath);
     assert.equal(response.result.status, 'complete');
     assert.equal(response.handoff.recordSeq, 1);
     assert.equal(response.handoff.summary, 'Dispatch completed and the bundle is ready for the lead.');

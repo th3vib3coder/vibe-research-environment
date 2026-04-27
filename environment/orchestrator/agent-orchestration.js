@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { access, mkdir, realpath } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import {
@@ -33,6 +34,18 @@ import { getTaskEntry } from './task-registry.js';
 
 const execFileAsync = promisify(execFile);
 const R2_BRIDGE_TIMEOUT_MS = 15_000;
+
+/**
+ * Absolute filesystem path of the reviewed-role-runner.js child binary.
+ * Phase 9 v1 default child command for reviewed subprocess dispatch:
+ * agent-orchestration spawns `process.execPath` (current node) with this
+ * runner script as argv[0] and `--envelope <path>` as the envelope arg.
+ * Tests may override `request.spawn.command` and `request.spawn.argv`.
+ */
+export const REVIEWED_ROLE_RUNNER_PATH = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    'reviewed-role-runner.js',
+);
 const R2_BRIDGE_ENV_WHITELIST = Object.freeze([
   'PATH',
   'Path',
@@ -780,7 +793,9 @@ function buildAllowedEnv(projectRoot, envelopePath, request) {
 
 function buildSpawnRequest(projectRoot, envelopePath, envelope, request) {
   const requestedArgs = Array.isArray(request.spawn?.argv) ? [...request.spawn.argv] : [];
-  const argv = requestedArgs.length > 0 ? requestedArgs : ['--envelope', envelopePath];
+  const argv = requestedArgs.length > 0
+    ? requestedArgs
+    : [REVIEWED_ROLE_RUNNER_PATH, '--envelope', envelopePath];
   const envelopeIndex = argv.indexOf('--envelope');
   if (envelopeIndex === -1) {
     argv.push('--envelope', envelopePath);
@@ -789,7 +804,7 @@ function buildSpawnRequest(projectRoot, envelopePath, envelope, request) {
   }
 
   return Object.freeze({
-    command: request.spawn?.command ?? 'reviewed-role-runner',
+    command: request.spawn?.command ?? process.execPath,
     argv,
     cwd: request.spawn?.cwd ?? envelope.sessionIsolation.workspaceRoot,
     env: buildAllowedEnv(projectRoot, envelopePath, request),
