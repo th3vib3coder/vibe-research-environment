@@ -42,6 +42,7 @@ import { writeObjectiveBlockerFlag } from '../objectives/blocker-flag.js';
 import { writeObjectiveDigest } from '../objectives/digest-writer.js';
 import { readAndValidateAnalysisManifest, ANALYSIS_MANIFEST_TASK_KIND } from './analysis-manifest.js';
 import { runAnalysisCommand } from './execution-lane.js';
+import { logGovernanceEventViaPlugin } from './governance-logger.js';
 import { evaluateDeterministicStrategicCheckpoint } from './semantic-drift-checkpoint.js';
 import {
   appendObjectiveQueueRecord,
@@ -68,6 +69,38 @@ const WAKE_CALLER_IDENTITIES = new Set([
   'manual'
 ]);
 const HANDOFF_SCHEMA_FILE = 'phase9-handoff.schema.json';
+const AUTONOMY_RUNTIME_GOVERNANCE_SOURCE_COMPONENT = 'vre/orchestrator/autonomy-runtime';
+const OBJECTIVE_BLOCKER_SEVERITY_BY_CODE = Object.freeze({
+  E_QUEUE_TERMINAL_WITHOUT_EVENT: 'critical',
+  E_TASK_INCOMPLETE_AT_CRASH: 'critical',
+  E_TASK_KIND_NOT_ALLOWED: 'warning',
+  E_MANIFEST_APPROVAL_REQUIRED: 'warning',
+  E_LLM_REASONING_REQUIRED: 'warning',
+  E_BUDGET_EXHAUSTED: 'warning'
+});
+
+function classifyObjectiveBlockedSeverity(blockerCode) {
+  return OBJECTIVE_BLOCKER_SEVERITY_BY_CODE[blockerCode] ?? 'warning';
+}
+
+async function recordObjectiveBlockedGovernanceEvent(objectiveId, blockerCode) {
+  const severity = classifyObjectiveBlockedSeverity(blockerCode);
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'objective_blocked',
+      source_component: AUTONOMY_RUNTIME_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: objectiveId,
+      severity,
+      details: {
+        blockerCode,
+        severity
+      }
+    });
+  } catch (error) {
+    const code = typeof error?.code === 'string' ? error.code : 'E_GOVERNANCE_BRIDGE_FAILED';
+    process.stderr.write(`[phase9-governance] objective_blocked telemetry failed: ${code}\n`);
+  }
+}
 
 export class ResearchLoopCliError extends Error {
   constructor({ code, message, exitCode = 1, extra = {} }) {
@@ -398,6 +431,7 @@ async function blockResearchLoop(projectRoot, objectiveRecord, activePointer, qu
     wakeId: options.wakeId ?? null,
     wakeCaller: options.wakeCaller ?? null
   }, writtenAt);
+  await recordObjectiveBlockedGovernanceEvent(objectiveRecord.objectiveId, blocker.code);
 
   let handoffResult = null;
   if (options.handoff != null) {
@@ -745,6 +779,7 @@ async function applyBudgetStopCondition(projectRoot, objectiveRecord, activePoin
     wakeId,
     wakeCaller
   }, writtenAt);
+  await recordObjectiveBlockedGovernanceEvent(objectiveRecord.objectiveId, reasonCode);
   // Round 74 T4.4 drift closure: `applyBudgetStopCondition` writes
   // `BLOCKER.flag` on the blocked branch but used to skip the canonical
   // digest writer, so the morning operator flow only saw the raw flag and

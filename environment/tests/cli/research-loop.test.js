@@ -31,8 +31,17 @@ const FIXTURE_KERNEL_ENV = {
     'tests',
     'fixtures',
     'fake-kernel-sibling'
+  ),
+  VIBE_SCIENCE_PLUGIN_CLI: path.join(
+    repoRoot,
+    'environment',
+    'tests',
+    'fixtures',
+    'governance-log-capture-stub.js'
   )
 };
+
+process.env.VIBE_SCIENCE_PLUGIN_CLI = FIXTURE_KERNEL_ENV.VIBE_SCIENCE_PLUGIN_CLI;
 
 const HANDSHAKE_STUB = Object.freeze({
   schemaVersion: 'phase9.capability-handshake.v1',
@@ -264,6 +273,58 @@ async function readQueueRecords(projectRoot, objectiveId = 'OBJ-001') {
 
 async function readObjectiveEvents(projectRoot, objectiveId = 'OBJ-001') {
   return readJsonl(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'events.jsonl'));
+}
+
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw
+      .trim()
+      .split(/\r?\n/u)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details ?? {});
+  for (const value of forbiddenValues) {
+    assert.equal(
+      serialized.includes(value),
+      false,
+      `governance details leaked forbidden value ${value}: ${serialized}`
+    );
+  }
+}
+
+function assertObjectiveBlockedGovernanceEvent(event, { objectiveId, blockerCode, severity }) {
+  assert.equal(event.event_type, 'objective_blocked');
+  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, severity);
+  assert.deepEqual(event.details, {
+    blockerCode,
+    severity
+  });
+}
+
+async function withGovernanceCapture(capturePath, fn) {
+  const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+  process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
+  try {
+    return await fn();
+  } finally {
+    if (previousCapturePath == null) {
+      delete process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+    } else {
+      process.env.VRE_GOVERNANCE_CAPTURE_PATH = previousCapturePath;
+    }
+  }
 }
 
 async function readObjectiveHandoffs(projectRoot, objectiveId = 'OBJ-001') {
@@ -695,6 +756,94 @@ test('research-loop blocks with E_LLM_REASONING_REQUIRED in unattended-batch mod
 
     const objectiveRecord = await readObjectiveRecord(projectRoot, 'OBJ-001');
     assert.equal(objectiveRecord.status, 'blocked');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop logs objective_blocked governance event for rule-only blocker', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-llm-block-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    await seedObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      active: true,
+      sessionId: 'sess-research-loop-governance'
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      'OBJ-001',
+      '--mode',
+      'unattended-batch'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.status, 'blocked');
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    assert.equal(governanceEvents.length, 1);
+    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+      objectiveId: 'OBJ-001',
+      blockerCode: 'E_LLM_REASONING_REQUIRED',
+      severity: 'warning'
+    });
+    assertNoDetailsLeak(governanceEvents[0], [
+      'No sanctioned next slice is mechanically derivable',
+      projectRoot,
+      'resume-snapshot.json'
+    ]);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop objective_blocked telemetry failure does not roll back blocker persistence', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-fail-soft-');
+  const missingCli = path.join(projectRoot, 'missing-governance-log.js');
+  try {
+    await seedObjective(projectRoot, {
+      objectiveId: 'OBJ-001',
+      active: true,
+      sessionId: 'sess-research-loop-governance-fail-soft'
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      'OBJ-001',
+      '--mode',
+      'unattended-batch'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VIBE_SCIENCE_PLUGIN_CLI: missingCli
+      }
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.doesNotMatch(result.stderr, new RegExp(missingCli.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u'));
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.status, 'blocked');
+    assert.equal(payload.stopReason, 'E_LLM_REASONING_REQUIRED');
+
+    const objectiveRecord = await readObjectiveRecord(projectRoot, 'OBJ-001');
+    assert.equal(objectiveRecord.status, 'blocked');
+    assert.match(await readBlockerText(projectRoot, 'OBJ-001'), /E_LLM_REASONING_REQUIRED/u);
+
+    const objectiveEvents = await readObjectiveEvents(projectRoot, 'OBJ-001');
+    assert.equal(
+      objectiveEvents.some((entry) => entry.kind === 'blocker-open' && entry.payload?.code === 'E_LLM_REASONING_REQUIRED'),
+      true
+    );
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -1345,6 +1494,69 @@ test('research-loop blocks with E_QUEUE_TERMINAL_WITHOUT_EVENT when a prior wake
   }
 });
 
+test('research-loop logs objective_blocked governance event for terminal queue without objective event', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-queue-without-event-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-loop-governance-qwoe-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    await assert.rejects(
+      runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        heartbeat: true,
+        wakeId: 'WAKE-GOV-QWOE-CRASH',
+        sessionId: 'sess-gov-qwoe-crash'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+        afterQueueResultPersisted: async () => {
+          throw new Error('simulated crash after terminal queue line SECRET-seq117-qwoe');
+        }
+      }),
+      /simulated crash after terminal queue line SECRET-seq117-qwoe/u
+    );
+
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-GOV-QWOE-CRASH',
+      leaseAcquiredAt: '2026-04-22T19:00:00Z',
+      leaseExpiresAt: '2026-04-22T19:01:00Z',
+      acquiredBy: 'sess-gov-qwoe-crash',
+      previousWakeId: null
+    });
+
+    const result = await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-GOV-QWOE-RESUME',
+      sessionId: 'sess-gov-qwoe-resume'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    }));
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'blocked');
+    assert.equal(result.stopReason, 'queue-terminal-without-event');
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    assert.equal(governanceEvents.length, 1);
+    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+      objectiveId: context.objectiveId,
+      blockerCode: 'E_QUEUE_TERMINAL_WITHOUT_EVENT',
+      severity: 'critical'
+    });
+    assertNoDetailsLeak(governanceEvents[0], [
+      'Queue shows terminal task',
+      'analysis-execution-run:ANL-loop-governance-qwoe-001',
+      'SECRET-seq117-qwoe',
+      projectRoot
+    ]);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 test('research-loop reports incomplete-at-crash, writes a handoff with objective id, and does not duplicate a non-idempotent running task automatically', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-incomplete-at-crash-');
   try {
@@ -1418,6 +1630,72 @@ test('research-loop reports incomplete-at-crash, writes a handoff with objective
     const handoffs = await readObjectiveHandoffs(projectRoot, context.objectiveId);
     assert.equal(handoffs.length, 1);
     assert.equal(handoffs[0].objectiveId, context.objectiveId);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop objective_blocked governance details redact incomplete-at-crash task message', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-incomplete-redaction-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      analysisId: 'ANL-SECRET-seq117',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    await assert.rejects(
+      runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        heartbeat: true,
+        wakeId: 'WAKE-GOV-INCOMPLETE-CRASH',
+        sessionId: 'sess-gov-incomplete-crash'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+        afterTaskIntentPersisted: async () => {
+          throw new Error('simulated crash after task-intent SECRET-seq117-incomplete');
+        }
+      }),
+      /simulated crash after task-intent SECRET-seq117-incomplete/u
+    );
+
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-GOV-INCOMPLETE-CRASH',
+      leaseAcquiredAt: '2026-04-22T19:00:00Z',
+      leaseExpiresAt: '2026-04-22T19:01:00Z',
+      acquiredBy: 'sess-gov-incomplete-crash',
+      previousWakeId: null
+    });
+
+    const resumed = await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-GOV-INCOMPLETE-RESUME',
+      sessionId: 'sess-gov-incomplete-resume'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    }));
+
+    assert.equal(resumed.ok, true);
+    assert.equal(resumed.status, 'blocked');
+    assert.equal(resumed.stopReason, 'incomplete-at-crash');
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    assert.equal(governanceEvents.length, 1);
+    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+      objectiveId: context.objectiveId,
+      blockerCode: 'E_TASK_INCOMPLETE_AT_CRASH',
+      severity: 'critical'
+    });
+    assertNoDetailsLeak(governanceEvents[0], [
+      'analysis-execution-run:ANL-SECRET-seq117',
+      'ANL-SECRET-seq117',
+      'SECRET-seq117-incomplete',
+      'Task analysis-execution-run',
+      projectRoot,
+      'queue.jsonl',
+      'handoffs.jsonl'
+    ]);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
@@ -1784,6 +2062,59 @@ test('research-loop blocks the objective and writes BLOCKER.flag when stopCondit
     assert.match(budgetDigest, /Event Log Path:/u);
     assert.match(budgetDigest, /Handoff Ledger Path:/u);
     assert.match(budgetDigest, /Queue Path:/u);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop logs objective_blocked governance event for budget-exhausted block branch', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-budget-block-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      scriptContents: SAFE_SCRIPT,
+      budget: {
+        maxIterations: 1
+      },
+      stopConditions: {
+        onBudgetExhausted: 'block'
+      }
+    });
+    await appendObjectiveEvent(projectRoot, context.objectiveId, 'loop-iteration', {
+      seeded: true
+    }, '2026-04-23T21:05:00Z');
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--heartbeat',
+      '--wake-id',
+      'WAKE-GOV-BUDGET-BLOCK'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.status, 'blocked');
+    assert.equal(payload.stopReason, 'budget-exhausted');
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    assert.equal(governanceEvents.length, 1);
+    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+      objectiveId: context.objectiveId,
+      blockerCode: 'E_BUDGET_EXHAUSTED',
+      severity: 'warning'
+    });
+    assertNoDetailsLeak(governanceEvents[0], [
+      'The effective runtime budget is exhausted.',
+      projectRoot,
+      'resume-snapshot.json'
+    ]);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
