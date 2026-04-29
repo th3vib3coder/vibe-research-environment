@@ -10,16 +10,25 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const runnerPath = path.join(repoRoot, 'environment', 'orchestrator', 'reviewed-role-runner.js');
-const closeExtraFdsPreloadPath = path.join(
-  repoRoot,
-  'environment',
-  'tests',
-  'control',
-  '_helpers',
-  'close-extra-fds-preload.cjs',
-);
 
 const MIN_RUNNER_ENV_KEYS = ['PATH', 'HOME', 'USERPROFILE', 'SYSTEMROOT', 'TEMP', 'TMP'];
+
+// Node's `child_process.spawn` cannot close inherited FDs 3+ from the
+// JavaScript side. In CI / `node --test` the parent leaks many FDs into
+// the cold child, which makes the stdio-fd severance axis fire on tests
+// that should reach later axes (or pass cleanly). The reviewed-role-
+// runner validator stays strict by design (security: real production
+// orchestrators control inheritance carefully). To run the test suite
+// against the production-shaped FD table, this fixture explicitly maps
+// FDs 3..MAX_STDIO_SLOT to `'ignore'` in the spawn `stdio` array. Node
+// honors that by NOT inheriting those slots into the child. Tests that
+// explicitly target the stdio-fd axis can opt out via
+// `inheritExtraFds: true`.
+const MAX_STDIO_SLOT = 256;
+const STDIO_IGNORE_FDS_3_PLUS = ['pipe', 'pipe', 'pipe'];
+for (let slot = 3; slot < MAX_STDIO_SLOT; slot += 1) {
+  STDIO_IGNORE_FDS_3_PLUS.push('ignore');
+}
 
 function buildMinimalEnv(extra = {}) {
   const env = {};
@@ -69,26 +78,22 @@ async function spawnRunner({
   cwd,
   env,
   preloadModulePath = null,
-  // The reviewed-role-runner asserts that the cold child has no extra FDs
-  // beyond 0/1/2. Node's `child_process` does not expose a portable way to
-  // close inherited FDs 3+ from the JavaScript side, so on Linux the test
-  // host (CI runners, `node --test`) leaks unrelated descriptors into the
-  // child. Tests that exercise other severance axes (or the all-axes-pass
-  // success path) must therefore preload an FD-closing helper *before* the
-  // runner inspects /proc/self/fd. Tests that explicitly target the
-  // stdio-fd axis can opt out by passing `closeExtraFds: false`.
-  closeExtraFds = true,
+  // Default false: explicitly DROP inherited FDs 3+ in the child via the
+  // spawn stdio array so the reviewed-role-runner sees the production-
+  // shaped FD table instead of CI / `node --test` leaks.
+  inheritExtraFds = false,
 }) {
-  const requireFlags = [];
-  if (closeExtraFds) requireFlags.push('--require', closeExtraFdsPreloadPath);
-  if (preloadModulePath) requireFlags.push('--require', preloadModulePath);
-  const args = [...requireFlags, runnerPath, '--envelope', envelopePath];
+  const args = preloadModulePath
+    ? ['--require', preloadModulePath, runnerPath, '--envelope', envelopePath]
+    : [runnerPath, '--envelope', envelopePath];
+  const stdio = inheritExtraFds ? undefined : STDIO_IGNORE_FDS_3_PLUS;
   try {
     const result = await execFileAsync(process.execPath, args, {
       cwd,
       env,
       encoding: 'utf8',
       windowsHide: true,
+      ...(stdio ? { stdio } : {}),
     });
     return { stdout: result.stdout, stderr: result.stderr, exitCode: 0 };
   } catch (error) {
