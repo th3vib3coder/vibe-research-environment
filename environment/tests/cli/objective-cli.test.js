@@ -23,6 +23,13 @@ const FIXTURE_KERNEL_ENV = {
     'tests',
     'fixtures',
     'fake-kernel-sibling'
+  ),
+  VIBE_SCIENCE_PLUGIN_CLI: path.join(
+    repoRoot,
+    'environment',
+    'tests',
+    'fixtures',
+    'governance-log-capture-stub.js'
   )
 };
 
@@ -69,6 +76,33 @@ async function pathExists(targetPath) {
 
 async function readJson(targetPath) {
   return JSON.parse(await readFile(targetPath, 'utf8'));
+}
+
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw
+      .trim()
+      .split(/\r?\n/u)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details ?? {});
+  for (const value of forbiddenValues) {
+    assert.equal(
+      serialized.includes(value),
+      false,
+      `governance details leaked forbidden value ${value}: ${serialized}`
+    );
+  }
 }
 
 async function readFixtureJson(section, fileName) {
@@ -122,6 +156,212 @@ async function writeBlockerFlag(projectRoot, objectiveId) {
     writtenAt: '2026-04-23T08:30:00Z'
   });
 }
+
+test('objective start emits an objective_started governance event after state commit', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-governance-start-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const result = await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-governance-start',
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'active');
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assert.equal(events[0].event_type, 'objective_started');
+    assert.equal(events[0].source_component, 'vre/objectives/cli');
+    assert.equal(events[0].objective_id, 'OBJ-001');
+    assert.deepEqual(events[0].details, {
+      runtimeMode: 'unattended-batch',
+      reasoningMode: 'rule-only'
+    });
+    assertNoDetailsLeak(events[0], ['demo objective', 'why-now', projectRoot]);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective stop emits an objective_completed governance event with terminal status only', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-governance-stop-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  const secretReason = 'operator closure SECRET-seq116-stop';
+  try {
+    await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-governance-stop'
+      }
+    });
+
+    const result = await runVre(projectRoot, [
+      'objective',
+      'stop',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      secretReason
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'abandoned');
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assert.equal(events[0].event_type, 'objective_completed');
+    assert.equal(events[0].source_component, 'vre/objectives/cli');
+    assert.equal(events[0].objective_id, 'OBJ-001');
+    assert.deepEqual(events[0].details, {
+      terminalStatus: 'abandoned'
+    });
+    assertNoDetailsLeak(events[0], [secretReason, projectRoot, 'active-objective.json']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective pause emits an objective_paused governance event without raw operator reason', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-governance-pause-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  const rawReason = 'operator pause SECRET-seq116-pause C:/sensitive/path';
+  try {
+    await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-governance-pause'
+      }
+    });
+
+    const result = await runVre(projectRoot, [
+      'objective',
+      'pause',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      rawReason
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'paused');
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assert.equal(events[0].event_type, 'objective_paused');
+    assert.equal(events[0].source_component, 'vre/objectives/cli');
+    assert.equal(events[0].objective_id, 'OBJ-001');
+    assert.deepEqual(events[0].details, {
+      pauseReason: 'operator-pause'
+    });
+    assertNoDetailsLeak(events[0], [rawReason, 'SECRET-seq116-pause', 'C:/sensitive/path']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective resume emits an objective_resumed governance event with boolean details', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-governance-resume-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-governance-resume'
+      }
+    });
+    await runVre(projectRoot, [
+      'objective',
+      'pause',
+      '--objective',
+      'OBJ-001',
+      '--reason',
+      'operator pause before resume'
+    ], {
+      env: FIXTURE_KERNEL_ENV
+    });
+
+    const result = await runVre(projectRoot, [
+      'objective',
+      'resume',
+      '--objective',
+      'OBJ-001'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'active');
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assert.equal(events[0].event_type, 'objective_resumed');
+    assert.equal(events[0].source_component, 'vre/objectives/cli');
+    assert.equal(events[0].objective_id, 'OBJ-001');
+    assert.deepEqual(events[0].details, {
+      repairSnapshot: false,
+      blockerResolved: false
+    });
+    assertNoDetailsLeak(events[0], [projectRoot, 'resume-snapshot.json', 'operator pause before resume']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective lifecycle governance bridge failure does not roll back the objective command', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-governance-fail-soft-');
+  const missingCli = path.join(projectRoot, 'missing-governance-log.js');
+  try {
+    const result = await runVre(projectRoot, buildObjectiveStartArgs(), {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_SESSION_ID: 'sess-governance-fail-soft',
+        VIBE_SCIENCE_PLUGIN_CLI: missingCli
+      }
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.doesNotMatch(result.stderr, new RegExp(missingCli.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u'));
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.objectiveId, 'OBJ-001');
+
+    const objectiveRecord = await readJson(
+      path.join(projectRoot, '.vibe-science-environment', 'objectives', 'OBJ-001', 'objective.json')
+    );
+    assert.equal(objectiveRecord.status, 'active');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
 
 test('objective start rejects unattended-batch without a wake policy and emits structured JSON', async () => {
   const projectRoot = await createCliFixtureProject('vre-objective-cli-no-wake-');

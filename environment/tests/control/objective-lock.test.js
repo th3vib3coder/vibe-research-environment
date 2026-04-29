@@ -17,6 +17,13 @@ const FIXTURE_KERNEL_ENV = {
     'tests',
     'fixtures',
     'fake-kernel-sibling'
+  ),
+  VIBE_SCIENCE_PLUGIN_CLI: path.join(
+    repoRoot,
+    'environment',
+    'tests',
+    'fixtures',
+    'governance-log-capture-stub.js'
   )
 };
 

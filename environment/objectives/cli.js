@@ -37,6 +37,24 @@ import {
   writeResumeSnapshot
 } from './resume-snapshot.js';
 import { assertReviewer2Gate } from '../orchestrator/agent-orchestration.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
+
+const OBJECTIVE_CLI_GOVERNANCE_SOURCE_COMPONENT = 'vre/objectives/cli';
+
+async function recordObjectiveLifecycleGovernanceEvent(eventType, objectiveId, details) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: eventType,
+      source_component: OBJECTIVE_CLI_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: objectiveId,
+      severity: 'info',
+      details
+    });
+  } catch (error) {
+    const code = typeof error?.code === 'string' ? error.code : 'E_GOVERNANCE_BRIDGE_FAILED';
+    process.stderr.write(`[phase9-governance] ${eventType} telemetry failed: ${code}\n`);
+  }
+}
 
 function toRepoRelative(projectRoot, targetPath) {
   return normalizeSlashes(path.relative(projectRoot, targetPath));
@@ -289,6 +307,14 @@ export async function startObjectiveCommand(repoRoot, { objectiveRecord, session
       await rm(path.dirname(objectiveRecordPath(repoRoot, activation.objectiveRecord.objectiveId)), { recursive: true, force: true }).catch(() => {});
       throw error;
     }
+    await recordObjectiveLifecycleGovernanceEvent(
+      'objective_started',
+      activation.objectiveRecord.objectiveId,
+      {
+        runtimeMode: activation.objectiveRecord.runtimeMode,
+        reasoningMode: activation.objectiveRecord.reasoningMode
+      }
+    );
 
     return phase9SuccessPayload('objective start', {
       objectiveId: activation.objectiveRecord.objectiveId,
@@ -318,6 +344,9 @@ export async function pauseObjectiveCommand(repoRoot, { objectiveId, reason }, d
       }
     );
     const persistedHandshake = await persistHandshake(repoRoot, deps);
+    await recordObjectiveLifecycleGovernanceEvent('objective_paused', objectiveId, {
+      pauseReason: 'operator-pause'
+    });
     return phase9SuccessPayload('objective pause', {
       objectiveId,
       reason,
@@ -354,6 +383,9 @@ export async function stopObjectiveCommand(repoRoot, { objectiveId, reason }, de
       }
     );
     const persistedHandshake = await persistHandshake(repoRoot, deps);
+    await recordObjectiveLifecycleGovernanceEvent('objective_completed', objectiveId, {
+      terminalStatus: result.objectiveRecord.status
+    });
     return phase9SuccessPayload('objective stop', {
       objectiveId,
       reason,
@@ -470,6 +502,10 @@ export async function resumeObjectiveCommand(repoRoot, { objectiveId, repairSnap
         blockerResolved
       });
       const persistedHandshake = await persistHandshake(repoRoot, deps);
+      await recordObjectiveLifecycleGovernanceEvent('objective_resumed', objectiveId, {
+        repairSnapshot: Boolean(repairSnapshot),
+        blockerResolved
+      });
 
       return phase9SuccessPayload('objective resume', {
         objectiveId,
