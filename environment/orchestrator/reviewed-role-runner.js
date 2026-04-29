@@ -29,7 +29,7 @@
  * It does NOT import agent-orchestration.js or the wider VRE surface to
  * avoid pulling parent runtime state into the child by accident.
  */
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, readlink } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -86,9 +86,18 @@ export async function probeParentLiveness(parentPid, options = {}) {
  * portable equivalent and returns null (best-effort unknown). The
  * validator treats null as pass with note, per spec line 134-136
  * (OS-level containment is deferred to v2).
+ *
+ * Linux runtime hardening (seq 119): `anon_inode:` entries are filtered
+ * out because they represent libuv-internal handles (eventfd, epoll,
+ * signalfd) that Node always opens to drive the event loop. Without
+ * this filter the validator would fail-closed on every Node child on
+ * Linux because Node always has libuv handles open beyond 0/1/2. The
+ * filter does NOT weaken the contract: real leaks (parent-inherited
+ * regular files, pipes, sockets) still surface as extra FDs.
  */
 export async function detectExtraFds(options = {}) {
     const readdirImpl = options.readdirImpl ?? readdir;
+    const readlinkImpl = options.readlinkImpl ?? readlink;
     const platformOverride = options.platform ?? process.platform;
     let fdDir = null;
     if (platformOverride === 'linux') fdDir = '/proc/self/fd';
@@ -96,10 +105,24 @@ export async function detectExtraFds(options = {}) {
     if (fdDir == null) return null;
     try {
         const entries = await readdirImpl(fdDir);
-        const fds = entries
+        const candidateFds = entries
             .map((entry) => Number.parseInt(entry, 10))
-            .filter((fd) => Number.isInteger(fd));
-        return fds.filter((fd) => fd > 2);
+            .filter((fd) => Number.isInteger(fd) && fd > 2);
+        const extras = [];
+        for (const fd of candidateFds) {
+            let target = '';
+            try {
+                target = await readlinkImpl(`${fdDir}/${fd}`);
+            } catch {
+                // Stale FD (already closed) — skip.
+                continue;
+            }
+            // Skip Node libuv-internal anonymous inodes. These are
+            // runtime-managed handles, not leaks from the parent.
+            if (typeof target === 'string' && target.startsWith('anon_inode:')) continue;
+            extras.push(fd);
+        }
+        return extras;
     } catch {
         return null;
     }
