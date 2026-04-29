@@ -62,6 +62,11 @@
       "reason": "Execution lane runs the sanctioned subprocess corridor and captures reviewed logs/artifacts."
     },
     {
+      "path": "environment/orchestrator/governance-logger.js",
+      "imports": ["node:child_process", "node:fs"],
+      "reason": "Governance logger bridge validates the plugin CLI path and invokes the plugin-owned governance-log.js subprocess."
+    },
+    {
       "path": "environment/orchestrator/executors/claude-cli.js",
       "imports": ["node:child_process"],
       "reason": "Reviewed executor launches Claude CLI as a bounded subprocess."

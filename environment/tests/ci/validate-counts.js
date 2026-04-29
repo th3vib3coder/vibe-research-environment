@@ -7,7 +7,7 @@ const expectedCounts = {
   evalTasks: 25,
   evalMetrics: 5,
   evalBenchmarks: 5,
-  controlTests: 27,
+  controlTests: 28,
   compatibilityTests: 5,
   flowTests: 8,
   libTests: 23,
@@ -27,7 +27,9 @@ export default async function validateCounts() {
     evalTasks: (await collectFiles('environment/evals/tasks', { include: (file) => file.endsWith('.json') && !file.endsWith('.gitkeep') })).length,
     evalMetrics: (await collectFiles('environment/evals/metrics', { include: (file) => file.endsWith('.js') && !file.endsWith('.gitkeep') })).length,
     evalBenchmarks: (await collectFiles('environment/evals/benchmarks', { include: (file) => file.endsWith('.json') && !file.endsWith('.gitkeep') })).length,
-    controlTests: (await collectFiles('environment/tests/control', { include: (file) => file.endsWith('.test.js') })).length,
+    controlTests:
+      (await collectFiles('environment/tests/control', { include: (file) => file.endsWith('.test.js') })).length
+      + (await collectFiles('environment/tests/orchestrator', { include: (file) => file.endsWith('.test.js') })).length,
     compatibilityTests: (await collectFiles('environment/tests/compatibility', { include: (file) => file.endsWith('.test.js') })).length,
     flowTests: (await collectFiles('environment/tests/flows', { include: (file) => file.endsWith('.test.js') })).length,
     libTests: (await collectFiles('environment/tests/lib', { include: (file) => file.endsWith('.test.js') })).length,

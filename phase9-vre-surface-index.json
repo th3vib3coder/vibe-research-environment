@@ -1,5 +1,14 @@
 [
   {
+    "kind": "bridge-script",
+    "name": "governance-logger",
+    "paths": [
+      "environment/orchestrator/governance-logger.js"
+    ],
+    "featureId": "W5-GOVERNANCE-BRIDGE",
+    "introducedAt": "2026-04-29"
+  },
+  {
     "kind": "cli-command",
     "name": "capabilities --json",
     "paths": [

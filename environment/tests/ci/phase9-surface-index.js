@@ -176,6 +176,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-29'
   },
   {
+    file: 'environment/orchestrator/governance-logger.js',
+    kind: 'bridge-script',
+    name: 'governance-logger',
+    featureId: 'W5-GOVERNANCE-BRIDGE',
+    introducedAt: '2026-04-29'
+  },
+  {
     file: 'environment/orchestrator/windows-task-scheduler.js',
     kind: 'orchestrator-surface',
     name: 'windows-task-scheduler',
