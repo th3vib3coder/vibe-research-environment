@@ -10,6 +10,14 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const runnerPath = path.join(repoRoot, 'environment', 'orchestrator', 'reviewed-role-runner.js');
+const closeExtraFdsPreloadPath = path.join(
+  repoRoot,
+  'environment',
+  'tests',
+  'control',
+  '_helpers',
+  'close-extra-fds-preload.cjs',
+);
 
 const MIN_RUNNER_ENV_KEYS = ['PATH', 'HOME', 'USERPROFILE', 'SYSTEMROOT', 'TEMP', 'TMP'];
 
@@ -61,10 +69,20 @@ async function spawnRunner({
   cwd,
   env,
   preloadModulePath = null,
+  // The reviewed-role-runner asserts that the cold child has no extra FDs
+  // beyond 0/1/2. Node's `child_process` does not expose a portable way to
+  // close inherited FDs 3+ from the JavaScript side, so on Linux the test
+  // host (CI runners, `node --test`) leaks unrelated descriptors into the
+  // child. Tests that exercise other severance axes (or the all-axes-pass
+  // success path) must therefore preload an FD-closing helper *before* the
+  // runner inspects /proc/self/fd. Tests that explicitly target the
+  // stdio-fd axis can opt out by passing `closeExtraFds: false`.
+  closeExtraFds = true,
 }) {
-  const args = preloadModulePath
-    ? ['--require', preloadModulePath, runnerPath, '--envelope', envelopePath]
-    : [runnerPath, '--envelope', envelopePath];
+  const requireFlags = [];
+  if (closeExtraFds) requireFlags.push('--require', closeExtraFdsPreloadPath);
+  if (preloadModulePath) requireFlags.push('--require', preloadModulePath);
+  const args = [...requireFlags, runnerPath, '--envelope', envelopePath];
   try {
     const result = await execFileAsync(process.execPath, args, {
       cwd,
