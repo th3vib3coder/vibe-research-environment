@@ -2,6 +2,11 @@
   "version": 1,
   "entries": [
     {
+      "path": "environment/claims/edges.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Claim-edge store owns the reviewed JSONL append/read surface for Phase 9 typed edges."
+    },
+    {
       "path": "environment/objectives/cli.js",
       "imports": ["node:fs/promises"],
       "reason": "Objective lifecycle CLI reads and deletes reviewed artifacts."

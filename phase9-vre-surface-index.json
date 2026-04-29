@@ -154,6 +154,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "claims-edges",
+    "paths": [
+      "environment/claims/edges.js"
+    ],
+    "featureId": "W5-CLAIM-EDGE-STORE",
+    "introducedAt": "2026-04-29"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "execution-lane",
     "paths": [
       "environment/orchestrator/execution-lane.js"

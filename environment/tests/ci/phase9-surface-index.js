@@ -169,6 +169,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-24'
   },
   {
+    file: 'environment/claims/edges.js',
+    kind: 'orchestrator-surface',
+    name: 'claims-edges',
+    featureId: 'W5-CLAIM-EDGE-STORE',
+    introducedAt: '2026-04-29'
+  },
+  {
     file: 'environment/orchestrator/windows-task-scheduler.js',
     kind: 'orchestrator-surface',
     name: 'windows-task-scheduler',

@@ -1,7 +1,7 @@
 import { assert, collectFiles, isDirectRun, pathExists, readJson, readText } from './_helpers.js';
 
 const DEFAULT_ALLOWLIST_PATH = 'environment/tests/ci/phase9-write-sandbox-allowlist.json';
-const REVIEWED_PREFIXES = ['environment/orchestrator/', 'environment/objectives/'];
+const REVIEWED_PREFIXES = ['environment/claims/', 'environment/orchestrator/', 'environment/objectives/'];
 const RAW_IMPORT_PATTERNS = [
   /from\s+['"](node:fs(?:\/promises)?|fs(?:\/promises)?|node:child_process|child_process)['"]/gu,
   /import\s*\(\s*['"](node:fs(?:\/promises)?|fs(?:\/promises)?|node:child_process|child_process)['"]\s*\)/gu,
