@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "phase9.claim-edge.v1",
+  "edgeId": "EDGE-supports-001",
+  "fromId": "CLAIM-source-001",
+  "toId": "CLAIM-target-001",
+  "relation": "supports",
+  "createdAt": "2026-04-29T00:00:00.000Z",
+  "confidence": 0.91,
+  "sourceR2EventId": null,
+  "objectiveId": "OBJ-wave5-claim-edge"
+}

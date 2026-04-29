@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "phase9.claim-edge.v1",
+  "edgeId": "EDGE-contradicts-001",
+  "fromId": "CLAIM-source-002",
+  "toId": "CLAIM-target-002",
+  "relation": "contradicts",
+  "createdAt": "2026-04-29T00:00:00.000Z",
+  "confidence": null,
+  "sourceR2EventId": "EV-0007",
+  "objectiveId": "OBJ-wave5-claim-edge"
+}

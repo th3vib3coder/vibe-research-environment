@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "phase9.claim-edge.v1",
+  "edgeId": "EDGE-invalid-relation-001",
+  "fromId": "CLAIM-source-003",
+  "toId": "CLAIM-target-003",
+  "relation": "opposes",
+  "createdAt": "2026-04-29T00:00:00.000Z"
+}

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "phase9.claim-edge.v1",
+  "edgeId": "EDGE-missing-from-001",
+  "toId": "CLAIM-target-004",
+  "relation": "supports",
+  "createdAt": "2026-04-29T00:00:00.000Z"
+}

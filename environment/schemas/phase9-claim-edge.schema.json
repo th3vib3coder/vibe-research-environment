@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.claim-edge.v1",
+  "title": "Phase 9 Claim Edge v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "edgeId", "fromId", "toId", "relation", "createdAt"],
+  "properties": {
+    "schemaVersion": { "const": "phase9.claim-edge.v1" },
+    "edgeId": { "type": "string", "pattern": "^EDGE-.+$" },
+    "fromId": { "type": "string", "pattern": "^CLAIM-.+$", "description": "Plugin claim ID per D2.1." },
+    "toId": { "type": "string", "pattern": "^CLAIM-.+$", "description": "Plugin claim ID per D2.1." },
+    "relation": { "type": "string", "enum": ["supports", "contradicts", "supersedes", "depends_on", "evolved_into", "related_to"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Optional. D2.2: only-if-producer." },
+    "sourceR2EventId": { "type": ["string", "null"], "pattern": "^EV-[0-9]{4}$" },
+    "objectiveId": { "type": ["string", "null"], "pattern": "^OBJ-.+$" }
+  }
+}
