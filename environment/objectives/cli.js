@@ -56,6 +56,13 @@ async function recordObjectiveLifecycleGovernanceEvent(eventType, objectiveId, d
   }
 }
 
+async function recordStateRepairGovernanceEvent(objectiveId) {
+  await recordObjectiveLifecycleGovernanceEvent('state_repair_applied', objectiveId, {
+    repairedLayer: 'snapshot',
+    repairTrigger: 'objective-resume-repair-snapshot'
+  });
+}
+
 function toRepoRelative(projectRoot, targetPath) {
   return normalizeSlashes(path.relative(projectRoot, targetPath));
 }
@@ -467,6 +474,7 @@ export async function resumeObjectiveCommand(repoRoot, { objectiveId, repairSnap
           repairedTo: 'resume-snapshot regenerated from pointer/objective/queue/events/handoffs',
           reason: 'objective resume --repair-snapshot'
         });
+        await recordStateRepairGovernanceEvent(objectiveId);
       }
 
       const eventsBeforeResume = await readJsonl(objectiveEventsPath(repoRoot, objectiveId));

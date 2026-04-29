@@ -28,6 +28,7 @@ import {
   readResumeSnapshot,
   writeObjectiveResumeSnapshot,
 } from '../objectives/resume-snapshot.js';
+import { logGovernanceEventViaPlugin } from './governance-logger.js';
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
@@ -140,6 +141,7 @@ const REVIEW_REQUIRED_BLOCKER_CODES = new Set([
   'E_HANDOFF_CONFLICT',
   'SEMANTIC_DRIFT_DETECTED',
 ]);
+const AGENT_ORCHESTRATION_GOVERNANCE_SOURCE_COMPONENT = 'vre/orchestrator/agent-orchestration';
 const CONTEXT_PRESSURE_THRESHOLD_NUMERATOR = 3;
 const CONTEXT_PRESSURE_THRESHOLD_DENOMINATOR = 5;
 const CONTEXT_PRESSURE_THRESHOLD_RATIO =
@@ -955,6 +957,31 @@ function deriveLeadContinuation(handoff) {
   };
 }
 
+async function recordStateConflictGovernanceEvent(objectiveId, leadContinuation) {
+  if (
+    leadContinuation?.blockerCode !== 'E_STATE_CONFLICT' ||
+    leadContinuation.status !== 'review-required'
+  ) {
+    return;
+  }
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'state_conflict_detected',
+      source_component: AGENT_ORCHESTRATION_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: objectiveId,
+      severity: 'critical',
+      details: {
+        conflictCode: 'E_STATE_CONFLICT',
+        continuationStatus: leadContinuation.status,
+        requestedReviewer: leadContinuation.requestedReviewer
+      }
+    });
+  } catch (error) {
+    const code = typeof error?.code === 'string' ? error.code : 'E_GOVERNANCE_BRIDGE_FAILED';
+    process.stderr.write(`[phase9-governance] state_conflict_detected telemetry failed: ${code}\n`);
+  }
+}
+
 function normalizeReviewer2Verdict(plan, persistedHandoff, result) {
   if (plan.roleId !== 'reviewer-2') {
     return null;
@@ -1262,6 +1289,8 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
     },
   );
   const persistedRecord = persistedHandoff?.handoff ?? null;
+  const leadContinuation = persistedRecord ? deriveLeadContinuation(persistedRecord) : null;
+  await recordStateConflictGovernanceEvent(plan.objectiveId, leadContinuation);
   const r2Verdict = normalizeReviewer2Verdict(plan, persistedRecord, result);
   let r2VerdictEvent = null;
   let r2Snapshot = null;
@@ -1325,7 +1354,7 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
     executed: true,
     handoff: persistedRecord,
     handoffLedgerPath: persistedHandoff?.handoffsPath ?? null,
-    leadContinuation: persistedRecord ? deriveLeadContinuation(persistedRecord) : null,
+    leadContinuation,
     r2Verdict,
     r2VerdictEvent,
     r2Bridge,

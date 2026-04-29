@@ -80,6 +80,7 @@ const OBJECTIVE_BLOCKER_SEVERITY_BY_CODE = Object.freeze({
   E_LLM_REASONING_REQUIRED: 'warning',
   E_BUDGET_EXHAUSTED: 'warning'
 });
+const SEMANTIC_DRIFT_GOVERNANCE_PHASES = new Set(['pre-slice', 'final-quarter']);
 const LOOP_ITERATION_GOVERNANCE_RESULT_STATUSES = new Set(['complete', 'failed', 'interrupted', 'cancelled']);
 const HEARTBEAT_GOVERNANCE_OUTCOMES = new Set(['lease-acquired', 'duplicate-wake-id', 'wake-lease-still-active']);
 const heartbeatGovernanceLastEmittedAtByObjectiveId = new Map();
@@ -147,6 +148,20 @@ async function recordObjectiveBlockedGovernanceEvent(objectiveId, blockerCode) {
   await recordAutonomyRuntimeGovernanceEvent('objective_blocked', objectiveId, severity, {
     blockerCode,
     severity
+  });
+}
+
+async function recordSemanticDriftGovernanceEvent(objectiveId, phase) {
+  await recordAutonomyRuntimeGovernanceEvent('semantic_drift_detected', objectiveId, 'warning', {
+    phase: SEMANTIC_DRIFT_GOVERNANCE_PHASES.has(phase) ? phase : 'pre-slice',
+    verdict: 'drifted'
+  });
+}
+
+async function recordStateRepairGovernanceEvent(objectiveId, repairTrigger) {
+  await recordAutonomyRuntimeGovernanceEvent('state_repair_applied', objectiveId, 'info', {
+    repairedLayer: 'snapshot',
+    repairTrigger
   });
 }
 
@@ -1012,6 +1027,7 @@ async function handleSemanticDrift(projectRoot, objectiveRecord, activePointer, 
     snapshotPath: snapshotRelativePath,
     writtenAt
   });
+  await recordSemanticDriftGovernanceEvent(objectiveRecord.objectiveId, driftPhase);
   // Round 74 T4.4 drift closure: `handleSemanticDrift` writes `BLOCKER.flag`
   // with `SEMANTIC_DRIFT_DETECTED` but bypassed the canonical digest writer.
   // Seq 089 claim "wiring blocker transitions through them" was not complete
@@ -1149,6 +1165,10 @@ async function maybeRepairSnapshotFromDurableState(projectRoot, objectiveRecord,
       },
       notes: 'Recovered resume snapshot from durable queue/event state after a prior crash before final snapshot.'
     }
+  );
+  await recordStateRepairGovernanceEvent(
+    objectiveRecord.objectiveId,
+    'research-loop-fresh-process-recovery'
   );
 
   return {

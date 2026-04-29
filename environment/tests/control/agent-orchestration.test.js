@@ -103,6 +103,84 @@ async function readObjectiveEvents(projectRoot, objectiveId) {
     : raw.trim().split(/\r?\n/u).map((line) => JSON.parse(line));
 }
 
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw.trim() === ''
+      ? []
+      : raw.trim().split(/\r?\n/u).map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function withGovernanceCapture(capturePath, fn, overrides = {}) {
+  const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+  const previousPluginCli = process.env.VIBE_SCIENCE_PLUGIN_CLI;
+  await mkdir(path.dirname(capturePath), { recursive: true });
+  process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
+  process.env.VIBE_SCIENCE_PLUGIN_CLI =
+    overrides.pluginCliPath ?? path.join(repoRoot, 'environment', 'tests', 'fixtures', 'governance-log-capture-stub.js');
+  try {
+    return await fn();
+  } finally {
+    if (previousCapturePath == null) {
+      delete process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+    } else {
+      process.env.VRE_GOVERNANCE_CAPTURE_PATH = previousCapturePath;
+    }
+    if (previousPluginCli == null) {
+      delete process.env.VIBE_SCIENCE_PLUGIN_CLI;
+    } else {
+      process.env.VIBE_SCIENCE_PLUGIN_CLI = previousPluginCli;
+    }
+  }
+}
+
+async function captureStderr(fn) {
+  const originalWrite = process.stderr.write;
+  let stderr = '';
+  process.stderr.write = function patchedWrite(chunk, encoding, callback) {
+    stderr += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
+  try {
+    const result = await fn();
+    return { result, stderr };
+  } finally {
+    process.stderr.write = originalWrite;
+  }
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details ?? {});
+  for (const value of forbiddenValues) {
+    assert.equal(
+      serialized.includes(value),
+      false,
+      `governance details leaked forbidden value ${value}: ${serialized}`
+    );
+  }
+}
+
+function assertStateConflictGovernanceEvent(event, { objectiveId }) {
+  assert.equal(event.event_type, 'state_conflict_detected');
+  assert.equal(event.source_component, 'vre/orchestrator/agent-orchestration');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'critical');
+  assert.deepEqual(event.details, {
+    conflictCode: 'E_STATE_CONFLICT',
+    continuationStatus: 'review-required',
+    requestedReviewer: 'reviewer-2'
+  });
+}
+
 async function seedObjectiveStore(objectiveId, overrides = {}) {
   const fixture = await readObjectiveFixture('valid-active.json');
   const objectiveRecord = {
@@ -945,6 +1023,123 @@ test('dispatchRoleAssignment persists conflict-marked handoffs and blocks lead c
     assert.equal(handoffs[0].openBlockers[0].code, 'E_STATE_CONFLICT');
   } finally {
     await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('dispatchRoleAssignment emits state_conflict_detected governance event for conflict-marked handoffs', async () => {
+  const objectiveId = `OBJ-GOV-CONFLICT-${Date.now()}`;
+  const capturePath = path.join(repoRoot, '.tmp', `state-conflict-governance-${Date.now()}.jsonl`);
+  const secret = 'SECRET-seq124-state-conflict';
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    `${secret}.md`,
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, `conflicting review ${secret}\n`, 'utf8');
+
+    const response = await withGovernanceCapture(capturePath, () => dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: `Reviewer-2 found a conflict ${secret} that must block lead continuation.`,
+          openBlockers: [{
+            code: 'E_STATE_CONFLICT',
+            message: `Conflicting role suggestions require review before continuation ${secret}.`,
+            openedAt: '2026-04-25T08:00:00Z',
+          }],
+        },
+      }),
+    }));
+
+    assert.equal(response.leadContinuation.status, 'review-required');
+    assert.equal(response.leadContinuation.blockerCode, 'E_STATE_CONFLICT');
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const conflictEvents = governanceEvents.filter((event) => event.event_type === 'state_conflict_detected');
+    assert.equal(conflictEvents.length, 1);
+    assertStateConflictGovernanceEvent(conflictEvents[0], { objectiveId });
+    assertNoDetailsLeak(conflictEvents[0], [
+      secret,
+      artifactPath,
+      'Conflicting role suggestions require review',
+      'Reviewer-2 found a conflict',
+      repoRoot
+    ]);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await rm(capturePath, { force: true }).catch(() => {});
+  }
+});
+
+test('dispatchRoleAssignment state_conflict_detected telemetry failure does not block conflict persistence', async () => {
+  const objectiveId = `OBJ-GOV-CONFLICT-FAILSOFT-${Date.now()}`;
+  const capturePath = path.join(repoRoot, '.tmp', `state-conflict-governance-fail-soft-${Date.now()}.jsonl`);
+  const missingCli = path.join(repoRoot, '.tmp', `missing-governance-log-${Date.now()}.js`);
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'conflict-fail-soft.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, 'conflicting review\n', 'utf8');
+    const { result: response, stderr } = await captureStderr(() => withGovernanceCapture(capturePath, () => dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 found a conflict that must block lead continuation.',
+          openBlockers: [{
+            code: 'E_STATE_CONFLICT',
+            message: 'Conflicting role suggestions require review before continuation.',
+            openedAt: '2026-04-25T08:00:00Z',
+          }],
+        },
+      }),
+    }), { pluginCliPath: missingCli }));
+
+    assert.equal(response.leadContinuation.status, 'review-required');
+    assert.equal(response.leadContinuation.blockerCode, 'E_STATE_CONFLICT');
+    assert.match(stderr, /state_conflict_detected telemetry failed/u);
+    assert.equal(stderr.includes(missingCli), false);
+    const handoffs = await readObjectiveHandoffs(repoRoot, objectiveId);
+    assert.equal(handoffs.length, 1);
+    assert.equal(handoffs[0].openBlockers[0].code, 'E_STATE_CONFLICT');
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await rm(capturePath, { force: true }).catch(() => {});
   }
 });
 

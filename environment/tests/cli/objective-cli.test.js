@@ -94,6 +94,17 @@ async function readGovernanceEvents(capturePath) {
   }
 }
 
+function assertStateRepairGovernanceEvent(event, { objectiveId, repairTrigger }) {
+  assert.equal(event.event_type, 'state_repair_applied');
+  assert.equal(event.source_component, 'vre/objectives/cli');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'info');
+  assert.deepEqual(event.details, {
+    repairedLayer: 'snapshot',
+    repairTrigger
+  });
+}
+
 function assertNoDetailsLeak(event, forbiddenValues) {
   const serialized = JSON.stringify(event.details ?? {});
   for (const value of forbiddenValues) {
@@ -821,6 +832,52 @@ test('objective resume --repair-snapshot rewrites the stale snapshot without mut
     );
     assert.deepEqual(events.map((entry) => entry.kind), ['state-repair', 'resume']);
     assert.equal(events[0].payload.repairedLayer, 'snapshot');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('objective resume --repair-snapshot emits state_repair_applied governance event without raw divergence text', async () => {
+  const projectRoot = await createCliFixtureProject('vre-objective-cli-governance-state-repair-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const objectiveRecord = await installBlockedObjective(projectRoot);
+    const snapshotPath = await writeResumeSnapshotFixture(
+      projectRoot,
+      objectiveRecord.objectiveId,
+      'invalid-reasoning-mode-diverged.json'
+    );
+
+    const result = await runVre(projectRoot, [
+      'objective',
+      'resume',
+      '--objective',
+      objectiveRecord.objectiveId,
+      '--repair-snapshot'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath
+      }
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const repairedSnapshot = await readJson(snapshotPath);
+    assert.equal(repairedSnapshot.reasoningMode, 'rule-only');
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const repairEvents = governanceEvents.filter((event) => event.event_type === 'state_repair_applied');
+    assert.equal(repairEvents.length, 1);
+    assertStateRepairGovernanceEvent(repairEvents[0], {
+      objectiveId: objectiveRecord.objectiveId,
+      repairTrigger: 'objective-resume-repair-snapshot'
+    });
+    assertNoDetailsLeak(repairEvents[0], [
+      'resume-snapshot.reasoningMode=reviewed-api',
+      'resume-snapshot validation failed',
+      'Rebuilt by objective resume --repair-snapshot',
+      'resume-snapshot.json',
+      projectRoot
+    ]);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

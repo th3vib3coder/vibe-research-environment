@@ -362,6 +362,28 @@ function assertHeartbeatGovernanceEvent(event, {
   ]);
 }
 
+function assertSemanticDriftGovernanceEvent(event, { objectiveId, phase }) {
+  assert.equal(event.event_type, 'semantic_drift_detected');
+  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'warning');
+  assert.deepEqual(event.details, {
+    phase,
+    verdict: 'drifted'
+  });
+}
+
+function assertStateRepairGovernanceEvent(event, { objectiveId, sourceComponent, repairTrigger }) {
+  assert.equal(event.event_type, 'state_repair_applied');
+  assert.equal(event.source_component, sourceComponent);
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'info');
+  assert.deepEqual(event.details, {
+    repairedLayer: 'snapshot',
+    repairTrigger
+  });
+}
+
 async function withGovernanceCapture(capturePath, fn) {
   const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
   process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
@@ -1514,6 +1536,74 @@ test('research-loop can repair a missing final resume snapshot from durable queu
   }
 });
 
+test('research-loop logs state_repair_applied governance event for fresh-process snapshot recovery', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-state-repair-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  const secret = 'SECRET-seq124-runtime-repair';
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-STATE-REPAIR-001',
+      analysisId: 'ANL-loop-governance-state-repair-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    await assert.rejects(
+      runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        heartbeat: true,
+        wakeId: 'WAKE-STATE-REPAIR-CRASH',
+        sessionId: 'sess-state-repair-crash'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+        afterLoopEventPersisted: async () => {
+          throw new Error(`simulated crash before final resume snapshot ${secret}`);
+        }
+      }),
+      /simulated crash before final resume snapshot/u
+    );
+
+    assert.equal(await pathExists(context.snapshotPath), false);
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-STATE-REPAIR-CRASH',
+      leaseAcquiredAt: '2026-04-22T19:00:00Z',
+      leaseExpiresAt: '2026-04-22T19:01:00Z',
+      acquiredBy: 'sess-state-repair-crash',
+      previousWakeId: null
+    });
+
+    const repaired = await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-STATE-REPAIR-SECRET-C:/private/path',
+      sessionId: 'sess-state-repair-recover'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    }));
+
+    assert.equal(repaired.ok, true);
+    assert.equal(repaired.status, 'recovered');
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const repairEvents = governanceEvents.filter((event) => event.event_type === 'state_repair_applied');
+    assert.equal(repairEvents.length, 1);
+    assertStateRepairGovernanceEvent(repairEvents[0], {
+      objectiveId: context.objectiveId,
+      sourceComponent: 'vre/orchestrator/autonomy-runtime',
+      repairTrigger: 'research-loop-fresh-process-recovery'
+    });
+    assertNoDetailsLeak(repairEvents[0], [
+      secret,
+      'simulated crash before final resume snapshot',
+      'WAKE-STATE-REPAIR-SECRET-C:/private/path',
+      'C:/private/path',
+      'queue/event state advanced past resume-snapshot.json',
+      'resume-snapshot.json',
+      projectRoot
+    ]);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 test('research-loop blocks with E_QUEUE_TERMINAL_WITHOUT_EVENT when a prior wake crashed after the terminal queue line but before the terminal objective event', async () => {
   const projectRoot = await createCliFixtureProject('vre-research-loop-terminal-without-event-');
   try {
@@ -1841,6 +1931,54 @@ test('research-loop pauses with SEMANTIC_DRIFT_DETECTED when the strategic check
       String(driftSnapshotState.snapshot.openBlockers[0].message ?? ''),
       /drift|objective/iu
     );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop logs semantic_drift_detected governance event without checkpoint message leakage', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-semantic-drift-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  const secretMessage = 'Objective drifted away from sanctioned scope SECRET-seq124-drift C:/private/drift.md';
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-DRIFT-001',
+      analysisId: 'ANL-loop-governance-drift-001',
+      scriptContents: SLOW_SCRIPT
+    });
+
+    const result = await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-GOV-DRIFT-SECRET-C:/private/wake',
+      sessionId: 'sess-gov-drift'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB,
+      strategicCheckpoint: async () => ({
+        status: 'drifted',
+        phase: 'pre-slice',
+        message: secretMessage
+      })
+    }));
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'paused');
+    assert.equal(result.stopReason, 'semantic-drift');
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const driftEvents = governanceEvents.filter((event) => event.event_type === 'semantic_drift_detected');
+    assert.equal(driftEvents.length, 1);
+    assertSemanticDriftGovernanceEvent(driftEvents[0], {
+      objectiveId: context.objectiveId,
+      phase: 'pre-slice'
+    });
+    assertNoDetailsLeak(driftEvents[0], [
+      secretMessage,
+      'SECRET-seq124-drift',
+      'C:/private/drift.md',
+      'WAKE-GOV-DRIFT-SECRET-C:/private/wake',
+      'C:/private/wake',
+      projectRoot
+    ]);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }
