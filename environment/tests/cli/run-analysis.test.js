@@ -25,6 +25,13 @@ const FIXTURE_KERNEL_ENV = {
     'fixtures',
     'fake-kernel-sibling',
   ),
+  VIBE_SCIENCE_PLUGIN_CLI: path.join(
+    repoRoot,
+    'environment',
+    'tests',
+    'fixtures',
+    'governance-log-capture-stub.js',
+  ),
 };
 
 async function pathExists(targetPath) {
@@ -225,6 +232,50 @@ async function readObjectiveEvents(projectRoot, objectiveId = 'OBJ-001') {
   );
 }
 
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw
+      .trim()
+      .split(/\r?\n/u)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details ?? {});
+  for (const value of forbiddenValues) {
+    assert.equal(
+      serialized.includes(value),
+      false,
+      `governance details leaked forbidden value ${value}: ${serialized}`,
+    );
+  }
+}
+
+function assertAnalysisRunGovernanceEvent(event, {
+  eventType,
+  objectiveId = 'OBJ-001',
+  analysisId,
+  details,
+}) {
+  assert.equal(event.event_type, eventType);
+  assert.equal(event.source_component, 'vre/orchestrator/execution-lane');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'info');
+  assert.deepEqual(event.details, details ?? {
+    analysisId,
+    scriptLanguage: 'other',
+    runner: 'other',
+  });
+}
+
 const SAFE_SCRIPT = `
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -326,6 +377,91 @@ test('run-analysis executes a safe script, writes stdout/stderr logs, appends la
   }
 });
 
+test('run-analysis logs analysis_run_started after durable running lane record', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-governance-started-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-governance-started-001',
+      scriptPath: 'analysis/scripts/governance-started.mjs',
+      inputPath: 'data/input.csv',
+      outputPath: 'artifacts/results.json',
+      scriptContents: SAFE_SCRIPT,
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath,
+      },
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'complete']);
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 2);
+    assertAnalysisRunGovernanceEvent(events[0], {
+      eventType: 'analysis_run_started',
+      analysisId: 'ANL-governance-started-001',
+    });
+    assert.equal(laneRuns[0].analysisId, events[0].details.analysisId);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis logs analysis_run_completed only after successful completion', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-governance-completed-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-governance-completed-001',
+      scriptPath: 'analysis/scripts/governance-completed.mjs',
+      inputPath: 'data/input.csv',
+      outputPath: 'artifacts/results.json',
+      scriptContents: SAFE_SCRIPT,
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath,
+      },
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.status, 'complete');
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 2);
+    assert.deepEqual(events.map((event) => event.event_type), [
+      'analysis_run_started',
+      'analysis_run_completed',
+    ]);
+    assertAnalysisRunGovernanceEvent(events[1], {
+      eventType: 'analysis_run_completed',
+      analysisId: 'ANL-governance-completed-001',
+      details: {
+        analysisId: 'ANL-governance-completed-001',
+        terminalStatus: 'complete',
+      },
+    });
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 test('run-analysis records a failing script as a failed lane run and structured JSON error', async () => {
   const projectRoot = await createCliFixtureProject('vre-run-analysis-failure-');
   try {
@@ -360,6 +496,133 @@ test('run-analysis records a failing script as a failed lane run and structured 
     const objectiveEvents = await readObjectiveEvents(projectRoot);
     assert.equal(objectiveEvents.at(-1)?.kind, 'analysis-run');
     assert.equal(objectiveEvents.at(-1)?.payload.status, 'failed');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis failure logs started but does not invent completed or failure-specific analysis events', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-governance-failure-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-governance-fail-001',
+      scriptPath: 'analysis/scripts/governance-failure.mjs',
+      inputPath: 'data/input.csv',
+      outputPath: 'artifacts/results.json',
+      scriptContents: FAILING_SCRIPT,
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath,
+      },
+    });
+
+    assert.equal(result.code, 1, `stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.status, 'failed');
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assertAnalysisRunGovernanceEvent(events[0], {
+      eventType: 'analysis_run_started',
+      analysisId: 'ANL-governance-fail-001',
+    });
+    assert.equal(
+      events.some((event) => event.event_type === 'analysis_run_completed' || /failed|failure/u.test(event.event_type)),
+      false,
+    );
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis governance event details exclude raw command, paths, outputs, and env secrets', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-governance-redaction-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  const secret = 'SECRET-seq118-redaction';
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-governance-redaction-001',
+      scriptPath: 'analysis/scripts/SECRET-seq118-script.mjs',
+      inputPath: 'data/SECRET-seq118-input.csv',
+      outputPath: 'artifacts/SECRET-seq118-output.json',
+      scriptContents: SAFE_SCRIPT,
+      mutateManifest(manifest) {
+        manifest.command.argv.push(`--${secret}`);
+      },
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_GOVERNANCE_CAPTURE_PATH: capturePath,
+        SECRET_SEQ118_ENV: secret,
+      },
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 2);
+    for (const event of events) {
+      assertNoDetailsLeak(event, [
+        secret,
+        'SECRET-seq118-script',
+        'SECRET-seq118-input',
+        'SECRET-seq118-output',
+        'analysis/scripts/',
+        'data/',
+        'artifacts/',
+        projectRoot,
+      ]);
+    }
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis governance bridge failure does not change successful execution', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-governance-fail-soft-');
+  const missingCli = path.join(projectRoot, 'missing-governance-log.js');
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-governance-fail-soft-001',
+      scriptPath: 'analysis/scripts/governance-fail-soft.mjs',
+      inputPath: 'data/input.csv',
+      outputPath: 'artifacts/results.json',
+      scriptContents: SAFE_SCRIPT,
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VIBE_SCIENCE_PLUGIN_CLI: missingCli,
+      },
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.doesNotMatch(result.stderr, new RegExp(missingCli.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u'));
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'complete');
+    assert.equal(await pathExists(context.absoluteOutputPath), true);
+
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'complete']);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

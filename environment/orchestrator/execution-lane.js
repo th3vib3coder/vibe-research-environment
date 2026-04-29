@@ -24,6 +24,7 @@ import { getDefaultRecoveryPolicy } from './recovery.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
 import { getTaskAdapter } from './task-adapters.js';
+import { logGovernanceEventViaPlugin } from './governance-logger.js';
 
 function cloneValue(value) {
   return globalThis.structuredClone
@@ -50,6 +51,22 @@ const ALLOWED_OUTPUT_ROOTS = new Set(['artifacts', 'outputs', 'results']);
 const PHASE9_LANE_RUNS_FILE = '.vibe-science-environment/orchestrator/lane-runs.jsonl';
 const PHASE9_RUN_LOGS_DIR = '.vibe-science-environment/orchestrator/analysis-run-logs';
 const RUN_ANALYSIS_COMMAND = 'run-analysis';
+const EXECUTION_LANE_GOVERNANCE_SOURCE_COMPONENT = 'vre/orchestrator/execution-lane';
+
+async function recordAnalysisRunGovernanceEvent(eventType, manifest, details) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: eventType,
+      source_component: EXECUTION_LANE_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: manifest.objectiveId,
+      severity: 'info',
+      details,
+    });
+  } catch (error) {
+    const code = typeof error?.code === 'string' ? error.code : 'E_GOVERNANCE_BRIDGE_FAILED';
+    process.stderr.write(`[phase9-governance] ${eventType} telemetry failed: ${code}\n`);
+  }
+}
 
 export class RunAnalysisCliError extends Error {
   constructor({ code, message, exitCode = 1, extra = {} }) {
@@ -523,6 +540,12 @@ export async function runAnalysisCommand(projectPath, { manifestPath, dryRun = f
       status: 'running',
     });
 
+    await recordAnalysisRunGovernanceEvent('analysis_run_started', manifest, {
+      analysisId: manifest.analysisId,
+      scriptLanguage: manifest.script.language,
+      runner: manifest.command.runner,
+    });
+
     const execution = await executeApprovedManifest(
       projectRoot,
       approvedTemplate,
@@ -597,6 +620,11 @@ export async function runAnalysisCommand(projectPath, { manifestPath, dryRun = f
     };
 
     if (finalStatus === 'complete') {
+      await recordAnalysisRunGovernanceEvent('analysis_run_completed', manifest, {
+        analysisId: manifest.analysisId,
+        terminalStatus: 'complete',
+      });
+
       return {
         ok: true,
         command: RUN_ANALYSIS_COMMAND,
