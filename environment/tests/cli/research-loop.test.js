@@ -313,6 +313,55 @@ function assertObjectiveBlockedGovernanceEvent(event, { objectiveId, blockerCode
   });
 }
 
+function assertLoopIterationGovernanceEvent(event, {
+  objectiveId,
+  iterationCount,
+  resultStatus = 'complete',
+  memorySyncStatus = 'synced'
+}) {
+  assert.equal(event.event_type, 'loop_iteration');
+  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'info');
+  assert.deepEqual(event.details, {
+    iterationCount,
+    taskKind: 'analysis-execution-run',
+    resultStatus,
+    memorySyncStatus
+  });
+}
+
+function assertHeartbeatGovernanceEvent(event, {
+  objectiveId,
+  wakeCaller = 'windows-task-scheduler',
+  outcome,
+  rateLimitWindowMs
+}) {
+  assert.equal(event.event_type, 'heartbeat');
+  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.objective_id, objectiveId);
+  assert.equal(event.severity, 'info');
+  assert.match(event.details.wakeIdHash, /^WAK-[a-f0-9]{12}$/u);
+  assert.deepEqual(
+    {
+      wakeCaller: event.details.wakeCaller,
+      outcome: event.details.outcome,
+      rateLimitWindowMs: event.details.rateLimitWindowMs
+    },
+    {
+      wakeCaller,
+      outcome,
+      rateLimitWindowMs
+    }
+  );
+  assert.deepEqual(Object.keys(event.details).sort(), [
+    'outcome',
+    'rateLimitWindowMs',
+    'wakeCaller',
+    'wakeIdHash'
+  ]);
+}
+
 async function withGovernanceCapture(capturePath, fn) {
   const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
   process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
@@ -323,6 +372,29 @@ async function withGovernanceCapture(capturePath, fn) {
       delete process.env.VRE_GOVERNANCE_CAPTURE_PATH;
     } else {
       process.env.VRE_GOVERNANCE_CAPTURE_PATH = previousCapturePath;
+    }
+  }
+}
+
+async function withEnvOverrides(overrides, fn) {
+  const previous = new Map();
+  for (const key of Object.keys(overrides)) {
+    previous.set(key, process.env[key]);
+    if (overrides[key] == null) {
+      delete process.env[key];
+    } else {
+      process.env[key] = overrides[key];
+    }
+  }
+  try {
+    return await fn();
+  } finally {
+    for (const [key, value] of previous.entries()) {
+      if (value == null) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
     }
   }
 }
@@ -2104,17 +2176,298 @@ test('research-loop logs objective_blocked governance event for budget-exhausted
     assert.equal(payload.stopReason, 'budget-exhausted');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    assert.equal(governanceEvents.length, 1);
-    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+    const objectiveBlockedEvents = governanceEvents.filter((event) => event.event_type === 'objective_blocked');
+    assert.equal(objectiveBlockedEvents.length, 1);
+    assertObjectiveBlockedGovernanceEvent(objectiveBlockedEvents[0], {
       objectiveId: context.objectiveId,
       blockerCode: 'E_BUDGET_EXHAUSTED',
       severity: 'warning'
     });
-    assertNoDetailsLeak(governanceEvents[0], [
+    assertNoDetailsLeak(objectiveBlockedEvents[0], [
       'The effective runtime budget is exhausted.',
       projectRoot,
       'resume-snapshot.json'
     ]);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop logs loop_iteration governance event after a reviewed loop iteration is recorded', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-loop-iteration-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-LOOP-001',
+      analysisId: 'ANL-loop-governance-iteration-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      wakeId: 'WAKE-GOV-LOOP-001',
+      sessionId: 'sess-gov-loop',
+      now: '2026-04-23T21:20:00Z'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    }));
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'slice-complete');
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const loopEvents = governanceEvents.filter((event) => event.event_type === 'loop_iteration');
+    assert.equal(loopEvents.length, 1);
+    assertLoopIterationGovernanceEvent(loopEvents[0], {
+      objectiveId: context.objectiveId,
+      iterationCount: 1
+    });
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop logs heartbeat governance event for an eligible heartbeat tick', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-heartbeat-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-HEARTBEAT-001',
+      analysisId: 'ANL-loop-governance-heartbeat-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: 'WAKE-GOV-HEARTBEAT-001',
+      sessionId: 'sess-gov-heartbeat',
+      now: '2026-04-23T21:21:00Z'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    }));
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'slice-complete');
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const c3Events = governanceEvents.filter((event) => ['heartbeat', 'loop_iteration'].includes(event.event_type));
+    assert.deepEqual(c3Events.map((event) => event.event_type), [
+      'heartbeat',
+      'loop_iteration'
+    ]);
+    assertHeartbeatGovernanceEvent(c3Events[0], {
+      objectiveId: context.objectiveId,
+      outcome: 'lease-acquired',
+      rateLimitWindowMs: 60000
+    });
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop rate-limits heartbeat governance without suppressing loop_iteration telemetry', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-heartbeat-rate-limit-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-HEARTBEAT-RATE-001',
+      analysisId: 'ANL-loop-governance-rate-001',
+      scriptContents: SAFE_SCRIPT
+    });
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-GOV-RATE-DUP',
+      leaseAcquiredAt: '2026-04-23T21:20:00Z',
+      leaseExpiresAt: '2026-04-23T22:20:00Z',
+      acquiredBy: 'sess-gov-rate-owner',
+      previousWakeId: null
+    });
+
+    await withEnvOverrides({ VRE_HEARTBEAT_MIN_INTERVAL_MS: '60000' }, () => withGovernanceCapture(capturePath, async () => {
+      for (let index = 0; index < 10; index += 1) {
+        const result = await runResearchLoopCommand(projectRoot, {
+          objectiveId: context.objectiveId,
+          heartbeat: true,
+          wakeId: 'WAKE-GOV-RATE-DUP',
+          sessionId: `sess-gov-rate-${index}`,
+          now: '2026-04-23T21:30:00.000Z'
+        }, {
+          generateCapabilityHandshake: async () => HANDSHAKE_STUB
+        });
+        assert.equal(result.ok, true);
+        assert.equal(result.status, 'no-op');
+      }
+
+      await setPointerWakeLease(projectRoot, context.objectiveId, {
+        wakeId: 'WAKE-GOV-RATE-DUP',
+        leaseAcquiredAt: '2026-04-23T20:00:00Z',
+        leaseExpiresAt: '2026-04-23T20:01:00Z',
+        acquiredBy: 'sess-gov-rate-owner',
+        previousWakeId: null
+      });
+      const loopResult = await runResearchLoopCommand(projectRoot, {
+        objectiveId: context.objectiveId,
+        wakeId: 'WAKE-GOV-RATE-LOOP',
+        sessionId: 'sess-gov-rate-loop',
+        now: '2026-04-23T21:31:00Z'
+      }, {
+        generateCapabilityHandshake: async () => HANDSHAKE_STUB
+      });
+      assert.equal(loopResult.ok, true);
+      assert.equal(loopResult.status, 'slice-complete');
+    }));
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const c3Events = governanceEvents.filter((event) => ['heartbeat', 'loop_iteration'].includes(event.event_type));
+    assert.deepEqual(c3Events.map((event) => event.event_type), [
+      'heartbeat',
+      'loop_iteration'
+    ]);
+    assertHeartbeatGovernanceEvent(c3Events[0], {
+      objectiveId: context.objectiveId,
+      outcome: 'duplicate-wake-id',
+      rateLimitWindowMs: 60000
+    });
+    assertLoopIterationGovernanceEvent(c3Events[1], {
+      objectiveId: context.objectiveId,
+      iterationCount: 1
+    });
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop governance bridge failure is fail-soft for loop_iteration telemetry', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-loop-fail-soft-');
+  const missingCli = path.join(projectRoot, 'missing-governance-log.js');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-LOOP-FAILSOFT-001',
+      analysisId: 'ANL-loop-governance-fail-soft-001',
+      scriptContents: SAFE_SCRIPT
+    });
+
+    const result = await runVre(projectRoot, [
+      'research-loop',
+      '--objective',
+      context.objectiveId,
+      '--wake-id',
+      'WAKE-GOV-LOOP-FAILSOFT'
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VIBE_SCIENCE_PLUGIN_CLI: missingCli
+      }
+    });
+
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.match(result.stderr, /loop_iteration telemetry failed/u);
+    assert.equal(result.stderr.includes(missingCli), false);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'slice-complete');
+    const queueRecords = await readQueueRecords(projectRoot, context.objectiveId);
+    assert.deepEqual(queueRecords.map((record) => record.status), ['running', 'completed']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop loop_iteration and heartbeat governance details redact wake ids, paths, and manifest text', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-redaction-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  const secret = 'SECRET-seq123-redaction';
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-REDACTION-001',
+      analysisId: 'ANL-SECRET-seq123',
+      scriptPath: `analysis/scripts/${secret}.mjs`,
+      inputPath: `data/${secret}-input.csv`,
+      outputPath: `artifacts/${secret}-output.json`,
+      scriptContents: SAFE_SCRIPT
+    });
+    const rawWakeId = 'WAKE-SECRET-seq123-C:/private/path';
+
+    await withGovernanceCapture(capturePath, () => runResearchLoopCommand(projectRoot, {
+      objectiveId: context.objectiveId,
+      heartbeat: true,
+      wakeId: rawWakeId,
+      sessionId: 'sess-gov-redaction',
+      now: '2026-04-23T21:40:00Z'
+    }, {
+      generateCapabilityHandshake: async () => HANDSHAKE_STUB
+    }));
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    const c3Events = governanceEvents.filter((event) => ['heartbeat', 'loop_iteration'].includes(event.event_type));
+    assert.deepEqual(c3Events.map((event) => event.event_type), [
+      'heartbeat',
+      'loop_iteration'
+    ]);
+    for (const event of c3Events) {
+      assertNoDetailsLeak(event, [
+        secret,
+        'ANL-SECRET-seq123',
+        rawWakeId,
+        'C:/private/path',
+        context.manifestPath,
+        context.manifest.script.path,
+        context.manifest.inputs[0].path,
+        context.manifest.outputs[0].path,
+        projectRoot
+      ]);
+    }
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('research-loop honors VRE_HEARTBEAT_MIN_INTERVAL_MS for process-local heartbeat governance rate limit', async () => {
+  const projectRoot = await createCliFixtureProject('vre-research-loop-governance-heartbeat-override-');
+  const capturePath = path.join(projectRoot, '.governance-events.jsonl');
+  try {
+    const context = await seedBoundResearchContext(projectRoot, {
+      objectiveId: 'OBJ-GOV-HEARTBEAT-OVERRIDE-001',
+      analysisId: 'ANL-loop-governance-override-001',
+      scriptContents: SAFE_SCRIPT
+    });
+    await setPointerWakeLease(projectRoot, context.objectiveId, {
+      wakeId: 'WAKE-GOV-OVERRIDE-DUP',
+      leaseAcquiredAt: '2026-04-23T21:50:00Z',
+      leaseExpiresAt: '2026-04-23T22:50:00Z',
+      acquiredBy: 'sess-gov-override-owner',
+      previousWakeId: null
+    });
+
+    await withEnvOverrides({ VRE_HEARTBEAT_MIN_INTERVAL_MS: '10' }, () => withGovernanceCapture(capturePath, async () => {
+      for (const timestamp of [
+        '2026-04-23T21:50:00.000Z',
+        '2026-04-23T21:50:00.005Z',
+        '2026-04-23T21:50:00.012Z'
+      ]) {
+        const result = await runResearchLoopCommand(projectRoot, {
+          objectiveId: context.objectiveId,
+          heartbeat: true,
+          wakeId: 'WAKE-GOV-OVERRIDE-DUP',
+          sessionId: `sess-gov-override-${timestamp}`,
+          now: timestamp
+        }, {
+          generateCapabilityHandshake: async () => HANDSHAKE_STUB
+        });
+        assert.equal(result.ok, true);
+        assert.equal(result.status, 'no-op');
+      }
+    }));
+
+    const governanceEvents = await readGovernanceEvents(capturePath);
+    assert.equal(governanceEvents.length, 2);
+    for (const event of governanceEvents) {
+      assertHeartbeatGovernanceEvent(event, {
+        objectiveId: context.objectiveId,
+        outcome: 'duplicate-wake-id',
+        rateLimitWindowMs: 10
+      });
+    }
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

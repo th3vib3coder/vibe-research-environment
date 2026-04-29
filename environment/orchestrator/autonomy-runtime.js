@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { appendFile, mkdir, readdir, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -70,6 +71,7 @@ const WAKE_CALLER_IDENTITIES = new Set([
 ]);
 const HANDOFF_SCHEMA_FILE = 'phase9-handoff.schema.json';
 const AUTONOMY_RUNTIME_GOVERNANCE_SOURCE_COMPONENT = 'vre/orchestrator/autonomy-runtime';
+const DEFAULT_HEARTBEAT_GOVERNANCE_MIN_INTERVAL_MS = 60000;
 const OBJECTIVE_BLOCKER_SEVERITY_BY_CODE = Object.freeze({
   E_QUEUE_TERMINAL_WITHOUT_EVENT: 'critical',
   E_TASK_INCOMPLETE_AT_CRASH: 'critical',
@@ -78,28 +80,99 @@ const OBJECTIVE_BLOCKER_SEVERITY_BY_CODE = Object.freeze({
   E_LLM_REASONING_REQUIRED: 'warning',
   E_BUDGET_EXHAUSTED: 'warning'
 });
+const LOOP_ITERATION_GOVERNANCE_RESULT_STATUSES = new Set(['complete', 'failed', 'interrupted', 'cancelled']);
+const HEARTBEAT_GOVERNANCE_OUTCOMES = new Set(['lease-acquired', 'duplicate-wake-id', 'wake-lease-still-active']);
+const heartbeatGovernanceLastEmittedAtByObjectiveId = new Map();
 
 function classifyObjectiveBlockedSeverity(blockerCode) {
   return OBJECTIVE_BLOCKER_SEVERITY_BY_CODE[blockerCode] ?? 'warning';
 }
 
-async function recordObjectiveBlockedGovernanceEvent(objectiveId, blockerCode) {
-  const severity = classifyObjectiveBlockedSeverity(blockerCode);
+function hashWakeId(wakeId) {
+  const canonical = String(wakeId ?? '').trim();
+  const digest = createHash('sha256').update(canonical).digest('hex').slice(0, 12);
+  return `WAK-${digest}`;
+}
+
+function resolveHeartbeatGovernanceMinIntervalMs(env = process.env) {
+  const parsed = Number.parseInt(env.VRE_HEARTBEAT_MIN_INTERVAL_MS ?? '', 10);
+  return Number.isFinite(parsed) && parsed >= 0
+    ? parsed
+    : DEFAULT_HEARTBEAT_GOVERNANCE_MIN_INTERVAL_MS;
+}
+
+function epochMsFromIso(value) {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : Date.now();
+}
+
+function shouldEmitHeartbeatGovernanceEvent(objectiveId, writtenAt, rateLimitWindowMs) {
+  const currentMs = epochMsFromIso(writtenAt);
+  const previousMs = heartbeatGovernanceLastEmittedAtByObjectiveId.get(objectiveId);
+  if (previousMs != null && currentMs - previousMs < rateLimitWindowMs) {
+    return false;
+  }
+  return true;
+}
+
+function heartbeatGovernanceOutcome(leaseClaim) {
+  if (leaseClaim.acquired) {
+    return 'lease-acquired';
+  }
+  if (HEARTBEAT_GOVERNANCE_OUTCOMES.has(leaseClaim.noOpReason)) {
+    return leaseClaim.noOpReason;
+  }
+  return 'wake-lease-still-active';
+}
+
+async function recordAutonomyRuntimeGovernanceEvent(eventType, objectiveId, severity, details) {
   try {
     await logGovernanceEventViaPlugin({
-      event_type: 'objective_blocked',
+      event_type: eventType,
       source_component: AUTONOMY_RUNTIME_GOVERNANCE_SOURCE_COMPONENT,
       objective_id: objectiveId,
       severity,
-      details: {
-        blockerCode,
-        severity
-      }
+      details
     });
+    return true;
   } catch (error) {
     const code = typeof error?.code === 'string' ? error.code : 'E_GOVERNANCE_BRIDGE_FAILED';
-    process.stderr.write(`[phase9-governance] objective_blocked telemetry failed: ${code}\n`);
+    process.stderr.write(`[phase9-governance] ${eventType} telemetry failed: ${code}\n`);
+    return false;
   }
+}
+
+async function recordObjectiveBlockedGovernanceEvent(objectiveId, blockerCode) {
+  const severity = classifyObjectiveBlockedSeverity(blockerCode);
+  await recordAutonomyRuntimeGovernanceEvent('objective_blocked', objectiveId, severity, {
+    blockerCode,
+    severity
+  });
+}
+
+async function recordHeartbeatGovernanceEvent(objectiveId, wakeRequest, wakeCaller, leaseClaim, writtenAt) {
+  const rateLimitWindowMs = resolveHeartbeatGovernanceMinIntervalMs();
+  if (!shouldEmitHeartbeatGovernanceEvent(objectiveId, writtenAt, rateLimitWindowMs)) {
+    return;
+  }
+  const recorded = await recordAutonomyRuntimeGovernanceEvent('heartbeat', objectiveId, 'info', {
+    wakeIdHash: hashWakeId(wakeRequest.wakeId),
+    wakeCaller: wakeCaller ?? 'manual',
+    outcome: heartbeatGovernanceOutcome(leaseClaim),
+    rateLimitWindowMs
+  });
+  if (recorded) {
+    heartbeatGovernanceLastEmittedAtByObjectiveId.set(objectiveId, epochMsFromIso(writtenAt));
+  }
+}
+
+async function recordLoopIterationGovernanceEvent(objectiveId, iterationCount, taskKind, resultStatus, memorySyncStatus) {
+  await recordAutonomyRuntimeGovernanceEvent('loop_iteration', objectiveId, 'info', {
+    iterationCount,
+    taskKind,
+    resultStatus: LOOP_ITERATION_GOVERNANCE_RESULT_STATUSES.has(resultStatus) ? resultStatus : 'failed',
+    memorySyncStatus
+  });
 }
 
 export class ResearchLoopCliError extends Error {
@@ -1169,6 +1242,10 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
   const leaseClaim = await claimWakeLease(projectRoot, objectiveId, wakeRequest, wakeCaller, sessionId, writtenAt);
   let claimedPointer = leaseClaim.activePointer;
 
+  if (wakeRequest.heartbeat && leaseClaim.acquired) {
+    await recordHeartbeatGovernanceEvent(objectiveId, wakeRequest, wakeCaller, leaseClaim, writtenAt);
+  }
+
   if (!leaseClaim.acquired) {
     const noopEvent = await appendObjectiveEvent(projectRoot, objectiveId, 'heartbeat', {
       wakeId: wakeRequest.wakeId,
@@ -1178,6 +1255,9 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
       activeLeaseWakeId: claimedPointer?.currentWakeLease?.wakeId ?? null,
       activeLeaseAcquiredBy: claimedPointer?.currentWakeLease?.acquiredBy ?? null
     }, writtenAt);
+    if (wakeRequest.heartbeat) {
+      await recordHeartbeatGovernanceEvent(objectiveId, wakeRequest, wakeCaller, leaseClaim, writtenAt);
+    }
     const noopSnapshot = await writeRuntimeResumeSnapshot(
       projectRoot,
       objectiveRecord,
@@ -1558,6 +1638,13 @@ export async function runResearchLoopCommand(projectPath, options = {}, deps = {
     memorySync: memorySyncState,
     wakeCaller
   }, now());
+  await recordLoopIterationGovernanceEvent(
+    objectiveId,
+    iterationsCompleted + 1,
+    ANALYSIS_MANIFEST_TASK_KIND,
+    executionPayload.ok ? 'complete' : executionPayload.status,
+    memorySyncState.status
+  );
 
   if (typeof deps.afterLoopEventPersisted === 'function') {
     await deps.afterLoopEventPersisted({
