@@ -17,6 +17,7 @@ async function withFixtureRepo(fn) {
     await mkdir(path.join(repoRoot, 'bin'), { recursive: true });
     await mkdir(path.join(repoRoot, '.github', 'workflows'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'tests', 'ci'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'environment', 'audit'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'claims'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'control'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'objectives'), { recursive: true });
@@ -83,6 +84,7 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'queue-adapter.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'governance-logger.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'orchestrator', 'windows-task-scheduler.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'audit', 'query.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'claims', 'edges.js'), '// fixture\n', 'utf8');
     await writeFile(
       path.join(repoRoot, '.github', 'workflows', 'ci.yml'),
@@ -128,7 +130,7 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 34);
+    assert.equal(surfaces.length, 35);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'test:phase9'), true);
@@ -149,6 +151,7 @@ test('phase9 surface-index generator runs and returns the pinned shape', async (
     assert.equal(surfaces.some((surface) => surface.name === 'semantic-drift-checkpoint'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'queue-adapter'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'claims-edges'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'audit-query'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'governance-logger'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'windows-task-scheduler'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'phase9.capability-handshake.v1'), true);
@@ -179,6 +182,7 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'semantic-drift-checkpoint'), true);
     assert.equal(persisted.some((surface) => surface.name === 'queue-adapter'), true);
     assert.equal(persisted.some((surface) => surface.name === 'claims-edges'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'audit-query'), true);
     assert.equal(persisted.some((surface) => surface.name === 'governance-logger'), true);
     assert.equal(persisted.some((surface) => surface.name === 'windows-task-scheduler'), true);
     assert.equal(persisted.some((surface) => surface.name === 'scheduler doctor'), true);

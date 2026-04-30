@@ -136,6 +136,15 @@
   },
   {
     "kind": "orchestrator-surface",
+    "name": "audit-query",
+    "paths": [
+      "environment/audit/query.js"
+    ],
+    "featureId": "W5-AUDIT-QUERIES",
+    "introducedAt": "2026-04-30"
+  },
+  {
+    "kind": "orchestrator-surface",
     "name": "autonomy-runtime",
     "paths": [
       "environment/orchestrator/autonomy-runtime.js"

@@ -1,0 +1,73 @@
+{
+  "empty": {
+    "governance_events_aggregated": [],
+    "edges_by_relation": {
+      "contradicts": [],
+      "supports": [],
+      "supersedes": [],
+      "depends_on": [],
+      "evolved_into": [],
+      "related_to": []
+    },
+    "summary": {
+      "total_events": 0,
+      "total_edges": 0,
+      "time_range": {
+        "from": "2026-04-30T00:00:00.000Z",
+        "to": "2026-04-30T23:59:59.999Z"
+      }
+    }
+  },
+  "populated": {
+    "governance_events_aggregated": [
+      {
+        "event_type": "law_violation",
+        "source_component": "plugin/hooks/pre-tool-use",
+        "count": 3
+      },
+      {
+        "event_type": "objective_started",
+        "source_component": "vre/objectives/cli",
+        "count": 2
+      }
+    ],
+    "edges_by_relation": {
+      "contradicts": [
+        {
+          "schemaVersion": "phase9.claim-edge.v1",
+          "edgeId": "EDGE-AUDIT-CONTRADICTS-1",
+          "fromId": "CLAIM-AUDIT-A",
+          "toId": "CLAIM-AUDIT-B",
+          "relation": "contradicts",
+          "createdAt": "2026-04-30T09:00:00.000Z",
+          "confidence": 0.8,
+          "objectiveId": "OBJ-AUDIT-130"
+        }
+      ],
+      "supports": [
+        {
+          "schemaVersion": "phase9.claim-edge.v1",
+          "edgeId": "EDGE-AUDIT-SUPPORTS-1",
+          "fromId": "CLAIM-AUDIT-C",
+          "toId": "CLAIM-AUDIT-D",
+          "relation": "supports",
+          "createdAt": "2026-04-30T09:01:00.000Z",
+          "confidence": 0.7,
+          "objectiveId": "OBJ-AUDIT-130"
+        }
+      ],
+      "supersedes": [],
+      "depends_on": [],
+      "evolved_into": [],
+      "related_to": []
+    },
+    "summary": {
+      "total_events": 5,
+      "total_edges": 2,
+      "time_range": {
+        "from": "2026-04-30T00:00:00.000Z",
+        "to": "2026-04-30T23:59:59.999Z"
+      }
+    }
+  }
+}

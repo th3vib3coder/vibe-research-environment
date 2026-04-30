@@ -176,6 +176,13 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-29'
   },
   {
+    file: 'environment/audit/query.js',
+    kind: 'orchestrator-surface',
+    name: 'audit-query',
+    featureId: 'W5-AUDIT-QUERIES',
+    introducedAt: '2026-04-30'
+  },
+  {
     file: 'environment/orchestrator/governance-logger.js',
     kind: 'bridge-script',
     name: 'governance-logger',

@@ -7,6 +7,11 @@
       "reason": "Claim-edge store owns the reviewed JSONL append/read surface for Phase 9 typed edges."
     },
     {
+      "path": "environment/audit/query.js",
+      "imports": ["node:child_process", "node:fs/promises"],
+      "reason": "Audit query helper invokes the plugin-owned audit-query CLI and validates its read-only evidence rows."
+    },
+    {
       "path": "environment/objectives/cli.js",
       "imports": ["node:fs/promises"],
       "reason": "Objective lifecycle CLI reads and deletes reviewed artifacts."
