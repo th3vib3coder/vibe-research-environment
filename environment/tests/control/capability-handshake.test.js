@@ -11,6 +11,7 @@ import {
   INTERNALS as HANDSHAKE_INTERNALS
 } from '../../control/capability-handshake.js';
 import { loadValidator } from '../../control/_io.js';
+import { KernelBridgeContractMismatchError } from '../../lib/kernel-bridge.js';
 
 const PROJECT_ROOT = process.cwd();
 const FAKE_KERNEL_ROOT = path.join(
@@ -21,6 +22,13 @@ const FAKE_KERNEL_ROOT = path.join(
   'fake-kernel-sibling'
 );
 const FIXED_GENERATED_AT = '2026-04-22T18:00:00.000Z';
+const GOVERNANCE_CAPTURE_STUB = path.join(
+  PROJECT_ROOT,
+  'environment',
+  'tests',
+  'fixtures',
+  'governance-log-capture-stub.js'
+);
 const EXPECTED_OPERATOR_COMMANDS = PHASE9_STUB_DEFINITIONS
   .filter((definition) => definition.kind !== 'doctor-surface')
   .map((definition) => definition.canonicalCommand)
@@ -29,6 +37,147 @@ const EXPECTED_OPERATOR_DOCTOR_COMMANDS = PHASE9_STUB_DEFINITIONS
   .filter((definition) => definition.kind === 'doctor-surface')
   .map((definition) => definition.canonicalCommand)
   .sort();
+
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw
+      .split(/\r?\n/u)
+      .filter((line) => line.trim() !== '')
+      .map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function withGovernanceCapture(capturePath, fn, overrides = {}) {
+  const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+  const previousPluginCli = process.env.VIBE_SCIENCE_PLUGIN_CLI;
+  await mkdir(path.dirname(capturePath), { recursive: true });
+  process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
+  process.env.VIBE_SCIENCE_PLUGIN_CLI = overrides.pluginCliPath ?? GOVERNANCE_CAPTURE_STUB;
+  try {
+    return await fn();
+  } finally {
+    if (previousCapturePath == null) {
+      delete process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+    } else {
+      process.env.VRE_GOVERNANCE_CAPTURE_PATH = previousCapturePath;
+    }
+    if (previousPluginCli == null) {
+      delete process.env.VIBE_SCIENCE_PLUGIN_CLI;
+    } else {
+      process.env.VIBE_SCIENCE_PLUGIN_CLI = previousPluginCli;
+    }
+  }
+}
+
+async function captureStderr(fn) {
+  const originalWrite = process.stderr.write;
+  let stderr = '';
+  process.stderr.write = (chunk, encoding, callback) => {
+    stderr += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
+  try {
+    return {
+      result: await fn(),
+      stderr
+    };
+  } finally {
+    process.stderr.write = originalWrite;
+  }
+}
+
+async function createKernelFixtureWithProjectionFailure({
+  failProjection = 'listClaimHeads',
+  mode = 'contract-mismatch',
+  sentinel = 'SECRET-seq125-truth-mismatch'
+} = {}) {
+  const kernelRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-kernel-truth-mismatch-'));
+  const scriptPath = path.join(kernelRoot, 'plugin', 'scripts', 'core-reader-cli.js');
+  await mkdir(path.dirname(scriptPath), { recursive: true });
+  await writeFile(
+    scriptPath,
+    `#!/usr/bin/env node
+const projection = process.argv[2] || '<missing>';
+let stdin = '';
+process.stdin.setEncoding('utf8');
+for await (const chunk of process.stdin) {
+  stdin += chunk;
+}
+let input = {};
+try {
+  input = JSON.parse(stdin || '{}');
+} catch {}
+if (projection === ${JSON.stringify(failProjection)}) {
+  if (${JSON.stringify(mode)} === 'contract-mismatch') {
+    process.stdout.write(JSON.stringify({
+      ok: true,
+      projection: ${JSON.stringify(sentinel)},
+      projectPath: input.projectPath || '',
+      data: {}
+    }));
+    process.exit(0);
+  }
+  process.stdout.write(JSON.stringify({
+    ok: false,
+    projection,
+    error: ${JSON.stringify(sentinel)}
+  }));
+  process.exit(0);
+}
+function dataFor(name) {
+  if (name === 'getProjectOverview') {
+    return { profile: 'default', projectId: 'fake-project' };
+  }
+  if (name === 'getStateSnapshot') {
+    return { sequences: [] };
+  }
+  if (name.startsWith('list')) {
+    return [];
+  }
+  return {};
+}
+process.stdout.write(JSON.stringify({
+  ok: true,
+  projection,
+  projectPath: input.projectPath || '',
+  data: dataFor(projection),
+  meta: {
+    sourceMode: 'kernel-backed',
+    dbAvailable: true
+  }
+}));
+`,
+    'utf8'
+  );
+  return kernelRoot;
+}
+
+function assertKernelTruthMismatchEvent(event, { projectionName = 'listClaimHeads' } = {}) {
+  assert.equal(event.event_type, 'kernel_vre_truth_mismatch');
+  assert.equal(event.source_component, 'vre/control/capability-handshake');
+  assert.equal(event.objective_id, null);
+  assert.equal(event.severity, 'critical');
+  assert.deepEqual(event.details, {
+    projectionName,
+    errorClass: 'KernelBridgeContractMismatchError'
+  });
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details);
+  for (const value of forbiddenValues) {
+    assert.equal(serialized.includes(value), false, `governance details leaked ${value}`);
+  }
+}
 
 test('capability-handshake generator produces a schema-valid full ontology payload from the live repo', async () => {
   const handshake = await generateCapabilityHandshake(PROJECT_ROOT, {
@@ -501,5 +650,103 @@ test('collectMemoryApis excludes on-disk exports that are not present in the rev
     );
   } finally {
     await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('kernel bridge contract mismatch emits kernel_vre_truth_mismatch and rethrows the original error', async () => {
+  const kernelRoot = await createKernelFixtureWithProjectionFailure();
+  const capturePath = path.join(kernelRoot, 'governance-events.jsonl');
+  try {
+    await assert.rejects(
+      () => withGovernanceCapture(capturePath, () => generateCapabilityHandshake(PROJECT_ROOT, {
+        generatedAt: FIXED_GENERATED_AT,
+        kernelRoot
+      })),
+      KernelBridgeContractMismatchError
+    );
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assertKernelTruthMismatchEvent(events[0]);
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
+});
+
+test('kernel_vre_truth_mismatch governance details do not leak raw mismatch messages', async () => {
+  const sentinel = 'SECRET-seq125-truth-mismatch C:/private/kernel/path';
+  const kernelRoot = await createKernelFixtureWithProjectionFailure({ sentinel });
+  const capturePath = path.join(kernelRoot, 'governance-events.jsonl');
+  try {
+    await assert.rejects(
+      () => withGovernanceCapture(capturePath, () => generateCapabilityHandshake(PROJECT_ROOT, {
+        generatedAt: FIXED_GENERATED_AT,
+        kernelRoot
+      })),
+      KernelBridgeContractMismatchError
+    );
+
+    const events = await readGovernanceEvents(capturePath);
+    assert.equal(events.length, 1);
+    assertKernelTruthMismatchEvent(events[0]);
+    assertNoDetailsLeak(events[0], [
+      sentinel,
+      'SECRET-seq125-truth-mismatch',
+      'C:/private/kernel/path',
+      'someOtherProjection',
+      'stdout is not valid JSON'
+    ]);
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
+});
+
+test('kernel_vre_truth_mismatch telemetry failure still rethrows the original contract mismatch', async () => {
+  const kernelRoot = await createKernelFixtureWithProjectionFailure();
+  const missingCli = path.join(kernelRoot, 'missing-governance-log.js');
+  try {
+    const { stderr } = await captureStderr(() => assert.rejects(
+      () => withGovernanceCapture(
+        path.join(kernelRoot, 'governance-events.jsonl'),
+        () => generateCapabilityHandshake(PROJECT_ROOT, {
+          generatedAt: FIXED_GENERATED_AT,
+          kernelRoot
+        }),
+        { pluginCliPath: missingCli }
+      ),
+      KernelBridgeContractMismatchError
+    ));
+
+    assert.match(stderr, /kernel_vre_truth_mismatch telemetry failed/u);
+    assert.equal(stderr.includes(missingCli), false);
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
+});
+
+test('non-contract kernel bridge errors preserve degraded handshake behavior without governance emission', async () => {
+  const kernelRoot = await createKernelFixtureWithProjectionFailure({
+    mode: 'kernel-error',
+    sentinel: 'SECRET-seq125-non-contract'
+  });
+  const capturePath = path.join(kernelRoot, 'governance-events.jsonl');
+  try {
+    const handshake = await withGovernanceCapture(capturePath, () => generateCapabilityHandshake(PROJECT_ROOT, {
+      generatedAt: FIXED_GENERATED_AT,
+      kernelRoot
+    }));
+
+    assert.equal(handshake.kernel.mode, 'degraded');
+    assert.equal(
+      handshake.kernel.projections.unavailable.some((entry) => entry.name === 'listClaimHeads'),
+      true
+    );
+    assert.equal(
+      handshake.degradedReasons.some((reason) => reason.includes('SECRET-seq125-non-contract')),
+      true
+    );
+    assert.deepEqual(await readGovernanceEvents(capturePath), []);
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
   }
 });

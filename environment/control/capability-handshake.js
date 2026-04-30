@@ -22,10 +22,12 @@ import {
   readDomainPackManifest
 } from '../domain-packs/loader.js';
 import {
+  KernelBridgeContractMismatchError,
   KERNEL_PROJECTION_NAMES,
   KERNEL_PROJECTION_SCHEMA_VERSION,
   resolveKernelReader
 } from '../lib/kernel-bridge.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
 import { getTaskRegistry } from '../orchestrator/task-registry.js';
 import { getMemoryFreshness } from '../memory/status.js';
 
@@ -38,6 +40,7 @@ export const PROJECTION_PROBE_FIXTURE_PATH =
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const MODULE_PROJECT_ROOT = resolveProjectRoot(path.join(MODULE_DIR, '..', '..'));
+const CAPABILITY_HANDSHAKE_GOVERNANCE_SOURCE_COMPONENT = 'vre/control/capability-handshake';
 
 export const OPERATOR_ARTIFACT_PATHS = Object.freeze([
   '.vibe-science-environment/objectives/<OBJ-ID>/resume-snapshot.json',
@@ -706,6 +709,24 @@ function buildUnavailableProbe(name, degradedReason) {
   };
 }
 
+async function recordKernelVreTruthMismatchGovernanceEvent(projectionName) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'kernel_vre_truth_mismatch',
+      source_component: CAPABILITY_HANDSHAKE_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: null,
+      severity: 'critical',
+      details: {
+        projectionName,
+        errorClass: 'KernelBridgeContractMismatchError'
+      }
+    });
+  } catch (error) {
+    const code = typeof error?.code === 'string' ? error.code : 'E_GOVERNANCE_BRIDGE_FAILED';
+    process.stderr.write(`[phase9-governance] kernel_vre_truth_mismatch telemetry failed: ${code}\n`);
+  }
+}
+
 function determineKernelMode({ kernelRoot, readerDbAvailable, availableCount }) {
   if (!kernelRoot) {
     return 'missing';
@@ -753,6 +774,10 @@ async function buildKernelSection(projectRoot, options = {}) {
       valuesByProjection.set(projectionName, data);
       availableNames.push(projectionName);
     } catch (error) {
+      if (error instanceof KernelBridgeContractMismatchError) {
+        await recordKernelVreTruthMismatchGovernanceEvent(projectionName);
+        throw error;
+      }
       const degradedReason = error?.message ?? String(error);
       probes.push(buildUnavailableProbe(projectionName, degradedReason));
       unavailable.push({ name: projectionName, reason: degradedReason });
