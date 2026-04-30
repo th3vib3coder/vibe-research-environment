@@ -47,6 +47,19 @@
             },
             "citationChecks": {
               "type": "boolean"
+            },
+            "truthMismatch": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "overview",
+                  "claimHeads",
+                  "unresolvedClaims",
+                  "citationChecks"
+                ]
+              },
+              "uniqueItems": true
             }
           }
         },

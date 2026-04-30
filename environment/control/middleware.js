@@ -5,8 +5,10 @@ import { appendEvent } from './events.js';
 import { rebuildSessionSnapshot } from './session-snapshot.js';
 import { readFlowIndex } from '../lib/flow-state.js';
 import { listManifests } from '../lib/manifest.js';
+import { KernelBridgeContractMismatchError } from '../lib/kernel-bridge.js';
 import { getMemoryFreshness } from '../memory/status.js';
 import { getWritingSignalSummary } from '../flows/writing-overview.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
 
 const FINAL_ATTEMPT_STATUSES = new Set([
   'succeeded',
@@ -17,6 +19,25 @@ const FINAL_ATTEMPT_STATUSES = new Set([
   'abandoned'
 ]);
 const BUDGET_ADVISORY_RATIO = 0.8;
+const MIDDLEWARE_GOVERNANCE_SOURCE_COMPONENT = 'vre/control/middleware';
+
+async function recordKernelTruthMismatchGovernanceEvent(projectionName) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'kernel_vre_truth_mismatch',
+      objective_id: null,
+      source_component: MIDDLEWARE_GOVERNANCE_SOURCE_COMPONENT,
+      severity: 'critical',
+      details: {
+        projectionName,
+        errorClass: 'KernelBridgeContractMismatchError'
+      }
+    });
+  } catch (error) {
+    const code = error?.code ?? error?.name ?? 'UNKNOWN';
+    process.stderr.write(`[phase9-governance] kernel_vre_truth_mismatch telemetry failed: ${code}\n`);
+  }
+}
 
 function normalizeScope(commandName, explicitScope) {
   const source = explicitScope ?? commandName;
@@ -146,7 +167,12 @@ async function deriveSignals(projectPath, reader, explicitSignals = {}) {
       } catch (error) {
         unresolvedClaims = 0;
         kernelSignalProvenance = 'mixed';
-        provenanceReason = error.message;
+        if (error instanceof KernelBridgeContractMismatchError) {
+          await recordKernelTruthMismatchGovernanceEvent('listUnresolvedClaims');
+          provenanceReason = 'kernel truth mismatch: listUnresolvedClaims';
+        } else {
+          provenanceReason = error.message;
+        }
       }
     } else {
       unresolvedClaims = 0;

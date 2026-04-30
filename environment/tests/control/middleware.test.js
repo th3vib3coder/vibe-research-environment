@@ -3,6 +3,107 @@ import assert from 'node:assert/strict';
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { KernelBridgeContractMismatchError } from '../../lib/kernel-bridge.js';
+
+const GOVERNANCE_CAPTURE_STUB = path.join(
+  process.cwd(),
+  'environment',
+  'tests',
+  'fixtures',
+  'governance-log-capture-stub.js'
+);
+
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw
+      .split(/\r?\n/u)
+      .filter((line) => line.trim() !== '')
+      .map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function withGovernanceCapture(capturePath, fn, overrides = {}) {
+  const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+  const previousPluginCli = process.env.VIBE_SCIENCE_PLUGIN_CLI;
+  await mkdir(path.dirname(capturePath), { recursive: true });
+  process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
+  process.env.VIBE_SCIENCE_PLUGIN_CLI = overrides.pluginCliPath ?? GOVERNANCE_CAPTURE_STUB;
+  try {
+    return await fn();
+  } finally {
+    if (previousCapturePath == null) {
+      delete process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+    } else {
+      process.env.VRE_GOVERNANCE_CAPTURE_PATH = previousCapturePath;
+    }
+    if (previousPluginCli == null) {
+      delete process.env.VIBE_SCIENCE_PLUGIN_CLI;
+    } else {
+      process.env.VIBE_SCIENCE_PLUGIN_CLI = previousPluginCli;
+    }
+  }
+}
+
+async function captureStderr(fn) {
+  const originalWrite = process.stderr.write;
+  let stderr = '';
+  process.stderr.write = (chunk, encoding, callback) => {
+    stderr += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
+  try {
+    return {
+      result: await fn(),
+      stderr
+    };
+  } finally {
+    process.stderr.write = originalWrite;
+  }
+}
+
+function assertKernelTruthMismatchEvent(event, { projectionName = 'listUnresolvedClaims' } = {}) {
+  assert.equal(event.event_type, 'kernel_vre_truth_mismatch');
+  assert.equal(event.source_component, 'vre/control/middleware');
+  assert.equal(event.objective_id, null);
+  assert.equal(event.severity, 'critical');
+  assert.deepEqual(event.details, {
+    projectionName,
+    errorClass: 'KernelBridgeContractMismatchError'
+  });
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details);
+  for (const value of forbiddenValues) {
+    assert.equal(serialized.includes(value), false, `governance details leaked ${value}`);
+  }
+}
+
+function createMiddlewareReader(errorFactory) {
+  let unresolvedCalls = 0;
+  return {
+    dbAvailable: true,
+    getProjectOverview: async () => ({ ok: true }),
+    listClaimHeads: async () => [],
+    listCitationChecks: async () => [],
+    listUnresolvedClaims: async () => {
+      unresolvedCalls += 1;
+      if (unresolvedCalls === 1) {
+        return [];
+      }
+      throw errorFactory();
+    }
+  };
+}
 
 async function setup() {
   const tmp = await mkdtemp(path.join(tmpdir(), 'vre-mw-'));
@@ -280,5 +381,75 @@ describe('middleware', () => {
     assert.equal(attempt.status, 'failed');
     assert.match(result.error, /JSON|flow index/i);
     assert.equal(publishedSnapshot, null);
+  });
+
+  it('emits kernel_vre_truth_mismatch and sanitizes middleware provenance on contract mismatch', async () => {
+    const capturePath = path.join(dir, 'middleware-truth-mismatch.jsonl');
+    const sentinel = 'SECRET-seq126-middleware-mismatch C:/private/path';
+
+    await withGovernanceCapture(capturePath, () => middleware.runWithMiddleware({
+      projectPath: dir,
+      commandName: '/flow-status',
+      reader: createMiddlewareReader(() => new KernelBridgeContractMismatchError(sentinel, {
+        projection: 'listUnresolvedClaims'
+      })),
+      commandFn: async () => ({})
+    }));
+    const events = await readGovernanceEvents(capturePath);
+    const currentSnapshot = await snapshot.getSessionSnapshot(dir);
+
+    assert.equal(events.length, 1);
+    assertKernelTruthMismatchEvent(events[0]);
+    assertNoDetailsLeak(events[0], [sentinel, 'SECRET-seq126-middleware-mismatch', 'C:/private/path']);
+    assert.equal(currentSnapshot.signals.provenance.sourceMode, 'mixed');
+    assert.equal(
+      currentSnapshot.signals.provenance.degradedReason,
+      'kernel truth mismatch: listUnresolvedClaims'
+    );
+    assert.equal(currentSnapshot.signals.provenance.degradedReason.includes('SECRET-seq126'), false);
+  });
+
+  it('keeps middleware soft-probe degraded when telemetry bridge is unavailable', async () => {
+    const missingCli = path.join(dir, 'missing-governance-cli.js');
+    const { stderr } = await captureStderr(() => withGovernanceCapture(
+      path.join(dir, 'middleware-missing-bridge.jsonl'),
+      () => middleware.runWithMiddleware({
+        projectPath: dir,
+        commandName: '/flow-status',
+        reader: createMiddlewareReader(() => new KernelBridgeContractMismatchError('contract mismatch', {
+          projection: 'listUnresolvedClaims'
+        })),
+        commandFn: async () => ({})
+      }),
+      { pluginCliPath: missingCli }
+    ));
+    const currentSnapshot = await snapshot.getSessionSnapshot(dir);
+
+    assert.match(stderr, /kernel_vre_truth_mismatch telemetry failed/u);
+    assert.equal(currentSnapshot.signals.provenance.sourceMode, 'mixed');
+    assert.equal(
+      currentSnapshot.signals.provenance.degradedReason,
+      'kernel truth mismatch: listUnresolvedClaims'
+    );
+  });
+
+  it('preserves non-contract middleware projection error behavior without governance emission', async () => {
+    const capturePath = path.join(dir, 'middleware-ordinary-error.jsonl');
+
+    await withGovernanceCapture(capturePath, () => middleware.runWithMiddleware({
+      projectPath: dir,
+      commandName: '/flow-status',
+      reader: createMiddlewareReader(() => new Error('ordinary middleware projection failure')),
+      commandFn: async () => ({})
+    }));
+    const events = await readGovernanceEvents(capturePath);
+    const currentSnapshot = await snapshot.getSessionSnapshot(dir);
+
+    assert.equal(events.length, 0);
+    assert.equal(currentSnapshot.signals.provenance.sourceMode, 'mixed');
+    assert.equal(
+      currentSnapshot.signals.provenance.degradedReason,
+      'ordinary middleware projection failure'
+    );
   });
 });

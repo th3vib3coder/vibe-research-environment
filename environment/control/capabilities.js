@@ -8,9 +8,18 @@ import {
   resolveInside,
   resolveProjectRoot
 } from './_io.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
+import { KernelBridgeContractMismatchError } from '../lib/kernel-bridge.js';
 
 const SCHEMA_FILE = 'capabilities-snapshot.schema.json';
 const CAPABILITIES_FILE = 'capabilities.json';
+const CAPABILITIES_GOVERNANCE_SOURCE_COMPONENT = 'vre/control/capabilities';
+const CAPABILITIES_PROJECTION_METHODS = Object.freeze({
+  overview: 'getProjectOverview',
+  claimHeads: 'listClaimHeads',
+  unresolvedClaims: 'listUnresolvedClaims',
+  citationChecks: 'listCitationChecks'
+});
 
 function capabilitiesPath(projectPath) {
   return resolveInside(controlDir(projectPath), CAPABILITIES_FILE);
@@ -28,8 +37,27 @@ function projectionDefaults() {
     overview: false,
     claimHeads: false,
     unresolvedClaims: false,
-    citationChecks: false
+    citationChecks: false,
+    truthMismatch: []
   };
+}
+
+async function recordKernelTruthMismatchGovernanceEvent(projectionName) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'kernel_vre_truth_mismatch',
+      objective_id: null,
+      source_component: CAPABILITIES_GOVERNANCE_SOURCE_COMPONENT,
+      severity: 'critical',
+      details: {
+        projectionName,
+        errorClass: 'KernelBridgeContractMismatchError'
+      }
+    });
+  } catch (error) {
+    const code = error?.code ?? error?.name ?? 'UNKNOWN';
+    process.stderr.write(`[phase9-governance] kernel_vre_truth_mismatch telemetry failed: ${code}\n`);
+  }
 }
 
 async function detectBundlesFromInstallState(projectPath) {
@@ -76,7 +104,7 @@ function extractAdvancedCapabilities(reader) {
   return defaults;
 }
 
-async function probeProjection(candidate) {
+async function probeProjection(candidate, { projectionKey, projectionName, truthMismatch }) {
   if (typeof candidate !== 'function') {
     return false;
   }
@@ -84,7 +112,11 @@ async function probeProjection(candidate) {
   try {
     const result = await candidate();
     return result !== null && result !== undefined;
-  } catch {
+  } catch (error) {
+    if (error instanceof KernelBridgeContractMismatchError) {
+      await recordKernelTruthMismatchGovernanceEvent(projectionName);
+      truthMismatch.push(projectionKey);
+    }
     return false;
   }
 }
@@ -128,11 +160,29 @@ export async function refreshCapabilitiesSnapshot(projectPath, reader) {
   snapshot.kernel.dbAvailable = Boolean(reader?.dbAvailable);
 
   if (snapshot.kernel.dbAvailable) {
+    const truthMismatch = [];
     snapshot.kernel.projections = {
-      overview: await probeProjection(() => reader.getProjectOverview?.()),
-      claimHeads: await probeProjection(() => reader.listClaimHeads?.()),
-      unresolvedClaims: await probeProjection(() => reader.listUnresolvedClaims?.()),
-      citationChecks: await probeProjection(() => reader.listCitationChecks?.())
+      overview: await probeProjection(() => reader.getProjectOverview?.(), {
+        projectionKey: 'overview',
+        projectionName: CAPABILITIES_PROJECTION_METHODS.overview,
+        truthMismatch
+      }),
+      claimHeads: await probeProjection(() => reader.listClaimHeads?.(), {
+        projectionKey: 'claimHeads',
+        projectionName: CAPABILITIES_PROJECTION_METHODS.claimHeads,
+        truthMismatch
+      }),
+      unresolvedClaims: await probeProjection(() => reader.listUnresolvedClaims?.(), {
+        projectionKey: 'unresolvedClaims',
+        projectionName: CAPABILITIES_PROJECTION_METHODS.unresolvedClaims,
+        truthMismatch
+      }),
+      citationChecks: await probeProjection(() => reader.listCitationChecks?.(), {
+        projectionKey: 'citationChecks',
+        projectionName: CAPABILITIES_PROJECTION_METHODS.citationChecks,
+        truthMismatch
+      }),
+      truthMismatch
     };
   }
 
