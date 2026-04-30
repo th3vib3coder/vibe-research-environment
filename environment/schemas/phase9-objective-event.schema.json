@@ -209,6 +209,12 @@
                   "null"
                 ]
               },
+              "contradictedClaimId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "verdict": {
                 "type": "string",
                 "enum": [
@@ -220,6 +226,12 @@
               "summary": {
                 "type": "string",
                 "minLength": 1
+              },
+              "confidence": {
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "reviewerRole": {
                 "const": "reviewer-2"

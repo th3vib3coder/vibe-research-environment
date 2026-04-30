@@ -276,6 +276,32 @@ test('prepareRoleDispatch binds reviewer-2 to the review lane through reviewed p
   }
 });
 
+test('prepareRoleDispatch exposes reviewer-2 r2Verdict edge fields in expectedOutputShape', async () => {
+  const request = buildRequest({
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+    expectedOutputShape: { kind: 'phase9.handoff.v1' },
+  });
+  try {
+    const result = await prepareRoleDispatch(repoRoot, request, {
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    });
+
+    assert.equal(result.envelope.expectedOutputShape.kind, 'phase9.handoff.v1');
+    assert.deepEqual(result.envelope.expectedOutputShape.r2Verdict, {
+      verdict: 'ACCEPT|REJECT|DEFER',
+      claimId: 'string|null',
+      contradictedClaimId: 'string|null; required when verdict=REJECT',
+      summary: 'string',
+      confidence: 'number|null',
+    });
+  } finally {
+    await cleanupObjectiveArtifacts(request.objectiveId);
+  }
+});
+
 test('prepareRoleDispatch keeps inline-only role-modes inline and does not fabricate reviewed subprocess state', async () => {
   const request = buildRequest({
     roleId: 'literature-mode',
@@ -1359,6 +1385,69 @@ test('T4.5.3: reviewer-2 dispatch persists an r2-verdict event and makes it visi
     assert.match(digestText, /R2 Verdict: ACCEPT/u);
     assert.match(digestText, /Claim Id: C-001/u);
     assert.match(digestText, new RegExp(`Handoff Id: ${response.handoff.handoffId}`, 'u'));
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+  }
+});
+
+test('T5.6 D.0: reviewer-2 dispatch persists rejected claim edge fields through the real dispatch path', async () => {
+  const objectiveId = `OBJ-T56D0-R2-REJECT-${Date.now()}`;
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    'r2-reject-verdict.md',
+  );
+  const request = buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+  });
+
+  try {
+    await seedObjectiveStore(objectiveId);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, '# R2 rejected claim edge\n', 'utf8');
+
+    const response = await dispatchRoleAssignment(repoRoot, request, {
+      execute: true,
+      spawnParentPid: 30303,
+      lanePolicies: buildLanePolicies(),
+      continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      writeR2Bridge: async () => ({ status: 'bridged', inserted: 1, skipped: 0 }),
+      invokeLaneBinding: async () => ({
+        status: 'complete',
+        handoff: {
+          toAgentRole: 'lead-researcher',
+          artifactPaths: [artifactPath],
+          summary: 'Reviewer-2 rejected the promoted claim because it contradicts an earlier claim.',
+        },
+        r2Verdict: {
+          claimId: 'C-NEW',
+          contradictedClaimId: 'C-OLD',
+          verdict: 'REJECT',
+          summary: 'The new claim contradicts an earlier accepted claim.',
+          confidence: 0.87,
+        },
+      }),
+    });
+
+    assert.equal(response.r2Verdict.verdict, 'REJECT');
+    assert.equal(response.r2Verdict.claimId, 'C-NEW');
+    assert.equal(response.r2Verdict.contradictedClaimId, 'C-OLD');
+    assert.equal(response.r2Verdict.confidence, 0.87);
+    assert.equal(response.r2VerdictEvent.payload.contradictedClaimId, 'C-OLD');
+    assert.equal(response.r2VerdictEvent.payload.confidence, 0.87);
+
+    const events = await readObjectiveEvents(repoRoot, objectiveId);
+    const verdictEvent = events.find((entry) => entry.kind === 'r2-verdict');
+    assert.equal(verdictEvent.payload.verdict, 'REJECT');
+    assert.equal(verdictEvent.payload.claimId, 'C-NEW');
+    assert.equal(verdictEvent.payload.contradictedClaimId, 'C-OLD');
+    assert.equal(verdictEvent.payload.confidence, 0.87);
   } finally {
     await cleanupObjectiveStore(objectiveId);
   }

@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 import {
+  objectiveEventsPath,
   objectiveHandoffsPath,
   activateObjective
 } from '../../objectives/store.js';
@@ -25,6 +26,169 @@ const FIXTURES_DIR = path.resolve(
 async function readFixture(section, fileName) {
   return JSON.parse(await readFile(path.join(FIXTURES_DIR, section, fileName), 'utf8'));
 }
+
+async function readObjectiveEvents(projectRoot, objectiveId) {
+  const raw = await readFile(objectiveEventsPath(projectRoot, objectiveId), 'utf8');
+  return raw.trim() === ''
+    ? []
+    : raw.trim().split(/\r?\n/u).map((line) => JSON.parse(line));
+}
+
+test('appendObjectiveEvent runs precommit after validation and before append', async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-objective-event-precommit-success-'));
+  try {
+    const objectiveRecord = await readFixture('objective', 'valid-active.json');
+    await activateObjective(projectRoot, objectiveRecord, {
+      sessionId: 'sess-objective-event-precommit-success'
+    });
+
+    const observations = [];
+    const result = await appendObjectiveEvent(
+      projectRoot,
+      objectiveRecord.objectiveId,
+      'loop-iteration',
+      {
+        iteration: 1,
+        status: 'completed'
+      },
+      '2026-04-23T10:03:00Z',
+      {
+        precommit: async ({ reservedEventId, reservedRecordSeq, event }) => {
+          observations.push({
+            reservedEventId,
+            reservedRecordSeq,
+            eventId: event.eventId,
+            recordSeq: event.recordSeq,
+            eventsBeforeAppend: await readObjectiveEvents(projectRoot, objectiveRecord.objectiveId)
+          });
+        }
+      }
+    );
+
+    assert.deepEqual(observations, [{
+      reservedEventId: 'EV-0001',
+      reservedRecordSeq: 1,
+      eventId: 'EV-0001',
+      recordSeq: 1,
+      eventsBeforeAppend: []
+    }]);
+    assert.equal(result.event.eventId, 'EV-0001');
+    assert.deepEqual(await readObjectiveEvents(projectRoot, objectiveRecord.objectiveId), [result.event]);
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test('appendObjectiveEvent aborts append when precommit throws', async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-objective-event-precommit-throws-'));
+  try {
+    const objectiveRecord = await readFixture('objective', 'valid-active.json');
+    await activateObjective(projectRoot, objectiveRecord, {
+      sessionId: 'sess-objective-event-precommit-throws'
+    });
+
+    await assert.rejects(
+      appendObjectiveEvent(
+        projectRoot,
+        objectiveRecord.objectiveId,
+        'loop-iteration',
+        {
+          iteration: 1,
+          status: 'completed'
+        },
+        '2026-04-23T10:04:00Z',
+        {
+          precommit: () => {
+            throw new Error('precommit refused objective event');
+          }
+        }
+      ),
+      /precommit refused objective event/
+    );
+
+    assert.deepEqual(await readObjectiveEvents(projectRoot, objectiveRecord.objectiveId), []);
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test('appendObjectiveEvent precommit receives reserved id matching the appended event', async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-objective-event-reserved-id-'));
+  try {
+    const objectiveRecord = await readFixture('objective', 'valid-active.json');
+    await activateObjective(projectRoot, objectiveRecord, {
+      sessionId: 'sess-objective-event-reserved-id'
+    });
+    await appendObjectiveEvent(
+      projectRoot,
+      objectiveRecord.objectiveId,
+      'loop-iteration',
+      {
+        iteration: 1,
+        status: 'completed'
+      },
+      '2026-04-23T10:05:00Z'
+    );
+
+    let seen = null;
+    const result = await appendObjectiveEvent(
+      projectRoot,
+      objectiveRecord.objectiveId,
+      'loop-iteration',
+      {
+        iteration: 2,
+        status: 'completed'
+      },
+      '2026-04-23T10:06:00Z',
+      {
+        precommit: ({ reservedEventId, reservedRecordSeq, event }) => {
+          seen = {
+            reservedEventId,
+            reservedRecordSeq,
+            eventId: event.eventId,
+            recordSeq: event.recordSeq
+          };
+        }
+      }
+    );
+
+    assert.deepEqual(seen, {
+      reservedEventId: 'EV-0002',
+      reservedRecordSeq: 2,
+      eventId: 'EV-0002',
+      recordSeq: 2
+    });
+    assert.equal(result.event.eventId, 'EV-0002');
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test('appendObjectiveEvent remains backward compatible without precommit options', async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-objective-event-no-precommit-'));
+  try {
+    const objectiveRecord = await readFixture('objective', 'valid-active.json');
+    await activateObjective(projectRoot, objectiveRecord, {
+      sessionId: 'sess-objective-event-no-precommit'
+    });
+
+    const result = await appendObjectiveEvent(
+      projectRoot,
+      objectiveRecord.objectiveId,
+      'loop-iteration',
+      {
+        iteration: 1,
+        status: 'completed'
+      },
+      '2026-04-23T10:07:00Z'
+    );
+
+    assert.equal(result.event.eventId, 'EV-0001');
+    assert.deepEqual(await readObjectiveEvents(projectRoot, objectiveRecord.objectiveId), [result.event]);
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
 
 test('writeObjectiveResumeSnapshot writes a schema-valid heartbeat snapshot from durable objective state', async () => {
   const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-resume-snapshot-heartbeat-'));

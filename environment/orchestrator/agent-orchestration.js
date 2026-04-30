@@ -176,6 +176,13 @@ const REQUIRED_SURFACES = Object.freeze([
   'environment/orchestrator/review-lane.js',
   'environment/orchestrator/execution-lane.js',
 ]);
+const REVIEWER2_EXPECTED_VERDICT_SHAPE = Object.freeze({
+  verdict: 'ACCEPT|REJECT|DEFER',
+  claimId: 'string|null',
+  contradictedClaimId: 'string|null; required when verdict=REJECT',
+  summary: 'string',
+  confidence: 'number|null',
+});
 
 export class AgentOrchestrationError extends Error {
   constructor({ code, message, extra = {} }) {
@@ -750,6 +757,7 @@ async function buildSessionIsolation(projectRoot, request, options = {}) {
 }
 
 function buildRoleEnvelope(request, sessionIsolation, options = {}) {
+  const expectedOutputShape = buildExpectedOutputShape(request.roleId, request.expectedOutputShape);
   return {
     schemaVersion: 'phase9.role-envelope.v1',
     objectiveId: request.objectiveId,
@@ -765,9 +773,35 @@ function buildRoleEnvelope(request, sessionIsolation, options = {}) {
       : defaultAllowedActions(request.roleId),
     activeGates: Array.isArray(request.activeGates) ? [...request.activeGates] : [],
     stopConditions: request.stopConditions ?? {},
-    expectedOutputShape: request.expectedOutputShape ?? {},
+    expectedOutputShape,
     generatedAt: options.now ?? ioNow(),
     generatedBySession: request.generatedBySession ?? null,
+  };
+}
+
+function buildExpectedOutputShape(roleId, expectedOutputShape) {
+  const shape = expectedOutputShape != null
+    && typeof expectedOutputShape === 'object'
+    && !Array.isArray(expectedOutputShape)
+    ? { ...expectedOutputShape }
+    : {};
+
+  if (roleId !== 'reviewer-2') {
+    return shape;
+  }
+
+  const existingVerdictShape = shape.r2Verdict != null
+    && typeof shape.r2Verdict === 'object'
+    && !Array.isArray(shape.r2Verdict)
+    ? shape.r2Verdict
+    : {};
+
+  return {
+    ...shape,
+    r2Verdict: {
+      ...existingVerdictShape,
+      ...REVIEWER2_EXPECTED_VERDICT_SHAPE,
+    },
   };
 }
 
@@ -1026,16 +1060,25 @@ function normalizeReviewer2Verdict(plan, persistedHandoff, result) {
     claimId: typeof rawVerdict?.claimId === 'string' && rawVerdict.claimId.trim() !== ''
       ? rawVerdict.claimId.trim()
       : null,
+    contradictedClaimId: typeof rawVerdict?.contradictedClaimId === 'string'
+      && rawVerdict.contradictedClaimId.trim() !== ''
+      ? rawVerdict.contradictedClaimId.trim()
+      : null,
     verdict,
     summary: typeof rawVerdict?.summary === 'string' && rawVerdict.summary.trim() !== ''
       ? rawVerdict.summary.trim()
       : persistedHandoff.summary,
+    confidence: typeof rawVerdict?.confidence === 'number' ? rawVerdict.confidence : null,
     reviewerRole: 'reviewer-2',
     handoffId: persistedHandoff.handoffId,
     reviewedArtifactPaths: [...persistedHandoff.artifactPaths],
     resolvedBlockerCodes,
   };
 }
+
+export const INTERNALS = Object.freeze({
+  normalizeReviewer2Verdict,
+});
 
 export async function validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath) {
   for (const [key, value] of Object.entries(spawnRequest.env ?? {})) {

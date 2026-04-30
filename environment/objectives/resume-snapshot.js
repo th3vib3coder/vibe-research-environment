@@ -56,15 +56,16 @@ export function blockerFlagPath(projectRoot, objectiveId) {
   return path.join(path.dirname(objectiveRecordPath(projectRoot, objectiveId)), BLOCKER_FLAG_FILE);
 }
 
-export async function appendObjectiveEvent(projectRoot, objectiveId, kind, payload, timestamp = now()) {
+export async function appendObjectiveEvent(projectRoot, objectiveId, kind, payload, timestamp = now(), options = {}) {
   const eventsPath = objectiveEventsPath(projectRoot, objectiveId);
   return withLock(projectRoot, `${objectiveId}-${OBJECTIVE_EVENTS_FILE}`, async () => {
     const existingEvents = await readJsonl(eventsPath);
     const recordSeq = (existingEvents.at(-1)?.recordSeq ?? 0) + 1;
+    const reservedEventId = `EV-${String(recordSeq).padStart(4, '0')}`;
     const event = {
       schemaVersion: 'phase9.objective-event.v1',
       objectiveId,
-      eventId: `EV-${String(recordSeq).padStart(4, '0')}`,
+      eventId: reservedEventId,
       ts: timestamp,
       recordSeq,
       kind,
@@ -72,6 +73,13 @@ export async function appendObjectiveEvent(projectRoot, objectiveId, kind, paylo
     };
     const validate = await loadSchemaValidator(projectRoot, OBJECTIVE_EVENT_SCHEMA_FILE);
     assertValid(validate, event, 'phase9 objective event');
+    if (typeof options.precommit === 'function') {
+      await options.precommit({
+        reservedEventId,
+        reservedRecordSeq: recordSeq,
+        event
+      });
+    }
     await appendFile(eventsPath, `${JSON.stringify(event)}\n`, 'utf8');
     return {
       event,
