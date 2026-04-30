@@ -26,6 +26,9 @@ import {
   appendObjectiveEvent,
   readResumeSnapshot,
 } from '../../objectives/resume-snapshot.js';
+import {
+  readClaimEdges,
+} from '../../claims/edges.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const OBJECTIVE_FIXTURES_DIR = path.join(repoRoot, 'environment', 'tests', 'fixtures', 'phase9', 'objective');
@@ -198,6 +201,70 @@ async function seedObjectiveStore(objectiveId, overrides = {}) {
 
 async function cleanupObjectiveStore(objectiveId) {
   await deleteObjectiveStore(repoRoot, objectiveId).catch(() => {});
+}
+
+async function cleanupClaimEdges() {
+  await rm(path.join(repoRoot, '.vibe-science-environment', 'claims'), { recursive: true, force: true });
+}
+
+function uniqueObjectiveId(prefix) {
+  return `OBJ-${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+}
+
+function buildReviewer2Request(objectiveId, overrides = {}) {
+  return buildRequest({
+    objectiveId,
+    roleId: 'reviewer-2',
+    taskKind: 'session-digest-review',
+    generatedBySession: `sess-${objectiveId}`,
+    allowedActions: ['review-artifacts', 'return-r2-verdict'],
+    ...overrides,
+  });
+}
+
+async function dispatchReviewer2Verdict(objectiveId, r2Verdict, options = {}) {
+  const artifactPath = path.join(
+    repoRoot,
+    '.vibe-science-environment',
+    'objectives',
+    objectiveId,
+    'review',
+    options.artifactName ?? 'r2-verdict-edge-binding.md',
+  );
+  await mkdir(path.dirname(artifactPath), { recursive: true });
+  await writeFile(artifactPath, '# R2 verdict edge binding\n', 'utf8');
+
+  return dispatchRoleAssignment(repoRoot, buildReviewer2Request(objectiveId), {
+    execute: true,
+    spawnParentPid: 30303,
+    lanePolicies: buildLanePolicies(),
+    continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+    claimResolver: options.claimResolver ?? (async () => true),
+    claimEdgeWriter: options.claimEdgeWriter,
+    writeR2Bridge: options.writeR2Bridge ?? (async () => ({ status: 'bridged', inserted: 1, skipped: 0 })),
+    now: options.now,
+    invokeLaneBinding: async () => ({
+      status: 'complete',
+      handoff: {
+        toAgentRole: 'lead-researcher',
+        artifactPaths: [artifactPath],
+        summary: options.handoffSummary ?? 'Reviewer-2 verdict is ready for the lead.',
+      },
+      r2Verdict,
+    }),
+  });
+}
+
+function buildRejectVerdict(overrides = {}) {
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  return {
+    claimId: `CLAIM-SEQ129-FROM-${suffix}`,
+    contradictedClaimId: `CLAIM-SEQ129-TO-${suffix}`,
+    verdict: 'REJECT',
+    summary: 'Reviewer-2 rejected the claim because it contradicts another claim.',
+    confidence: 0.64,
+    ...overrides,
+  };
 }
 
 async function expectAgentError(fn, expectedCode) {
@@ -1408,6 +1475,7 @@ test('T5.6 D.0: reviewer-2 dispatch persists rejected claim edge fields through 
   });
 
   try {
+    await cleanupClaimEdges();
     await seedObjectiveStore(objectiveId);
     await mkdir(path.dirname(artifactPath), { recursive: true });
     await writeFile(artifactPath, '# R2 rejected claim edge\n', 'utf8');
@@ -1417,6 +1485,7 @@ test('T5.6 D.0: reviewer-2 dispatch persists rejected claim edge fields through 
       spawnParentPid: 30303,
       lanePolicies: buildLanePolicies(),
       continuityProfile: { runtime: { defaultAllowApiFallback: false } },
+      claimResolver: async () => true,
       writeR2Bridge: async () => ({ status: 'bridged', inserted: 1, skipped: 0 }),
       invokeLaneBinding: async () => ({
         status: 'complete',
@@ -1426,8 +1495,8 @@ test('T5.6 D.0: reviewer-2 dispatch persists rejected claim edge fields through 
           summary: 'Reviewer-2 rejected the promoted claim because it contradicts an earlier claim.',
         },
         r2Verdict: {
-          claimId: 'C-NEW',
-          contradictedClaimId: 'C-OLD',
+          claimId: 'CLAIM-NEW',
+          contradictedClaimId: 'CLAIM-OLD',
           verdict: 'REJECT',
           summary: 'The new claim contradicts an earlier accepted claim.',
           confidence: 0.87,
@@ -1436,20 +1505,329 @@ test('T5.6 D.0: reviewer-2 dispatch persists rejected claim edge fields through 
     });
 
     assert.equal(response.r2Verdict.verdict, 'REJECT');
-    assert.equal(response.r2Verdict.claimId, 'C-NEW');
-    assert.equal(response.r2Verdict.contradictedClaimId, 'C-OLD');
+    assert.equal(response.r2Verdict.claimId, 'CLAIM-NEW');
+    assert.equal(response.r2Verdict.contradictedClaimId, 'CLAIM-OLD');
     assert.equal(response.r2Verdict.confidence, 0.87);
-    assert.equal(response.r2VerdictEvent.payload.contradictedClaimId, 'C-OLD');
+    assert.equal(response.r2VerdictEvent.payload.contradictedClaimId, 'CLAIM-OLD');
     assert.equal(response.r2VerdictEvent.payload.confidence, 0.87);
 
     const events = await readObjectiveEvents(repoRoot, objectiveId);
     const verdictEvent = events.find((entry) => entry.kind === 'r2-verdict');
     assert.equal(verdictEvent.payload.verdict, 'REJECT');
-    assert.equal(verdictEvent.payload.claimId, 'C-NEW');
-    assert.equal(verdictEvent.payload.contradictedClaimId, 'C-OLD');
+    assert.equal(verdictEvent.payload.claimId, 'CLAIM-NEW');
+    assert.equal(verdictEvent.payload.contradictedClaimId, 'CLAIM-OLD');
     assert.equal(verdictEvent.payload.confidence, 0.87);
   } finally {
     await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: REJECT with both claim ids writes one contradicts edge before the verdict event', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-EDGE');
+  const secret = 'SECRET-seq129-edge-bind';
+  const capturePath = path.join(repoRoot, '.tmp', `r2-edge-binding-governance-${Date.now()}.jsonl`);
+  const verdict = buildRejectVerdict({
+    summary: `Reviewer-2 rejected the claim without leaking ${secret} to governance.`,
+  });
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    const response = await withGovernanceCapture(
+      capturePath,
+      () => dispatchReviewer2Verdict(objectiveId, verdict),
+    );
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    const edges = await readClaimEdges(repoRoot);
+    const governanceEvents = await readGovernanceEvents(capturePath);
+
+    assert.equal(events.length, 1);
+    assert.equal(events[0].eventId, response.r2VerdictEvent.eventId);
+    assert.equal(edges.length, 1);
+    assert.deepEqual(edges[0], {
+      schemaVersion: 'phase9.claim-edge.v1',
+      edgeId: `EDGE-R2-${events[0].eventId}`,
+      fromId: verdict.claimId,
+      toId: verdict.contradictedClaimId,
+      relation: 'contradicts',
+      createdAt: events[0].ts,
+      confidence: verdict.confidence,
+      sourceR2EventId: events[0].eventId,
+      objectiveId,
+    });
+    assert.equal(governanceEvents.length, 0);
+    for (const event of governanceEvents) {
+      assertNoDetailsLeak(event, [secret]);
+    }
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+    await rm(capturePath, { force: true });
+  }
+});
+
+test('T5.6 D.1: edge-store failure rolls back the r2-verdict event cascade', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-ROLLBACK');
+  const edgeError = Object.assign(new Error('invalid claim edge'), {
+    code: 'E_CLAIM_EDGE_INVALID',
+  });
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    await assert.rejects(
+      () => dispatchReviewer2Verdict(objectiveId, buildRejectVerdict(), {
+        claimEdgeWriter: async () => {
+          throw edgeError;
+        },
+      }),
+      (error) => error?.code === 'E_CLAIM_EDGE_INVALID',
+    );
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    const snapshot = await readResumeSnapshot(repoRoot, objectiveId);
+    const digestPath = path.join(
+      repoRoot,
+      '.vibe-science-environment',
+      'objectives',
+      objectiveId,
+      'digests',
+      'digest-latest.md',
+    );
+
+    assert.equal(events.length, 0);
+    assert.equal(snapshot.exists, false);
+    await assert.rejects(
+      () => readFile(digestPath, 'utf8'),
+      (error) => error?.code === 'ENOENT',
+    );
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: idempotent retry no-ops the edge while appending a fresh verdict event', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-IDEMPOTENT');
+  const verdict = buildRejectVerdict({ confidence: 0.58 });
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    const first = await dispatchReviewer2Verdict(objectiveId, verdict);
+    const second = await dispatchReviewer2Verdict(objectiveId, verdict, {
+      artifactName: 'r2-verdict-edge-binding-retry.md',
+    });
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    const edges = await readClaimEdges(repoRoot);
+
+    assert.equal(events.length, 2);
+    assert.notEqual(first.r2VerdictEvent.eventId, second.r2VerdictEvent.eventId);
+    assert.equal(edges.length, 1);
+    assert.equal(edges[0].fromId, verdict.claimId);
+    assert.equal(edges[0].toId, verdict.contradictedClaimId);
+    assert.equal(edges[0].sourceR2EventId, first.r2VerdictEvent.eventId);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: conflicting duplicate edge rolls back the second r2-verdict event', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-CONFLICT');
+  const firstVerdict = buildRejectVerdict({ confidence: 0.41 });
+  const secondVerdict = {
+    ...firstVerdict,
+    confidence: 0.79,
+    summary: 'Reviewer-2 rejected the same contradiction with conflicting confidence.',
+  };
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    await dispatchReviewer2Verdict(objectiveId, firstVerdict);
+    await assert.rejects(
+      () => dispatchReviewer2Verdict(objectiveId, secondVerdict, {
+        artifactName: 'r2-verdict-conflicting-confidence.md',
+      }),
+      (error) => error?.code === 'E_CLAIM_EDGE_DUPLICATE_CONFLICT',
+    );
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    const edges = await readClaimEdges(repoRoot);
+
+    assert.equal(events.length, 1);
+    assert.equal(edges.length, 1);
+    assert.equal(edges[0].confidence, 0.41);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: ACCEPT verdict lands zero edges and one r2-verdict event', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-ACCEPT');
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    await dispatchReviewer2Verdict(objectiveId, {
+      claimId: `CLAIM-SEQ129-ACCEPT-${Date.now()}`,
+      verdict: 'ACCEPT',
+      summary: 'Reviewer-2 accepted the claim.',
+      confidence: 0.92,
+    });
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    assert.equal(events.length, 1);
+    assert.equal(events[0].payload.verdict, 'ACCEPT');
+    assert.deepEqual(await readClaimEdges(repoRoot), []);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: DEFER verdict lands zero edges and one r2-verdict event', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-DEFER');
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    await dispatchReviewer2Verdict(objectiveId, {
+      claimId: `CLAIM-SEQ129-DEFER-${Date.now()}`,
+      verdict: 'DEFER',
+      summary: 'Reviewer-2 deferred the claim.',
+      confidence: 0.37,
+    });
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    assert.equal(events.length, 1);
+    assert.equal(events[0].payload.verdict, 'DEFER');
+    assert.deepEqual(await readClaimEdges(repoRoot), []);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: REJECT without claimId lands zero edges and skips the plugin claim bridge', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-NO-CLAIM');
+  const bridgeCalls = [];
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    await dispatchReviewer2Verdict(objectiveId, buildRejectVerdict({
+      claimId: null,
+      contradictedClaimId: `CLAIM-SEQ129-ONLY-TO-${Date.now()}`,
+    }), {
+      writeR2Bridge: async (request) => {
+        bridgeCalls.push(request);
+        return { status: 'bridged', inserted: 1, skipped: 0 };
+      },
+    });
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    assert.equal(events.length, 1);
+    assert.equal(events[0].payload.claimId, null);
+    assert.deepEqual(await readClaimEdges(repoRoot), []);
+    assert.equal(bridgeCalls.length, 0);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: REJECT without contradictedClaimId lands zero edges while preserving claim bridge', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-NO-CONTRADICTED');
+  const bridgeCalls = [];
+  const claimId = `CLAIM-SEQ129-NO-CONTRADICTED-${Date.now()}`;
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    await dispatchReviewer2Verdict(objectiveId, buildRejectVerdict({
+      claimId,
+      contradictedClaimId: null,
+    }), {
+      writeR2Bridge: async (request) => {
+        bridgeCalls.push(request);
+        return { status: 'bridged', inserted: 1, skipped: 0 };
+      },
+    });
+
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+    assert.equal(events.length, 1);
+    assert.equal(events[0].payload.claimId, claimId);
+    assert.equal(events[0].payload.contradictedClaimId, null);
+    assert.deepEqual(await readClaimEdges(repoRoot), []);
+    assert.equal(bridgeCalls.length, 1);
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
+  }
+});
+
+test('T5.6 D.1: historical r2-verdict events are not backfilled into claim edges', async () => {
+  const objectiveId = uniqueObjectiveId('T56D1-R2-NO-BACKFILL');
+  const newVerdict = buildRejectVerdict({ confidence: 0.73 });
+
+  try {
+    await cleanupClaimEdges();
+    await seedObjectiveStore(objectiveId);
+
+    for (let index = 0; index < 5; index += 1) {
+      await appendObjectiveEvent(repoRoot, objectiveId, 'r2-verdict', {
+        gateId: REVIEWER2_GATE_ID,
+        claimId: `CLAIM-HISTORICAL-FROM-${index}`,
+        contradictedClaimId: `CLAIM-HISTORICAL-TO-${index}`,
+        verdict: 'REJECT',
+        summary: `Historical reviewer-2 reject ${index}.`,
+        confidence: 0.5,
+        reviewerRole: 'reviewer-2',
+        handoffId: `H-HISTORICAL-${index}`,
+        reviewedArtifactPaths: [`review/historical-${index}.md`],
+        resolvedBlockerCodes: ['E_R2_REVIEW_PENDING'],
+      });
+    }
+
+    await dispatchReviewer2Verdict(objectiveId, newVerdict);
+
+    const edges = await readClaimEdges(repoRoot);
+    const events = (await readObjectiveEvents(repoRoot, objectiveId))
+      .filter((entry) => entry.kind === 'r2-verdict');
+
+    assert.equal(events.length, 6);
+    assert.equal(edges.length, 1);
+    assert.equal(edges[0].fromId, newVerdict.claimId);
+    assert.equal(edges[0].toId, newVerdict.contradictedClaimId);
+    assert.equal(
+      edges.some((edge) => edge.fromId.startsWith('CLAIM-HISTORICAL-')),
+      false,
+    );
+  } finally {
+    await cleanupObjectiveStore(objectiveId);
+    await cleanupClaimEdges();
   }
 });
 

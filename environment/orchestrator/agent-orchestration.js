@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { access, mkdir, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +28,10 @@ import {
   readResumeSnapshot,
   writeObjectiveResumeSnapshot,
 } from '../objectives/resume-snapshot.js';
+import {
+  createClaimEdge,
+  readClaimEdges,
+} from '../claims/edges.js';
 import { logGovernanceEventViaPlugin } from './governance-logger.js';
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
@@ -35,6 +39,7 @@ import { getTaskEntry } from './task-registry.js';
 
 const execFileAsync = promisify(execFile);
 const R2_BRIDGE_TIMEOUT_MS = 15_000;
+const CLAIM_RESOLVER_TIMEOUT_MS = 5_000;
 
 /**
  * Absolute filesystem path of the reviewed-role-runner.js child binary.
@@ -197,6 +202,16 @@ function fail(code, message, extra = {}) {
   throw new AgentOrchestrationError({ code, message, extra });
 }
 
+function defaultClaimResolverScriptPath(projectRoot) {
+  return path.join(
+    path.dirname(projectRoot),
+    'vibe-science',
+    'plugin',
+    'scripts',
+    'claim-resolver.js',
+  );
+}
+
 function defaultR2BridgeScriptPath(projectRoot) {
   return path.join(
     path.dirname(projectRoot),
@@ -217,6 +232,138 @@ function buildR2BridgeEnv(overrideEnv = {}) {
   return {
     ...env,
     ...overrideEnv,
+  };
+}
+
+function parseClaimResolverStdout(stdout, cliPath) {
+  const trimmed = stdout.trim();
+  if (trimmed === '') {
+    fail(
+      'E_CLAIM_RESOLVER_UNAVAILABLE',
+      'claim resolver CLI emitted empty stdout.',
+      { cliPath, stdout },
+    );
+  }
+  try {
+    return JSON.parse(trimmed);
+  } catch (error) {
+    fail(
+      'E_CLAIM_RESOLVER_UNAVAILABLE',
+      `claim resolver CLI emitted non-JSON stdout: ${error.message}`,
+      { cliPath, stdout },
+    );
+  }
+}
+
+export function makeClaimResolver(projectRoot, options = {}) {
+  const canonicalProjectRoot = resolveProjectRoot(projectRoot);
+  const cliPath = options.claimResolverScriptPath ?? defaultClaimResolverScriptPath(canonicalProjectRoot);
+  const timeoutMs = Number.isFinite(options.claimResolverTimeoutMs)
+    ? Math.max(1, Number(options.claimResolverTimeoutMs))
+    : CLAIM_RESOLVER_TIMEOUT_MS;
+  const env = buildR2BridgeEnv({
+    ...(options.claimResolverEnv ?? {}),
+    ...(options.claimResolverDbPath ? { VIBE_SCIENCE_DB_PATH: options.claimResolverDbPath } : {}),
+  });
+
+  return async (claimId) => {
+    try {
+      await access(cliPath);
+    } catch {
+      fail(
+        'E_CLAIM_RESOLVER_UNAVAILABLE',
+        'Claim resolver CLI is missing.',
+        { cliPath, claimId },
+      );
+    }
+
+    return new Promise((resolve, reject) => {
+      let child;
+      try {
+        child = spawn(process.execPath, [cliPath], {
+          cwd: path.dirname(path.dirname(path.dirname(cliPath))),
+          env,
+          shell: false,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          windowsHide: true,
+        });
+      } catch (error) {
+        reject(new AgentOrchestrationError({
+          code: 'E_CLAIM_RESOLVER_UNAVAILABLE',
+          message: `Claim resolver spawn failed: ${error.message}`,
+          extra: { cliPath, claimId },
+        }));
+        return;
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let timedOut = false;
+      let spawnFailure = null;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          // Child may have already exited.
+        }
+      }, timeoutMs);
+
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk.toString('utf8');
+      });
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString('utf8');
+      });
+      child.on('error', (error) => {
+        spawnFailure = error;
+      });
+      child.on('close', (exitCode, signal) => {
+        clearTimeout(timeout);
+
+        if (timedOut) {
+          reject(new AgentOrchestrationError({
+            code: 'E_CLAIM_RESOLVER_UNAVAILABLE',
+            message: `Claim resolver timed out after ${timeoutMs} ms.`,
+            extra: { cliPath, claimId, timeoutMs, signal },
+          }));
+          return;
+        }
+
+        if (spawnFailure) {
+          reject(new AgentOrchestrationError({
+            code: 'E_CLAIM_RESOLVER_UNAVAILABLE',
+            message: `Claim resolver spawn failed: ${spawnFailure.message}`,
+            extra: { cliPath, claimId },
+          }));
+          return;
+        }
+
+        if (exitCode !== 0) {
+          reject(new AgentOrchestrationError({
+            code: 'E_CLAIM_RESOLVER_UNAVAILABLE',
+            message: `Claim resolver exited with code ${exitCode}.`,
+            extra: { cliPath, claimId, stderr },
+          }));
+          return;
+        }
+
+        let parsed;
+        try {
+          parsed = parseClaimResolverStdout(stdout, cliPath);
+        } catch (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(parsed?.exists === true);
+      });
+
+      child.stdin.end(JSON.stringify({
+        claimId,
+        projectPath: canonicalProjectRoot,
+      }));
+    });
   };
 }
 
@@ -1080,6 +1227,51 @@ export const INTERNALS = Object.freeze({
   normalizeReviewer2Verdict,
 });
 
+function nonEmptyString(value) {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+function shouldEmitReviewer2ClaimEdge(r2Verdict) {
+  return r2Verdict != null
+    && r2Verdict.verdict === 'REJECT'
+    && nonEmptyString(r2Verdict.claimId)
+    && nonEmptyString(r2Verdict.contradictedClaimId);
+}
+
+function sameClaimEdgeTuple(left, right) {
+  return left?.fromId === right?.fromId
+    && left?.toId === right?.toId
+    && left?.relation === right?.relation;
+}
+
+function sameNullableValue(left, right) {
+  return left === right || (left == null && right == null);
+}
+
+function sameReviewer2EdgePayload(existingEdge, edgeRecord) {
+  return existingEdge?.schemaVersion === edgeRecord.schemaVersion
+    && sameClaimEdgeTuple(existingEdge, edgeRecord)
+    && sameNullableValue(existingEdge?.confidence, edgeRecord.confidence)
+    && sameNullableValue(existingEdge?.objectiveId, edgeRecord.objectiveId);
+}
+
+async function writeReviewer2ClaimEdge(projectRoot, edgeRecord, options = {}) {
+  const claimResolver = options.claimResolver ?? makeClaimResolver(projectRoot, options);
+  const claimEdgeWriter = options.claimEdgeWriter ?? createClaimEdge;
+  if (claimEdgeWriter !== createClaimEdge) {
+    return claimEdgeWriter(projectRoot, edgeRecord, { claimResolver });
+  }
+
+  const existingEdge = (await readClaimEdges(projectRoot)).find((candidate) =>
+    sameClaimEdgeTuple(candidate, edgeRecord)
+  );
+  if (existingEdge != null && sameReviewer2EdgePayload(existingEdge, edgeRecord)) {
+    return createClaimEdge(projectRoot, existingEdge, { claimResolver });
+  }
+
+  return createClaimEdge(projectRoot, edgeRecord, { claimResolver });
+}
+
 export async function validateReviewedSpawnRequest(spawnRequest, envelope, envelopePath) {
   for (const [key, value] of Object.entries(spawnRequest.env ?? {})) {
     if (DENY_REGEX.test(key) || (typeof value === 'string' && DENY_REGEX.test(value))) {
@@ -1343,12 +1535,30 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
   if (r2Verdict != null) {
     const projectRoot = resolveProjectRoot(projectPath);
     const writtenAt = options.now ?? ioNow();
+    const edgeEmissionPlanned = shouldEmitReviewer2ClaimEdge(r2Verdict);
     r2VerdictEvent = (await appendObjectiveEvent(
       projectRoot,
       plan.objectiveId,
       'r2-verdict',
       r2Verdict,
       writtenAt,
+      edgeEmissionPlanned
+        ? {
+            precommit: async ({ reservedEventId }) => {
+              await writeReviewer2ClaimEdge(projectRoot, {
+                schemaVersion: 'phase9.claim-edge.v1',
+                edgeId: `EDGE-R2-${reservedEventId}`,
+                fromId: r2Verdict.claimId,
+                toId: r2Verdict.contradictedClaimId,
+                relation: 'contradicts',
+                createdAt: writtenAt,
+                confidence: r2Verdict.confidence ?? null,
+                sourceR2EventId: reservedEventId,
+                objectiveId: plan.objectiveId,
+              }, options);
+            },
+          }
+        : {},
     )).event;
     r2Snapshot = await writeObjectiveResumeSnapshot(projectRoot, plan.objectiveId, {
       writtenReason: 'pre-handoff',
