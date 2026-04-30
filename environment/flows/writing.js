@@ -15,10 +15,13 @@ import {
 } from '../lib/export-records.js';
 import { validateExportSnapshot, writeExportSnapshot } from '../lib/export-snapshot.js';
 import { readFlowIndex, writeFlowIndex } from '../lib/flow-state.js';
+import { KernelBridgeContractMismatchError } from '../lib/kernel-bridge.js';
 import { listManifests } from '../lib/manifest.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
 import { discoverBundlesByExperiment } from './results-discovery.js';
 import { renderClaimBackedSeed } from './writing-render.js';
 
+const WRITING_GOVERNANCE_SOURCE_COMPONENT = 'vre/flows/writing';
 const FLOW_NAME = 'writing';
 const COMMAND_NAME = '/flow-writing';
 const WRITING_STAGE = 'writing-handoff';
@@ -635,8 +638,31 @@ async function safeReaderArray(reader, methodName, argument, label, warnings) {
       : await reader[methodName](argument);
     return Array.isArray(result) ? cloneValue(result) : [];
   } catch (error) {
-    warnings.push(`Unable to read ${label}: ${error.message}`);
+    if (error instanceof KernelBridgeContractMismatchError) {
+      await recordKernelTruthMismatchGovernanceEvent(methodName);
+      warnings.push(`Unable to read ${label}: kernel truth mismatch`);
+    } else {
+      warnings.push(`Unable to read ${label}: ${error.message}`);
+    }
     return [];
+  }
+}
+
+async function recordKernelTruthMismatchGovernanceEvent(projectionName) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'kernel_vre_truth_mismatch',
+      source_component: WRITING_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: null,
+      severity: 'critical',
+      details: {
+        projectionName,
+        errorClass: 'KernelBridgeContractMismatchError',
+      },
+    });
+  } catch (error) {
+    const code = error?.code ?? error?.name ?? 'E_GOVERNANCE_LOG_FAILED';
+    process.stderr.write(`[phase9-governance] kernel_vre_truth_mismatch telemetry failed: ${code}\n`);
   }
 }
 

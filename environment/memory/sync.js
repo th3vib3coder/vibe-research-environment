@@ -11,7 +11,9 @@ import {
   resolveProjectRoot
 } from '../control/_io.js';
 import { getSessionSnapshot, listDecisions } from '../control/query.js';
+import { KernelBridgeContractMismatchError } from '../lib/kernel-bridge.js';
 import { listManifests } from '../lib/manifest.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
 import {
   buildMarkIndex,
   getMemoryMarks,
@@ -20,6 +22,7 @@ import {
 
 const SCHEMA_FILE = 'memory-sync-state.schema.json';
 const SCHEMA_VERSION = 'vibe-env.memory-sync-state.v1';
+const MEMORY_SYNC_GOVERNANCE_SOURCE_COMPONENT = 'vre/memory/sync';
 const DEFAULT_KERNEL_WARNING =
   'kernel DB unavailable — workspace-first memory sync only';
 
@@ -144,11 +147,34 @@ async function safeProjectionCall({
       sourceRead: true
     };
   } catch (error) {
-    warningCollector.add(`${label} unavailable: ${error.message}`);
+    if (error instanceof KernelBridgeContractMismatchError) {
+      await recordKernelTruthMismatchGovernanceEvent(methodName);
+      warningCollector.add(`${label} unavailable: kernel truth mismatch`);
+    } else {
+      warningCollector.add(`${label} unavailable: ${error.message}`);
+    }
     return {
       value: fallback,
       sourceRead: false
     };
+  }
+}
+
+async function recordKernelTruthMismatchGovernanceEvent(projectionName) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'kernel_vre_truth_mismatch',
+      source_component: MEMORY_SYNC_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: null,
+      severity: 'critical',
+      details: {
+        projectionName,
+        errorClass: 'KernelBridgeContractMismatchError',
+      },
+    });
+  } catch (error) {
+    const code = error?.code ?? error?.name ?? 'E_GOVERNANCE_LOG_FAILED';
+    process.stderr.write(`[phase9-governance] kernel_vre_truth_mismatch telemetry failed: ${code}\n`);
   }
 }
 

@@ -8,7 +8,90 @@ import { registerExperiment, updateExperiment } from '../../flows/experiment.js'
 import { packageExperimentResults } from '../../flows/results.js';
 import { buildWritingHandoff } from '../../flows/writing.js';
 import { buildAdvisorPack, buildRebuttalPack } from '../../flows/writing-packs.js';
+import { KernelBridgeContractMismatchError } from '../../lib/kernel-bridge.js';
 import { createFixtureProject, cleanupFixtureProject } from '../integration/_fixture.js';
+
+const GOVERNANCE_CAPTURE_STUB = path.join(
+  process.cwd(),
+  'environment',
+  'tests',
+  'fixtures',
+  'governance-log-capture-stub.js',
+);
+
+async function readGovernanceEvents(capturePath) {
+  try {
+    const raw = await readFile(capturePath, 'utf8');
+    return raw
+      .split(/\r?\n/u)
+      .filter((line) => line.trim() !== '')
+      .map((line) => JSON.parse(line));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function withGovernanceCapture(capturePath, fn, overrides = {}) {
+  const previousCapturePath = process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+  const previousPluginCli = process.env.VIBE_SCIENCE_PLUGIN_CLI;
+  process.env.VRE_GOVERNANCE_CAPTURE_PATH = capturePath;
+  process.env.VIBE_SCIENCE_PLUGIN_CLI = overrides.pluginCliPath ?? GOVERNANCE_CAPTURE_STUB;
+  try {
+    return await fn();
+  } finally {
+    if (previousCapturePath == null) {
+      delete process.env.VRE_GOVERNANCE_CAPTURE_PATH;
+    } else {
+      process.env.VRE_GOVERNANCE_CAPTURE_PATH = previousCapturePath;
+    }
+    if (previousPluginCli == null) {
+      delete process.env.VIBE_SCIENCE_PLUGIN_CLI;
+    } else {
+      process.env.VIBE_SCIENCE_PLUGIN_CLI = previousPluginCli;
+    }
+  }
+}
+
+async function captureStderr(fn) {
+  const originalWrite = process.stderr.write;
+  let stderr = '';
+  process.stderr.write = (chunk, encoding, callback) => {
+    stderr += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
+  try {
+    return {
+      result: await fn(),
+      stderr,
+    };
+  } finally {
+    process.stderr.write = originalWrite;
+  }
+}
+
+function assertKernelTruthMismatchEvent(event, projectionName) {
+  assert.equal(event.event_type, 'kernel_vre_truth_mismatch');
+  assert.equal(event.source_component, 'vre/flows/writing-packs');
+  assert.equal(event.objective_id, null);
+  assert.equal(event.severity, 'critical');
+  assert.deepEqual(event.details, {
+    projectionName,
+    errorClass: 'KernelBridgeContractMismatchError',
+  });
+}
+
+function assertNoDetailsLeak(event, forbiddenValues) {
+  const serialized = JSON.stringify(event.details);
+  for (const value of forbiddenValues) {
+    assert.equal(serialized.includes(value), false, `governance details leaked ${value}`);
+  }
+}
 
 function buildExperiment(overrides = {}) {
   return {
@@ -263,19 +346,118 @@ test('buildRebuttalPack assembles imported comments and live claim status honest
   }
 });
 
+test('buildRebuttalPack emits kernel truth mismatch while preserving silent pack fallback', async () => {
+  const projectRoot = await createFixtureProject('vre-rebuttal-pack-truth-mismatch-');
+  const capturePath = path.join(projectRoot, 'writing-pack-governance.jsonl');
+  const sentinel = 'SECRET-seq127-flow-mismatch C:/private/path';
+
+  try {
+    const pack = await withGovernanceCapture(capturePath, () => buildRebuttalPack(projectRoot, 'submission-127', {
+      now: '2026-04-02T18:20:00Z',
+      claimIds: ['C-127'],
+      reviewerComments: ['Reviewer: verify the kernel-backed claim status.'],
+      reader: createReader({
+        throwOn: {
+          listClaimHeads: () => new KernelBridgeContractMismatchError(
+            `writing pack mismatch ${sentinel}`,
+            { projection: 'listClaimHeads' },
+          ),
+        },
+      }),
+    }));
+    const events = await readGovernanceEvents(capturePath);
+
+    assert.equal(events.length, 1);
+    assertKernelTruthMismatchEvent(events[0], 'listClaimHeads');
+    assertNoDetailsLeak(events[0], [sentinel, 'SECRET-seq127-flow-mismatch', 'C:/private/path']);
+    assert.equal(pack.packType, 'rebuttal');
+    assert.deepEqual(pack.claimIds, ['C-127']);
+    assert.equal(pack.warnings.join('\n').includes('SECRET-seq127'), false);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('buildRebuttalPack preserves silent pack fallback when kernel truth telemetry fails', async () => {
+  const projectRoot = await createFixtureProject('vre-rebuttal-pack-truth-fail-soft-');
+  const capturePath = path.join(projectRoot, 'writing-pack-missing-bridge.jsonl');
+  const missingCli = path.join(projectRoot, 'missing-governance-cli.js');
+
+  try {
+    const { result: pack, stderr } = await captureStderr(() => withGovernanceCapture(
+      capturePath,
+      () => buildRebuttalPack(projectRoot, 'submission-128', {
+        now: '2026-04-02T18:25:00Z',
+        claimIds: ['C-128'],
+        reviewerComments: ['Reviewer: check the citation status.'],
+        reader: createReader({
+          throwOn: {
+            listCitationChecks: () => new KernelBridgeContractMismatchError(
+              'writing pack citation mismatch',
+              { projection: 'listCitationChecks' },
+            ),
+          },
+        }),
+      }),
+      { pluginCliPath: missingCli },
+    ));
+
+    assert.match(stderr, /kernel_vre_truth_mismatch telemetry failed/u);
+    assert.equal(pack.packType, 'rebuttal');
+    assert.deepEqual(pack.claimIds, ['C-128']);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
+test('buildRebuttalPack preserves ordinary pack reader errors without governance emission', async () => {
+  const projectRoot = await createFixtureProject('vre-rebuttal-pack-ordinary-error-');
+  const capturePath = path.join(projectRoot, 'writing-pack-ordinary-error.jsonl');
+
+  try {
+    const pack = await withGovernanceCapture(capturePath, () => buildRebuttalPack(projectRoot, 'submission-129', {
+      now: '2026-04-02T18:30:00Z',
+      claimIds: ['C-129'],
+      reviewerComments: ['Reviewer: keep fallback behavior silent.'],
+      reader: createReader({
+        throwOn: {
+          listClaimHeads: () => new Error('ordinary pack reader failure'),
+        },
+      }),
+    }));
+    const events = await readGovernanceEvents(capturePath);
+
+    assert.equal(events.length, 0);
+    assert.equal(pack.packType, 'rebuttal');
+    assert.deepEqual(pack.claimIds, ['C-129']);
+  } finally {
+    await cleanupFixtureProject(projectRoot);
+  }
+});
+
 function createReader({
   heads = [],
   unresolvedClaims = [],
   citations = [],
+  throwOn = {},
 } = {}) {
   return {
     async listClaimHeads() {
+      if (throwOn.listClaimHeads != null) {
+        throw throwOn.listClaimHeads();
+      }
       return heads;
     },
     async listUnresolvedClaims() {
+      if (throwOn.listUnresolvedClaims != null) {
+        throw throwOn.listUnresolvedClaims();
+      }
       return unresolvedClaims;
     },
     async listCitationChecks(options = {}) {
+      if (throwOn.listCitationChecks != null) {
+        throw throwOn.listCitationChecks();
+      }
       if (typeof options.claimId !== 'string') {
         return citations;
       }

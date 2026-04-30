@@ -4,7 +4,9 @@ import path from 'node:path';
 import { getSessionSnapshot } from '../control/session-snapshot.js';
 import { resolveInside, resolveProjectRoot } from '../control/_io.js';
 import { readFlowIndex, writeFlowIndex } from '../lib/flow-state.js';
+import { KernelBridgeContractMismatchError } from '../lib/kernel-bridge.js';
 import { listManifests } from '../lib/manifest.js';
+import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
 import {
   renderAdvisorStatusSummary,
   renderClaimStatus,
@@ -18,6 +20,7 @@ import {
 import { getResultsOverview } from './results-discovery.js';
 import { getWritingOverview } from './writing-overview.js';
 
+const WRITING_PACKS_GOVERNANCE_SOURCE_COMPONENT = 'vre/flows/writing-packs';
 const FLOW_NAME = 'writing';
 const COMMAND_NAME = '/flow-writing';
 
@@ -197,8 +200,29 @@ async function safeReaderArray(reader, methodName) {
   try {
     const result = await reader[methodName]();
     return Array.isArray(result) ? result : [];
-  } catch {
+  } catch (error) {
+    if (error instanceof KernelBridgeContractMismatchError) {
+      await recordKernelTruthMismatchGovernanceEvent(methodName);
+    }
     return [];
+  }
+}
+
+async function recordKernelTruthMismatchGovernanceEvent(projectionName) {
+  try {
+    await logGovernanceEventViaPlugin({
+      event_type: 'kernel_vre_truth_mismatch',
+      source_component: WRITING_PACKS_GOVERNANCE_SOURCE_COMPONENT,
+      objective_id: null,
+      severity: 'critical',
+      details: {
+        projectionName,
+        errorClass: 'KernelBridgeContractMismatchError',
+      },
+    });
+  } catch (error) {
+    const code = error?.code ?? error?.name ?? 'E_GOVERNANCE_LOG_FAILED';
+    process.stderr.write(`[phase9-governance] kernel_vre_truth_mismatch telemetry failed: ${code}\n`);
   }
 }
 
