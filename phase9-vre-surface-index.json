@@ -421,6 +421,18 @@
   },
   {
     "kind": "test-entrypoint",
+    "name": "phase9:acceptance",
+    "paths": [
+      "environment/acceptance/run-wave6-acceptance.js",
+      "environment/acceptance/wave6-harness.js",
+      "environment/tests/acceptance/wave6-harness.test.js",
+      "package.json"
+    ],
+    "featureId": "W6-ACCEPTANCE-HARNESS",
+    "introducedAt": "2026-06-06"
+  },
+  {
+    "kind": "test-entrypoint",
     "name": "test:phase9",
     "paths": [
       ".github/workflows/ci.yml",

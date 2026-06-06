@@ -63,7 +63,12 @@ async function withEnv(overrides, fn) {
   }
 }
 
-async function writeAuditCliStub(projectRoot, { rows, markerPath = null, filterByRange = false }) {
+async function writeAuditCliStub(projectRoot, {
+  rows,
+  markerPath = null,
+  filterByRange = false,
+  filterByObjectiveId = false
+}) {
   const cliPath = path.join(projectRoot, 'audit-query-cli-stub.js');
   await writeFile(cliPath, [
     "const fs = require('node:fs');",
@@ -73,9 +78,12 @@ async function writeAuditCliStub(projectRoot, { rows, markerPath = null, filterB
     "  const payload = stdin.trim() === '' ? {} : JSON.parse(stdin);",
     markerPath ? `  fs.writeFileSync(${JSON.stringify(markerPath)}, JSON.stringify(payload));` : '',
     `  const rows = ${JSON.stringify(rows)};`,
+    filterByObjectiveId
+      ? "  const objectiveRows = rows.filter((row) => row.objective_id === payload.objectiveId);"
+      : '  const objectiveRows = rows;',
     filterByRange
       ? "  const selected = payload.from === '2026-04-30T10:00:00.000Z' && payload.to === '2026-04-30T11:00:00.000Z' ? rows.slice(0, 1) : rows;"
-      : '  const selected = rows;',
+      : '  const selected = objectiveRows;',
     "  process.stdout.write(JSON.stringify({ ok: true, rows: selected }) + '\\n');",
     '});',
     ''
@@ -175,9 +183,30 @@ test('buildEvidenceExcerpt returns the empty Wave 6 evidence excerpt shape', asy
     const fixture = await readFixture();
 
     await withEnv({ VIBE_SCIENCE_AUDIT_QUERY_CLI: cliPath }, async () => {
-      const excerpt = await buildEvidenceExcerpt(projectRoot, EMPTY_RANGE);
+      const excerpt = await buildEvidenceExcerpt(projectRoot, {
+        ...EMPTY_RANGE,
+        objectiveId: 'OBJ-AUDIT-EMPTY'
+      });
 
       assert.deepEqual(excerpt, fixture.empty);
+    });
+  });
+});
+
+test('buildEvidenceExcerpt requires a non-empty objectiveId for Wave 6 evidence bundles', async () => {
+  await withTempProject(async (projectRoot) => {
+    const cliPath = await writeAuditCliStub(projectRoot, { rows: [] });
+
+    await withEnv({ VIBE_SCIENCE_AUDIT_QUERY_CLI: cliPath }, async () => {
+      for (const objectiveId of [undefined, null, '', '   ', 42, { id: 'OBJ-AUDIT' }]) {
+        await assert.rejects(
+          () => buildEvidenceExcerpt(projectRoot, {
+            ...EMPTY_RANGE,
+            ...(objectiveId === undefined ? {} : { objectiveId })
+          }),
+          /objectiveId must be a non-empty string/u
+        );
+      }
     });
   });
 });
@@ -212,22 +241,79 @@ test('buildEvidenceExcerpt summary.total_edges matches the relation bucket sum',
       edgeId: 'EDGE-AUDIT-CONTRADICTS-1',
       fromId: 'CLAIM-AUDIT-A',
       toId: 'CLAIM-AUDIT-B',
-      relation: 'contradicts'
+      relation: 'contradicts',
+      objectiveId: 'OBJ-AUDIT-SUMMARY'
     });
     await seedEdge(projectRoot, {
       edgeId: 'EDGE-AUDIT-SUPPORTS-1',
       fromId: 'CLAIM-AUDIT-C',
       toId: 'CLAIM-AUDIT-D',
-      relation: 'supports'
+      relation: 'supports',
+      objectiveId: 'OBJ-AUDIT-SUMMARY'
     });
 
     await withEnv({ VIBE_SCIENCE_AUDIT_QUERY_CLI: cliPath }, async () => {
-      const excerpt = await buildEvidenceExcerpt(projectRoot, EMPTY_RANGE);
+      const excerpt = await buildEvidenceExcerpt(projectRoot, {
+        ...EMPTY_RANGE,
+        objectiveId: 'OBJ-AUDIT-SUMMARY'
+      });
       const relationTotal = Object.values(excerpt.edges_by_relation)
         .reduce((total, edges) => total + edges.length, 0);
 
       assert.equal(excerpt.summary.total_edges, relationTotal);
       assert.equal(excerpt.summary.total_edges, 2);
+    });
+  });
+});
+
+test('buildEvidenceExcerpt filters governance events and edges to one objectiveId', async () => {
+  await withTempProject(async (projectRoot) => {
+    const markerPath = path.join(projectRoot, 'audit-query-stdin.json');
+    const cliPath = await writeAuditCliStub(projectRoot, {
+      rows: [
+        { event_type: 'objective_started', source_component: 'vre/objectives/cli', objective_id: 'OBJ-AUDIT-A', count: 2 },
+        { event_type: 'objective_started', source_component: 'vre/objectives/cli', objective_id: 'OBJ-AUDIT-B', count: 99 }
+      ],
+      markerPath,
+      filterByObjectiveId: true
+    });
+
+    await seedEdge(projectRoot, {
+      edgeId: 'EDGE-AUDIT-A-CONTRADICTS',
+      fromId: 'CLAIM-AUDIT-A1',
+      toId: 'CLAIM-AUDIT-A2',
+      relation: 'contradicts',
+      objectiveId: 'OBJ-AUDIT-A'
+    });
+    await seedEdge(projectRoot, {
+      edgeId: 'EDGE-AUDIT-B-CONTRADICTS',
+      fromId: 'CLAIM-AUDIT-B1',
+      toId: 'CLAIM-AUDIT-B2',
+      relation: 'contradicts',
+      objectiveId: 'OBJ-AUDIT-B'
+    });
+
+    await withEnv({ VIBE_SCIENCE_AUDIT_QUERY_CLI: cliPath }, async () => {
+      const excerpt = await buildEvidenceExcerpt(projectRoot, {
+        ...EMPTY_RANGE,
+        objectiveId: 'OBJ-AUDIT-A',
+        pluginProjectRoot: path.join(projectRoot, 'fixture-plugin-root')
+      });
+
+      assert.deepEqual(JSON.parse(await readFile(markerPath, 'utf8')), {
+        ...EMPTY_RANGE,
+        objectiveId: 'OBJ-AUDIT-A',
+        pluginProjectRoot: path.join(projectRoot, 'fixture-plugin-root')
+      });
+      assert.deepEqual(excerpt.governance_events_aggregated, [
+        { event_type: 'objective_started', source_component: 'vre/objectives/cli', count: 2 }
+      ]);
+      assert.deepEqual(
+        excerpt.edges_by_relation.contradicts.map((edge) => edge.edgeId),
+        ['EDGE-AUDIT-A-CONTRADICTS']
+      );
+      assert.equal(excerpt.summary.objective_id, 'OBJ-AUDIT-A');
+      assert.equal(JSON.stringify(excerpt).includes('OBJ-AUDIT-B'), false);
     });
   });
 });
@@ -243,7 +329,10 @@ test('buildEvidenceExcerpt output is pinned by sample-evidence-excerpt fixture',
     await seedEdge(projectRoot, fixture.populated.edges_by_relation.supports[0]);
 
     await withEnv({ VIBE_SCIENCE_AUDIT_QUERY_CLI: cliPath }, async () => {
-      const excerpt = await buildEvidenceExcerpt(projectRoot, EMPTY_RANGE);
+      const excerpt = await buildEvidenceExcerpt(projectRoot, {
+        ...EMPTY_RANGE,
+        objectiveId: 'OBJ-AUDIT-130'
+      });
 
       assert.deepEqual(excerpt, fixture.populated);
       assertNoDetailsLeak(excerpt);

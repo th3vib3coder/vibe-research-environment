@@ -230,8 +230,13 @@ export async function createClaimEdge(projectRoot, edgeRecord, options = {}) {
 
 export async function readClaimEdges(projectRoot, options = {}) {
   const records = await readJsonl(claimEdgesPath(projectRoot));
-  if (options.relation == null) {
-    return records;
-  }
-  return records.filter((record) => record.relation === options.relation);
+  return records.filter((record) => {
+    if (options.relation != null && record.relation !== options.relation) {
+      return false;
+    }
+    if (options.objectiveId != null && record.objectiveId !== options.objectiveId) {
+      return false;
+    }
+    return true;
+  });
 }

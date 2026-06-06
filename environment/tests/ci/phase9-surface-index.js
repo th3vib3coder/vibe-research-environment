@@ -400,6 +400,30 @@ export async function generatePhase9SurfaceIndex(options = {}) {
     }));
   }
 
+  const acceptanceHarnessFiles = [
+    'package.json',
+    'environment/acceptance/wave6-harness.js',
+    'environment/acceptance/run-wave6-acceptance.js',
+    'environment/tests/acceptance/wave6-harness.test.js'
+  ];
+  const hasAcceptanceScript = typeof scripts['phase9:acceptance'] === 'string'
+    && scripts['phase9:acceptance'].includes('run-wave6-acceptance.js');
+  const hasAcceptanceFiles = await Promise.all(
+    acceptanceHarnessFiles
+      .filter((file) => file !== 'package.json')
+      .map((file) => pathExistsAt(localRepoRoot, file))
+  ).then((values) => values.every(Boolean));
+
+  if (hasAcceptanceScript && hasAcceptanceFiles) {
+    surfaces.push(buildSurface({
+      kind: 'test-entrypoint',
+      name: 'phase9:acceptance',
+      paths: acceptanceHarnessFiles,
+      featureId: 'W6-ACCEPTANCE-HARNESS',
+      introducedAt: '2026-06-06'
+    }));
+  }
+
   for (const definition of EXTRA_PHASE9_SURFACES) {
     if (await pathExistsAt(localRepoRoot, definition.file)) {
       surfaces.push(buildSurface({

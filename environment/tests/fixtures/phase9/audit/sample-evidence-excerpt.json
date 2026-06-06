@@ -10,6 +10,7 @@
       "related_to": []
     },
     "summary": {
+      "objective_id": "OBJ-AUDIT-EMPTY",
       "total_events": 0,
       "total_edges": 0,
       "time_range": {
@@ -62,6 +63,7 @@
       "related_to": []
     },
     "summary": {
+      "objective_id": "OBJ-AUDIT-130",
       "total_events": 5,
       "total_edges": 2,
       "time_range": {

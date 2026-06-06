@@ -156,6 +156,45 @@ test('readClaimEdges filters by relation', async () => {
   });
 });
 
+test('readClaimEdges filters by relation and objectiveId together', async () => {
+  await withTempProject(async (projectRoot) => {
+    await createClaimEdge(projectRoot, validEdge({
+      edgeId: 'EDGE-A-CONTRADICTS',
+      fromId: 'CLAIM-a1',
+      toId: 'CLAIM-a2',
+      relation: 'contradicts',
+      objectiveId: 'OBJ-AUDIT-A'
+    }), {
+      claimResolver: acceptingResolver
+    });
+    await createClaimEdge(projectRoot, validEdge({
+      edgeId: 'EDGE-B-CONTRADICTS',
+      fromId: 'CLAIM-b1',
+      toId: 'CLAIM-b2',
+      relation: 'contradicts',
+      objectiveId: 'OBJ-AUDIT-B'
+    }), {
+      claimResolver: acceptingResolver
+    });
+    await createClaimEdge(projectRoot, validEdge({
+      edgeId: 'EDGE-A-SUPPORTS',
+      fromId: 'CLAIM-a3',
+      toId: 'CLAIM-a4',
+      relation: 'supports',
+      objectiveId: 'OBJ-AUDIT-A'
+    }), {
+      claimResolver: acceptingResolver
+    });
+
+    const edges = await readClaimEdges(projectRoot, {
+      relation: 'contradicts',
+      objectiveId: 'OBJ-AUDIT-A'
+    });
+
+    assert.deepEqual(edges.map((edge) => edge.edgeId), ['EDGE-A-CONTRADICTS']);
+  });
+});
+
 test('createClaimEdge fails closed when no claimResolver is supplied', async () => {
   await withTempProject(async (projectRoot) => {
     await expectClaimEdgeError(

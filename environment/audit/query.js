@@ -32,6 +32,16 @@ function fail(code, message, extra = {}) {
   throw new AuditQueryError({ code, message, extra });
 }
 
+function normalizeObjectiveId(objectiveId) {
+  if (typeof objectiveId !== 'string' || objectiveId.trim() === '') {
+    fail(
+      'E_AUDIT_QUERY_OBJECTIVE_ID_REQUIRED',
+      'objectiveId must be a non-empty string.'
+    );
+  }
+  return objectiveId.trim();
+}
+
 function defaultAuditQueryCliPath(projectRoot, env = process.env) {
   if (typeof env.VIBE_SCIENCE_AUDIT_QUERY_CLI === 'string' && env.VIBE_SCIENCE_AUDIT_QUERY_CLI.trim() !== '') {
     return path.resolve(env.VIBE_SCIENCE_AUDIT_QUERY_CLI);
@@ -95,15 +105,27 @@ function normalizeRows(rows, cliPath) {
   });
 }
 
-export async function aggregateGovernanceEvents(projectRoot, { from, to } = {}) {
+export async function aggregateGovernanceEvents(projectRoot, {
+  from,
+  to,
+  objectiveId = null,
+  pluginProjectRoot = null
+} = {}) {
   const canonicalProjectRoot = resolveProjectRoot(projectRoot);
   const env = process.env;
   const cliPath = defaultAuditQueryCliPath(canonicalProjectRoot, env);
-  const stdinPayload = JSON.stringify({
+  const payload = {
     from,
     to,
     pluginProjectRoot: null
-  });
+  };
+  if (objectiveId != null) {
+    payload.objectiveId = normalizeObjectiveId(objectiveId);
+  }
+  if (typeof pluginProjectRoot === 'string' && pluginProjectRoot.trim() !== '') {
+    payload.pluginProjectRoot = path.resolve(pluginProjectRoot);
+  }
+  const stdinPayload = JSON.stringify(payload);
 
   try {
     await access(cliPath);
@@ -205,15 +227,33 @@ export async function aggregateGovernanceEvents(projectRoot, { from, to } = {}) 
   });
 }
 
-export async function listEdgesByRelation(projectRoot, relation) {
-  return readClaimEdges(projectRoot, { relation });
+export async function listEdgesByRelation(projectRoot, relation, options = {}) {
+  return readClaimEdges(projectRoot, {
+    relation,
+    objectiveId: options.objectiveId == null
+      ? null
+      : normalizeObjectiveId(options.objectiveId)
+  });
 }
 
-export async function buildEvidenceExcerpt(projectRoot, { from, to } = {}) {
-  const governanceEventsAggregated = await aggregateGovernanceEvents(projectRoot, { from, to });
+export async function buildEvidenceExcerpt(projectRoot, {
+  from,
+  to,
+  objectiveId,
+  pluginProjectRoot = null
+} = {}) {
+  const normalizedObjectiveId = normalizeObjectiveId(objectiveId);
+  const governanceEventsAggregated = await aggregateGovernanceEvents(projectRoot, {
+    from,
+    to,
+    objectiveId: normalizedObjectiveId,
+    pluginProjectRoot
+  });
   const edgesByRelation = {};
   await Promise.all(EVIDENCE_EDGE_RELATIONS.map(async (relation) => {
-    edgesByRelation[relation] = await listEdgesByRelation(projectRoot, relation);
+    edgesByRelation[relation] = await listEdgesByRelation(projectRoot, relation, {
+      objectiveId: normalizedObjectiveId
+    });
   }));
 
   const totalEvents = governanceEventsAggregated
@@ -225,6 +265,7 @@ export async function buildEvidenceExcerpt(projectRoot, { from, to } = {}) {
     governance_events_aggregated: governanceEventsAggregated,
     edges_by_relation: edgesByRelation,
     summary: {
+      objective_id: normalizedObjectiveId,
       total_events: totalEvents,
       total_edges: totalEdges,
       time_range: { from, to }
