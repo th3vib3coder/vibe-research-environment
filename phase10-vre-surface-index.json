@@ -1,0 +1,187 @@
+[
+  {
+    "kind": "ci-checker",
+    "name": "check-phase10-ledger",
+    "paths": [
+      "environment/tests/ci/check-phase10-ledger.js",
+      "environment/tests/ci/check-phase10-ledger.test.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "ci-checker",
+    "name": "phase10-surface-index-generator",
+    "paths": [
+      "environment/tests/ci/phase10-surface-index.js",
+      "environment/tests/ci/phase10-surface-index.test.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "feature-ledger",
+    "name": "phase10-vre-feature-ledger",
+    "paths": [
+      "phase10-vre-feature-ledger.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "hard-dependency",
+    "name": "claims-edges dependency",
+    "paths": [
+      "environment/claims/edges.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "hard-dependency",
+    "name": "phase9.claim-edge.v1 dependency",
+    "paths": [
+      "environment/schemas/phase9-claim-edge.schema.json"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "implementation-log",
+    "name": "phase10-implementation-log",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "ledger",
+    "name": "phase10-change-trace-ledger",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-change-trace-ledger.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "ledger",
+    "name": "phase10-export-guard-ledger",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-export-guard-ledger.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "ledger",
+    "name": "phase10-file-change-ledger",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-file-change-ledger.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "ledger",
+    "name": "phase10-lint-check-ledger",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-lint-check-ledger.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "ledger",
+    "name": "phase10-role-budget-ledger",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-role-budget-ledger.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "maintenance-notes",
+    "name": "phase10-maintenance-notes",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-maintenance-notes.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "build:phase10-surface-index",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-surface-index.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "check:phase10-ledger",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/check-phase10-ledger.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:dependency-check",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/check-phase10-ledger.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "test:phase10-scaffold",
+    "paths": [
+      "package.json"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "registry",
+    "name": "phase10-schema-registry",
+    "paths": [
+      "../vibe-science/blueprints/private/phase10-implementation-plan/phase10-schema-registry.md"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "surface-index",
+    "name": "phase10-vre-surface-index",
+    "paths": [
+      "phase10-vre-surface-index.json"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  }
+]
