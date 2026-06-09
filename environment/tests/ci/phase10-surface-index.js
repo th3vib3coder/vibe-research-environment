@@ -30,6 +30,8 @@ const INTRODUCED_AT = '2026-06-07';
 const TASK = 'T10.0.1';
 const SCHEMA_INTRODUCED_AT = '2026-06-09';
 const SCHEMA_TASK = 'T10.0.2';
+const LAW13_INTRODUCED_AT = '2026-06-09';
+const LAW13_TASK = 'T10.0.3';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -73,6 +75,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
       'environment/tests/ci/check-phase10-ledger.js',
       'environment/tests/ci/check-phase10-ledger.test.js'
     ]
+  },
+  {
+    kind: 'lint-validator',
+    name: 'phase10-law13-lint',
+    paths: [
+      'environment/phase10/law13-lint.js',
+      'environment/tests/ci/phase10-law13-lint.js',
+      'environment/tests/ci/phase10-law13-lint.test.js'
+    ],
+    task: LAW13_TASK,
+    status: 'implemented-lint-foundation',
+    introducedAt: LAW13_INTRODUCED_AT
   },
   {
     kind: 'hard-dependency',
@@ -181,6 +195,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('check-phase10-ledger.js')) {
     paths.push('environment/tests/ci/check-phase10-ledger.js');
   }
+  if (command.includes('phase10-law13-lint.js')) {
+    paths.push('environment/tests/ci/phase10-law13-lint.js');
+  }
   return buildSurface({
     kind: 'package-script',
     name: scriptName,
@@ -228,6 +245,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'build:phase10-surface-index',
     'check:phase10-ledger',
     'phase10:dependency-check',
+    'phase10:law13-lint',
     'test:phase10-scaffold'
   ]) {
     if (typeof scripts[scriptName] === 'string') {

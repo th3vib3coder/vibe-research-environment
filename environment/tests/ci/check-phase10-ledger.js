@@ -57,6 +57,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'build:phase10-surface-index': 'phase10-surface-index.js',
   'check:phase10-ledger': 'check-phase10-ledger.js',
   'phase10:dependency-check': 'check-phase10-ledger.js',
+  'phase10:law13-lint': 'phase10-law13-lint.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

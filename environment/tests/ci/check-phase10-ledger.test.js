@@ -39,6 +39,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'build:phase10-surface-index': 'node environment/tests/ci/phase10-surface-index.js',
         'check:phase10-ledger': 'node environment/tests/ci/check-phase10-ledger.js',
         'phase10:dependency-check': 'node environment/tests/ci/check-phase10-ledger.js --dependency-check',
+        'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
       }
     }, null, 2));

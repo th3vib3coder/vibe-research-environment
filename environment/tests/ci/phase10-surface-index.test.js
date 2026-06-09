@@ -31,7 +31,8 @@ async function withFixtureWorkspace(fn) {
       scripts: {
         'build:phase10-surface-index': 'node environment/tests/ci/phase10-surface-index.js',
         'check:phase10-ledger': 'node environment/tests/ci/check-phase10-ledger.js',
-        'phase10:dependency-check': 'node environment/tests/ci/check-phase10-ledger.js --dependency-check'
+        'phase10:dependency-check': 'node environment/tests/ci/check-phase10-ledger.js --dependency-check',
+        'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js'
       }
     }, null, 2));
 
@@ -41,6 +42,9 @@ async function withFixtureWorkspace(fn) {
       'environment/tests/ci/phase10-surface-index.test.js',
       'environment/tests/ci/check-phase10-ledger.js',
       'environment/tests/ci/check-phase10-ledger.test.js',
+      'environment/phase10/law13-lint.js',
+      'environment/tests/ci/phase10-law13-lint.js',
+      'environment/tests/ci/phase10-law13-lint.test.js',
       'environment/schemas/phase9-claim-edge.schema.json',
       'environment/claims/edges.js'
     ]) {
@@ -89,7 +93,9 @@ test('phase10 surface-index generator records scaffold, ledgers, scripts, and de
       'claims-edges dependency',
       'phase10:dependency-check',
       'phase10.knowledge-domain.v1',
-      'phase10.role-envelope.v1'
+      'phase10.role-envelope.v1',
+      'phase10-law13-lint',
+      'phase10:law13-lint'
     ]) {
       assert.equal(surfaces.some((surface) => surface.name === expected), true, expected);
     }
@@ -110,5 +116,6 @@ test('phase10 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'phase10-export-guard-ledger'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10:dependency-check'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10.compile-policy.v1'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase10-law13-lint'), true);
   });
 });

@@ -14,6 +14,7 @@
     "check:phase9-ledger": "node environment/tests/ci/check-phase9-ledger.js",
     "check:phase10-ledger": "node environment/tests/ci/check-phase10-ledger.js",
     "phase10:dependency-check": "node environment/tests/ci/check-phase10-ledger.js --dependency-check",
+    "phase10:law13-lint": "node environment/tests/ci/phase10-law13-lint.js",
     "phase9:acceptance": "node environment/acceptance/run-wave6-acceptance.js --all",
     "phase9:acceptance:A": "node environment/acceptance/run-wave6-acceptance.js A",
     "phase9:acceptance:B": "node environment/acceptance/run-wave6-acceptance.js B",
