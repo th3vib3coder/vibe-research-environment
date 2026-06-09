@@ -42,6 +42,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:claim-edge-projection': 'node environment/tests/ci/phase10-claim-edge-projection.js',
         'phase10:curator-role': 'node environment/tests/ci/phase10-curator-role.js',
         'phase10:domain-lifecycle': 'node --test environment/tests/cli/domain-cli.test.js',
+        'phase10:law13-bridge': 'node environment/tests/ci/phase10-law13-bridge.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
       }
@@ -63,6 +64,9 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/schemas/phase9-objective.schema.json',
       'environment/phase10/domain-lifecycle.js',
       'environment/tests/cli/domain-cli.test.js',
+      'environment/phase10/law13-bridge.js',
+      'environment/tests/ci/phase10-law13-bridge.js',
+      'environment/tests/ci/phase10-law13-bridge.test.js',
       'environment/orchestrator/task-registry/phase10-wiki-lint.json',
       'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
@@ -221,6 +225,19 @@ test('phase10-ledger check covers domain lifecycle CLI surfaces in trace reconci
         changedFiles: ['environment/tests/cli/domain-cli.test.js']
       }),
       /E_PHASE10_TRACE_MISSING.*environment\/tests\/cli\/domain-cli\.test\.js/u
+    );
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers LAW 13 bridge validator surfaces in trace reconciliation', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/phase10/law13-bridge.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/phase10\/law13-bridge\.js/u
     );
   }, { sparseTrace: true });
 });

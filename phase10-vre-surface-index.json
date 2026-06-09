@@ -1,5 +1,17 @@
 [
   {
+    "kind": "bridge-validator",
+    "name": "phase10-law13-bridge",
+    "paths": [
+      "environment/phase10/law13-bridge.js",
+      "environment/tests/ci/phase10-law13-bridge.js",
+      "environment/tests/ci/phase10-law13-bridge.test.js"
+    ],
+    "task": "T10.0.7",
+    "status": "implemented-bridge-validator",
+    "introducedAt": "2026-06-09"
+  },
+  {
     "kind": "ci-checker",
     "name": "check-phase10-ledger",
     "paths": [
@@ -207,6 +219,17 @@
     "paths": [
       "package.json",
       "environment/tests/cli/domain-cli.test.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:law13-bridge",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-law13-bridge.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",

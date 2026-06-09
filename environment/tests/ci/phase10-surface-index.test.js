@@ -35,6 +35,7 @@ async function withFixtureWorkspace(fn) {
         'phase10:claim-edge-projection': 'node environment/tests/ci/phase10-claim-edge-projection.js',
         'phase10:curator-role': 'node environment/tests/ci/phase10-curator-role.js',
         'phase10:domain-lifecycle': 'node --test environment/tests/cli/domain-cli.test.js',
+        'phase10:law13-bridge': 'node environment/tests/ci/phase10-law13-bridge.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js'
       }
     }, null, 2));
@@ -60,6 +61,9 @@ async function withFixtureWorkspace(fn) {
       'bin/vre',
       'environment/phase10/domain-lifecycle.js',
       'environment/tests/cli/domain-cli.test.js',
+      'environment/phase10/law13-bridge.js',
+      'environment/tests/ci/phase10-law13-bridge.js',
+      'environment/tests/ci/phase10-law13-bridge.test.js',
       'environment/schemas/phase9-objective.schema.json',
       'environment/schemas/phase9-claim-edge.schema.json',
       'environment/claims/edges.js'
@@ -117,7 +121,9 @@ test('phase10 surface-index generator records scaffold, ledgers, scripts, and de
       'phase10-curator-role',
       'phase10:curator-role',
       'phase10-domain-lifecycle-cli',
-      'phase10:domain-lifecycle'
+      'phase10:domain-lifecycle',
+      'phase10-law13-bridge',
+      'phase10:law13-bridge'
     ]) {
       assert.equal(surfaces.some((surface) => surface.name === expected), true, expected);
     }
@@ -142,5 +148,6 @@ test('phase10 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'phase10-claim-edge-projection'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-curator-role'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-domain-lifecycle-cli'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase10-law13-bridge'), true);
   });
 });

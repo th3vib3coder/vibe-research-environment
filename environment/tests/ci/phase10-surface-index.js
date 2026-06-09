@@ -38,6 +38,8 @@ const CURATOR_ROLE_INTRODUCED_AT = '2026-06-09';
 const CURATOR_ROLE_TASK = 'T10.0.5';
 const DOMAIN_LIFECYCLE_INTRODUCED_AT = '2026-06-09';
 const DOMAIN_LIFECYCLE_TASK = 'T10.0.6';
+const LAW13_BRIDGE_INTRODUCED_AT = '2026-06-09';
+const LAW13_BRIDGE_TASK = 'T10.0.7';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -133,6 +135,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     task: DOMAIN_LIFECYCLE_TASK,
     status: 'implemented-lifecycle-cli-foundation',
     introducedAt: DOMAIN_LIFECYCLE_INTRODUCED_AT
+  },
+  {
+    kind: 'bridge-validator',
+    name: 'phase10-law13-bridge',
+    paths: [
+      'environment/phase10/law13-bridge.js',
+      'environment/tests/ci/phase10-law13-bridge.js',
+      'environment/tests/ci/phase10-law13-bridge.test.js'
+    ],
+    task: LAW13_BRIDGE_TASK,
+    status: 'implemented-bridge-validator',
+    introducedAt: LAW13_BRIDGE_INTRODUCED_AT
   },
   {
     kind: 'hard-dependency',
@@ -244,6 +258,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-law13-lint.js')) {
     paths.push('environment/tests/ci/phase10-law13-lint.js');
   }
+  if (command.includes('phase10-law13-bridge.js')) {
+    paths.push('environment/tests/ci/phase10-law13-bridge.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -303,6 +320,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:claim-edge-projection',
     'phase10:curator-role',
     'phase10:domain-lifecycle',
+    'phase10:law13-bridge',
     'phase10:law13-lint',
     'test:phase10-scaffold'
   ]) {

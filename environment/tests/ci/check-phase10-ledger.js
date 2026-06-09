@@ -33,6 +33,9 @@ export const PHASE10_PATHS = {
   curatorRoleTest: 'environment/tests/ci/phase10-curator-role.test.js',
   domainLifecycle: 'environment/phase10/domain-lifecycle.js',
   domainCliTest: 'environment/tests/cli/domain-cli.test.js',
+  law13Bridge: 'environment/phase10/law13-bridge.js',
+  law13BridgeValidator: 'environment/tests/ci/phase10-law13-bridge.js',
+  law13BridgeTest: 'environment/tests/ci/phase10-law13-bridge.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -66,6 +69,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.curatorRoleTest,
   PHASE10_PATHS.domainLifecycle,
   PHASE10_PATHS.domainCliTest,
+  PHASE10_PATHS.law13Bridge,
+  PHASE10_PATHS.law13BridgeValidator,
+  PHASE10_PATHS.law13BridgeTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -86,6 +92,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:claim-edge-projection': 'phase10-claim-edge-projection.js',
   'phase10:curator-role': 'phase10-curator-role.js',
   'phase10:domain-lifecycle': 'domain-cli.test.js',
+  'phase10:law13-bridge': 'phase10-law13-bridge.js',
   'phase10:law13-lint': 'phase10-law13-lint.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
