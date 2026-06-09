@@ -274,7 +274,7 @@ async function expectAgentError(fn, expectedCode) {
   );
 }
 
-test('agent orchestration exposes the exact frozen Phase 9 v1 role set', () => {
+test('agent orchestration exposes the reviewed Phase 9 plus Phase 10 curator role set', () => {
   assert.deepEqual(listSupportedAgentRoles(), [
     'lead-researcher',
     'literature-mode',
@@ -283,6 +283,7 @@ test('agent orchestration exposes the exact frozen Phase 9 v1 role set', () => {
     'reviewer-2',
     'serendipity-mode',
     'continuity-agent',
+    'curator-agent',
   ]);
 });
 
@@ -2238,6 +2239,12 @@ test('Round 81: getRoleDispatchContract returns the frozen Phase 9 v1 matrix for
   assert.equal(reviewerContract.dispatchMode, 'review-lane');
   assert.equal(reviewerContract.laneId, 'review');
   assert.deepEqual(reviewerContract.allowedTaskKinds, ['session-digest-review']);
+
+  const curatorContract = getRoleDispatchContract('curator-agent');
+  assert.equal(curatorContract.dispatchMode, 'queue-task');
+  assert.equal(curatorContract.canMutateObjective, false);
+  assert.equal(curatorContract.canMutateClaimLedger, false);
+  assert.deepEqual(curatorContract.allowedTaskKinds, ['phase10-wiki-lint', 'phase10-wiki-compile']);
 
   assert.equal(getRoleDispatchContract('not-a-real-role'), null);
 });

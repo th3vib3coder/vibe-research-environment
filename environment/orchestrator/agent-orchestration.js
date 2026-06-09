@@ -32,6 +32,11 @@ import {
   createClaimEdge,
   readClaimEdges,
 } from '../claims/edges.js';
+import {
+  CURATOR_AGENT_ROLE_ID,
+  CURATOR_ALLOWED_ACTIONS,
+  CURATOR_ALLOWED_TASK_KINDS,
+} from '../phase10/curator-role.js';
 import { logGovernanceEventViaPlugin } from './governance-logger.js';
 import { invokeLaneBinding, selectLaneBinding } from './provider-gateway.js';
 import { readContinuityProfile, readLanePolicies } from './state.js';
@@ -133,6 +138,23 @@ const ROLE_RUNTIME_MATRIX = Object.freeze({
     executorClasses: Object.freeze(['codex-cli', 'claude-cli', 'local-subprocess']),
     resultContract: 'handoff + continuity evidence',
     canMutateObjective: false,
+    webRequired: false,
+  }),
+  [CURATOR_AGENT_ROLE_ID]: Object.freeze({
+    roleId: CURATOR_AGENT_ROLE_ID,
+    dispatchMode: 'queue-task',
+    laneId: 'execution',
+    allowedTaskKinds: CURATOR_ALLOWED_TASK_KINDS,
+    executorClasses: Object.freeze(['codex-cli', 'claude-cli', 'local-subprocess']),
+    resultContract: 'bounded Phase 10 wiki lint/compile handoff',
+    canMutateObjective: false,
+    canMutateClaimLedger: false,
+    writeScope: 'wiki-page',
+    budgetCategory: 'curation',
+    canReadFullInbox: false,
+    canReadSkillCachePayloads: false,
+    canPromoteSupposition: false,
+    canCaptureSerendipitySeeds: false,
     webRequired: false,
   }),
 });
@@ -433,6 +455,8 @@ function defaultAllowedActions(roleId) {
       return ['package-artifacts', 'write-artifact', 'propose-handoff'];
     case 'continuity-agent':
       return ['refresh-memory', 'verify-resume-state', 'propose-handoff'];
+    case CURATOR_AGENT_ROLE_ID:
+      return [...CURATOR_ALLOWED_ACTIONS];
     case 'literature-mode':
       return ['survey-web-inline', 'register-literature-artifact', 'propose-handoff'];
     case 'serendipity-mode':
@@ -926,6 +950,180 @@ function buildRoleEnvelope(request, sessionIsolation, options = {}) {
   };
 }
 
+function objectOrEmpty(value) {
+  return value != null && typeof value === 'object' && !Array.isArray(value)
+    ? value
+    : {};
+}
+
+function normalizeAction(value) {
+  return String(value).trim().toLowerCase();
+}
+
+function includesForbiddenAction(actions, fragments) {
+  return actions.some((action) => fragments.some((fragment) => action.includes(fragment)));
+}
+
+function assertCuratorDispatchBoundary(roleContract, request, options = {}) {
+  if (roleContract.roleId !== CURATOR_AGENT_ROLE_ID) {
+    return;
+  }
+
+  const phase10Override = objectOrEmpty(request.phase10RoleEnvelope);
+  if (
+    request.transportEnvelopeSchemaVersion != null
+    && request.transportEnvelopeSchemaVersion !== 'phase9.role-envelope.v1'
+  ) {
+    fail(
+      'E_CURATOR_TRANSPORT_ENVELOPE_FORBIDDEN',
+      'curator-agent must preserve phase9.role-envelope.v1 as reviewed subprocess transport.',
+      { requested: request.transportEnvelopeSchemaVersion },
+    );
+  }
+
+  if (request.canMutateClaimLedger === true || phase10Override.canMutateClaimLedger === true) {
+    fail(
+      'E_CURATOR_CLAIM_LEDGER_FORBIDDEN',
+      'curator-agent cannot mutate the claim ledger.',
+      { roleId: roleContract.roleId },
+    );
+  }
+
+  const writeScope = phase10Override.writeScope ?? request.writeScope;
+  if (writeScope === 'claim-ledger') {
+    fail(
+      'E_CURATOR_CLAIM_LEDGER_FORBIDDEN',
+      'curator-agent writeScope cannot target claim-ledger.',
+      { roleId: roleContract.roleId, writeScope },
+    );
+  }
+
+  if (
+    phase10Override.budgetCategory != null
+    && phase10Override.budgetCategory !== roleContract.budgetCategory
+  ) {
+    fail(
+      'E_CURATOR_ROLE_ENVELOPE_INVALID',
+      'curator-agent budgetCategory must remain curation.',
+      { expected: roleContract.budgetCategory, actual: phase10Override.budgetCategory },
+    );
+  }
+
+  const actions = (Array.isArray(request.allowedActions)
+    ? request.allowedActions
+    : defaultAllowedActions(roleContract.roleId))
+    .map(normalizeAction);
+
+  if (includesForbiddenAction(actions, ['create-claim-edge', 'write-claim-edge'])) {
+    fail(
+      'E_CURATOR_CLAIM_EDGE_FORBIDDEN',
+      'curator-agent cannot create or write claim edges.',
+      { allowedActions: actions },
+    );
+  }
+
+  if (includesForbiddenAction(actions, ['mutate-claim-ledger', 'write-claim-ledger'])) {
+    fail(
+      'E_CURATOR_CLAIM_LEDGER_FORBIDDEN',
+      'curator-agent cannot request claim-ledger mutation actions.',
+      { allowedActions: actions },
+    );
+  }
+
+  if (includesForbiddenAction(actions, ['promote-supposition', 'claim-promotion'])) {
+    fail(
+      'E_CURATOR_SUPPOSITION_FORBIDDEN',
+      'curator-agent cannot promote suppositions to claims.',
+      { allowedActions: actions },
+    );
+  }
+
+  if (includesForbiddenAction(actions, ['surface-seed', 'serendipity-seed', 'capture-seed'])) {
+    fail(
+      'E_CURATOR_SERENDIPITY_FORBIDDEN',
+      'curator-agent cannot create or own serendipity seeds.',
+      { allowedActions: actions },
+    );
+  }
+
+  const contextSource = normalizeAction(request.contextSource ?? '');
+  if (
+    contextSource.includes('_inbox')
+    || contextSource.includes('full-inbox')
+    || contextSource.includes('full_inbox')
+    || contextSource.includes('inbox-full')
+  ) {
+    fail(
+      'E_CURATOR_CONTEXT_FORBIDDEN',
+      'curator-agent cannot read full inbox payloads.',
+      { contextSource: request.contextSource },
+    );
+  }
+
+  if (contextSource.includes('skill-cache')) {
+    fail(
+      'E_CURATOR_CONTEXT_FORBIDDEN',
+      'curator-agent cannot read raw skill-cache payloads.',
+      { contextSource: request.contextSource },
+    );
+  }
+
+  if (typeof options.claimEdgeWriter === 'function') {
+    fail(
+      'E_CURATOR_CLAIM_EDGE_FORBIDDEN',
+      'curator-agent dispatch cannot inject a claim-edge writer.',
+      { roleId: roleContract.roleId },
+    );
+  }
+}
+
+async function buildPhase10RoleEnvelope(projectRoot, roleContract, request, options = {}) {
+  if (roleContract.roleId !== CURATOR_AGENT_ROLE_ID) {
+    return null;
+  }
+
+  const phase10Override = objectOrEmpty(request.phase10RoleEnvelope);
+  const domainId = phase10Override.domainId ?? request.domainId;
+  const phase10OutputShape = objectOrEmpty(phase10Override.expectedOutputShape);
+  if (typeof domainId !== 'string' || !/^KDOM-.+/u.test(domainId)) {
+    fail(
+      'E_CURATOR_ROLE_ENVELOPE_INVALID',
+      'curator-agent requires a Phase 10 knowledge-domain id for governance envelope validation.',
+      { domainId },
+    );
+  }
+
+  const envelope = {
+    schemaVersion: 'phase10.role-envelope.v1',
+    roleEnvelopeId: phase10Override.roleEnvelopeId
+      ?? request.roleEnvelopeId
+      ?? `ROLEENV-${request.taskId ?? request.objectiveId ?? 'CURATOR'}`,
+    domainId,
+    roleId: roleContract.roleId,
+    canMutateClaimLedger: false,
+    writeScope: roleContract.writeScope,
+    budgetCategory: roleContract.budgetCategory,
+    expectedOutputShape: Object.keys(phase10OutputShape).length > 0
+      ? phase10OutputShape
+      : buildExpectedOutputShape(request.roleId, request.expectedOutputShape),
+    createdAt: phase10Override.createdAt ?? options.now ?? ioNow(),
+  };
+
+  const validateEnvelope = options.phase10RoleEnvelopeValidator
+    ?? await loadValidator(projectRoot, 'phase10-role-envelope.schema.json');
+
+  try {
+    assertValid(validateEnvelope, envelope, 'phase10.role-envelope.v1');
+  } catch (error) {
+    fail('E_CURATOR_ROLE_ENVELOPE_INVALID', error.message, {
+      roleId: roleContract.roleId,
+      domainId,
+    });
+  }
+
+  return envelope;
+}
+
 function buildExpectedOutputShape(roleId, expectedOutputShape) {
   const shape = expectedOutputShape != null
     && typeof expectedOutputShape === 'object'
@@ -1377,6 +1575,8 @@ export async function prepareRoleDispatch(projectPath, request = {}, options = {
   }
 
   assertRoleMutationPermission(roleContract, request);
+  assertCuratorDispatchBoundary(roleContract, request, options);
+  const phase10RoleEnvelope = await buildPhase10RoleEnvelope(projectRoot, roleContract, request, options);
   const dispatchMode = deriveDispatchMode(roleContract, request);
   assertTransportPolicy(roleId, request, dispatchMode);
   const objectiveId = assertObjectiveScope(request, dispatchMode);
@@ -1459,11 +1659,12 @@ export async function prepareRoleDispatch(projectPath, request = {}, options = {
     binding,
     transport: 'reviewed-subprocess',
     canMutateObjective: roleContract.canMutateObjective,
-    resultContract: roleContract.resultContract,
-    allowedTaskKinds: [...roleContract.allowedTaskKinds],
-    envelope,
-    envelopePath,
-    spawnRequest,
+      resultContract: roleContract.resultContract,
+      allowedTaskKinds: [...roleContract.allowedTaskKinds],
+      phase10RoleEnvelope,
+      envelope,
+      envelopePath,
+      spawnRequest,
   };
 }
 
@@ -1505,6 +1706,7 @@ export async function dispatchRoleAssignment(projectPath, request = {}, options 
       roleId: plan.roleId,
       roleEnvelope: finalEnvelope,
       roleEnvelopePath: plan.envelopePath,
+      phase10RoleEnvelope: plan.phase10RoleEnvelope ?? null,
       taskKind: plan.taskKind,
       objectiveId: plan.objectiveId,
       stageId: finalEnvelope.stageId,

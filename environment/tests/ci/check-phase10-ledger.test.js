@@ -40,6 +40,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'check:phase10-ledger': 'node environment/tests/ci/check-phase10-ledger.js',
         'phase10:dependency-check': 'node environment/tests/ci/check-phase10-ledger.js --dependency-check',
         'phase10:claim-edge-projection': 'node environment/tests/ci/phase10-claim-edge-projection.js',
+        'phase10:curator-role': 'node environment/tests/ci/phase10-curator-role.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
       }
@@ -52,7 +53,13 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/tests/ci/check-phase10-ledger.test.js',
       'environment/phase10/claim-edge-projection.js',
       'environment/tests/ci/phase10-claim-edge-projection.js',
-      'environment/tests/ci/phase10-claim-edge-projection.test.js'
+      'environment/tests/ci/phase10-claim-edge-projection.test.js',
+      'environment/orchestrator/agent-orchestration.js',
+      'environment/phase10/curator-role.js',
+      'environment/tests/ci/phase10-curator-role.js',
+      'environment/tests/ci/phase10-curator-role.test.js',
+      'environment/orchestrator/task-registry/phase10-wiki-lint.json',
+      'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
       await writeFixtureFile(vreRoot, relPath);
     }
@@ -170,6 +177,32 @@ test('phase10-ledger check covers phase10 projection helpers in trace reconcilia
         changedFiles: ['environment/phase10/claim-edge-projection.js']
       }),
       /E_PHASE10_TRACE_MISSING.*environment\/phase10\/claim-edge-projection\.js/u
+    );
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers phase10 curator role surfaces in trace reconciliation', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/phase10/curator-role.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/phase10\/curator-role\.js/u
+    );
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers curator changes in agent-orchestration runtime trace', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/orchestrator/agent-orchestration.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/orchestrator\/agent-orchestration\.js/u
     );
   }, { sparseTrace: true });
 });

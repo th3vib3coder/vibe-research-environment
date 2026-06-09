@@ -33,6 +33,7 @@ async function withFixtureWorkspace(fn) {
         'check:phase10-ledger': 'node environment/tests/ci/check-phase10-ledger.js',
         'phase10:dependency-check': 'node environment/tests/ci/check-phase10-ledger.js --dependency-check',
         'phase10:claim-edge-projection': 'node environment/tests/ci/phase10-claim-edge-projection.js',
+        'phase10:curator-role': 'node environment/tests/ci/phase10-curator-role.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js'
       }
     }, null, 2));
@@ -49,6 +50,12 @@ async function withFixtureWorkspace(fn) {
       'environment/phase10/claim-edge-projection.js',
       'environment/tests/ci/phase10-claim-edge-projection.js',
       'environment/tests/ci/phase10-claim-edge-projection.test.js',
+      'environment/phase10/curator-role.js',
+      'environment/orchestrator/agent-orchestration.js',
+      'environment/orchestrator/task-registry/phase10-wiki-lint.json',
+      'environment/orchestrator/task-registry/phase10-wiki-compile.json',
+      'environment/tests/ci/phase10-curator-role.js',
+      'environment/tests/ci/phase10-curator-role.test.js',
       'environment/schemas/phase9-claim-edge.schema.json',
       'environment/claims/edges.js'
     ]) {
@@ -101,7 +108,9 @@ test('phase10 surface-index generator records scaffold, ledgers, scripts, and de
       'phase10-law13-lint',
       'phase10:law13-lint',
       'phase10-claim-edge-projection',
-      'phase10:claim-edge-projection'
+      'phase10:claim-edge-projection',
+      'phase10-curator-role',
+      'phase10:curator-role'
     ]) {
       assert.equal(surfaces.some((surface) => surface.name === expected), true, expected);
     }
@@ -124,5 +133,6 @@ test('phase10 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'phase10.compile-policy.v1'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-law13-lint'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-claim-edge-projection'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase10-curator-role'), true);
   });
 });

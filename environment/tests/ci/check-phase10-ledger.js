@@ -25,6 +25,12 @@ export const PHASE10_PATHS = {
   claimEdgeProjection: 'environment/phase10/claim-edge-projection.js',
   claimEdgeProjectionValidator: 'environment/tests/ci/phase10-claim-edge-projection.js',
   claimEdgeProjectionTest: 'environment/tests/ci/phase10-claim-edge-projection.test.js',
+  agentOrchestration: 'environment/orchestrator/agent-orchestration.js',
+  curatorRole: 'environment/phase10/curator-role.js',
+  curatorRoleValidator: 'environment/tests/ci/phase10-curator-role.js',
+  curatorRoleTest: 'environment/tests/ci/phase10-curator-role.test.js',
+  curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
+  curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
   schemaRegistry: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-schema-registry.md',
   lintCheckLedger: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-lint-check-ledger.md',
@@ -48,6 +54,12 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.claimEdgeProjection,
   PHASE10_PATHS.claimEdgeProjectionValidator,
   PHASE10_PATHS.claimEdgeProjectionTest,
+  PHASE10_PATHS.agentOrchestration,
+  PHASE10_PATHS.curatorRole,
+  PHASE10_PATHS.curatorRoleValidator,
+  PHASE10_PATHS.curatorRoleTest,
+  PHASE10_PATHS.curatorWikiLintTask,
+  PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
   PHASE10_PATHS.schemaRegistry,
   PHASE10_PATHS.lintCheckLedger,
@@ -64,6 +76,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'check:phase10-ledger': 'check-phase10-ledger.js',
   'phase10:dependency-check': 'check-phase10-ledger.js',
   'phase10:claim-edge-projection': 'phase10-claim-edge-projection.js',
+  'phase10:curator-role': 'phase10-curator-role.js',
   'phase10:law13-lint': 'phase10-law13-lint.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
@@ -182,6 +195,8 @@ function isPhase10CoveredPath(pathValue) {
     || pathValue.startsWith('environment/schemas/phase10-')
     || pathValue.startsWith('environment/tests/schemas/phase10-')
     || pathValue.startsWith('environment/phase10/')
+    || pathValue === PHASE10_PATHS.agentOrchestration
+    || pathValue.startsWith('environment/orchestrator/task-registry/phase10-')
     || pathValue.startsWith('../vibe-science/blueprints/private/phase10-implementation-plan/phase10-')
     || pathValue.startsWith('../vibe-science/blueprints/private/WIKI_VRE/');
 }

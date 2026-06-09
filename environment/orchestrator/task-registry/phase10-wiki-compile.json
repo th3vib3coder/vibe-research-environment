@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "phase10-wiki-compile",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/phase10/curator-role.js",
+  "helperExport": "planCuratorWikiCompile",
+  "inputSchema": null,
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["wikiCompileReportPath"],
+    "warningCount": "integer",
+    "payload": {
+      "phase10RoleEnvelope": "phase10.role-envelope.v1",
+      "law13StatusChecked": "boolean"
+    }
+  },
+  "routerKeywords": [
+    "phase10 wiki compile",
+    "phase 10 wiki compile",
+    "curator wiki compile"
+  ],
+  "degradesTo": "escalate"
+}

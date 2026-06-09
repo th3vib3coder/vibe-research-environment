@@ -13,6 +13,7 @@ import validateCloseoutHonesty from './validate-closeout-honesty.js';
 import validateCiWorkflow from './validate-ci-workflow.js';
 import checkPhase9Ledger from './check-phase9-ledger.js';
 import validatePhase10ClaimEdgeProjection from './phase10-claim-edge-projection.js';
+import validatePhase10CuratorRole from './phase10-curator-role.js';
 import validatePhase10Law13Lint from './phase10-law13-lint.js';
 
 const validators = [
@@ -30,6 +31,7 @@ const validators = [
   ['validate-ci-workflow', validateCiWorkflow],
   ['check-phase9-ledger', checkPhase9Ledger],
   ['phase10-claim-edge-projection', validatePhase10ClaimEdgeProjection],
+  ['phase10-curator-role', validatePhase10CuratorRole],
   ['phase10-law13-lint', validatePhase10Law13Lint]
 ];
 

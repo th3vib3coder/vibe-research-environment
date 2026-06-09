@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "vibe-env.task-registry-entry.v1",
+  "taskKind": "phase10-wiki-lint",
+  "lane": "execution",
+  "requiredCapability": "programmatic",
+  "helperModule": "environment/phase10/curator-role.js",
+  "helperExport": "planCuratorWikiLint",
+  "inputSchema": null,
+  "outputContract": {
+    "summary": "string",
+    "artifactRefs": ["wikiLintReportPath"],
+    "warningCount": "integer",
+    "payload": {
+      "phase10RoleEnvelope": "phase10.role-envelope.v1",
+      "law13StatusChecked": "boolean"
+    }
+  },
+  "routerKeywords": [
+    "phase10 wiki lint",
+    "phase 10 wiki lint",
+    "curator wiki lint"
+  ],
+  "degradesTo": "escalate"
+}

@@ -34,6 +34,8 @@ const LAW13_INTRODUCED_AT = '2026-06-09';
 const LAW13_TASK = 'T10.0.3';
 const CLAIM_EDGE_PROJECTION_INTRODUCED_AT = '2026-06-09';
 const CLAIM_EDGE_PROJECTION_TASK = 'T10.0.4';
+const CURATOR_ROLE_INTRODUCED_AT = '2026-06-09';
+const CURATOR_ROLE_TASK = 'T10.0.5';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -101,6 +103,21 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     task: CLAIM_EDGE_PROJECTION_TASK,
     status: 'implemented-read-only-projection',
     introducedAt: CLAIM_EDGE_PROJECTION_INTRODUCED_AT
+  },
+  {
+    kind: 'role-migration',
+    name: 'phase10-curator-role',
+    paths: [
+      'environment/phase10/curator-role.js',
+      'environment/orchestrator/agent-orchestration.js',
+      'environment/orchestrator/task-registry/phase10-wiki-lint.json',
+      'environment/orchestrator/task-registry/phase10-wiki-compile.json',
+      'environment/tests/ci/phase10-curator-role.js',
+      'environment/tests/ci/phase10-curator-role.test.js'
+    ],
+    task: CURATOR_ROLE_TASK,
+    status: 'implemented-role-migration-foundation',
+    introducedAt: CURATOR_ROLE_INTRODUCED_AT
   },
   {
     kind: 'hard-dependency',
@@ -215,6 +232,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
+  if (command.includes('phase10-curator-role.js')) {
+    paths.push('environment/tests/ci/phase10-curator-role.js');
+  }
   return buildSurface({
     kind: 'package-script',
     name: scriptName,
@@ -263,6 +283,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'check:phase10-ledger',
     'phase10:dependency-check',
     'phase10:claim-edge-projection',
+    'phase10:curator-role',
     'phase10:law13-lint',
     'test:phase10-scaffold'
   ]) {

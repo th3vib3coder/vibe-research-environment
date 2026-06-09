@@ -168,6 +168,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:curator-role",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-curator-role.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:dependency-check",
     "paths": [
       "package.json",
@@ -219,6 +230,21 @@
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",
     "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "role-migration",
+    "name": "phase10-curator-role",
+    "paths": [
+      "environment/phase10/curator-role.js",
+      "environment/orchestrator/agent-orchestration.js",
+      "environment/orchestrator/task-registry/phase10-wiki-lint.json",
+      "environment/orchestrator/task-registry/phase10-wiki-compile.json",
+      "environment/tests/ci/phase10-curator-role.js",
+      "environment/tests/ci/phase10-curator-role.test.js"
+    ],
+    "task": "T10.0.5",
+    "status": "implemented-role-migration-foundation",
+    "introducedAt": "2026-06-09"
   },
   {
     "kind": "schema-contract",
