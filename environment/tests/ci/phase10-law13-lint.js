@@ -57,7 +57,7 @@ function minimalValidCorpus() {
       { edgeId: 'EDGE-ci', lifecycleStatus: 'active' }
     ],
     domains: [
-      { domainId: 'KDOM-ci', linkedObjectiveIds: ['OBJ-ci'] }
+      { domainId: 'KDOM-ci', objectiveLinks: ['OBJ-ci'] }
     ],
     objectives: [
       { objectiveId: 'OBJ-ci', domainId: 'KDOM-ci' }
@@ -74,6 +74,22 @@ export default async function validatePhase10Law13Lint() {
 
   const valid = lintPhase10Corpus(minimalValidCorpus());
   assert(valid.ok, `Valid Phase 10 LAW 13 fixture failed: ${JSON.stringify(valid.issues)}`);
+
+  const objectLinkShape = minimalValidCorpus();
+  objectLinkShape.domains[0].objectiveLinks = [{ objectiveId: 'OBJ-ci' }];
+  const objectLinkResult = lintPhase10Corpus(objectLinkShape);
+  assert(
+    objectLinkResult.ok,
+    `LAW 13 lint must accept object-shaped objectiveLinks: ${JSON.stringify(objectLinkResult.issues)}`
+  );
+
+  const oneSided = minimalValidCorpus();
+  oneSided.objectives[0].domainId = 'KDOM-other';
+  const oneSidedResult = lintPhase10Corpus(oneSided);
+  assert(
+    oneSidedResult.issues.some((issue) => issue.code === 'E_PHASE10_DOMAIN_LINK_BIDIRECTIONAL_INTEGRITY'),
+    'LAW 13 lint must fail closed for one-sided objectiveLinks domain bindings'
+  );
 
   const invalid = minimalValidCorpus();
   invalid.provenanceLinks.push({

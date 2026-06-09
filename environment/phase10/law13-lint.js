@@ -26,6 +26,12 @@ function refId(cite) {
   return undefined;
 }
 
+function objectiveIdForDomainLink(link) {
+  if (typeof link === 'string') return link;
+  if (link && typeof link === 'object') return link.objectiveId;
+  return undefined;
+}
+
 function isQueryPath(value) {
   return typeof value === 'string' && value.replaceAll('\\', '/').startsWith('wiki/queries/');
 }
@@ -221,13 +227,14 @@ export function lintPhase10Corpus(corpus = {}) {
   }
 
   for (const domain of asArray(corpus.domains)) {
-    for (const objectiveId of asArray(domain?.linkedObjectiveIds)) {
+    for (const objectiveLink of asArray(domain?.objectiveLinks)) {
+      const objectiveId = objectiveIdForDomainLink(objectiveLink);
       const objective = indexes.objectiveById.get(objectiveId);
       if (!objective || objective.domainId !== domain.domainId) {
         issue(
           'E_PHASE10_DOMAIN_LINK_BIDIRECTIONAL_INTEGRITY',
           'domain-link-bidirectional-integrity',
-          'Domain linkedObjectiveIds must point to objectives that link back to the same domain.',
+          'Domain objectiveLinks must point to objectives that link back to the same domain.',
           { domainId: domain?.domainId, objectiveId }
         );
       }
@@ -237,7 +244,10 @@ export function lintPhase10Corpus(corpus = {}) {
   for (const objective of asArray(corpus.objectives)) {
     if (typeof objective?.domainId !== 'string') continue;
     const domain = indexes.domainById.get(objective.domainId);
-    if (!domain || !asArray(domain.linkedObjectiveIds).includes(objective.objectiveId)) {
+    const hasReciprocalLink = domain
+      ? asArray(domain.objectiveLinks).some((link) => objectiveIdForDomainLink(link) === objective.objectiveId)
+      : false;
+    if (!hasReciprocalLink) {
       issue(
         'E_PHASE10_DOMAIN_LINK_BIDIRECTIONAL_INTEGRITY',
         'domain-link-bidirectional-integrity',

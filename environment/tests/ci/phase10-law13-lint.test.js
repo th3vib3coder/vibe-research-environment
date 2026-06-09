@@ -83,7 +83,7 @@ function validCorpus(overrides = {}) {
       { edgeId: 'EDGE-001', relation: 'supports', lifecycleStatus: 'active' }
     ],
     domains: [
-      { domainId: 'KDOM-main', linkedObjectiveIds: ['OBJ-001'] }
+      { domainId: 'KDOM-main', objectiveLinks: ['OBJ-001'] }
     ],
     objectives: [
       { objectiveId: 'OBJ-001', domainId: 'KDOM-main' }
@@ -124,6 +124,12 @@ test('phase10 LAW 13 check catalog includes the reviewed lint foundation set', (
 
 test('phase10 LAW 13 accepts a fully grounded corpus', () => {
   assert.deepEqual(lintPhase10Corpus(validCorpus()), { ok: true, issues: [] });
+});
+
+test('domain link integrity accepts object-shaped objectiveLinks', () => {
+  const corpus = validCorpus();
+  corpus.domains[0].objectiveLinks = [{ objectiveId: 'OBJ-001' }];
+  assert.deepEqual(lintPhase10Corpus(corpus), { ok: true, issues: [] });
 });
 
 test('wiki page with uncited assertion fails', () => {
@@ -202,6 +208,12 @@ test('stale edge reference without marker fails', () => {
 test('one-sided domain link fails', () => {
   const corpus = validCorpus();
   corpus.objectives[0].domainId = 'KDOM-other';
+  expectCode(corpus, 'E_PHASE10_DOMAIN_LINK_BIDIRECTIONAL_INTEGRITY');
+});
+
+test('objective pointing to a domain without reciprocal objectiveLinks fails', () => {
+  const corpus = validCorpus();
+  corpus.domains[0].objectiveLinks = [];
   expectCode(corpus, 'E_PHASE10_DOMAIN_LINK_BIDIRECTIONAL_INTEGRITY');
 });
 
