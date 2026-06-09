@@ -12,6 +12,7 @@ import validateNoPersonalPaths from './validate-no-personal-paths.js';
 import validateCloseoutHonesty from './validate-closeout-honesty.js';
 import validateCiWorkflow from './validate-ci-workflow.js';
 import checkPhase9Ledger from './check-phase9-ledger.js';
+import validatePhase10ClaimEdgeProjection from './phase10-claim-edge-projection.js';
 import validatePhase10Law13Lint from './phase10-law13-lint.js';
 
 const validators = [
@@ -28,6 +29,7 @@ const validators = [
   ['validate-closeout-honesty', validateCloseoutHonesty],
   ['validate-ci-workflow', validateCiWorkflow],
   ['check-phase9-ledger', checkPhase9Ledger],
+  ['phase10-claim-edge-projection', validatePhase10ClaimEdgeProjection],
   ['phase10-law13-lint', validatePhase10Law13Lint]
 ];
 

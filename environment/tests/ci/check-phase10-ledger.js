@@ -22,6 +22,9 @@ export const PHASE10_PATHS = {
   surfaceIndexTest: 'environment/tests/ci/phase10-surface-index.test.js',
   ledgerCheck: 'environment/tests/ci/check-phase10-ledger.js',
   ledgerCheckTest: 'environment/tests/ci/check-phase10-ledger.test.js',
+  claimEdgeProjection: 'environment/phase10/claim-edge-projection.js',
+  claimEdgeProjectionValidator: 'environment/tests/ci/phase10-claim-edge-projection.js',
+  claimEdgeProjectionTest: 'environment/tests/ci/phase10-claim-edge-projection.test.js',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
   schemaRegistry: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-schema-registry.md',
   lintCheckLedger: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-lint-check-ledger.md',
@@ -42,6 +45,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.surfaceIndexTest,
   PHASE10_PATHS.ledgerCheck,
   PHASE10_PATHS.ledgerCheckTest,
+  PHASE10_PATHS.claimEdgeProjection,
+  PHASE10_PATHS.claimEdgeProjectionValidator,
+  PHASE10_PATHS.claimEdgeProjectionTest,
   PHASE10_PATHS.implementationLog,
   PHASE10_PATHS.schemaRegistry,
   PHASE10_PATHS.lintCheckLedger,
@@ -57,6 +63,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'build:phase10-surface-index': 'phase10-surface-index.js',
   'check:phase10-ledger': 'check-phase10-ledger.js',
   'phase10:dependency-check': 'check-phase10-ledger.js',
+  'phase10:claim-edge-projection': 'phase10-claim-edge-projection.js',
   'phase10:law13-lint': 'phase10-law13-lint.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };

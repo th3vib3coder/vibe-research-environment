@@ -32,6 +32,8 @@ const SCHEMA_INTRODUCED_AT = '2026-06-09';
 const SCHEMA_TASK = 'T10.0.2';
 const LAW13_INTRODUCED_AT = '2026-06-09';
 const LAW13_TASK = 'T10.0.3';
+const CLAIM_EDGE_PROJECTION_INTRODUCED_AT = '2026-06-09';
+const CLAIM_EDGE_PROJECTION_TASK = 'T10.0.4';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -87,6 +89,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     task: LAW13_TASK,
     status: 'implemented-lint-foundation',
     introducedAt: LAW13_INTRODUCED_AT
+  },
+  {
+    kind: 'projection-helper',
+    name: 'phase10-claim-edge-projection',
+    paths: [
+      'environment/phase10/claim-edge-projection.js',
+      'environment/tests/ci/phase10-claim-edge-projection.js',
+      'environment/tests/ci/phase10-claim-edge-projection.test.js'
+    ],
+    task: CLAIM_EDGE_PROJECTION_TASK,
+    status: 'implemented-read-only-projection',
+    introducedAt: CLAIM_EDGE_PROJECTION_INTRODUCED_AT
   },
   {
     kind: 'hard-dependency',
@@ -198,6 +212,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-law13-lint.js')) {
     paths.push('environment/tests/ci/phase10-law13-lint.js');
   }
+  if (command.includes('phase10-claim-edge-projection.js')) {
+    paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
+  }
   return buildSurface({
     kind: 'package-script',
     name: scriptName,
@@ -245,6 +262,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'build:phase10-surface-index',
     'check:phase10-ledger',
     'phase10:dependency-check',
+    'phase10:claim-edge-projection',
     'phase10:law13-lint',
     'test:phase10-scaffold'
   ]) {

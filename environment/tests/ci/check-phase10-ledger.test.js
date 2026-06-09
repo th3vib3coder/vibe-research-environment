@@ -39,6 +39,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'build:phase10-surface-index': 'node environment/tests/ci/phase10-surface-index.js',
         'check:phase10-ledger': 'node environment/tests/ci/check-phase10-ledger.js',
         'phase10:dependency-check': 'node environment/tests/ci/check-phase10-ledger.js --dependency-check',
+        'phase10:claim-edge-projection': 'node environment/tests/ci/phase10-claim-edge-projection.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
       }
@@ -48,7 +49,10 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/tests/ci/phase10-surface-index.js',
       'environment/tests/ci/phase10-surface-index.test.js',
       'environment/tests/ci/check-phase10-ledger.js',
-      'environment/tests/ci/check-phase10-ledger.test.js'
+      'environment/tests/ci/check-phase10-ledger.test.js',
+      'environment/phase10/claim-edge-projection.js',
+      'environment/tests/ci/phase10-claim-edge-projection.js',
+      'environment/tests/ci/phase10-claim-edge-projection.test.js'
     ]) {
       await writeFixtureFile(vreRoot, relPath);
     }
@@ -153,6 +157,19 @@ test('phase10-ledger check covers phase10 schema tests in trace reconciliation',
         changedFiles: ['environment/tests/schemas/phase10-knowledge-domain.schema.test.js']
       }),
       /E_PHASE10_TRACE_MISSING.*environment\/tests\/schemas\/phase10-knowledge-domain\.schema\.test\.js/u
+    );
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers phase10 projection helpers in trace reconciliation', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/phase10/claim-edge-projection.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/phase10\/claim-edge-projection\.js/u
     );
   }, { sparseTrace: true });
 });
