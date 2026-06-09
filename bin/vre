@@ -23,6 +23,14 @@ import {
   stopObjectiveCommand
 } from '../environment/objectives/cli.js';
 import {
+  archiveKnowledgeDomain,
+  createKnowledgeDomain,
+  DomainLifecycleError,
+  linkObjectiveToDomain,
+  readKnowledgeDomainStatus,
+  unlinkObjectiveFromDomain
+} from '../environment/phase10/domain-lifecycle.js';
+import {
   normalizeWakeCallerIdentity,
   ResearchLoopCliError,
   runResearchLoopCommand
@@ -249,6 +257,7 @@ const PHASE9_ROOTS = [...new Set(PHASE9_STUB_DEFINITIONS.map((definition) => def
 const KNOWN_COMMANDS = [
   ...Object.keys(DISPATCH_TABLE).filter((commandName) => !commandName.includes(' ')),
   ...PHASE9_ROOTS,
+  'domain',
   'init'
 ].sort();
 const PHASE9_LOOKUP = new Map(
@@ -509,6 +518,17 @@ function namedPhase9ErrorPayload(command, code, message, extra = {}) {
     command,
     code,
     phase9: true,
+    message,
+    ...extra
+  };
+}
+
+function namedPhase10ErrorPayload(command, code, message, extra = {}) {
+  return {
+    ok: false,
+    command,
+    code,
+    phase10: true,
     message,
     ...extra
   };
@@ -806,6 +826,112 @@ async function runObjectiveStart(repoRoot, parsed) {
     );
   } catch (error) {
     throw coerceObjectiveCliError('objective start', error);
+  }
+}
+
+function coerceDomainCliError(command, error) {
+  if (error instanceof DomainLifecycleError) {
+    return new DomainLifecycleError({
+      command,
+      code: error.code,
+      message: error.message,
+      exitCode: error.exitCode,
+      extra: error.extra
+    });
+  }
+
+  return new DomainLifecycleError({
+    command,
+    code: 'E_PHASE10_DOMAIN_CLI_USAGE',
+    exitCode: 3,
+    message: error?.message ?? String(error)
+  });
+}
+
+function assertNoDomainPositionals(parsed, command) {
+  if (parsed.positionals.length > 0) {
+    throw new DomainLifecycleError({
+      command,
+      code: 'E_PHASE10_DOMAIN_CLI_USAGE',
+      exitCode: 3,
+      message: `${command} does not accept positional arguments: ${parsed.positionals.join(' ')}`
+    });
+  }
+}
+
+function domainStateRootOption(parsed) {
+  return typeof parsed.options['state-root'] === 'string'
+    ? parsed.options['state-root']
+    : null;
+}
+
+async function runDomainCreate(repoRoot, parsed) {
+  const command = 'domain create';
+  try {
+    assertNoDomainPositionals(parsed, command);
+    return createKnowledgeDomain(repoRoot, {
+      domainId: requiredStringOption(parsed, 'domain', command),
+      name: requiredStringOption(parsed, 'name', command),
+      objectiveId: requiredStringOption(parsed, 'objective', command),
+      stateRoot: domainStateRootOption(parsed)
+    });
+  } catch (error) {
+    throw coerceDomainCliError(command, error);
+  }
+}
+
+async function runDomainLink(repoRoot, parsed) {
+  const command = 'domain link';
+  try {
+    assertNoDomainPositionals(parsed, command);
+    return linkObjectiveToDomain(repoRoot, {
+      domainId: requiredStringOption(parsed, 'domain', command),
+      objectiveId: requiredStringOption(parsed, 'objective', command),
+      stateRoot: domainStateRootOption(parsed)
+    });
+  } catch (error) {
+    throw coerceDomainCliError(command, error);
+  }
+}
+
+async function runDomainUnlink(repoRoot, parsed) {
+  const command = 'domain unlink';
+  try {
+    assertNoDomainPositionals(parsed, command);
+    return unlinkObjectiveFromDomain(repoRoot, {
+      domainId: requiredStringOption(parsed, 'domain', command),
+      objectiveId: requiredStringOption(parsed, 'objective', command),
+      stateRoot: domainStateRootOption(parsed)
+    });
+  } catch (error) {
+    throw coerceDomainCliError(command, error);
+  }
+}
+
+async function runDomainStatus(repoRoot, parsed) {
+  const command = 'domain status';
+  try {
+    assertNoDomainPositionals(parsed, command);
+    return readKnowledgeDomainStatus(repoRoot, {
+      domainId: requiredStringOption(parsed, 'domain', command),
+      stateRoot: domainStateRootOption(parsed)
+    });
+  } catch (error) {
+    throw coerceDomainCliError(command, error);
+  }
+}
+
+async function runDomainArchive(repoRoot, parsed) {
+  const command = 'domain archive';
+  try {
+    assertNoDomainPositionals(parsed, command);
+    return archiveKnowledgeDomain(repoRoot, {
+      domainId: requiredStringOption(parsed, 'domain', command),
+      reason: typeof parsed.options.reason === 'string' ? parsed.options.reason : null,
+      stateRoot: domainStateRootOption(parsed)
+    });
+  } catch (error) {
+    throw coerceDomainCliError(command, error);
   }
 }
 
@@ -1322,6 +1448,80 @@ export async function main(argv = process.argv) {
       return 3;
     }
     return runInit(repoRoot);
+  }
+
+  if (subcommand === 'domain') {
+    const [action, ...domainRest] = rest;
+    const allowedActions = ['archive', 'create', 'link', 'status', 'unlink'];
+    if (!action) {
+      writeJsonPayload({
+        ok: false,
+        code: 'E_PHASE10_DOMAIN_CLI_USAGE',
+        command: 'domain',
+        phase10: true,
+        expected: 'domain <create|link|unlink|status|archive>'
+      });
+      return 3;
+    }
+    if (!allowedActions.includes(action)) {
+      writeJsonPayload({
+        ok: false,
+        code: 'PHASE10_UNKNOWN_SUBCOMMAND',
+        command: `domain ${action}`,
+        phase10: true,
+        allowed: allowedActions.map((candidate) => `domain ${candidate}`)
+      });
+      return 2;
+    }
+
+    const repoRoot = resolveRepoRoot(process.cwd());
+    if (!repoRoot) {
+      writeJsonPayload({
+        ok: false,
+        code: 'NOT_IN_VRE_REPO',
+        command: `domain ${action}`,
+        phase10: true
+      });
+      return 3;
+    }
+
+    const parsed = parseLongOptions(domainRest);
+    try {
+      if (action === 'create') {
+        writeJsonPayload(await runDomainCreate(repoRoot, parsed));
+        return 0;
+      }
+      if (action === 'link') {
+        writeJsonPayload(await runDomainLink(repoRoot, parsed));
+        return 0;
+      }
+      if (action === 'unlink') {
+        writeJsonPayload(await runDomainUnlink(repoRoot, parsed));
+        return 0;
+      }
+      if (action === 'status') {
+        writeJsonPayload(await runDomainStatus(repoRoot, parsed));
+        return 0;
+      }
+      if (action === 'archive') {
+        writeJsonPayload(await runDomainArchive(repoRoot, parsed));
+        return 0;
+      }
+    } catch (error) {
+      if (error instanceof DomainLifecycleError) {
+        writeJsonPayload(
+          namedPhase10ErrorPayload(
+            error.command ?? `domain ${action}`,
+            error.code,
+            error.message,
+            error.extra
+          )
+        );
+        return error.exitCode ?? 1;
+      }
+      process.stderr.write(`vre: domain ${action}: ${error.message}\n`);
+      return 1;
+    }
   }
 
   const phase9Invocation = parsePhase9Invocation([subcommand, ...rest]);

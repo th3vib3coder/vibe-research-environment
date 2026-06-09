@@ -1,6 +1,11 @@
 import test from 'node:test';
+import assert from 'node:assert/strict';
 
-import { expectFixtureValidity } from './phase9-schema-fixture-helper.js';
+import {
+  expectFixtureValidity,
+  loadValidator,
+  readFixture
+} from './phase9-schema-fixture-helper.js';
 
 for (const fixturePath of [
   'environment/tests/fixtures/phase9/objective/valid-active.json',
@@ -29,3 +34,20 @@ for (const fixturePath of [
     });
   });
 }
+
+test('phase9-objective.schema accepts optional Phase 10 knowledge-domain link', async () => {
+  const validator = await loadValidator('phase9-objective.schema.json');
+  const fixture = await readFixture('environment/tests/fixtures/phase9/objective/valid-active.json');
+  fixture.domainId = 'KDOM-001';
+
+  assert.equal(validator(fixture), true, JSON.stringify(validator.errors ?? []));
+});
+
+test('phase9-objective.schema rejects invalid Phase 10 knowledge-domain link ids', async () => {
+  const validator = await loadValidator('phase9-objective.schema.json');
+  const fixture = await readFixture('environment/tests/fixtures/phase9/objective/valid-active.json');
+  fixture.domainId = 'domain-001';
+
+  assert.equal(validator(fixture), false);
+  assert.match(JSON.stringify(validator.errors ?? []), /domainId/u);
+});

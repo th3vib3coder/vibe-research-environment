@@ -22,6 +22,8 @@ export const PHASE10_PATHS = {
   surfaceIndexTest: 'environment/tests/ci/phase10-surface-index.test.js',
   ledgerCheck: 'environment/tests/ci/check-phase10-ledger.js',
   ledgerCheckTest: 'environment/tests/ci/check-phase10-ledger.test.js',
+  binVre: 'bin/vre',
+  phase9ObjectiveSchema: 'environment/schemas/phase9-objective.schema.json',
   claimEdgeProjection: 'environment/phase10/claim-edge-projection.js',
   claimEdgeProjectionValidator: 'environment/tests/ci/phase10-claim-edge-projection.js',
   claimEdgeProjectionTest: 'environment/tests/ci/phase10-claim-edge-projection.test.js',
@@ -29,6 +31,8 @@ export const PHASE10_PATHS = {
   curatorRole: 'environment/phase10/curator-role.js',
   curatorRoleValidator: 'environment/tests/ci/phase10-curator-role.js',
   curatorRoleTest: 'environment/tests/ci/phase10-curator-role.test.js',
+  domainLifecycle: 'environment/phase10/domain-lifecycle.js',
+  domainCliTest: 'environment/tests/cli/domain-cli.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -51,6 +55,8 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.surfaceIndexTest,
   PHASE10_PATHS.ledgerCheck,
   PHASE10_PATHS.ledgerCheckTest,
+  PHASE10_PATHS.binVre,
+  PHASE10_PATHS.phase9ObjectiveSchema,
   PHASE10_PATHS.claimEdgeProjection,
   PHASE10_PATHS.claimEdgeProjectionValidator,
   PHASE10_PATHS.claimEdgeProjectionTest,
@@ -58,6 +64,8 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.curatorRole,
   PHASE10_PATHS.curatorRoleValidator,
   PHASE10_PATHS.curatorRoleTest,
+  PHASE10_PATHS.domainLifecycle,
+  PHASE10_PATHS.domainCliTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -77,6 +85,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:dependency-check': 'check-phase10-ledger.js',
   'phase10:claim-edge-projection': 'phase10-claim-edge-projection.js',
   'phase10:curator-role': 'phase10-curator-role.js',
+  'phase10:domain-lifecycle': 'domain-cli.test.js',
   'phase10:law13-lint': 'phase10-law13-lint.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
@@ -189,6 +198,9 @@ async function resolveChangedFiles(options, localRepoRoot, workspaceRoot) {
 
 function isPhase10CoveredPath(pathValue) {
   return pathValue === 'package.json'
+    || pathValue === PHASE10_PATHS.binVre
+    || pathValue === PHASE10_PATHS.phase9ObjectiveSchema
+    || pathValue === PHASE10_PATHS.domainCliTest
     || pathValue.startsWith('phase10-')
     || pathValue.startsWith('environment/tests/ci/phase10-')
     || pathValue.startsWith('environment/tests/ci/check-phase10-')

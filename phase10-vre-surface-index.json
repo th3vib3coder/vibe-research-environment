@@ -112,6 +112,19 @@
     "introducedAt": "2026-06-07"
   },
   {
+    "kind": "lifecycle-cli",
+    "name": "phase10-domain-lifecycle-cli",
+    "paths": [
+      "bin/vre",
+      "environment/phase10/domain-lifecycle.js",
+      "environment/tests/cli/domain-cli.test.js",
+      "environment/schemas/phase9-objective.schema.json"
+    ],
+    "task": "T10.0.6",
+    "status": "implemented-lifecycle-cli-foundation",
+    "introducedAt": "2026-06-09"
+  },
+  {
     "kind": "lint-validator",
     "name": "phase10-law13-lint",
     "paths": [
@@ -183,6 +196,17 @@
     "paths": [
       "package.json",
       "environment/tests/ci/check-phase10-ledger.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:domain-lifecycle",
+    "paths": [
+      "package.json",
+      "environment/tests/cli/domain-cli.test.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",
