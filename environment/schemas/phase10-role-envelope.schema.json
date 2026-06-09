@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.role-envelope.v1",
+  "title": "Phase 10 Role Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "roleEnvelopeId",
+    "domainId",
+    "roleId",
+    "canMutateClaimLedger",
+    "writeScope",
+    "budgetCategory",
+    "expectedOutputShape",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.role-envelope.v1"
+    },
+    "roleEnvelopeId": {
+      "type": "string",
+      "pattern": "^ROLEENV-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "roleId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canMutateClaimLedger": {
+      "type": "boolean"
+    },
+    "writeScope": {
+      "type": "string",
+      "enum": ["claim-ledger", "wiki-page", "computed-artifact", "none"]
+    },
+    "budgetCategory": {
+      "type": "string",
+      "enum": ["curation", "analysis", "review", "export"]
+    },
+    "expectedOutputShape": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

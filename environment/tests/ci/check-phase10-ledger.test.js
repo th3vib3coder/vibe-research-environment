@@ -142,3 +142,16 @@ test('phase10-ledger check rejects git-diff paths absent from file/change trace 
     );
   }, { sparseTrace: true });
 });
+
+test('phase10-ledger check covers phase10 schema tests in trace reconciliation', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/tests/schemas/phase10-knowledge-domain.schema.test.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/tests\/schemas\/phase10-knowledge-domain\.schema\.test\.js/u
+    );
+  }, { sparseTrace: true });
+});

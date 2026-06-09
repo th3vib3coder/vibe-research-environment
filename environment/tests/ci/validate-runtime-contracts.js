@@ -70,7 +70,20 @@ const activeSchemaFiles = [
   'assembled-continuity-payload.schema.json',
   'task-registry-entry.schema.json',
   'operator-validation-artifact.schema.json',
-  'session-digest-review-input.schema.json'
+  'session-digest-review-input.schema.json',
+  'phase10-knowledge-domain.schema.json',
+  'phase10-source-bundle.schema.json',
+  'phase10-raw-document.schema.json',
+  'phase10-provenance-link.schema.json',
+  'phase10-wiki-page.schema.json',
+  'phase10-computed-artifact.schema.json',
+  'phase10-inbox-entry.schema.json',
+  'phase10-query-record.schema.json',
+  'phase10-presentation.schema.json',
+  'phase10-export-recipe.schema.json',
+  'phase10-marp-template.schema.json',
+  'phase10-compile-policy.schema.json',
+  'phase10-role-envelope.schema.json'
 ];
 
 const activeEvalTaskFiles = [

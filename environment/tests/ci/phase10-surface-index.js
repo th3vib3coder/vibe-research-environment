@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { assert, isDirectRun, repoRoot, runValidator } from './_helpers.js';
@@ -28,6 +28,24 @@ export const PHASE10_SURFACE_INDEX_SCHEMA = {
 
 const INTRODUCED_AT = '2026-06-07';
 const TASK = 'T10.0.1';
+const SCHEMA_INTRODUCED_AT = '2026-06-09';
+const SCHEMA_TASK = 'T10.0.2';
+
+export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
+  ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
+  ['phase10.source-bundle.v1', 'phase10-source-bundle.schema.json', 'phase10-source-bundle.schema.test.js'],
+  ['phase10.raw-document.v1', 'phase10-raw-document.schema.json', 'phase10-raw-document.schema.test.js'],
+  ['phase10.provenance-link.v1', 'phase10-provenance-link.schema.json', 'phase10-provenance-link.schema.test.js'],
+  ['phase10.wiki-page.v1', 'phase10-wiki-page.schema.json', 'phase10-wiki-page.schema.test.js'],
+  ['phase10.computed-artifact.v1', 'phase10-computed-artifact.schema.json', 'phase10-computed-artifact.schema.test.js'],
+  ['phase10.inbox-entry.v1', 'phase10-inbox-entry.schema.json', 'phase10-inbox-entry.schema.test.js'],
+  ['phase10.query-record.v1', 'phase10-query-record.schema.json', 'phase10-query-record.schema.test.js'],
+  ['phase10.presentation.v1', 'phase10-presentation.schema.json', 'phase10-presentation.schema.test.js'],
+  ['phase10.export-recipe.v1', 'phase10-export-recipe.schema.json', 'phase10-export-recipe.schema.test.js'],
+  ['phase10.marp-template.v1', 'phase10-marp-template.schema.json', 'phase10-marp-template.schema.test.js'],
+  ['phase10.compile-policy.v1', 'phase10-compile-policy.schema.json', 'phase10-compile-policy.schema.test.js'],
+  ['phase10.role-envelope.v1', 'phase10-role-envelope.schema.json', 'phase10-role-envelope.schema.test.js']
+]);
 
 const STATIC_PHASE10_SURFACES = Object.freeze([
   {
@@ -108,15 +126,51 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
   }
 ]);
 
-function buildSurface({ kind, name, paths }) {
+async function pathExistsAt(localRepoRoot, repoRelativePath) {
+  try {
+    await access(path.join(localRepoRoot, repoRelativePath));
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
+
+function buildSurface({
+  kind,
+  name,
+  paths,
+  task = TASK,
+  status = 'planned-or-active-scaffold',
+  introducedAt = INTRODUCED_AT
+}) {
   return {
     kind,
     name,
     paths,
-    task: TASK,
-    status: 'planned-or-active-scaffold',
-    introducedAt: INTRODUCED_AT
+    task,
+    status,
+    introducedAt
   };
+}
+
+async function maybeSchemaContractSurface(localRepoRoot, [schemaId, schemaFile, testFile]) {
+  const schemaPath = `environment/schemas/${schemaFile}`;
+  const testPath = `environment/tests/schemas/${testFile}`;
+  if (!(await pathExistsAt(localRepoRoot, schemaPath)) || !(await pathExistsAt(localRepoRoot, testPath))) {
+    return null;
+  }
+
+  return buildSurface({
+    kind: 'schema-contract',
+    name: schemaId,
+    paths: [schemaPath, testPath],
+    task: SCHEMA_TASK,
+    status: 'implemented-schema-contract',
+    introducedAt: SCHEMA_INTRODUCED_AT
+  });
 }
 
 function scriptSurface(scriptName, command) {
@@ -162,6 +216,13 @@ export async function generatePhase10SurfaceIndex(options = {}) {
   const localRepoRoot = options.repoRoot ?? repoRoot;
   const scripts = await loadPackageScripts(localRepoRoot);
   const surfaces = STATIC_PHASE10_SURFACES.map(buildSurface);
+
+  for (const contract of PHASE10_SCHEMA_CONTRACTS) {
+    const surface = await maybeSchemaContractSurface(localRepoRoot, contract);
+    if (surface) {
+      surfaces.push(surface);
+    }
+  }
 
   for (const scriptName of [
     'build:phase10-surface-index',

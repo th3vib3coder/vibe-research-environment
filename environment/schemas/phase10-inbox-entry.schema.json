@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.inbox-entry.v1",
+  "title": "Phase 10 Inbox Entry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "inboxEntryId",
+    "domainId",
+    "entryType",
+    "sourceRef",
+    "reviewStatus",
+    "priority",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.inbox-entry.v1"
+    },
+    "inboxEntryId": {
+      "type": "string",
+      "pattern": "^INBOX-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "entryType": {
+      "type": "string",
+      "enum": ["raw-document", "source-bundle", "wiki-page", "computed-artifact", "query-record"]
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "reviewStatus": {
+      "type": "string",
+      "enum": ["pending", "in-review", "accepted", "rejected"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high", "urgent"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.export-recipe.v1",
+  "title": "Phase 10 Export Recipe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "exportRecipeId",
+    "domainId",
+    "format",
+    "sourcePageIds",
+    "compilePolicyId",
+    "guardPolicy",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.export-recipe.v1"
+    },
+    "exportRecipeId": {
+      "type": "string",
+      "pattern": "^EXPORT-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "format": {
+      "type": "string",
+      "enum": ["marp", "markdown", "html", "pdf"]
+    },
+    "sourcePageIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^WIKI-.+$"
+      }
+    },
+    "compilePolicyId": {
+      "type": "string",
+      "pattern": "^CP-.+$"
+    },
+    "guardPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requireFreshSources", "requireCitations"],
+      "properties": {
+        "requireFreshSources": {
+          "type": "boolean"
+        },
+        "requireCitations": {
+          "type": "boolean"
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

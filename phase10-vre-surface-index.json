@@ -175,6 +175,149 @@
     "introducedAt": "2026-06-07"
   },
   {
+    "kind": "schema-contract",
+    "name": "phase10.compile-policy.v1",
+    "paths": [
+      "environment/schemas/phase10-compile-policy.schema.json",
+      "environment/tests/schemas/phase10-compile-policy.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.computed-artifact.v1",
+    "paths": [
+      "environment/schemas/phase10-computed-artifact.schema.json",
+      "environment/tests/schemas/phase10-computed-artifact.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.export-recipe.v1",
+    "paths": [
+      "environment/schemas/phase10-export-recipe.schema.json",
+      "environment/tests/schemas/phase10-export-recipe.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.inbox-entry.v1",
+    "paths": [
+      "environment/schemas/phase10-inbox-entry.schema.json",
+      "environment/tests/schemas/phase10-inbox-entry.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.knowledge-domain.v1",
+    "paths": [
+      "environment/schemas/phase10-knowledge-domain.schema.json",
+      "environment/tests/schemas/phase10-knowledge-domain.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.marp-template.v1",
+    "paths": [
+      "environment/schemas/phase10-marp-template.schema.json",
+      "environment/tests/schemas/phase10-marp-template.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.presentation.v1",
+    "paths": [
+      "environment/schemas/phase10-presentation.schema.json",
+      "environment/tests/schemas/phase10-presentation.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.provenance-link.v1",
+    "paths": [
+      "environment/schemas/phase10-provenance-link.schema.json",
+      "environment/tests/schemas/phase10-provenance-link.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.query-record.v1",
+    "paths": [
+      "environment/schemas/phase10-query-record.schema.json",
+      "environment/tests/schemas/phase10-query-record.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.raw-document.v1",
+    "paths": [
+      "environment/schemas/phase10-raw-document.schema.json",
+      "environment/tests/schemas/phase10-raw-document.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.role-envelope.v1",
+    "paths": [
+      "environment/schemas/phase10-role-envelope.schema.json",
+      "environment/tests/schemas/phase10-role-envelope.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.source-bundle.v1",
+    "paths": [
+      "environment/schemas/phase10-source-bundle.schema.json",
+      "environment/tests/schemas/phase10-source-bundle.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "schema-contract",
+    "name": "phase10.wiki-page.v1",
+    "paths": [
+      "environment/schemas/phase10-wiki-page.schema.json",
+      "environment/tests/schemas/phase10-wiki-page.schema.test.js"
+    ],
+    "task": "T10.0.2",
+    "status": "implemented-schema-contract",
+    "introducedAt": "2026-06-09"
+  },
+  {
     "kind": "surface-index",
     "name": "phase10-vre-surface-index",
     "paths": [

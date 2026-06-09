@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.wiki-page.v1",
+  "title": "Phase 10 Wiki Page v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "pageId",
+    "domainId",
+    "title",
+    "path",
+    "compilePolicyId",
+    "assertionGraph",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.wiki-page.v1"
+    },
+    "pageId": {
+      "type": "string",
+      "pattern": "^WIKI-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "compilePolicyId": {
+      "type": "string",
+      "pattern": "^CP-.+$"
+    },
+    "assertionGraph": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assertionId", "text", "status", "cites"],
+        "properties": {
+          "assertionId": {
+            "type": "string",
+            "pattern": "^ASSERT-.+$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "active", "superseded", "retracted"]
+          },
+          "cites": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^PROV-.+$"
+            }
+          }
+        }
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

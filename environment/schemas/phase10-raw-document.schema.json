@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.raw-document.v1",
+  "title": "Phase 10 Raw Document v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "rawDocumentId",
+    "bundleId",
+    "domainId",
+    "sourceType",
+    "trustTier",
+    "sourceLocator",
+    "contentHash",
+    "capturedAt",
+    "ingestion"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.raw-document.v1"
+    },
+    "rawDocumentId": {
+      "type": "string",
+      "pattern": "^RAW-.+$"
+    },
+    "bundleId": {
+      "type": "string",
+      "pattern": "^SB-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": ["pdf", "webpage", "dataset", "markdown", "note", "other"]
+    },
+    "trustTier": {
+      "type": "string",
+      "enum": ["primary", "secondary", "tertiary", "operator-provided"]
+    },
+    "sourceLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "uri"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["file", "url", "doi", "obsidian"]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "contentHash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capturedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ingestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "operator"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

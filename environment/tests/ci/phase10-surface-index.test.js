@@ -7,6 +7,7 @@ import test from 'node:test';
 import {
   generatePhase10SurfaceIndex,
   PHASE10_SURFACE_INDEX_PATH,
+  PHASE10_SCHEMA_CONTRACTS,
   validatePhase10SurfaceIndexShape,
   writePhase10SurfaceIndex
 } from './phase10-surface-index.js';
@@ -46,6 +47,11 @@ async function withFixtureWorkspace(fn) {
       await writeFixtureFile(vreRoot, relPath);
     }
 
+    for (const [, schemaFile, testFile] of PHASE10_SCHEMA_CONTRACTS) {
+      await writeFixtureFile(vreRoot, `environment/schemas/${schemaFile}`);
+      await writeFixtureFile(vreRoot, `environment/tests/schemas/${testFile}`);
+    }
+
     for (const relPath of [
       'blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
       'blueprints/private/phase10-implementation-plan/phase10-schema-registry.md',
@@ -81,12 +87,18 @@ test('phase10 surface-index generator records scaffold, ledgers, scripts, and de
       'check-phase10-ledger',
       'phase9.claim-edge.v1 dependency',
       'claims-edges dependency',
-      'phase10:dependency-check'
+      'phase10:dependency-check',
+      'phase10.knowledge-domain.v1',
+      'phase10.role-envelope.v1'
     ]) {
       assert.equal(surfaces.some((surface) => surface.name === expected), true, expected);
     }
 
     assert.equal(surfaces.some((surface) => surface.paths.includes('phase10-feature-ledger.md')), false);
+    assert.equal(
+      surfaces.filter((surface) => surface.kind === 'schema-contract' && surface.task === 'T10.0.2').length,
+      13
+    );
   });
 });
 
@@ -97,5 +109,6 @@ test('phase10 surface-index writer persists schema-valid JSON', async () => {
     assert.doesNotThrow(() => validatePhase10SurfaceIndexShape(persisted));
     assert.equal(persisted.some((surface) => surface.name === 'phase10-export-guard-ledger'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10:dependency-check'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase10.compile-policy.v1'), true);
   });
 });

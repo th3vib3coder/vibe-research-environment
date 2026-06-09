@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.knowledge-domain.v1",
+  "title": "Phase 10 Knowledge Domain v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "domainId",
+    "name",
+    "lifecycleStatus",
+    "objectiveLinks",
+    "active",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.knowledge-domain.v1"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lifecycleStatus": {
+      "type": "string",
+      "enum": ["draft", "active", "archived"]
+    },
+    "objectiveLinks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^OBJ-.+$"
+      }
+    },
+    "active": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

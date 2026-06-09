@@ -172,6 +172,7 @@ function isPhase10CoveredPath(pathValue) {
     || pathValue.startsWith('environment/tests/ci/phase10-')
     || pathValue.startsWith('environment/tests/ci/check-phase10-')
     || pathValue.startsWith('environment/schemas/phase10-')
+    || pathValue.startsWith('environment/tests/schemas/phase10-')
     || pathValue.startsWith('environment/phase10/')
     || pathValue.startsWith('../vibe-science/blueprints/private/phase10-implementation-plan/phase10-')
     || pathValue.startsWith('../vibe-science/blueprints/private/WIKI_VRE/');

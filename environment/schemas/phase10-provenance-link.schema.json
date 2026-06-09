@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.provenance-link.v1",
+  "title": "Phase 10 Provenance Link v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "linkId",
+    "domainId",
+    "kind",
+    "sourceRef",
+    "targetRef",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.provenance-link.v1"
+    },
+    "linkId": {
+      "type": "string",
+      "pattern": "^PROV-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["raw-source", "computed-artifact", "claim-ledger", "edge"]
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "targetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

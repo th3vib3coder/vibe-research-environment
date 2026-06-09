@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.compile-policy.v1",
+  "title": "Phase 10 Compile Policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "compilePolicyId",
+    "policy",
+    "rationale",
+    "requiredReviewer",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.compile-policy.v1"
+    },
+    "compilePolicyId": {
+      "type": "string",
+      "pattern": "^CP-.+$"
+    },
+    "policy": {
+      "type": "string",
+      "enum": ["two-pass", "three-pass-r2-audited"]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiredReviewer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

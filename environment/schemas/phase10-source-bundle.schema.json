@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase10.source-bundle.v1",
+  "title": "Phase 10 Source Bundle v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "bundleId",
+    "domainId",
+    "title",
+    "sourceType",
+    "trustTier",
+    "sourceLocators",
+    "collectedAt",
+    "status"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase10.source-bundle.v1"
+    },
+    "bundleId": {
+      "type": "string",
+      "pattern": "^SB-.+$"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^KDOM-.+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": ["pdf", "webpage", "dataset", "markdown", "note", "other"]
+    },
+    "trustTier": {
+      "type": "string",
+      "enum": ["primary", "secondary", "tertiary", "operator-provided"]
+    },
+    "sourceLocators": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "uri"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["file", "url", "doi", "obsidian"]
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "collectedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["raw", "curated", "rejected", "archived"]
+    }
+  }
+}
