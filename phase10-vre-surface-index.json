@@ -74,6 +74,18 @@
     "introducedAt": "2026-06-07"
   },
   {
+    "kind": "inbox-workflow",
+    "name": "phase10-inbox",
+    "paths": [
+      "environment/phase10/inbox.js",
+      "environment/tests/ci/phase10-inbox.js",
+      "environment/tests/ci/phase10-inbox.test.js"
+    ],
+    "task": "T10.1.2",
+    "status": "implemented-inbox-review-promotion",
+    "introducedAt": "2026-06-10"
+  },
+  {
     "kind": "ledger",
     "name": "phase10-change-trace-ledger",
     "paths": [
@@ -219,6 +231,17 @@
     "paths": [
       "package.json",
       "environment/tests/cli/domain-cli.test.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:inbox",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-inbox.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",

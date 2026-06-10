@@ -10,9 +10,45 @@
     "domainId",
     "entryType",
     "sourceRef",
-    "reviewStatus",
+    "dedupeKeys",
+    "discoveredBySkill",
+    "discoveredByTask",
+    "discoveredAt",
+    "selectionRationale",
+    "relevanceScore",
+    "whyThisMatters",
+    "candidateStatus",
     "priority",
+    "payloadStatus",
     "createdAt"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "candidateStatus": {
+            "const": "approved"
+          }
+        },
+        "required": ["candidateStatus"]
+      },
+      "then": {
+        "required": ["approval"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "candidateStatus": {
+            "const": "rejected"
+          }
+        },
+        "required": ["candidateStatus"]
+      },
+      "then": {
+        "required": ["rejection"]
+      }
+    }
   ],
   "properties": {
     "schemaVersion": {
@@ -37,7 +73,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "minLength": 1
+          "enum": ["doi", "pmid", "arxiv", "url", "file", "operator-note", "other"]
         },
         "id": {
           "type": "string",
@@ -45,15 +81,171 @@
         }
       }
     },
-    "reviewStatus": {
+    "dedupeKeys": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "discoveredBySkill": {
       "type": "string",
-      "enum": ["pending", "in-review", "accepted", "rejected"]
+      "minLength": 1
+    },
+    "discoveredByTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectiveId", "taskId"],
+      "properties": {
+        "objectiveId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taskId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "discoveredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "selectionRationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "relevanceScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "whyThisMatters": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidateStatus": {
+      "type": "string",
+      "enum": ["pending", "stale", "approved", "rejected", "deferred"]
     },
     "priority": {
       "type": "string",
       "enum": ["low", "normal", "high", "urgent"]
     },
+    "payloadStatus": {
+      "type": "string",
+      "enum": [
+        "missing",
+        "metadata-only",
+        "abstract-only",
+        "full-text-available",
+        "preserved",
+        "removed-copyright",
+        "removed-sensitive"
+      ]
+    },
+    "preliminaryMetadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "licenseGuess": {
+      "type": "string",
+      "enum": ["open", "user-owned", "permission-granted", "restricted", "unknown"]
+    },
+    "trustTierSuggestion": {
+      "type": "string",
+      "enum": ["primary", "secondary", "tertiary", "operator-provided"]
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approvedAt",
+        "approvedBy",
+        "license",
+        "trustTier",
+        "scopeOfUse",
+        "promotedToBundle"
+      ],
+      "properties": {
+        "approvedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "approvedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "license": {
+          "type": "string",
+          "enum": ["open", "user-owned", "permission-granted", "restricted"]
+        },
+        "trustTier": {
+          "type": "string",
+          "enum": ["primary", "secondary", "tertiary", "operator-provided"]
+        },
+        "scopeOfUse": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "evidence",
+              "background",
+              "contradictory-evidence",
+              "method-reference",
+              "replication-evidence",
+              "failed-replication"
+            ]
+          }
+        },
+        "promotedToBundle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bundleId", "bundleVersion"],
+          "properties": {
+            "bundleId": {
+              "type": "string",
+              "pattern": "^SB-.+$"
+            },
+            "bundleVersion": {
+              "type": "string",
+              "pattern": "^v[0-9][A-Za-z0-9._-]*$"
+            }
+          }
+        }
+      }
+    },
+    "rejection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rejectedAt", "rejectedBy", "rejectReason", "payloadStatus"],
+      "properties": {
+        "rejectedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rejectedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rejectReason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payloadStatus": {
+          "type": "string",
+          "enum": ["preserved", "removed-copyright", "removed-sensitive"]
+        }
+      }
+    },
     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
       "type": "string",
       "format": "date-time"
     }

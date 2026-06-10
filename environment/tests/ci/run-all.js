@@ -14,6 +14,7 @@ import validateCiWorkflow from './validate-ci-workflow.js';
 import checkPhase9Ledger from './check-phase9-ledger.js';
 import validatePhase10ClaimEdgeProjection from './phase10-claim-edge-projection.js';
 import validatePhase10CuratorRole from './phase10-curator-role.js';
+import validatePhase10Inbox from './phase10-inbox.js';
 import validatePhase10Law13Bridge from './phase10-law13-bridge.js';
 import validatePhase10Law13Lint from './phase10-law13-lint.js';
 import validatePhase10RawZone from './phase10-raw-zone.js';
@@ -35,6 +36,7 @@ const validators = [
   ['check-phase9-ledger', checkPhase9Ledger],
   ['phase10-claim-edge-projection', validatePhase10ClaimEdgeProjection],
   ['phase10-curator-role', validatePhase10CuratorRole],
+  ['phase10-inbox', validatePhase10Inbox],
   ['phase10-law13-bridge', validatePhase10Law13Bridge],
   ['phase10-law13-lint', validatePhase10Law13Lint],
   ['phase10-raw-zone', validatePhase10RawZone],
