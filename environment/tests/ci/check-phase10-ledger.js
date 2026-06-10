@@ -45,6 +45,9 @@ export const PHASE10_PATHS = {
   inbox: 'environment/phase10/inbox.js',
   inboxValidator: 'environment/tests/ci/phase10-inbox.js',
   inboxTest: 'environment/tests/ci/phase10-inbox.test.js',
+  knowledgeBaseImport: 'environment/phase10/knowledge-base-import.js',
+  knowledgeBaseImportValidator: 'environment/tests/ci/phase10-knowledge-base-import.js',
+  knowledgeBaseImportTest: 'environment/tests/ci/phase10-knowledge-base-import.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -90,6 +93,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.inbox,
   PHASE10_PATHS.inboxValidator,
   PHASE10_PATHS.inboxTest,
+  PHASE10_PATHS.knowledgeBaseImport,
+  PHASE10_PATHS.knowledgeBaseImportValidator,
+  PHASE10_PATHS.knowledgeBaseImportTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -115,6 +121,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:raw-zone': 'phase10-raw-zone.js',
   'phase10:source-bundles': 'phase10-source-bundles.js',
   'phase10:inbox': 'phase10-inbox.js',
+  'phase10:knowledge-base-import': 'phase10-knowledge-base-import.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 
