@@ -16,6 +16,7 @@ import validatePhase10ClaimEdgeProjection from './phase10-claim-edge-projection.
 import validatePhase10CuratorRole from './phase10-curator-role.js';
 import validatePhase10Law13Bridge from './phase10-law13-bridge.js';
 import validatePhase10Law13Lint from './phase10-law13-lint.js';
+import validatePhase10RawZone from './phase10-raw-zone.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -34,7 +35,8 @@ const validators = [
   ['phase10-claim-edge-projection', validatePhase10ClaimEdgeProjection],
   ['phase10-curator-role', validatePhase10CuratorRole],
   ['phase10-law13-bridge', validatePhase10Law13Bridge],
-  ['phase10-law13-lint', validatePhase10Law13Lint]
+  ['phase10-law13-lint', validatePhase10Law13Lint],
+  ['phase10-raw-zone', validatePhase10RawZone]
 ];
 
 for (const [name, validator] of validators) {

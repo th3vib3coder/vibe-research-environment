@@ -248,6 +248,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:raw-zone",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-raw-zone.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "test:phase10-scaffold",
     "paths": [
       "package.json"
@@ -267,6 +278,18 @@
     "task": "T10.0.4",
     "status": "implemented-read-only-projection",
     "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "raw-zone-storage",
+    "name": "phase10-raw-zone",
+    "paths": [
+      "environment/phase10/raw-zone.js",
+      "environment/tests/ci/phase10-raw-zone.js",
+      "environment/tests/ci/phase10-raw-zone.test.js"
+    ],
+    "task": "T10.1.0",
+    "status": "implemented-raw-zone-storage-scaffold",
+    "introducedAt": "2026-06-10"
   },
   {
     "kind": "registry",

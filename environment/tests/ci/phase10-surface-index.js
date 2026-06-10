@@ -40,6 +40,8 @@ const DOMAIN_LIFECYCLE_INTRODUCED_AT = '2026-06-09';
 const DOMAIN_LIFECYCLE_TASK = 'T10.0.6';
 const LAW13_BRIDGE_INTRODUCED_AT = '2026-06-09';
 const LAW13_BRIDGE_TASK = 'T10.0.7';
+const RAW_ZONE_INTRODUCED_AT = '2026-06-10';
+const RAW_ZONE_TASK = 'T10.1.0';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -147,6 +149,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     task: LAW13_BRIDGE_TASK,
     status: 'implemented-bridge-validator',
     introducedAt: LAW13_BRIDGE_INTRODUCED_AT
+  },
+  {
+    kind: 'raw-zone-storage',
+    name: 'phase10-raw-zone',
+    paths: [
+      'environment/phase10/raw-zone.js',
+      'environment/tests/ci/phase10-raw-zone.js',
+      'environment/tests/ci/phase10-raw-zone.test.js'
+    ],
+    task: RAW_ZONE_TASK,
+    status: 'implemented-raw-zone-storage-scaffold',
+    introducedAt: RAW_ZONE_INTRODUCED_AT
   },
   {
     kind: 'hard-dependency',
@@ -261,6 +275,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-law13-bridge.js')) {
     paths.push('environment/tests/ci/phase10-law13-bridge.js');
   }
+  if (command.includes('phase10-raw-zone.js')) {
+    paths.push('environment/tests/ci/phase10-raw-zone.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -322,6 +339,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:domain-lifecycle',
     'phase10:law13-bridge',
     'phase10:law13-lint',
+    'phase10:raw-zone',
     'test:phase10-scaffold'
   ]) {
     if (typeof scripts[scriptName] === 'string') {
