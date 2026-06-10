@@ -23,6 +23,8 @@ import validatePhase10ScientificSkillIntake from './phase10-scientific-skill-int
 import validatePhase10SourceBundles from './phase10-source-bundles.js';
 import validatePhase10WikiCompile from './phase10-wiki-compile.js';
 import validatePhase10WikiR2Audit from './phase10-wiki-r2-audit.js';
+import validatePhase10AssertionGraph from './phase10-assertion-graph.js';
+import validatePhase10RiskScanner from './phase10-risk-scanner.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -48,7 +50,9 @@ const validators = [
   ['phase10-raw-zone', validatePhase10RawZone],
   ['phase10-source-bundles', validatePhase10SourceBundles],
   ['phase10-wiki-compile', validatePhase10WikiCompile],
-  ['phase10-wiki-r2-audit', validatePhase10WikiR2Audit]
+  ['phase10-wiki-r2-audit', validatePhase10WikiR2Audit],
+  ['phase10-assertion-graph', validatePhase10AssertionGraph],
+  ['phase10-risk-scanner', validatePhase10RiskScanner]
 ];
 
 for (const [name, validator] of validators) {

@@ -17,6 +17,9 @@ import {
   listSourceBundles
 } from './source-bundles.js';
 import {
+  materializeAssertionGraph
+} from './assertion-graph.js';
+import {
   normalizeSynthesisR2Audit
 } from './wiki-r2-audit.js';
 
@@ -40,7 +43,7 @@ const FORBIDDEN_LOCATOR_SEGMENTS = new Set([
   'query',
   'skill-cache'
 ]);
-const DEFERRED_DRAFT_FIELDS = new Set([
+const FORBIDDEN_DRAFT_COMPUTED_FIELDS = new Set([
   'declaredKind',
   'finalRouting',
   'riskFlags',
@@ -262,11 +265,11 @@ async function resolveProvenanceLinks(projectRoot, domainId, provenanceLinks = [
 }
 
 function assertDraftScope(draftPage) {
-  for (const field of DEFERRED_DRAFT_FIELDS) {
+  for (const field of FORBIDDEN_DRAFT_COMPUTED_FIELDS) {
     if (Object.hasOwn(draftPage, field)) {
       failWiki(
         'E_PHASE10_WIKI_DEFERRED_FIELD_FORBIDDEN',
-        `${field} is T10.2.2 scope, not T10.2.0`
+        `${field} is computed by assertion routing and cannot be authored`
       );
     }
   }
@@ -330,7 +333,7 @@ function normalizeAssertionGraph(draftPage, provenanceLinks) {
     );
   }
 
-  return draftPage.assertionGraph.map((assertion) => {
+  for (const assertion of draftPage.assertionGraph) {
     if (!LAW13_ASSERTION_STATUSES.has(assertion?.status)) {
       failWiki(
         'E_PHASE10_WIKI_ASSERTION_STATUS_INVALID',
@@ -357,12 +360,12 @@ function normalizeAssertionGraph(draftPage, provenanceLinks) {
         );
       }
     }
-    return {
-      assertionId: assertion.assertionId,
-      text: assertion.text,
-      status: assertion.status,
-      cites: [...assertion.cites]
-    };
+  }
+
+  return materializeAssertionGraph({
+    pageType: draftPage.type,
+    assertions: draftPage.assertionGraph,
+    claimEdges: draftPage.claimEdges ?? []
   });
 }
 
@@ -424,6 +427,7 @@ export async function compileWikiPages(projectPath, {
         provenanceLinks: resolvedProvenance
       })
       : null;
+    const routedAssertions = normalizeAssertionGraph(draftPage, resolvedProvenance);
 
     const wikiPage = {
       schemaVersion: 'phase10.wiki-page.v1',
@@ -434,7 +438,8 @@ export async function compileWikiPages(projectPath, {
       path: draftPage.path,
       compilePolicyId: compilePolicy.compilePolicyId,
       lifecycleStatus: draftPage.lifecycleStatus ?? 'draft',
-      assertionGraph: normalizeAssertionGraph(draftPage, resolvedProvenance),
+      pageRouting: routedAssertions.pageRouting,
+      assertionGraph: routedAssertions.assertionGraph,
       updatedAt: timestamp
     };
     if (draftPage.type === 'hypothesis') {

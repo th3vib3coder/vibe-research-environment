@@ -129,6 +129,7 @@ export default async function validatePhase10WikiR2Audit() {
               assertionId: 'ASSERT-r2-validator',
               text: 'Validator synthesis cites original provenance.',
               status: 'claimed',
+              declaredKind: 'cross-source-comparison',
               cites: ['PROV-r2-validator']
             }
           ],

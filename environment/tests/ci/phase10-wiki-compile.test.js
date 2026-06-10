@@ -146,6 +146,7 @@ function sourceDraft(overrides = {}) {
         assertionId: 'ASSERT-wiki-001',
         text: 'A sourced assertion cites a provenance link.',
         status: 'sourced',
+        declaredKind: 'extractive-fact',
         cites: ['PROV-wiki-001']
       }
     ],
@@ -346,19 +347,171 @@ test('wiki compile enforces source and hypothesis page metadata', async () => {
   });
 });
 
-test('wiki compile rejects fields deferred to T10.2.2', async () => {
-  await withProject('phase10-wiki-compile-deferred-fields-', async (projectRoot) => {
+test('wiki compile rejects author-declared computed routing fields', async () => {
+  await withProject('phase10-wiki-compile-computed-fields-', async (projectRoot) => {
     await installDomain(projectRoot);
     await installBundle(projectRoot);
 
-    for (const field of ['declaredKind', 'finalRouting', 'riskFlags', 'entityCausalRouting']) {
+    for (const field of ['riskFlags', 'finalRouting']) {
       await expectCode(
         () => compileBasic(projectRoot, {
-          draftPages: [sourceDraft({ [field]: field === 'riskFlags' ? ['causal'] : 'causal' })]
+          draftPages: [
+            sourceDraft({
+              assertionGraph: [
+                {
+                  ...sourceDraft().assertionGraph[0],
+                  [field]: field === 'riskFlags' ? ['causal'] : 'rejected'
+                }
+              ]
+            })
+          ]
         }),
-        'E_PHASE10_WIKI_DEFERRED_FIELD_FORBIDDEN'
+        'E_PHASE10_WIKI_ASSERTION_COMPUTED_FIELD_FORBIDDEN'
       );
     }
+  });
+});
+
+test('wiki compile persists assertion routing fields', async () => {
+  await withProject('phase10-wiki-compile-routing-fields-', async (projectRoot) => {
+    await installDomain(projectRoot);
+    await installBundle(projectRoot);
+
+    const result = await compileBasic(projectRoot);
+    const page = await readJson(path.join(projectRoot, result.pages[0].wikiPageRecordPath));
+
+    assert.equal(page.pageRouting, 'publishable');
+    assert.equal(page.assertionGraph[0].declaredKind, 'extractive-fact');
+    assert.deepEqual(page.assertionGraph[0].riskFlags, []);
+    assert.equal(page.assertionGraph[0].finalRouting, 'allowed');
+  });
+});
+
+test('wiki compile routes concept risk metadata without creating synthesis', async () => {
+  await withProject('phase10-wiki-compile-concept-routing-', async (projectRoot) => {
+    await installDomain(projectRoot);
+    await installBundle(projectRoot);
+
+    const result = await compileBasic(projectRoot, {
+      draftPages: [
+        sourceDraft({
+          pageId: 'WIKI-concept',
+          type: 'concept',
+          title: 'Concept page',
+          path: 'WIKI_VRE/entities/concept-page.md',
+          assertionGraph: [
+            {
+              ...sourceDraft().assertionGraph[0],
+              assertionId: 'ASSERT-wiki-concept',
+              text: 'IL6 drives inflammatory signalling in resistant cells.',
+              declaredKind: 'observed-association'
+            }
+          ]
+        })
+      ]
+    });
+
+    assert.equal(result.pageCount, 1);
+    assert.equal(result.pages[0].type, 'concept');
+    assert.equal(result.pages[0].pageRouting, 'requires-synthesis');
+    assert.equal(result.pages[0].assertionGraph[0].finalRouting, 'auto-upgraded-to-synthesis');
+
+    const wikiDir = path.join(
+      projectRoot,
+      '.vibe-science-environment',
+      'phase10',
+      'knowledge-domains',
+      DOMAIN_ID,
+      'wiki'
+    );
+    assert.equal(await pathExists(path.join(wikiDir, 'WIKI-r2-synthesis.json')), false);
+  });
+});
+
+test('wiki compile rejects source and entity risk categorization errors', async () => {
+  await withProject('phase10-wiki-compile-risk-reject-', async (projectRoot) => {
+    await installDomain(projectRoot);
+    await installBundle(projectRoot);
+
+    await expectCode(
+      () => compileBasic(projectRoot, {
+        draftPages: [
+          sourceDraft({
+            assertionGraph: [
+              {
+                ...sourceDraft().assertionGraph[0],
+                text: 'IL6 causes resistance through a pathway mechanism.'
+              }
+            ]
+          })
+        ]
+      }),
+      'E_PHASE10_ASSERTION_RISK_CATEGORIZATION'
+    );
+
+    await expectCode(
+      () => compileBasic(projectRoot, {
+        draftPages: [
+          sourceDraft({
+            type: 'entity',
+            assertionGraph: [
+              {
+                ...sourceDraft().assertionGraph[0],
+                text: 'The entity page lists a short description.',
+                declaredKind: 'causal-claim'
+              }
+            ]
+          })
+        ]
+      }),
+      'E_PHASE10_ASSERTION_KIND_FOR_PAGE_TYPE'
+    );
+  });
+});
+
+test('wiki compile routes hedge and supposition to hypothesis review', async () => {
+  await withProject('phase10-wiki-compile-hypothesis-routing-', async (projectRoot) => {
+    await installDomain(projectRoot);
+    await installBundle(projectRoot);
+
+    const hedge = await compileBasic(projectRoot, {
+      draftPages: [
+        sourceDraft({
+          pageId: 'WIKI-hedge',
+          type: 'concept',
+          title: 'Hedge concept',
+          path: 'WIKI_VRE/entities/hedge-concept.md',
+          assertionGraph: [
+            {
+              ...sourceDraft().assertionGraph[0],
+              text: 'This marker pattern may underlie resistant relapse.',
+              declaredKind: 'observed-association'
+            }
+          ]
+        })
+      ]
+    });
+    assert.equal(hedge.pages[0].pageRouting, 'hypothesis-review');
+
+    const supposition = await compileBasic(projectRoot, {
+      draftPages: [
+        sourceDraft({
+          pageId: 'WIKI-supposition',
+          type: 'concept',
+          title: 'Supposition concept',
+          path: 'WIKI_VRE/entities/supposition-concept.md',
+          assertionGraph: [
+            {
+              ...sourceDraft().assertionGraph[0],
+              status: 'supposition',
+              text: 'This marker is a future idea to test.',
+              declaredKind: 'observed-association'
+            }
+          ]
+        })
+      ]
+    });
+    assert.equal(supposition.pages[0].pageRouting, 'hypothesis-review');
   });
 });
 
@@ -379,7 +532,11 @@ test('wiki compile writes schema-valid pages without forbidden side effects', as
     const page = await readJson(pagePath);
     assert.equal(page.schemaVersion, 'phase10.wiki-page.v1');
     assert.equal(page.type, 'source');
+    assert.equal(page.pageRouting, 'publishable');
     assert.equal(page.assertionGraph[0].status, 'sourced');
+    assert.equal(page.assertionGraph[0].declaredKind, 'extractive-fact');
+    assert.deepEqual(page.assertionGraph[0].riskFlags, []);
+    assert.equal(page.assertionGraph[0].finalRouting, 'allowed');
     assert.deepEqual(page.assertionGraph[0].cites, ['PROV-wiki-001']);
 
     for (const forbidden of [

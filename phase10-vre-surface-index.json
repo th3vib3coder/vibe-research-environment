@@ -1,5 +1,21 @@
 [
   {
+    "kind": "assertion-graph-routing",
+    "name": "phase10-assertion-graph",
+    "paths": [
+      "environment/phase10/assertion-graph.js",
+      "environment/phase10/wiki-compile.js",
+      "environment/schemas/phase10-wiki-page.schema.json",
+      "environment/tests/schemas/phase10-wiki-page.schema.test.js",
+      "environment/tests/ci/phase10-assertion-graph.js",
+      "environment/tests/ci/phase10-assertion-graph.test.js",
+      "environment/tests/ci/phase10-wiki-compile.test.js"
+    ],
+    "task": "T10.2.2",
+    "status": "implemented-assertion-graph-routing",
+    "introducedAt": "2026-06-10"
+  },
+  {
     "kind": "bridge-validator",
     "name": "phase10-law13-bridge",
     "paths": [
@@ -206,6 +222,16 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:assertion-graph",
+    "paths": [
+      "package.json"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:claim-edge-projection",
     "paths": [
       "package.json",
@@ -305,6 +331,16 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:risk-scanner",
+    "paths": [
+      "package.json"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:scientific-skill-intake",
     "paths": [
       "package.json",
@@ -390,6 +426,20 @@
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",
     "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "risk-scanner",
+    "name": "phase10-risk-scanner",
+    "paths": [
+      "environment/phase10/risk-scanner.js",
+      "environment/phase10/assertion-graph.js",
+      "environment/tests/ci/phase10-risk-scanner.js",
+      "environment/tests/ci/phase10-risk-scanner.test.js",
+      "environment/tests/ci/phase10-assertion-graph.test.js"
+    ],
+    "task": "T10.2.2",
+    "status": "implemented-risk-scanner-routing",
+    "introducedAt": "2026-06-10"
   },
   {
     "kind": "role-migration",

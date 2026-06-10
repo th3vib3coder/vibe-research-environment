@@ -54,6 +54,10 @@ const WIKI_COMPILE_INTRODUCED_AT = '2026-06-10';
 const WIKI_COMPILE_TASK = 'T10.2.0';
 const WIKI_R2_AUDIT_INTRODUCED_AT = '2026-06-10';
 const WIKI_R2_AUDIT_TASK = 'T10.2.1';
+const ASSERTION_GRAPH_INTRODUCED_AT = '2026-06-10';
+const ASSERTION_GRAPH_TASK = 'T10.2.2';
+const RISK_SCANNER_INTRODUCED_AT = '2026-06-10';
+const RISK_SCANNER_TASK = 'T10.2.2';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -251,6 +255,36 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     task: WIKI_R2_AUDIT_TASK,
     status: 'implemented-r2-audited-synthesis-policy',
     introducedAt: WIKI_R2_AUDIT_INTRODUCED_AT
+  },
+  {
+    kind: 'assertion-graph-routing',
+    name: 'phase10-assertion-graph',
+    paths: [
+      'environment/phase10/assertion-graph.js',
+      'environment/phase10/wiki-compile.js',
+      'environment/schemas/phase10-wiki-page.schema.json',
+      'environment/tests/schemas/phase10-wiki-page.schema.test.js',
+      'environment/tests/ci/phase10-assertion-graph.js',
+      'environment/tests/ci/phase10-assertion-graph.test.js',
+      'environment/tests/ci/phase10-wiki-compile.test.js'
+    ],
+    task: ASSERTION_GRAPH_TASK,
+    status: 'implemented-assertion-graph-routing',
+    introducedAt: ASSERTION_GRAPH_INTRODUCED_AT
+  },
+  {
+    kind: 'risk-scanner',
+    name: 'phase10-risk-scanner',
+    paths: [
+      'environment/phase10/risk-scanner.js',
+      'environment/phase10/assertion-graph.js',
+      'environment/tests/ci/phase10-risk-scanner.js',
+      'environment/tests/ci/phase10-risk-scanner.test.js',
+      'environment/tests/ci/phase10-assertion-graph.test.js'
+    ],
+    task: RISK_SCANNER_TASK,
+    status: 'implemented-risk-scanner-routing',
+    introducedAt: RISK_SCANNER_INTRODUCED_AT
   },
   {
     kind: 'hard-dependency',
@@ -452,6 +486,8 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:scientific-skill-intake',
     'phase10:wiki-compile',
     'phase10:wiki-r2-audit',
+    'phase10:assertion-graph',
+    'phase10:risk-scanner',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

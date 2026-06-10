@@ -26,6 +26,8 @@
     "phase10:source-bundles": "node environment/tests/ci/phase10-source-bundles.js",
     "phase10:wiki-compile": "node environment/tests/ci/phase10-wiki-compile.js",
     "phase10:wiki-r2-audit": "node environment/tests/ci/phase10-wiki-r2-audit.js",
+    "phase10:assertion-graph": "node environment/tests/ci/phase10-assertion-graph.js",
+    "phase10:risk-scanner": "node environment/tests/ci/phase10-risk-scanner.js",
     "phase9:acceptance": "node environment/acceptance/run-wave6-acceptance.js --all",
     "phase9:acceptance:A": "node environment/acceptance/run-wave6-acceptance.js A",
     "phase9:acceptance:B": "node environment/acceptance/run-wave6-acceptance.js B",

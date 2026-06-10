@@ -12,6 +12,7 @@
     "title",
     "path",
     "compilePolicyId",
+    "pageRouting",
     "assertionGraph",
     "updatedAt"
   ],
@@ -138,13 +139,25 @@
         }
       }
     },
+    "pageRouting": {
+      "type": "string",
+      "enum": ["publishable", "requires-synthesis", "rejected", "hypothesis-review"]
+    },
     "assertionGraph": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["assertionId", "text", "status", "cites"],
+        "required": [
+          "assertionId",
+          "text",
+          "status",
+          "declaredKind",
+          "riskFlags",
+          "finalRouting",
+          "cites"
+        ],
         "properties": {
           "assertionId": {
             "type": "string",
@@ -158,6 +171,43 @@
             "type": "string",
             "enum": ["sourced", "computed", "claimed", "supposition"]
           },
+          "declaredKind": {
+            "type": "string",
+            "enum": [
+              "extractive-fact",
+              "definition",
+              "synonym",
+              "observed-association",
+              "quantitative-observation",
+              "method-description",
+              "causal-claim",
+              "mechanism",
+              "contradiction",
+              "cross-source-comparison",
+              "clinical-implication",
+              "priority-ranking"
+            ]
+          },
+          "riskFlags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "causal-or-mechanistic-language",
+                "hedge-causality"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "finalRouting": {
+            "type": "string",
+            "enum": [
+              "allowed",
+              "auto-upgraded-to-synthesis",
+              "rejected",
+              "routed-to-hypothesis-review"
+            ]
+          },
           "cites": {
             "type": "array",
             "minItems": 1,
@@ -165,6 +215,14 @@
               "type": "string",
               "pattern": "^PROV-.+$"
             }
+          },
+          "edgeRefs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^EDGE-.+$"
+            },
+            "uniqueItems": true
           }
         }
       }

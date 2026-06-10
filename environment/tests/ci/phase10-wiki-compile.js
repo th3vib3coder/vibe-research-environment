@@ -136,6 +136,7 @@ export default async function validatePhase10WikiCompile() {
               assertionId: 'ASSERT-wiki-validator',
               text: 'Validator assertion has a provenance cite.',
               status: 'sourced',
+              declaredKind: 'extractive-fact',
               cites: ['PROV-wiki-validator']
             }
           ]

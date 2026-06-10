@@ -13,11 +13,15 @@ const validWikiPage = {
   path: 'WIKI_VRE/entities/therapy-evidence-summary.md',
   compilePolicyId: 'CP-001',
   lifecycleStatus: 'draft',
+  pageRouting: 'publishable',
   assertionGraph: [
     {
       assertionId: 'ASSERT-001',
       text: 'Every assertion carries its own citations.',
       status: 'sourced',
+      declaredKind: 'extractive-fact',
+      riskFlags: [],
+      finalRouting: 'allowed',
       cites: ['PROV-001']
     }
   ],
@@ -71,6 +75,34 @@ test('phase10-wiki-page.schema keeps lifecycle status distinct from LAW 13 statu
   fixture.assertionGraph[0].status = 'computed';
 
   await expectValid(SCHEMA_FILE, fixture);
+});
+
+test('phase10-wiki-page.schema requires assertion routing fields', async () => {
+  const missingDeclaredKind = clone(validWikiPage);
+  delete missingDeclaredKind.assertionGraph[0].declaredKind;
+  await expectInvalid(SCHEMA_FILE, missingDeclaredKind, /required|declaredKind/u);
+
+  const missingRiskFlags = clone(validWikiPage);
+  delete missingRiskFlags.assertionGraph[0].riskFlags;
+  await expectInvalid(SCHEMA_FILE, missingRiskFlags, /required|riskFlags/u);
+
+  const missingFinalRouting = clone(validWikiPage);
+  delete missingFinalRouting.assertionGraph[0].finalRouting;
+  await expectInvalid(SCHEMA_FILE, missingFinalRouting, /required|finalRouting/u);
+
+  const missingPageRouting = clone(validWikiPage);
+  delete missingPageRouting.pageRouting;
+  await expectInvalid(SCHEMA_FILE, missingPageRouting, /required|pageRouting/u);
+});
+
+test('phase10-wiki-page.schema rejects design-prose kebab field names', async () => {
+  const fixture = clone(validWikiPage);
+  fixture.assertionGraph[0]['declared-kind'] = fixture.assertionGraph[0].declaredKind;
+  delete fixture.assertionGraph[0].declaredKind;
+  fixture['page-routing'] = fixture.pageRouting;
+  delete fixture.pageRouting;
+
+  await expectInvalid(SCHEMA_FILE, fixture, /additional|required/u);
 });
 
 test('phase10-wiki-page.schema requires hypothesis nexusStatus', async () => {
