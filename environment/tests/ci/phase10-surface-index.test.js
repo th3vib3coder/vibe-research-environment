@@ -39,6 +39,7 @@ async function withFixtureWorkspace(fn) {
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'phase10:inbox': 'node environment/tests/ci/phase10-inbox.js',
         'phase10:knowledge-base-import': 'node environment/tests/ci/phase10-knowledge-base-import.js',
+        'phase10:wiki-compile': 'node environment/tests/ci/phase10-wiki-compile.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js'
       }
@@ -80,6 +81,9 @@ async function withFixtureWorkspace(fn) {
       'environment/phase10/knowledge-base-import.js',
       'environment/tests/ci/phase10-knowledge-base-import.js',
       'environment/tests/ci/phase10-knowledge-base-import.test.js',
+      'environment/phase10/wiki-compile.js',
+      'environment/tests/ci/phase10-wiki-compile.js',
+      'environment/tests/ci/phase10-wiki-compile.test.js',
       'environment/schemas/phase9-objective.schema.json',
       'environment/schemas/phase9-claim-edge.schema.json',
       'environment/claims/edges.js'
@@ -144,6 +148,8 @@ test('phase10 surface-index generator records scaffold, ledgers, scripts, and de
       'phase10:inbox',
       'phase10-knowledge-base-import',
       'phase10:knowledge-base-import',
+      'phase10-wiki-compile',
+      'phase10:wiki-compile',
       'phase10-raw-zone',
       'phase10:raw-zone',
       'phase10-source-bundles',
@@ -175,6 +181,7 @@ test('phase10 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'phase10-law13-bridge'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-inbox'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-knowledge-base-import'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase10-wiki-compile'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-raw-zone'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-source-bundles'), true);
   });

@@ -8,6 +8,7 @@
     "schemaVersion",
     "pageId",
     "domainId",
+    "type",
     "title",
     "path",
     "compilePolicyId",
@@ -26,6 +27,10 @@
       "type": "string",
       "pattern": "^KDOM-.+$"
     },
+    "type": {
+      "type": "string",
+      "enum": ["source", "concept", "synthesis", "hypothesis", "entity"]
+    },
     "title": {
       "type": "string",
       "minLength": 1
@@ -37,6 +42,14 @@
     "compilePolicyId": {
       "type": "string",
       "pattern": "^CP-.+$"
+    },
+    "lifecycleStatus": {
+      "type": "string",
+      "enum": ["draft", "active", "superseded", "retracted"]
+    },
+    "nexusStatus": {
+      "type": "string",
+      "const": "not-established"
     },
     "assertionGraph": {
       "type": "array",
@@ -56,7 +69,7 @@
           },
           "status": {
             "type": "string",
-            "enum": ["draft", "active", "superseded", "retracted"]
+            "enum": ["sourced", "computed", "claimed", "supposition"]
           },
           "cites": {
             "type": "array",
@@ -73,5 +86,20 @@
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "hypothesis"
+          }
+        },
+        "required": ["type"]
+      },
+      "then": {
+        "required": ["nexusStatus"]
+      }
+    }
+  ]
 }
