@@ -90,12 +90,13 @@ export default async function validatePhase10WikiQuery() {
       domainId: DOMAIN_ID,
       queryId: 'QUERY-validator-query',
       queryText: 'CXCL13 CD8 ovarian cancer',
-      queryClass: 'targeted-read',
+      queryClass: 'lookup',
+      estimationProfile: 'targeted-read',
       now: TIMESTAMP
     });
 
     if (
-      result.queryRecord?.decisionUse?.classification !== 'not-for-decision'
+      result.queryRecord?.decisionUse?.classification !== 'informational'
       || result.queryRecord?.resultRefs?.[0] !== 'WIKI-validator-query'
       || !result.queryMarkdownPath.endsWith('wiki/queries/QUERY-validator-query.md')
     ) {

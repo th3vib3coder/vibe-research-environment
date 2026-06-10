@@ -53,6 +53,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:risk-scanner': 'node environment/tests/ci/phase10-risk-scanner.js',
         'phase10:compile-policy': 'node environment/tests/ci/phase10-compile-policy.js',
         'phase10:wiki-query': 'node environment/tests/ci/phase10-wiki-query.js',
+        'phase10:query-decision-use': 'node environment/tests/ci/phase10-query-decision-use.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
@@ -112,6 +113,9 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/wiki-query.js',
       'environment/tests/ci/phase10-wiki-query.js',
       'environment/tests/ci/phase10-wiki-query.test.js',
+      'environment/phase10/query-decision-use.js',
+      'environment/tests/ci/phase10-query-decision-use.js',
+      'environment/tests/ci/phase10-query-decision-use.test.js',
       'environment/orchestrator/task-registry/phase10-wiki-lint.json',
       'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
@@ -408,6 +412,25 @@ test('phase10-ledger check covers wiki-query surfaces', async () => {
       'environment/phase10/wiki-query.js',
       'environment/tests/ci/phase10-wiki-query.js',
       'environment/tests/ci/phase10-wiki-query.test.js'
+    ]) {
+      await assert.rejects(
+        () => checkPhase10Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [changedFile]
+        }),
+        new RegExp(`E_PHASE10_TRACE_MISSING.*${changedFile.replaceAll('/', '\\/')}`, 'u')
+      );
+    }
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers query decision-use surfaces', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    for (const changedFile of [
+      'environment/phase10/query-decision-use.js',
+      'environment/tests/ci/phase10-query-decision-use.js',
+      'environment/tests/ci/phase10-query-decision-use.test.js'
     ]) {
       await assert.rejects(
         () => checkPhase10Ledger({

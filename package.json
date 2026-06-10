@@ -30,6 +30,7 @@
     "phase10:risk-scanner": "node environment/tests/ci/phase10-risk-scanner.js",
     "phase10:compile-policy": "node environment/tests/ci/phase10-compile-policy.js",
     "phase10:wiki-query": "node environment/tests/ci/phase10-wiki-query.js",
+    "phase10:query-decision-use": "node environment/tests/ci/phase10-query-decision-use.js",
     "phase9:acceptance": "node environment/acceptance/run-wave6-acceptance.js --all",
     "phase9:acceptance:A": "node environment/acceptance/run-wave6-acceptance.js A",
     "phase9:acceptance:B": "node environment/acceptance/run-wave6-acceptance.js B",

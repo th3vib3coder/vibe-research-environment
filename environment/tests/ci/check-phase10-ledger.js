@@ -70,6 +70,9 @@ export const PHASE10_PATHS = {
   wikiQuery: 'environment/phase10/wiki-query.js',
   wikiQueryValidator: 'environment/tests/ci/phase10-wiki-query.js',
   wikiQueryTest: 'environment/tests/ci/phase10-wiki-query.test.js',
+  queryDecisionUse: 'environment/phase10/query-decision-use.js',
+  queryDecisionUseValidator: 'environment/tests/ci/phase10-query-decision-use.js',
+  queryDecisionUseTest: 'environment/tests/ci/phase10-query-decision-use.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -140,6 +143,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.wikiQuery,
   PHASE10_PATHS.wikiQueryValidator,
   PHASE10_PATHS.wikiQueryTest,
+  PHASE10_PATHS.queryDecisionUse,
+  PHASE10_PATHS.queryDecisionUseValidator,
+  PHASE10_PATHS.queryDecisionUseTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -173,6 +179,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:risk-scanner': 'phase10-risk-scanner.js',
   'phase10:compile-policy': 'phase10-compile-policy.js',
   'phase10:wiki-query': 'phase10-wiki-query.js',
+  'phase10:query-decision-use': 'phase10-query-decision-use.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

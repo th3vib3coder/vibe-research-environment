@@ -14,6 +14,10 @@ import {
   activeDomainRecordPath,
   domainStateRootDir
 } from './domain-lifecycle.js';
+import {
+  computeQueryDecisionUse,
+  QUERY_CLASSES
+} from './query-decision-use.js';
 
 export const QUERY_RECORD_SCHEMA_FILE = 'phase10-query-record.schema.json';
 export const WIKI_PAGE_SCHEMA_FILE = 'phase10-wiki-page.schema.json';
@@ -21,7 +25,7 @@ export const WIKI_QUERY_MANIFEST_FILE = 'compiled-manifest.json';
 
 export const QUERY_ESTIMATION_TABLE = Object.freeze({
   'targeted-read': Object.freeze({
-    queryClass: 'targeted-read',
+    estimationProfile: 'targeted-read',
     expectedPages: 5,
     expectedTokens: 2000,
     expectedHops: 1,
@@ -29,7 +33,7 @@ export const QUERY_ESTIMATION_TABLE = Object.freeze({
     maxCitationRefs: 20
   }),
   'broad-read': Object.freeze({
-    queryClass: 'broad-read',
+    estimationProfile: 'broad-read',
     expectedPages: 12,
     expectedTokens: 6000,
     expectedHops: 2,
@@ -41,8 +45,7 @@ export const QUERY_ESTIMATION_TABLE = Object.freeze({
 const SAFE_DOMAIN_ID_PATTERN = /^KDOM-[A-Za-z0-9][A-Za-z0-9._-]*$/u;
 const SAFE_QUERY_ID_PATTERN = /^QUERY-[A-Za-z0-9][A-Za-z0-9._-]*$/u;
 const SAFE_WIKI_PAGE_ID_PATTERN = /^WIKI-[A-Za-z0-9][A-Za-z0-9._-]*$/u;
-const COMPUTED_BY = 'phase10-wiki-query';
-const FORBIDDEN_DECISION_USE_CLASSIFICATIONS = new Set(['decision-grade', 'audit-grade']);
+const FORMAL_QUERY_CLASS_SET = new Set(QUERY_CLASSES);
 const RESERVED_SOURCE_SEGMENTS = new Set([
   '_inbox',
   'raw',
@@ -189,13 +192,16 @@ async function readCompiledManifest(projectRoot, domainId, options, timestamp, o
   return manifest;
 }
 
-function resolveEstimate(queryClass) {
-  const estimate = QUERY_ESTIMATION_TABLE[queryClass];
+function resolveEstimate(estimationProfile) {
+  const estimate = QUERY_ESTIMATION_TABLE[estimationProfile];
   if (!estimate) {
-    failQuery('E_PHASE10_QUERY_ESTIMATE_MISSING', `No query estimate for ${queryClass}`);
+    failQuery(
+      'E_PHASE10_QUERY_ESTIMATE_MISSING',
+      `No query estimate for ${estimationProfile}`
+    );
   }
   for (const field of [
-    'queryClass',
+    'estimationProfile',
     'expectedPages',
     'expectedTokens',
     'expectedHops',
@@ -207,6 +213,16 @@ function resolveEstimate(queryClass) {
     }
   }
   return estimate;
+}
+
+function assertFormalQueryClass(queryClass) {
+  if (!FORMAL_QUERY_CLASS_SET.has(queryClass)) {
+    failQuery(
+      'E_PHASE10_QUERY_CLASS_INVALID',
+      `Invalid Phase 10 query class: ${queryClass}`,
+      { queryClass }
+    );
+  }
 }
 
 function positiveInteger(value, fallback) {
@@ -254,12 +270,11 @@ function assertNoCrossDomain(input) {
   }
 }
 
-function assertNoForbiddenDecisionUse(input) {
-  const requested = input.requestedDecisionUseClassification;
-  if (FORBIDDEN_DECISION_USE_CLASSIFICATIONS.has(requested)) {
+function assertNoDeclaredDecisionUse(input) {
+  if (input.decisionUse != null || input.requestedDecisionUseClassification != null) {
     failQuery(
-      'E_PHASE10_QUERY_DECISION_GRADE_REQUIRES_R2',
-      `${requested} requires a reviewed R2 decision-use path outside T10.3.0`
+      'E_PHASE10_DECISION_USE_DECLARED',
+      'Query decisionUse is computed by Phase 10 and cannot be caller-declared'
     );
   }
 }
@@ -411,7 +426,7 @@ async function validateQueryRecord(projectRoot, queryRecord) {
 export async function runWikiQuery(projectPath, input = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
   assertNoCrossDomain(input);
-  assertNoForbiddenDecisionUse(input);
+  assertNoDeclaredDecisionUse(input);
 
   const domainId = input.domainId;
   assertSafeDomainId(domainId);
@@ -420,8 +435,10 @@ export async function runWikiQuery(projectPath, input = {}) {
   const timestamp = input.now ?? now();
   const options = { stateRoot: input.stateRoot };
   const outputPath = logicalOutputPath(queryId, input.outputPath);
-  const queryClass = input.queryClass ?? 'targeted-read';
-  const estimate = resolveEstimate(queryClass);
+  const queryClass = input.queryClass ?? 'lookup';
+  assertFormalQueryClass(queryClass);
+  const estimationProfile = input.estimationProfile ?? 'targeted-read';
+  const estimate = resolveEstimate(estimationProfile);
   const budget = resolveBudget(input.budget, estimate);
 
   const domainRecord = await readActiveDomainRecord(projectRoot, options);
@@ -436,6 +453,15 @@ export async function runWikiQuery(projectPath, input = {}) {
   assertBudget(manifest, budget);
   const pages = await readManifestPages(projectRoot, domainId, manifest, options);
   const results = rankPages(pages, input.queryText, budget);
+  const status = 'complete';
+  const decisionUse = computeQueryDecisionUse({
+    queryClass,
+    status,
+    reportScope: input.reportScope,
+    r2Audit: input.r2Audit,
+    qualityGates: input.qualityGates,
+    computedAt: timestamp
+  });
 
   const queryRecord = {
     schemaVersion: 'phase10.query-record.v1',
@@ -443,12 +469,18 @@ export async function runWikiQuery(projectPath, input = {}) {
     domainId,
     queryText: input.queryText,
     issuedAt: timestamp,
+    queryClass,
+    status,
+    ...(input.reportScope == null ? {} : { reportScope: input.reportScope }),
+    ...(input.r2Audit == null ? {} : { r2Audit: input.r2Audit }),
+    ...(input.qualityGates == null ? {} : { qualityGates: input.qualityGates }),
+    outputPath,
+    outputBanner: {
+      decisionUseClassification: decisionUse.classification,
+      provenanceWarning: 'query-output-is-metadata-not-law13-provenance'
+    },
     resultRefs: results.map((result) => result.pageId),
-    decisionUse: {
-      classification: 'not-for-decision',
-      computedBy: COMPUTED_BY,
-      computedAt: timestamp
-    }
+    decisionUse
   };
   await validateQueryRecord(projectRoot, queryRecord);
 

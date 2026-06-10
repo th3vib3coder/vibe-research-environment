@@ -137,7 +137,7 @@ async function queryBasic(projectRoot, overrides = {}) {
     domainId: DOMAIN_ID,
     queryId: 'QUERY-cxcl13-cd8',
     queryText: 'CXCL13 CD8 ovarian cancer',
-    queryClass: 'targeted-read',
+    estimationProfile: 'targeted-read',
     now: TIMESTAMP,
     ...overrides
   });
@@ -146,7 +146,7 @@ async function queryBasic(projectRoot, overrides = {}) {
 test('wiki query exposes pinned codebase estimation lookup fields', () => {
   const estimate = QUERY_ESTIMATION_TABLE['targeted-read'];
   for (const field of [
-    'queryClass',
+    'estimationProfile',
     'expectedPages',
     'expectedTokens',
     'expectedHops',
@@ -155,6 +155,21 @@ test('wiki query exposes pinned codebase estimation lookup fields', () => {
   ]) {
     assert.ok(Object.hasOwn(estimate, field), `missing ${field}`);
   }
+});
+
+test('wiki query rejects old queryClass estimation-profile alias', async () => {
+  await withProject('phase10-wiki-query-clean-replace-', async (projectRoot) => {
+    await installCompiledWiki(projectRoot);
+    await expectCode(
+      () => queryBasic(projectRoot, { queryClass: 'targeted-read' }),
+      'E_PHASE10_QUERY_CLASS_INVALID'
+    );
+    const result = await queryBasic(projectRoot, {
+      estimationProfile: 'targeted-read',
+      queryClass: 'lookup'
+    });
+    assert.equal(result.estimate.estimationProfile, 'targeted-read');
+  });
 });
 
 test('wiki query rejects missing, inactive, and stale compiled manifest', async () => {
@@ -227,40 +242,68 @@ test('wiki query fails closed on budget, empty trace, and reserved page paths', 
 test('wiki query writes schema-valid records with computed not-for-decision floor', async () => {
   await withProject('phase10-wiki-query-green-', async (projectRoot) => {
     await installCompiledWiki(projectRoot);
-    const result = await queryBasic(projectRoot, {
-      decisionUse: {
-        classification: 'decision-grade',
-        computedBy: 'caller',
-        computedAt: TIMESTAMP
-      }
-    });
+    const result = await queryBasic(projectRoot, { queryClass: 'lookup' });
 
     assert.equal(result.ok, true);
     assert.equal(result.queryRecord.schemaVersion, 'phase10.query-record.v1');
     assert.equal(result.queryRecord.queryId, 'QUERY-cxcl13-cd8');
+    assert.equal(result.queryRecord.queryClass, 'lookup');
+    assert.equal(result.queryRecord.status, 'complete');
     assert.deepEqual(result.queryRecord.resultRefs, ['WIKI-cxcl13-cd8']);
-    assert.equal(result.queryRecord.decisionUse.classification, 'not-for-decision');
-    assert.equal(result.queryRecord.decisionUse.computedBy, 'phase10-wiki-query');
+    assert.equal(result.queryRecord.decisionUse.classification, 'informational');
+    assert.equal(result.queryRecord.decisionUse.computedBy, 'phase10-query-decision-use');
     assert.match(result.queryRecord.decisionUse.computedAt, /^\d{4}-\d{2}-\d{2}T/u);
     assert.deepEqual(result.results[0].citationRefs, ['PROV-cxcl13-cd8']);
-    assert.equal(result.estimate.queryClass, 'targeted-read');
+    assert.equal(result.estimate.estimationProfile, 'targeted-read');
     assert.equal(result.queryMarkdownPath.endsWith('wiki/queries/QUERY-cxcl13-cd8.md'), true);
 
     const record = await readJson(path.join(projectRoot, result.queryRecordPath));
-    assert.equal(record.decisionUse.classification, 'not-for-decision');
+    assert.equal(record.decisionUse.classification, 'informational');
     assert.equal(await pathExists(path.join(wikiRoot(projectRoot), 'provenance-links')), false);
   });
 });
 
-test('wiki query never emits decision-grade or audit-grade without R2', async () => {
+test('wiki query rejects caller-declared decision use', async () => {
   await withProject('phase10-wiki-query-hb8-', async (projectRoot) => {
     await installCompiledWiki(projectRoot);
-    for (const classification of ['decision-grade', 'audit-grade']) {
-      await expectCode(
-        () => queryBasic(projectRoot, { requestedDecisionUseClassification: classification }),
-        'E_PHASE10_QUERY_DECISION_GRADE_REQUIRES_R2'
-      );
-    }
+    await expectCode(
+      () => queryBasic(projectRoot, {
+        decisionUse: {
+          classification: 'decision-grade',
+          computedBy: 'caller',
+          computedAt: TIMESTAMP
+        }
+      }),
+      'E_PHASE10_DECISION_USE_DECLARED'
+    );
+  });
+});
+
+test('wiki query gates decision-grade and audit-grade evidence', async () => {
+  await withProject('phase10-wiki-query-decision-use-', async (projectRoot) => {
+    await installCompiledWiki(projectRoot);
+    const noR2 = await queryBasic(projectRoot, { queryClass: 'decision-support' });
+    assert.equal(noR2.queryRecord.decisionUse.classification, 'not-for-decision');
+
+    const withR2 = await queryBasic(projectRoot, {
+      queryClass: 'decision-support',
+      r2Audit: { status: 'passed', verdict: 'ACCEPT' }
+    });
+    assert.equal(withR2.queryRecord.decisionUse.classification, 'decision-grade');
+
+    const noFullEnumeration = await queryBasic(projectRoot, {
+      queryClass: 'contradiction-audit'
+    });
+    assert.equal(
+      noFullEnumeration.queryRecord.decisionUse.classification,
+      'not-for-decision'
+    );
+
+    const auditGrade = await queryBasic(projectRoot, {
+      queryClass: 'contradiction-audit',
+      qualityGates: { fullContradictionEnumeration: true }
+    });
+    assert.equal(auditGrade.queryRecord.decisionUse.classification, 'audit-grade');
   });
 });
 

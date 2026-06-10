@@ -10,6 +10,10 @@
     "domainId",
     "queryText",
     "issuedAt",
+    "queryClass",
+    "status",
+    "outputPath",
+    "outputBanner",
     "resultRefs",
     "decisionUse"
   ],
@@ -33,6 +37,88 @@
       "type": "string",
       "format": "date-time"
     },
+    "queryClass": {
+      "type": "string",
+      "enum": [
+        "lookup",
+        "evidence-summary",
+        "decision-support",
+        "contradiction-audit",
+        "report-generation"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["complete", "incomplete", "failed"]
+    },
+    "reportScope": {
+      "type": "string",
+      "enum": [
+        "domain-summary",
+        "recent-week",
+        "inbox-status",
+        "claim-status-overview",
+        "single-objective"
+      ]
+    },
+    "r2Audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verdict": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "qualityGates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fullContradictionEnumeration": {
+          "type": "boolean"
+        },
+        "contradictionEnumerationComplete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "outputPath": {
+      "type": "string",
+      "pattern": "^wiki/queries/QUERY-.+\\.md$"
+    },
+    "outputBanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionUseClassification",
+        "provenanceWarning"
+      ],
+      "properties": {
+        "decisionUseClassification": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provenanceWarning": {
+          "const": "query-output-is-metadata-not-law13-provenance"
+        }
+      }
+    },
     "resultRefs": {
       "type": "array",
       "minItems": 1,
@@ -48,11 +134,16 @@
       "properties": {
         "classification": {
           "type": "string",
-          "minLength": 1
+          "enum": [
+            "not-for-decision",
+            "informational",
+            "evidence-support",
+            "decision-grade",
+            "audit-grade"
+          ]
         },
         "computedBy": {
-          "type": "string",
-          "minLength": 1
+          "const": "phase10-query-decision-use"
         },
         "computedAt": {
           "type": "string",
@@ -60,5 +151,20 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "queryClass": {
+            "const": "report-generation"
+          }
+        },
+        "required": ["queryClass"]
+      },
+      "then": {
+        "required": ["reportScope"]
+      }
+    }
+  ]
 }

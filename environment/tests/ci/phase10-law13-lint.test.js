@@ -76,7 +76,14 @@ function validCorpus(overrides = {}) {
       {
         queryId: 'QUERY-001',
         path: 'wiki/queries/query-001.md',
-        decisionUse: { classification: 'context-only' }
+        queryClass: 'lookup',
+        status: 'complete',
+        outputPath: 'wiki/queries/query-001.md',
+        decisionUse: {
+          classification: 'informational',
+          computedBy: 'phase10-query-decision-use',
+          computedAt: '2026-06-10T00:00:00.000Z'
+        }
       }
     ],
     claimEdges: [
@@ -118,7 +125,10 @@ test('phase10 LAW 13 check catalog includes the reviewed lint foundation set', (
     'edge-reference-resolves',
     'edge-stale-or-superseded-marker-required',
     'domain-link-bidirectional-integrity',
-    'phase10-domain-name-anti-clash'
+    'phase10-domain-name-anti-clash',
+    'decision-use-computed-not-declared',
+    'report-scope-required-for-report-class',
+    'r2-audit-required-for-decision-grade'
   ]);
 });
 
@@ -237,4 +247,23 @@ test('query origin metadata is allowed when not used as evidence', () => {
   const corpus = validCorpus();
   corpus.wikiPages[1].originQueryId = 'QUERY-001';
   assert.deepEqual(lintPhase10Corpus(corpus), { ok: true, issues: [] });
+});
+
+test('author-declared decision use fails LAW 13 query lint', () => {
+  const corpus = validCorpus();
+  corpus.queryRecords[0].decisionUse.declaredBy = 'author';
+  expectCode(corpus, 'E_PHASE10_DECISION_USE_COMPUTED_NOT_DECLARED');
+});
+
+test('report-generation query records require report scope', () => {
+  const corpus = validCorpus();
+  corpus.queryRecords[0].queryClass = 'report-generation';
+  expectCode(corpus, 'E_PHASE10_REPORT_SCOPE_REQUIRED');
+});
+
+test('decision-grade query records require accepted R2 audit', () => {
+  const corpus = validCorpus();
+  corpus.queryRecords[0].queryClass = 'decision-support';
+  corpus.queryRecords[0].decisionUse.classification = 'decision-grade';
+  expectCode(corpus, 'E_PHASE10_R2_AUDIT_REQUIRED_FOR_DECISION_GRADE');
 });

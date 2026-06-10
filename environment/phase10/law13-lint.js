@@ -1,3 +1,9 @@
+import {
+  acceptedR2AuditPresent,
+  COMPUTED_BY,
+  computeQueryDecisionUse
+} from './query-decision-use.js';
+
 export const LAW13_CHECKS = Object.freeze([
   'wiki-page-requires-provenance',
   'raw-document-requires-trust-tier',
@@ -9,7 +15,10 @@ export const LAW13_CHECKS = Object.freeze([
   'edge-reference-resolves',
   'edge-stale-or-superseded-marker-required',
   'domain-link-bidirectional-integrity',
-  'phase10-domain-name-anti-clash'
+  'phase10-domain-name-anti-clash',
+  'decision-use-computed-not-declared',
+  'report-scope-required-for-report-class',
+  'r2-audit-required-for-decision-grade'
 ]);
 
 const AUTHORITATIVE_PAGE_TYPES = new Set(['source', 'concept', 'synthesis', 'entity']);
@@ -57,6 +66,12 @@ function edgeIdForLink(link) {
   if (link?.targetRef?.type === 'edge') return link.targetRef.id;
   if (typeof link?.edgeId === 'string') return link.edgeId;
   return undefined;
+}
+
+function queryDecisionUseDeclared(queryRecord) {
+  return queryRecord?.decisionUse?.declaredBy != null
+    || queryRecord?.decisionUse?.declaredAt != null
+    || queryRecord?.decisionUse?.declaredByRole != null;
 }
 
 function buildIndexes(corpus) {
@@ -198,6 +213,67 @@ export function lintPhase10Corpus(corpus = {}) {
         'raw-document-requires-trust-tier',
         'Raw documents require trustTier.',
         { rawDocumentId: raw?.rawDocumentId }
+      );
+    }
+  }
+
+  for (const queryRecord of asArray(corpus.queryRecords)) {
+    if (queryDecisionUseDeclared(queryRecord)) {
+      issue(
+        'E_PHASE10_DECISION_USE_COMPUTED_NOT_DECLARED',
+        'decision-use-computed-not-declared',
+        'Query decisionUse must be computed by Phase 10, not declared by the caller.',
+        { queryId: queryRecord?.queryId }
+      );
+    }
+
+    if (queryRecord?.queryClass === 'report-generation' && queryRecord.reportScope == null) {
+      issue(
+        'E_PHASE10_REPORT_SCOPE_REQUIRED',
+        'report-scope-required-for-report-class',
+        'Report-generation query records require reportScope.',
+        { queryId: queryRecord?.queryId }
+      );
+    }
+
+    if (
+      queryRecord?.decisionUse?.classification === 'decision-grade'
+      && !acceptedR2AuditPresent(queryRecord.r2Audit)
+    ) {
+      issue(
+        'E_PHASE10_R2_AUDIT_REQUIRED_FOR_DECISION_GRADE',
+        'r2-audit-required-for-decision-grade',
+        'Decision-grade query records require accepted R2 audit metadata.',
+        { queryId: queryRecord?.queryId }
+      );
+    }
+
+    try {
+      const computed = computeQueryDecisionUse({
+        ...queryRecord,
+        decisionUse: undefined,
+        computedAt: queryRecord?.decisionUse?.computedAt
+      });
+      if (
+        queryRecord?.decisionUse?.computedBy !== COMPUTED_BY
+        || queryRecord?.decisionUse?.classification !== computed.classification
+      ) {
+        issue(
+          'E_PHASE10_DECISION_USE_COMPUTED_NOT_DECLARED',
+          'decision-use-computed-not-declared',
+          'Query decisionUse must match the reviewed computed matrix.',
+          { queryId: queryRecord?.queryId }
+        );
+      }
+    } catch (error) {
+      if (error?.code === 'E_PHASE10_REPORT_SCOPE_REQUIRED') {
+        continue;
+      }
+      issue(
+        'E_PHASE10_DECISION_USE_COMPUTED_NOT_DECLARED',
+        'decision-use-computed-not-declared',
+        'Query decisionUse inputs are not computable by the reviewed matrix.',
+        { queryId: queryRecord?.queryId, errorCode: error?.code }
       );
     }
   }
