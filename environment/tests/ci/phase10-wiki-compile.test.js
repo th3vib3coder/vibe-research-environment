@@ -129,6 +129,27 @@ async function installBundle(projectRoot, overrides = {}) {
   return bundle;
 }
 
+async function installSecondBundle(projectRoot, overrides = {}) {
+  return installBundle(projectRoot, {
+    bundleId: 'SB-wiki-002',
+    title: 'Second curated wiki source bundle',
+    sourceType: 'webpage',
+    rawDocumentRefs: [
+      {
+        rawDocumentId: 'RAW-wiki-002',
+        contentHash: 'sha256:wiki-raw-002'
+      }
+    ],
+    sourceLocators: [
+      {
+        kind: 'file',
+        uri: 'raw/papers/RAW-wiki-002/source.html'
+      }
+    ],
+    ...overrides
+  });
+}
+
 function sourceDraft(overrides = {}) {
   return {
     pageId: 'WIKI-source',
@@ -381,9 +402,98 @@ test('wiki compile persists assertion routing fields', async () => {
     const page = await readJson(path.join(projectRoot, result.pages[0].wikiPageRecordPath));
 
     assert.equal(page.pageRouting, 'publishable');
+    assert.equal(page.compilePolicyRationale, 'default-from-compile-policy');
     assert.equal(page.assertionGraph[0].declaredKind, 'extractive-fact');
     assert.deepEqual(page.assertionGraph[0].riskFlags, []);
     assert.equal(page.assertionGraph[0].finalRouting, 'allowed');
+  });
+});
+
+test('wiki compile auto-upgrades triggered synthesis policy with accepted R2', async () => {
+  await withProject('phase10-wiki-compile-policy-upgrade-', async (projectRoot) => {
+    await installDomain(projectRoot);
+    await installBundle(projectRoot);
+
+    const result = await compileBasic(projectRoot, {
+      draftPages: [
+        sourceDraft({
+          pageId: 'WIKI-synthesis',
+          type: 'synthesis',
+          title: 'Triggered synthesis page',
+          path: 'WIKI_VRE/entities/triggered-synthesis.md',
+          assertionGraph: [
+            {
+              assertionId: 'ASSERT-wiki-contradiction',
+              text: 'The synthesis records a contradiction across sources.',
+              status: 'claimed',
+              declaredKind: 'contradiction',
+              cites: ['PROV-wiki-001']
+            }
+          ],
+          r2Audit: {
+            status: 'passed',
+            verdict: 'ACCEPT',
+            reviewer: 'claude-code',
+            reviewedAt: TIMESTAMP,
+            law13ReviewExtension: {
+              law13StatusChecked: true,
+              provenanceRefsChecked: true,
+              queryNotProvenanceCheck: true,
+              r2PathRequired: true,
+              r2PathPresent: true,
+              suppositionIsolationChecked: true
+            }
+          }
+        })
+      ]
+    });
+
+    assert.equal(result.pages[0].r2Audit.status, 'passed');
+    assert.equal(
+      result.pages[0].compilePolicyRationale,
+      'auto-upgraded-because-contradiction-signal'
+    );
+  });
+});
+
+test('wiki compile fails closed for non-synthesis heuristic triggers', async () => {
+  await withProject('phase10-wiki-compile-policy-review-required-', async (projectRoot) => {
+    await installDomain(projectRoot);
+    await installBundle(projectRoot);
+    await installSecondBundle(projectRoot);
+
+    await expectCode(
+      () => compileBasic(projectRoot, {
+        sourceBundleRefs: [
+          { bundleId: 'SB-wiki-001', bundleVersion: 'v1' },
+          { bundleId: 'SB-wiki-002', bundleVersion: 'v1' }
+        ],
+        draftPages: [
+          sourceDraft({
+            pageId: 'WIKI-concept-policy',
+            type: 'concept',
+            title: 'Concept with source mix',
+            path: 'WIKI_VRE/entities/concept-policy.md',
+            sourceBundleRefs: [
+              { bundleId: 'SB-wiki-001', bundleVersion: 'v1' },
+              { bundleId: 'SB-wiki-002', bundleVersion: 'v1' }
+            ]
+          })
+        ]
+      }),
+      'E_PHASE10_COMPILE_POLICY_REVIEW_REQUIRED'
+    );
+
+    const rejectedPath = path.join(
+      projectRoot,
+      '.vibe-science-environment',
+      'phase10',
+      'knowledge-domains',
+      DOMAIN_ID,
+      'wiki',
+      'WIKI-concept-policy.json'
+    );
+    assert.equal(await pathExists(rejectedPath), false);
   });
 });
 
@@ -532,6 +642,7 @@ test('wiki compile writes schema-valid pages without forbidden side effects', as
     const page = await readJson(pagePath);
     assert.equal(page.schemaVersion, 'phase10.wiki-page.v1');
     assert.equal(page.type, 'source');
+    assert.equal(page.compilePolicyRationale, 'default-from-compile-policy');
     assert.equal(page.pageRouting, 'publishable');
     assert.equal(page.assertionGraph[0].status, 'sourced');
     assert.equal(page.assertionGraph[0].declaredKind, 'extractive-fact');

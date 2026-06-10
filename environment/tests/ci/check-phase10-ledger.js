@@ -64,6 +64,9 @@ export const PHASE10_PATHS = {
   riskScanner: 'environment/phase10/risk-scanner.js',
   riskScannerValidator: 'environment/tests/ci/phase10-risk-scanner.js',
   riskScannerTest: 'environment/tests/ci/phase10-risk-scanner.test.js',
+  compilePolicy: 'environment/phase10/compile-policy.js',
+  compilePolicyValidator: 'environment/tests/ci/phase10-compile-policy.js',
+  compilePolicyTest: 'environment/tests/ci/phase10-compile-policy.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -128,6 +131,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.riskScanner,
   PHASE10_PATHS.riskScannerValidator,
   PHASE10_PATHS.riskScannerTest,
+  PHASE10_PATHS.compilePolicy,
+  PHASE10_PATHS.compilePolicyValidator,
+  PHASE10_PATHS.compilePolicyTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -159,6 +165,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:wiki-r2-audit': 'phase10-wiki-r2-audit.js',
   'phase10:assertion-graph': 'phase10-assertion-graph.js',
   'phase10:risk-scanner': 'phase10-risk-scanner.js',
+  'phase10:compile-policy': 'phase10-compile-policy.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

@@ -22,6 +22,10 @@ import {
 import {
   normalizeSynthesisR2Audit
 } from './wiki-r2-audit.js';
+import {
+  CompilePolicyError,
+  resolveCompilePolicy
+} from './compile-policy.js';
 
 export const WIKI_COMPILE_SCHEMA_FILE = 'phase10-wiki-page.schema.json';
 export const WIKI_COMPILE_POLICY_SCHEMA_FILE = 'phase10-compile-policy.schema.json';
@@ -291,6 +295,38 @@ function assertDraftPolicy(draftPage, compilePolicy) {
   }
 }
 
+function unwrapPolicyMessage(error) {
+  return String(error.message ?? '').replace(new RegExp(`^${error.code}:\\s*`, 'u'), '');
+}
+
+function resolveDraftCompilePolicy({ compilePolicy, draftPage, sourceBundles }) {
+  try {
+    return resolveCompilePolicy({ compilePolicy, draftPage, sourceBundles });
+  } catch (error) {
+    if (error instanceof CompilePolicyError) {
+      failWiki(error.code, unwrapPolicyMessage(error), error.extra);
+    }
+    throw error;
+  }
+}
+
+function assertCompilePolicyReviewClosed(draftPage, resolvedPolicy) {
+  if (!resolvedPolicy.reviewRequired) {
+    return;
+  }
+  failWiki(
+    'E_PHASE10_COMPILE_POLICY_REVIEW_REQUIRED',
+    'compile policy heuristic requires synthesis review before persistence',
+    {
+      pageId: draftPage.pageId,
+      pageType: draftPage.type,
+      compilePolicyRationale: resolvedPolicy.compilePolicyRationale,
+      reviewRouting: resolvedPolicy.reviewRouting,
+      triggeredHeuristics: resolvedPolicy.triggeredHeuristics
+    }
+  );
+}
+
 function assertDraftBundles(draftPage, resolvedBundles) {
   const refs = (draftPage.sourceBundleRefs ?? draftPage.sourceBundleIds ?? [])
     .map((ref) => normalizeBundleRef(ref));
@@ -311,6 +347,10 @@ function assertDraftBundles(draftPage, resolvedBundles) {
     );
   }
   return refs;
+}
+
+function pageSourceBundles(refs, resolvedBundles) {
+  return refs.map((ref) => resolvedBundles.get(bundleRefKey(ref))).filter(Boolean);
 }
 
 function assertHypothesisMetadata(draftPage) {
@@ -418,11 +458,21 @@ export async function compileWikiPages(projectPath, {
     assertSafePageId(draftPage.pageId);
     assertDraftType(draftPage);
     assertDraftPolicy(draftPage, normalizedCompilePolicy);
-    assertDraftBundles(draftPage, resolvedBundles);
+    const draftBundleRefs = assertDraftBundles(draftPage, resolvedBundles);
     assertHypothesisMetadata(draftPage);
+    const resolvedCompilePolicy = resolveDraftCompilePolicy({
+      compilePolicy: normalizedCompilePolicy,
+      draftPage,
+      sourceBundles: pageSourceBundles(draftBundleRefs, resolvedBundles)
+    });
+    assertCompilePolicyReviewClosed(draftPage, resolvedCompilePolicy);
+    const effectiveCompilePolicy = {
+      ...normalizedCompilePolicy,
+      policy: resolvedCompilePolicy.policy
+    };
     const r2Audit = draftPage.type === 'synthesis'
       ? normalizeSynthesisR2Audit({
-        compilePolicy: normalizedCompilePolicy,
+        compilePolicy: effectiveCompilePolicy,
         draftPage,
         provenanceLinks: resolvedProvenance
       })
@@ -437,6 +487,7 @@ export async function compileWikiPages(projectPath, {
       title: draftPage.title,
       path: draftPage.path,
       compilePolicyId: compilePolicy.compilePolicyId,
+      compilePolicyRationale: resolvedCompilePolicy.compilePolicyRationale,
       lifecycleStatus: draftPage.lifecycleStatus ?? 'draft',
       pageRouting: routedAssertions.pageRouting,
       assertionGraph: routedAssertions.assertionGraph,

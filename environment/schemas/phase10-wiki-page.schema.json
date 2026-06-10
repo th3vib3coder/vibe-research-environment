@@ -12,6 +12,7 @@
     "title",
     "path",
     "compilePolicyId",
+    "compilePolicyRationale",
     "pageRouting",
     "assertionGraph",
     "updatedAt"
@@ -43,6 +44,15 @@
     "compilePolicyId": {
       "type": "string",
       "pattern": "^CP-.+$"
+    },
+    "compilePolicyRationale": {
+      "type": "string",
+      "enum": [
+        "default-from-compile-policy",
+        "auto-upgraded-because-contradiction-signal",
+        "auto-upgraded-because-source-mix",
+        "auto-upgraded-because-lower-trust-tier"
+      ]
     },
     "lifecycleStatus": {
       "type": "string",

@@ -12,6 +12,7 @@ const validWikiPage = {
   title: 'Therapy Evidence Summary',
   path: 'WIKI_VRE/entities/therapy-evidence-summary.md',
   compilePolicyId: 'CP-001',
+  compilePolicyRationale: 'default-from-compile-policy',
   lifecycleStatus: 'draft',
   pageRouting: 'publishable',
   assertionGraph: [
@@ -93,6 +94,16 @@ test('phase10-wiki-page.schema requires assertion routing fields', async () => {
   const missingPageRouting = clone(validWikiPage);
   delete missingPageRouting.pageRouting;
   await expectInvalid(SCHEMA_FILE, missingPageRouting, /required|pageRouting/u);
+});
+
+test('phase10-wiki-page.schema requires reviewed compile-policy rationale', async () => {
+  const missingRationale = clone(validWikiPage);
+  delete missingRationale.compilePolicyRationale;
+  await expectInvalid(SCHEMA_FILE, missingRationale, /required|compilePolicyRationale/u);
+
+  const invalidRationale = clone(validWikiPage);
+  invalidRationale.compilePolicyRationale = 'operator-override';
+  await expectInvalid(SCHEMA_FILE, invalidRationale, /allowed|enum/u);
 });
 
 test('phase10-wiki-page.schema rejects design-prose kebab field names', async () => {

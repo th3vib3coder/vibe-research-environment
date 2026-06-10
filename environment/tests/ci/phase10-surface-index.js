@@ -58,6 +58,8 @@ const ASSERTION_GRAPH_INTRODUCED_AT = '2026-06-10';
 const ASSERTION_GRAPH_TASK = 'T10.2.2';
 const RISK_SCANNER_INTRODUCED_AT = '2026-06-10';
 const RISK_SCANNER_TASK = 'T10.2.2';
+const COMPILE_POLICY_INTRODUCED_AT = '2026-06-10';
+const COMPILE_POLICY_TASK = 'T10.2.3';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -287,6 +289,22 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: RISK_SCANNER_INTRODUCED_AT
   },
   {
+    kind: 'compile-policy-resolution',
+    name: 'phase10-compile-policy',
+    paths: [
+      'environment/phase10/compile-policy.js',
+      'environment/phase10/wiki-compile.js',
+      'environment/schemas/phase10-wiki-page.schema.json',
+      'environment/tests/schemas/phase10-wiki-page.schema.test.js',
+      'environment/tests/ci/phase10-compile-policy.js',
+      'environment/tests/ci/phase10-compile-policy.test.js',
+      'environment/tests/ci/phase10-wiki-compile.test.js'
+    ],
+    task: COMPILE_POLICY_TASK,
+    status: 'implemented-dynamic-auto-upgrade-heuristics',
+    introducedAt: COMPILE_POLICY_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -420,6 +438,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-wiki-r2-audit.js')) {
     paths.push('environment/tests/ci/phase10-wiki-r2-audit.js');
   }
+  if (command.includes('phase10-compile-policy.js')) {
+    paths.push('environment/tests/ci/phase10-compile-policy.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -488,6 +509,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:wiki-r2-audit',
     'phase10:assertion-graph',
     'phase10:risk-scanner',
+    'phase10:compile-policy',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'
