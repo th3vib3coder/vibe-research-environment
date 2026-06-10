@@ -305,6 +305,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:scientific-skill-intake",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-scientific-skill-intake.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:source-bundles",
     "paths": [
       "package.json",
@@ -515,6 +526,19 @@
     "task": "T10.0.2",
     "status": "implemented-schema-contract",
     "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "scientific-skill-intake",
+    "name": "phase10-scientific-skill-intake",
+    "paths": [
+      ".gitignore",
+      "environment/phase10/scientific-skill-intake.js",
+      "environment/tests/ci/phase10-scientific-skill-intake.js",
+      "environment/tests/ci/phase10-scientific-skill-intake.test.js"
+    ],
+    "task": "T10.1.4",
+    "status": "implemented-scientific-skill-discovery-intake",
+    "introducedAt": "2026-06-10"
   },
   {
     "kind": "source-bundle-registration",

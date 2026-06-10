@@ -13,6 +13,7 @@ import {
 const execFileAsync = promisify(execFile);
 
 export const PHASE10_PATHS = {
+  gitIgnore: '.gitignore',
   featureLedger: 'phase10-vre-feature-ledger.md',
   forbiddenFeatureLedger: 'phase10-feature-ledger.md',
   surfaceIndex: PHASE10_SURFACE_INDEX_PATH,
@@ -48,6 +49,9 @@ export const PHASE10_PATHS = {
   knowledgeBaseImport: 'environment/phase10/knowledge-base-import.js',
   knowledgeBaseImportValidator: 'environment/tests/ci/phase10-knowledge-base-import.js',
   knowledgeBaseImportTest: 'environment/tests/ci/phase10-knowledge-base-import.test.js',
+  scientificSkillIntake: 'environment/phase10/scientific-skill-intake.js',
+  scientificSkillIntakeValidator: 'environment/tests/ci/phase10-scientific-skill-intake.js',
+  scientificSkillIntakeTest: 'environment/tests/ci/phase10-scientific-skill-intake.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -62,6 +66,7 @@ export const PHASE10_PATHS = {
 };
 
 const REQUIRED_FILES = [
+  PHASE10_PATHS.gitIgnore,
   PHASE10_PATHS.featureLedger,
   PHASE10_PATHS.surfaceIndex,
   PHASE10_PATHS.claimEdgeSchema,
@@ -96,6 +101,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.knowledgeBaseImport,
   PHASE10_PATHS.knowledgeBaseImportValidator,
   PHASE10_PATHS.knowledgeBaseImportTest,
+  PHASE10_PATHS.scientificSkillIntake,
+  PHASE10_PATHS.scientificSkillIntakeValidator,
+  PHASE10_PATHS.scientificSkillIntakeTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -122,6 +130,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:source-bundles': 'phase10-source-bundles.js',
   'phase10:inbox': 'phase10-inbox.js',
   'phase10:knowledge-base-import': 'phase10-knowledge-base-import.js',
+  'phase10:scientific-skill-intake': 'phase10-scientific-skill-intake.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 
@@ -232,7 +241,8 @@ async function resolveChangedFiles(options, localRepoRoot, workspaceRoot) {
 }
 
 function isPhase10CoveredPath(pathValue) {
-  return pathValue === 'package.json'
+  return pathValue === PHASE10_PATHS.gitIgnore
+    || pathValue === 'package.json'
     || pathValue === PHASE10_PATHS.binVre
     || pathValue === PHASE10_PATHS.phase9ObjectiveSchema
     || pathValue === PHASE10_PATHS.domainCliTest

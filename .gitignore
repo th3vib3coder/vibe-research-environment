@@ -6,6 +6,8 @@
 !.vibe-science-environment/operator-validation/artifacts/**
 !.vibe-science-environment/operator-validation/benchmarks/
 !.vibe-science-environment/operator-validation/benchmarks/**
+.vre-local/skill-cache/
+**/.vre-local/skill-cache/
 
 # Node
 node_modules/

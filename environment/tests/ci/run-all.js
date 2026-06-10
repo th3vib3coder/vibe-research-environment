@@ -19,6 +19,7 @@ import validatePhase10KnowledgeBaseImport from './phase10-knowledge-base-import.
 import validatePhase10Law13Bridge from './phase10-law13-bridge.js';
 import validatePhase10Law13Lint from './phase10-law13-lint.js';
 import validatePhase10RawZone from './phase10-raw-zone.js';
+import validatePhase10ScientificSkillIntake from './phase10-scientific-skill-intake.js';
 import validatePhase10SourceBundles from './phase10-source-bundles.js';
 
 const validators = [
@@ -39,6 +40,7 @@ const validators = [
   ['phase10-curator-role', validatePhase10CuratorRole],
   ['phase10-inbox', validatePhase10Inbox],
   ['phase10-knowledge-base-import', validatePhase10KnowledgeBaseImport],
+  ['phase10-scientific-skill-intake', validatePhase10ScientificSkillIntake],
   ['phase10-law13-bridge', validatePhase10Law13Bridge],
   ['phase10-law13-lint', validatePhase10Law13Lint],
   ['phase10-raw-zone', validatePhase10RawZone],

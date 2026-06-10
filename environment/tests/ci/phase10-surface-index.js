@@ -48,6 +48,8 @@ const INBOX_INTRODUCED_AT = '2026-06-10';
 const INBOX_TASK = 'T10.1.2';
 const KNOWLEDGE_BASE_IMPORT_INTRODUCED_AT = '2026-06-10';
 const KNOWLEDGE_BASE_IMPORT_TASK = 'T10.1.3';
+const SCIENTIFIC_SKILL_INTAKE_INTRODUCED_AT = '2026-06-10';
+const SCIENTIFIC_SKILL_INTAKE_TASK = 'T10.1.4';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -205,6 +207,19 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: KNOWLEDGE_BASE_IMPORT_INTRODUCED_AT
   },
   {
+    kind: 'scientific-skill-intake',
+    name: 'phase10-scientific-skill-intake',
+    paths: [
+      '.gitignore',
+      'environment/phase10/scientific-skill-intake.js',
+      'environment/tests/ci/phase10-scientific-skill-intake.js',
+      'environment/tests/ci/phase10-scientific-skill-intake.test.js'
+    ],
+    task: SCIENTIFIC_SKILL_INTAKE_TASK,
+    status: 'implemented-scientific-skill-discovery-intake',
+    introducedAt: SCIENTIFIC_SKILL_INTAKE_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -329,6 +344,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-knowledge-base-import.js')) {
     paths.push('environment/tests/ci/phase10-knowledge-base-import.js');
   }
+  if (command.includes('phase10-scientific-skill-intake.js')) {
+    paths.push('environment/tests/ci/phase10-scientific-skill-intake.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -392,6 +410,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:law13-lint',
     'phase10:inbox',
     'phase10:knowledge-base-import',
+    'phase10:scientific-skill-intake',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

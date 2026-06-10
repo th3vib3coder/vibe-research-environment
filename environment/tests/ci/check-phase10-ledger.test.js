@@ -46,6 +46,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'phase10:inbox': 'node environment/tests/ci/phase10-inbox.js',
         'phase10:knowledge-base-import': 'node environment/tests/ci/phase10-knowledge-base-import.js',
+        'phase10:scientific-skill-intake': 'node environment/tests/ci/phase10-scientific-skill-intake.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
@@ -53,6 +54,7 @@ async function withFixtureWorkspace(fn, options = {}) {
     }, null, 2));
 
     for (const relPath of [
+      '.gitignore',
       'environment/tests/ci/phase10-surface-index.js',
       'environment/tests/ci/phase10-surface-index.test.js',
       'environment/tests/ci/check-phase10-ledger.js',
@@ -83,6 +85,9 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/knowledge-base-import.js',
       'environment/tests/ci/phase10-knowledge-base-import.js',
       'environment/tests/ci/phase10-knowledge-base-import.test.js',
+      'environment/phase10/scientific-skill-intake.js',
+      'environment/tests/ci/phase10-scientific-skill-intake.js',
+      'environment/tests/ci/phase10-scientific-skill-intake.test.js',
       'environment/orchestrator/task-registry/phase10-wiki-lint.json',
       'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
@@ -306,6 +311,19 @@ test('phase10-ledger check covers knowledge-base import surfaces in trace reconc
         changedFiles: ['environment/phase10/knowledge-base-import.js']
       }),
       /E_PHASE10_TRACE_MISSING.*environment\/phase10\/knowledge-base-import\.js/u
+    );
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers scientific-skill intake surfaces', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/phase10/scientific-skill-intake.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/phase10\/scientific-skill-intake\.js/u
     );
   }, { sparseTrace: true });
 });
