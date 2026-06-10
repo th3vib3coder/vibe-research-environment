@@ -167,6 +167,7 @@ function synthesisDraft(overrides = {}) {
         assertionId: 'ASSERT-r2-audit',
         text: 'A synthesis assertion cites original provenance.',
         status: 'claimed',
+        declaredKind: 'extractive-fact',
         cites: ['PROV-r2-audit']
       }
     ],
@@ -383,6 +384,7 @@ test('R2 audited synthesis still rejects orphan assertions after repair metadata
                 assertionId: 'ASSERT-r2-audit',
                 text: 'A repaired assertion still needs cites.',
                 status: 'claimed',
+                declaredKind: 'extractive-fact',
                 cites: []
               }
             ],
