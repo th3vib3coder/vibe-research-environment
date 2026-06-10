@@ -42,6 +42,8 @@ const LAW13_BRIDGE_INTRODUCED_AT = '2026-06-09';
 const LAW13_BRIDGE_TASK = 'T10.0.7';
 const RAW_ZONE_INTRODUCED_AT = '2026-06-10';
 const RAW_ZONE_TASK = 'T10.1.0';
+const SOURCE_BUNDLES_INTRODUCED_AT = '2026-06-10';
+const SOURCE_BUNDLES_TASK = 'T10.1.1';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -163,6 +165,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: RAW_ZONE_INTRODUCED_AT
   },
   {
+    kind: 'source-bundle-registration',
+    name: 'phase10-source-bundles',
+    paths: [
+      'environment/phase10/source-bundles.js',
+      'environment/tests/ci/phase10-source-bundles.js',
+      'environment/tests/ci/phase10-source-bundles.test.js'
+    ],
+    task: SOURCE_BUNDLES_TASK,
+    status: 'implemented-source-bundle-registration',
+    introducedAt: SOURCE_BUNDLES_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -278,6 +292,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-raw-zone.js')) {
     paths.push('environment/tests/ci/phase10-raw-zone.js');
   }
+  if (command.includes('phase10-source-bundles.js')) {
+    paths.push('environment/tests/ci/phase10-source-bundles.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -340,6 +357,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:law13-bridge',
     'phase10:law13-lint',
     'phase10:raw-zone',
+    'phase10:source-bundles',
     'test:phase10-scaffold'
   ]) {
     if (typeof scripts[scriptName] === 'string') {

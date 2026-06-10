@@ -45,6 +45,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:law13-bridge': 'node environment/tests/ci/phase10-law13-bridge.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
+        'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
       }
     }, null, 2));
@@ -71,6 +72,9 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/raw-zone.js',
       'environment/tests/ci/phase10-raw-zone.js',
       'environment/tests/ci/phase10-raw-zone.test.js',
+      'environment/phase10/source-bundles.js',
+      'environment/tests/ci/phase10-source-bundles.js',
+      'environment/tests/ci/phase10-source-bundles.test.js',
       'environment/orchestrator/task-registry/phase10-wiki-lint.json',
       'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
@@ -255,6 +259,19 @@ test('phase10-ledger check covers raw-zone storage surfaces in trace reconciliat
         changedFiles: ['environment/phase10/raw-zone.js']
       }),
       /E_PHASE10_TRACE_MISSING.*environment\/phase10\/raw-zone\.js/u
+    );
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers source-bundle registration surfaces in trace reconciliation', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () => checkPhase10Ledger({
+        repoRoot: vreRoot,
+        workspaceRoot,
+        changedFiles: ['environment/phase10/source-bundles.js']
+      }),
+      /E_PHASE10_TRACE_MISSING.*environment\/phase10\/source-bundles\.js/u
     );
   }, { sparseTrace: true });
 });

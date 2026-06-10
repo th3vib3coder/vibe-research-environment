@@ -20,6 +20,7 @@
     "phase10:law13-bridge": "node environment/tests/ci/phase10-law13-bridge.js",
     "phase10:law13-lint": "node environment/tests/ci/phase10-law13-lint.js",
     "phase10:raw-zone": "node environment/tests/ci/phase10-raw-zone.js",
+    "phase10:source-bundles": "node environment/tests/ci/phase10-source-bundles.js",
     "phase9:acceptance": "node environment/acceptance/run-wave6-acceptance.js --all",
     "phase9:acceptance:A": "node environment/acceptance/run-wave6-acceptance.js A",
     "phase9:acceptance:B": "node environment/acceptance/run-wave6-acceptance.js B",

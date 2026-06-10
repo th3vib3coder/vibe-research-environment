@@ -259,6 +259,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:source-bundles",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-source-bundles.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "test:phase10-scaffold",
     "paths": [
       "package.json"
@@ -458,6 +469,18 @@
     "task": "T10.0.2",
     "status": "implemented-schema-contract",
     "introducedAt": "2026-06-09"
+  },
+  {
+    "kind": "source-bundle-registration",
+    "name": "phase10-source-bundles",
+    "paths": [
+      "environment/phase10/source-bundles.js",
+      "environment/tests/ci/phase10-source-bundles.js",
+      "environment/tests/ci/phase10-source-bundles.test.js"
+    ],
+    "task": "T10.1.1",
+    "status": "implemented-source-bundle-registration",
+    "introducedAt": "2026-06-10"
   },
   {
     "kind": "surface-index",

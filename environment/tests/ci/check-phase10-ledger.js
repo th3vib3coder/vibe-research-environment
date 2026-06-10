@@ -39,6 +39,9 @@ export const PHASE10_PATHS = {
   rawZone: 'environment/phase10/raw-zone.js',
   rawZoneValidator: 'environment/tests/ci/phase10-raw-zone.js',
   rawZoneTest: 'environment/tests/ci/phase10-raw-zone.test.js',
+  sourceBundles: 'environment/phase10/source-bundles.js',
+  sourceBundlesValidator: 'environment/tests/ci/phase10-source-bundles.js',
+  sourceBundlesTest: 'environment/tests/ci/phase10-source-bundles.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -78,6 +81,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.rawZone,
   PHASE10_PATHS.rawZoneValidator,
   PHASE10_PATHS.rawZoneTest,
+  PHASE10_PATHS.sourceBundles,
+  PHASE10_PATHS.sourceBundlesValidator,
+  PHASE10_PATHS.sourceBundlesTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -101,6 +107,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:law13-bridge': 'phase10-law13-bridge.js',
   'phase10:law13-lint': 'phase10-law13-lint.js',
   'phase10:raw-zone': 'phase10-raw-zone.js',
+  'phase10:source-bundles': 'phase10-source-bundles.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

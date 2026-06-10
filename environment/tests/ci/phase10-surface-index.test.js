@@ -37,7 +37,8 @@ async function withFixtureWorkspace(fn) {
         'phase10:domain-lifecycle': 'node --test environment/tests/cli/domain-cli.test.js',
         'phase10:law13-bridge': 'node environment/tests/ci/phase10-law13-bridge.js',
         'phase10:law13-lint': 'node environment/tests/ci/phase10-law13-lint.js',
-        'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js'
+        'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
+        'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js'
       }
     }, null, 2));
 
@@ -68,6 +69,9 @@ async function withFixtureWorkspace(fn) {
       'environment/phase10/raw-zone.js',
       'environment/tests/ci/phase10-raw-zone.js',
       'environment/tests/ci/phase10-raw-zone.test.js',
+      'environment/phase10/source-bundles.js',
+      'environment/tests/ci/phase10-source-bundles.js',
+      'environment/tests/ci/phase10-source-bundles.test.js',
       'environment/schemas/phase9-objective.schema.json',
       'environment/schemas/phase9-claim-edge.schema.json',
       'environment/claims/edges.js'
@@ -129,7 +133,9 @@ test('phase10 surface-index generator records scaffold, ledgers, scripts, and de
       'phase10-law13-bridge',
       'phase10:law13-bridge',
       'phase10-raw-zone',
-      'phase10:raw-zone'
+      'phase10:raw-zone',
+      'phase10-source-bundles',
+      'phase10:source-bundles'
     ]) {
       assert.equal(surfaces.some((surface) => surface.name === expected), true, expected);
     }
@@ -156,5 +162,6 @@ test('phase10 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'phase10-domain-lifecycle-cli'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-law13-bridge'), true);
     assert.equal(persisted.some((surface) => surface.name === 'phase10-raw-zone'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'phase10-source-bundles'), true);
   });
 });

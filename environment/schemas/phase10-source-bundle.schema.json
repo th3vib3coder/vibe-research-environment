@@ -7,13 +7,43 @@
   "required": [
     "schemaVersion",
     "bundleId",
+    "bundleVersion",
     "domainId",
     "title",
     "sourceType",
     "trustTier",
+    "license",
+    "allowTrackPayload",
+    "scopeOfUse",
+    "rawDocumentRefs",
     "sourceLocators",
     "collectedAt",
     "status"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "curated"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["license", "scopeOfUse"],
+        "properties": {
+          "license": {
+            "not": {
+              "const": "unknown"
+            }
+          },
+          "scopeOfUse": {
+            "minItems": 1
+          }
+        }
+      }
+    }
   ],
   "properties": {
     "schemaVersion": {
@@ -22,6 +52,10 @@
     "bundleId": {
       "type": "string",
       "pattern": "^SB-.+$"
+    },
+    "bundleVersion": {
+      "type": "string",
+      "pattern": "^v[0-9][A-Za-z0-9._-]*$"
     },
     "domainId": {
       "type": "string",
@@ -38,6 +72,48 @@
     "trustTier": {
       "type": "string",
       "enum": ["primary", "secondary", "tertiary", "operator-provided"]
+    },
+    "license": {
+      "type": "string",
+      "enum": ["open", "user-owned", "permission-granted", "restricted", "unknown"],
+      "default": "unknown"
+    },
+    "allowTrackPayload": {
+      "type": "boolean",
+      "default": false
+    },
+    "scopeOfUse": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "evidence",
+          "background",
+          "contradictory-evidence",
+          "method-reference",
+          "replication-evidence",
+          "failed-replication"
+        ]
+      }
+    },
+    "rawDocumentRefs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rawDocumentId"],
+        "properties": {
+          "rawDocumentId": {
+            "type": "string",
+            "pattern": "^RAW-.+$"
+          },
+          "contentHash": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     },
     "sourceLocators": {
       "type": "array",
