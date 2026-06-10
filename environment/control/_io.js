@@ -92,19 +92,47 @@ export async function atomicWriteJson(filePath, data) {
   }
 }
 
+/**
+ * Classify an error thrown by open(lockPath, 'wx') during lock acquisition.
+ *
+ * - 'contended': the lock file already exists (POSIX EEXIST). Honor the
+ *   existing stale-reclamation + backoff path.
+ * - 'transient': a Windows-only EPERM raised when another handle is briefly
+ *   open, the file is in a delete-pending window, or an AV/indexer touches it.
+ *   This is contention, not a real permission failure, so back off and retry,
+ *   but NEVER stale-remove (the lock may be live; removing it would break
+ *   mutual exclusion). A crashed holder surfaces as EEXIST, not EPERM, so
+ *   reclamation still flows through the 'contended' path.
+ * - 'fatal': anything else, including POSIX EPERM (a genuine permission error),
+ *   which must surface immediately rather than spin.
+ */
+export function classifyLockOpenError(error, platform = process.platform) {
+  const code = error?.code;
+  if (code === 'EEXIST') {
+    return 'contended';
+  }
+  if (platform === 'win32' && code === 'EPERM') {
+    return 'transient';
+  }
+  return 'fatal';
+}
+
 async function acquireLock(projectPath, lockName, options = {}) {
   const lockOptions = {
     ...DEFAULT_LOCK_OPTIONS,
     ...options
   };
+  const openImpl = options.openImpl ?? open;
+  const platform = options.platform ?? process.platform;
   const locksPath = controlLocksDir(projectPath);
   await mkdir(locksPath, { recursive: true });
 
   const lockPath = resolveInside(locksPath, `${lockName}.lock`);
 
+  let lastError;
   for (let attempt = 0; attempt <= lockOptions.maxRetries; attempt += 1) {
     try {
-      const handle = await open(lockPath, 'wx');
+      const handle = await openImpl(lockPath, 'wx');
       await handle.writeFile(
         JSON.stringify({
           pid: process.pid,
@@ -120,29 +148,40 @@ async function acquireLock(projectPath, lockName, options = {}) {
         }
       };
     } catch (error) {
-      if (error?.code !== 'EEXIST') {
+      const lockErrorKind = classifyLockOpenError(error, platform);
+      if (lockErrorKind === 'fatal') {
         throw error;
       }
+      lastError = error;
 
-      const metadata = await stat(lockPath).catch(() => null);
-      const ageMs = metadata
-        ? Date.now() - metadata.mtimeMs
-        : lockOptions.staleMs + 1;
+      // 'contended' (EEXIST) may be an orphaned lock from a crashed holder:
+      // reclaim it once stale. A 'transient' Windows EPERM must NOT reclaim;
+      // the lock may be live, and removing it would break mutual exclusion.
+      if (lockErrorKind === 'contended') {
+        const metadata = await stat(lockPath).catch(() => null);
+        const ageMs = metadata
+          ? Date.now() - metadata.mtimeMs
+          : lockOptions.staleMs + 1;
 
-      if (ageMs > lockOptions.staleMs) {
-        await rm(lockPath, { force: true }).catch(() => {});
-        continue;
+        if (ageMs > lockOptions.staleMs) {
+          await rm(lockPath, { force: true }).catch(() => {});
+          continue;
+        }
       }
 
       if (attempt === lockOptions.maxRetries) {
-        throw new Error(`Failed to acquire control-plane lock: ${lockName}`);
+        throw new Error(`Failed to acquire control-plane lock: ${lockName}`, {
+          cause: lastError
+        });
       }
 
       await sleep(lockOptions.retryDelayMs);
     }
   }
 
-  throw new Error(`Failed to acquire control-plane lock: ${lockName}`);
+  throw new Error(`Failed to acquire control-plane lock: ${lockName}`, {
+    cause: lastError
+  });
 }
 
 export async function withLock(projectPath, lockName, fn, options = {}) {

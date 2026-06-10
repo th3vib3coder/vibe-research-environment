@@ -8,7 +8,7 @@ const expectedCounts = {
   evalMetrics: 5,
   evalBenchmarks: 5,
   auditTests: 1,
-  controlTests: 29,
+  controlTests: 30,
   compatibilityTests: 5,
   flowTests: 8,
   libTests: 23,

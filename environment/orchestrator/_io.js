@@ -11,6 +11,7 @@ import path from 'node:path';
 import {
   assertValid,
   atomicWriteJson,
+  classifyLockOpenError,
   loadValidator,
   now,
   readJson,
@@ -46,14 +47,17 @@ async function acquireOrchestratorLock(projectPath, lockName, options = {}) {
     ...DEFAULT_LOCK_OPTIONS,
     ...options,
   };
+  const openImpl = options.openImpl ?? open;
+  const platform = options.platform ?? process.platform;
   const locksPath = orchestratorLocksDir(projectPath);
   await mkdir(locksPath, { recursive: true });
 
   const lockPath = resolveInside(locksPath, `${lockName}.lock`);
 
+  let lastError;
   for (let attempt = 0; attempt <= lockOptions.maxRetries; attempt += 1) {
     try {
-      const handle = await open(lockPath, 'wx');
+      const handle = await openImpl(lockPath, 'wx');
       await handle.writeFile(
         JSON.stringify({
           pid: process.pid,
@@ -68,27 +72,38 @@ async function acquireOrchestratorLock(projectPath, lockName, options = {}) {
         },
       };
     } catch (error) {
-      if (error?.code !== 'EEXIST') {
+      const lockErrorKind = classifyLockOpenError(error, platform);
+      if (lockErrorKind === 'fatal') {
         throw error;
       }
+      lastError = error;
 
-      const metadata = await stat(lockPath).catch(() => null);
-      const ageMs = metadata ? Date.now() - metadata.mtimeMs : lockOptions.staleMs + 1;
+      // 'contended' (EEXIST) may be an orphaned lock from a crashed holder:
+      // reclaim it once stale. A 'transient' Windows EPERM must NOT reclaim;
+      // the lock may be live, and removing it would break mutual exclusion.
+      if (lockErrorKind === 'contended') {
+        const metadata = await stat(lockPath).catch(() => null);
+        const ageMs = metadata ? Date.now() - metadata.mtimeMs : lockOptions.staleMs + 1;
 
-      if (ageMs > lockOptions.staleMs) {
-        await rm(lockPath, { force: true }).catch(() => {});
-        continue;
+        if (ageMs > lockOptions.staleMs) {
+          await rm(lockPath, { force: true }).catch(() => {});
+          continue;
+        }
       }
 
       if (attempt === lockOptions.maxRetries) {
-        throw new Error(`Failed to acquire orchestrator lock: ${lockName}`);
+        throw new Error(`Failed to acquire orchestrator lock: ${lockName}`, {
+          cause: lastError,
+        });
       }
 
       await sleep(lockOptions.retryDelayMs);
     }
   }
 
-  throw new Error(`Failed to acquire orchestrator lock: ${lockName}`);
+  throw new Error(`Failed to acquire orchestrator lock: ${lockName}`, {
+    cause: lastError,
+  });
 }
 
 export async function withOrchestratorLock(projectPath, lockName, fn, options = {}) {
