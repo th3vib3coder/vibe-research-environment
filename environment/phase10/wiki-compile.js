@@ -16,6 +16,9 @@ import {
 import {
   listSourceBundles
 } from './source-bundles.js';
+import {
+  normalizeSynthesisR2Audit
+} from './wiki-r2-audit.js';
 
 export const WIKI_COMPILE_SCHEMA_FILE = 'phase10-wiki-page.schema.json';
 export const WIKI_COMPILE_POLICY_SCHEMA_FILE = 'phase10-compile-policy.schema.json';
@@ -103,7 +106,7 @@ function assertActiveDomain(domainRecord, domainId) {
   }
 }
 
-async function assertTwoPassPolicy(projectRoot, compilePolicy) {
+async function assertCompilePolicy(projectRoot, compilePolicy) {
   if (compilePolicy == null || typeof compilePolicy !== 'object') {
     failWiki('E_PHASE10_WIKI_COMPILE_POLICY_REQUIRED', 'compilePolicy is required');
   }
@@ -115,13 +118,7 @@ async function assertTwoPassPolicy(projectRoot, compilePolicy) {
     failWiki('E_PHASE10_WIKI_COMPILE_POLICY_SCHEMA_INVALID', error.message);
   }
 
-  if (compilePolicy.policy !== 'two-pass') {
-    failWiki(
-      'E_PHASE10_WIKI_COMPILE_POLICY_FORBIDDEN',
-      'T10.2.0 wiki compile scaffold only accepts two-pass policy',
-      { policy: compilePolicy.policy }
-    );
-  }
+  return compilePolicy;
 }
 
 function normalizeBundleRef(ref) {
@@ -279,8 +276,15 @@ function assertDraftType(draftPage) {
   if (!PAGE_TYPES.has(draftPage.type)) {
     failWiki('E_PHASE10_WIKI_PAGE_TYPE_INVALID', `Invalid page type: ${draftPage.type}`);
   }
-  if (draftPage.type === 'synthesis') {
-    failWiki('E_PHASE10_WIKI_SYNTHESIS_DEFERRED', 'Synthesis compile is T10.2.1 scope');
+}
+
+function assertDraftPolicy(draftPage, compilePolicy) {
+  if (draftPage.type !== 'synthesis' && compilePolicy.policy !== 'two-pass') {
+    failWiki(
+      'E_PHASE10_WIKI_COMPILE_POLICY_FORBIDDEN',
+      'three-pass-r2-audited policy is synthesis-only in T10.2.1',
+      { policy: compilePolicy.policy, pageType: draftPage.type }
+    );
   }
 }
 
@@ -394,7 +398,7 @@ export async function compileWikiPages(projectPath, {
   const options = { stateRoot };
   const domainRecord = await readActiveDomainRecord(projectRoot, options);
   assertActiveDomain(domainRecord, domainId);
-  await assertTwoPassPolicy(projectRoot, compilePolicy);
+  const normalizedCompilePolicy = await assertCompilePolicy(projectRoot, compilePolicy);
 
   if (!Array.isArray(draftPages) || draftPages.length === 0) {
     failWiki('E_PHASE10_WIKI_DRAFTS_REQUIRED', 'draftPages must be a non-empty array');
@@ -410,8 +414,16 @@ export async function compileWikiPages(projectPath, {
     assertDraftScope(draftPage);
     assertSafePageId(draftPage.pageId);
     assertDraftType(draftPage);
+    assertDraftPolicy(draftPage, normalizedCompilePolicy);
     assertDraftBundles(draftPage, resolvedBundles);
     assertHypothesisMetadata(draftPage);
+    const r2Audit = draftPage.type === 'synthesis'
+      ? normalizeSynthesisR2Audit({
+        compilePolicy: normalizedCompilePolicy,
+        draftPage,
+        provenanceLinks: resolvedProvenance
+      })
+      : null;
 
     const wikiPage = {
       schemaVersion: 'phase10.wiki-page.v1',
@@ -427,6 +439,9 @@ export async function compileWikiPages(projectPath, {
     };
     if (draftPage.type === 'hypothesis') {
       wikiPage.nexusStatus = draftPage.nexusStatus;
+    }
+    if (r2Audit) {
+      wikiPage.r2Audit = r2Audit;
     }
 
     await validateWikiPage(projectRoot, wikiPage);

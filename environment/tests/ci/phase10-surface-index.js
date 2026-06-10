@@ -52,6 +52,8 @@ const SCIENTIFIC_SKILL_INTAKE_INTRODUCED_AT = '2026-06-10';
 const SCIENTIFIC_SKILL_INTAKE_TASK = 'T10.1.4';
 const WIKI_COMPILE_INTRODUCED_AT = '2026-06-10';
 const WIKI_COMPILE_TASK = 'T10.2.0';
+const WIKI_R2_AUDIT_INTRODUCED_AT = '2026-06-10';
+const WIKI_R2_AUDIT_TASK = 'T10.2.1';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -236,6 +238,21 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: WIKI_COMPILE_INTRODUCED_AT
   },
   {
+    kind: 'wiki-r2-audit-policy',
+    name: 'phase10-wiki-r2-audit',
+    paths: [
+      'environment/phase10/wiki-r2-audit.js',
+      'environment/phase10/wiki-compile.js',
+      'environment/schemas/phase10-wiki-page.schema.json',
+      'environment/tests/schemas/phase10-wiki-page.schema.test.js',
+      'environment/tests/ci/phase10-wiki-r2-audit.js',
+      'environment/tests/ci/phase10-wiki-r2-audit.test.js'
+    ],
+    task: WIKI_R2_AUDIT_TASK,
+    status: 'implemented-r2-audited-synthesis-policy',
+    introducedAt: WIKI_R2_AUDIT_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -366,6 +383,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-wiki-compile.js')) {
     paths.push('environment/tests/ci/phase10-wiki-compile.js');
   }
+  if (command.includes('phase10-wiki-r2-audit.js')) {
+    paths.push('environment/tests/ci/phase10-wiki-r2-audit.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -431,6 +451,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:knowledge-base-import',
     'phase10:scientific-skill-intake',
     'phase10:wiki-compile',
+    'phase10:wiki-r2-audit',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

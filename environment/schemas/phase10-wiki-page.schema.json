@@ -51,6 +51,93 @@
       "type": "string",
       "const": "not-established"
     },
+    "r2Audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "verdict",
+        "reviewer",
+        "reviewedAt",
+        "law13ReviewExtension"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "passed"
+        },
+        "verdict": {
+          "type": "string",
+          "const": "ACCEPT"
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "law13ReviewExtension": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "law13StatusChecked",
+            "provenanceRefsChecked",
+            "queryNotProvenanceCheck",
+            "r2PathRequired",
+            "r2PathPresent",
+            "suppositionIsolationChecked"
+          ],
+          "properties": {
+            "law13StatusChecked": {
+              "type": "boolean"
+            },
+            "provenanceRefsChecked": {
+              "type": "boolean"
+            },
+            "queryNotProvenanceCheck": {
+              "type": "boolean"
+            },
+            "r2PathRequired": {
+              "type": "boolean"
+            },
+            "r2PathPresent": {
+              "type": "boolean"
+            },
+            "suppositionIsolationChecked": {
+              "type": "boolean"
+            }
+          }
+        },
+        "repairAttempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rejectionEventId", "rejectedStatementIds", "action"],
+            "properties": {
+              "rejectionEventId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rejectedStatementIds": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^ASSERT-.+$"
+                }
+              },
+              "action": {
+                "type": "string",
+                "const": "metadata-only-retry"
+              }
+            }
+          }
+        }
+      }
+    },
     "assertionGraph": {
       "type": "array",
       "minItems": 1,
@@ -99,6 +186,20 @@
       },
       "then": {
         "required": ["nexusStatus"]
+      }
+    }
+    ,
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "synthesis"
+          }
+        },
+        "required": ["type"]
+      },
+      "then": {
+        "required": ["r2Audit"]
       }
     }
   ]

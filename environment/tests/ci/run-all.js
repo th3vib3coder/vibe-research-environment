@@ -22,6 +22,7 @@ import validatePhase10RawZone from './phase10-raw-zone.js';
 import validatePhase10ScientificSkillIntake from './phase10-scientific-skill-intake.js';
 import validatePhase10SourceBundles from './phase10-source-bundles.js';
 import validatePhase10WikiCompile from './phase10-wiki-compile.js';
+import validatePhase10WikiR2Audit from './phase10-wiki-r2-audit.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -46,7 +47,8 @@ const validators = [
   ['phase10-law13-lint', validatePhase10Law13Lint],
   ['phase10-raw-zone', validatePhase10RawZone],
   ['phase10-source-bundles', validatePhase10SourceBundles],
-  ['phase10-wiki-compile', validatePhase10WikiCompile]
+  ['phase10-wiki-compile', validatePhase10WikiCompile],
+  ['phase10-wiki-r2-audit', validatePhase10WikiR2Audit]
 ];
 
 for (const [name, validator] of validators) {

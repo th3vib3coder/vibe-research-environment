@@ -24,6 +24,23 @@ const validWikiPage = {
   updatedAt: ISO_TIME
 };
 
+function validR2Audit() {
+  return {
+    status: 'passed',
+    verdict: 'ACCEPT',
+    reviewer: 'claude-code',
+    reviewedAt: ISO_TIME,
+    law13ReviewExtension: {
+      law13StatusChecked: true,
+      provenanceRefsChecked: true,
+      queryNotProvenanceCheck: true,
+      r2PathRequired: true,
+      r2PathPresent: true,
+      suppositionIsolationChecked: true
+    }
+  };
+}
+
 test('phase10-wiki-page.schema accepts assertion-level citations', async () => {
   await expectValid(SCHEMA_FILE, validWikiPage);
 });
@@ -65,6 +82,38 @@ test('phase10-wiki-page.schema requires hypothesis nexusStatus', async () => {
   fixture.nexusStatus = 'not-established';
 
   await expectValid(SCHEMA_FILE, fixture);
+});
+
+test('phase10-wiki-page.schema requires R2 audit for synthesis pages', async () => {
+  const missingAudit = clone(validWikiPage);
+  missingAudit.type = 'synthesis';
+
+  await expectInvalid(SCHEMA_FILE, missingAudit, /required|r2Audit/u);
+
+  const validSynthesis = clone(missingAudit);
+  validSynthesis.r2Audit = validR2Audit();
+
+  await expectValid(SCHEMA_FILE, validSynthesis);
+});
+
+test('phase10-wiki-page.schema rejects non-accepted synthesis R2 audit', async () => {
+  const fixture = clone(validWikiPage);
+  fixture.type = 'synthesis';
+  fixture.r2Audit = {
+    ...validR2Audit(),
+    verdict: 'REDIRECT'
+  };
+
+  await expectInvalid(SCHEMA_FILE, fixture, /const|ACCEPT/u);
+});
+
+test('phase10-wiki-page.schema requires complete LAW 13 bridge fields in R2 audit', async () => {
+  const fixture = clone(validWikiPage);
+  fixture.type = 'synthesis';
+  fixture.r2Audit = validR2Audit();
+  delete fixture.r2Audit.law13ReviewExtension.queryNotProvenanceCheck;
+
+  await expectInvalid(SCHEMA_FILE, fixture, /required|queryNotProvenanceCheck/u);
 });
 
 test('phase10-wiki-page.schema rejects page-level provenance without assertion cites', async () => {

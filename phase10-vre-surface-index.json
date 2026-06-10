@@ -338,6 +338,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:wiki-r2-audit",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-wiki-r2-audit.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "test:phase10-scaffold",
     "paths": [
       "package.json"
@@ -585,6 +596,21 @@
     ],
     "task": "T10.2.0",
     "status": "implemented-wiki-compile-scaffold",
+    "introducedAt": "2026-06-10"
+  },
+  {
+    "kind": "wiki-r2-audit-policy",
+    "name": "phase10-wiki-r2-audit",
+    "paths": [
+      "environment/phase10/wiki-r2-audit.js",
+      "environment/phase10/wiki-compile.js",
+      "environment/schemas/phase10-wiki-page.schema.json",
+      "environment/tests/schemas/phase10-wiki-page.schema.test.js",
+      "environment/tests/ci/phase10-wiki-r2-audit.js",
+      "environment/tests/ci/phase10-wiki-r2-audit.test.js"
+    ],
+    "task": "T10.2.1",
+    "status": "implemented-r2-audited-synthesis-policy",
     "introducedAt": "2026-06-10"
   }
 ]

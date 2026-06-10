@@ -55,6 +55,9 @@ export const PHASE10_PATHS = {
   wikiCompile: 'environment/phase10/wiki-compile.js',
   wikiCompileValidator: 'environment/tests/ci/phase10-wiki-compile.js',
   wikiCompileTest: 'environment/tests/ci/phase10-wiki-compile.test.js',
+  wikiR2Audit: 'environment/phase10/wiki-r2-audit.js',
+  wikiR2AuditValidator: 'environment/tests/ci/phase10-wiki-r2-audit.js',
+  wikiR2AuditTest: 'environment/tests/ci/phase10-wiki-r2-audit.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -110,6 +113,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.wikiCompile,
   PHASE10_PATHS.wikiCompileValidator,
   PHASE10_PATHS.wikiCompileTest,
+  PHASE10_PATHS.wikiR2Audit,
+  PHASE10_PATHS.wikiR2AuditValidator,
+  PHASE10_PATHS.wikiR2AuditTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -138,6 +144,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:knowledge-base-import': 'phase10-knowledge-base-import.js',
   'phase10:scientific-skill-intake': 'phase10-scientific-skill-intake.js',
   'phase10:wiki-compile': 'phase10-wiki-compile.js',
+  'phase10:wiki-r2-audit': 'phase10-wiki-r2-audit.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

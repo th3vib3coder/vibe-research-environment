@@ -209,7 +209,7 @@ test('wiki compile rejects inactive, archived, and mismatched active domains', a
   });
 });
 
-test('wiki compile accepts only two-pass policy in T10.2.0', async () => {
+test('wiki compile keeps three-pass policy restricted to audited synthesis', async () => {
   await withProject('phase10-wiki-compile-policy-', async (projectRoot) => {
     await installDomain(projectRoot);
     await installBundle(projectRoot);
@@ -229,7 +229,7 @@ test('wiki compile accepts only two-pass policy in T10.2.0', async () => {
     );
     await expectCode(
       () => compileBasic(projectRoot, { draftPages: [sourceDraft({ type: 'synthesis' })] }),
-      'E_PHASE10_WIKI_SYNTHESIS_DEFERRED'
+      'E_PHASE10_WIKI_SYNTHESIS_R2_POLICY_REQUIRED'
     );
   });
 });
