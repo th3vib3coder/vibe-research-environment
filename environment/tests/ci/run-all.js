@@ -26,6 +26,7 @@ import validatePhase10WikiR2Audit from './phase10-wiki-r2-audit.js';
 import validatePhase10AssertionGraph from './phase10-assertion-graph.js';
 import validatePhase10RiskScanner from './phase10-risk-scanner.js';
 import validatePhase10CompilePolicy from './phase10-compile-policy.js';
+import validatePhase10WikiQuery from './phase10-wiki-query.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -54,7 +55,8 @@ const validators = [
   ['phase10-wiki-r2-audit', validatePhase10WikiR2Audit],
   ['phase10-assertion-graph', validatePhase10AssertionGraph],
   ['phase10-risk-scanner', validatePhase10RiskScanner],
-  ['phase10-compile-policy', validatePhase10CompilePolicy]
+  ['phase10-compile-policy', validatePhase10CompilePolicy],
+  ['phase10-wiki-query', validatePhase10WikiQuery]
 ];
 
 for (const [name, validator] of validators) {

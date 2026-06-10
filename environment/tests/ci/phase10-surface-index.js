@@ -60,6 +60,8 @@ const RISK_SCANNER_INTRODUCED_AT = '2026-06-10';
 const RISK_SCANNER_TASK = 'T10.2.2';
 const COMPILE_POLICY_INTRODUCED_AT = '2026-06-10';
 const COMPILE_POLICY_TASK = 'T10.2.3';
+const WIKI_QUERY_INTRODUCED_AT = '2026-06-10';
+const WIKI_QUERY_TASK = 'T10.3.0';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -305,6 +307,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: COMPILE_POLICY_INTRODUCED_AT
   },
   {
+    kind: 'wiki-query-read-path',
+    name: 'phase10-wiki-query',
+    paths: [
+      'environment/phase10/wiki-query.js',
+      'environment/tests/ci/phase10-wiki-query.js',
+      'environment/tests/ci/phase10-wiki-query.test.js'
+    ],
+    task: WIKI_QUERY_TASK,
+    status: 'implemented-wiki-query-read-path',
+    introducedAt: WIKI_QUERY_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -441,6 +455,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-compile-policy.js')) {
     paths.push('environment/tests/ci/phase10-compile-policy.js');
   }
+  if (command.includes('phase10-wiki-query.js')) {
+    paths.push('environment/tests/ci/phase10-wiki-query.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -510,6 +527,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:assertion-graph',
     'phase10:risk-scanner',
     'phase10:compile-policy',
+    'phase10:wiki-query',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

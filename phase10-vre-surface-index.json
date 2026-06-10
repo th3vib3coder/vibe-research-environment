@@ -401,6 +401,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:wiki-query",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-wiki-query.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:wiki-r2-audit",
     "paths": [
       "package.json",
@@ -673,6 +684,18 @@
     ],
     "task": "T10.2.0",
     "status": "implemented-wiki-compile-scaffold",
+    "introducedAt": "2026-06-10"
+  },
+  {
+    "kind": "wiki-query-read-path",
+    "name": "phase10-wiki-query",
+    "paths": [
+      "environment/phase10/wiki-query.js",
+      "environment/tests/ci/phase10-wiki-query.js",
+      "environment/tests/ci/phase10-wiki-query.test.js"
+    ],
+    "task": "T10.3.0",
+    "status": "implemented-wiki-query-read-path",
     "introducedAt": "2026-06-10"
   },
   {
