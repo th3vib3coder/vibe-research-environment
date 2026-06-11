@@ -396,9 +396,12 @@ function queryMarkdownFilePath(projectRoot, domainId, logicalPath, options) {
   return resolveInside(domainStateRootDir(projectRoot, options), domainId, logicalPath);
 }
 
-function renderMarkdown({ queryId, queryText, results, issuedAt }) {
+function renderMarkdown({ queryId, queryText, results, issuedAt, decisionUse }) {
   const lines = [
     `# ${queryId}`,
+    '',
+    '> query-output-is-metadata-not-law13-provenance',
+    `> decision-use: ${decisionUse.classification}`,
     '',
     `Query: ${queryText}`,
     `Issued: ${issuedAt}`,
@@ -490,7 +493,13 @@ export async function runWikiQuery(projectPath, input = {}) {
   await mkdir(path.dirname(markdownPath), { recursive: true });
   await writeFile(
     markdownPath,
-    renderMarkdown({ queryId, queryText: input.queryText, results, issuedAt: timestamp }),
+    renderMarkdown({
+      queryId,
+      queryText: input.queryText,
+      results,
+      issuedAt: timestamp,
+      decisionUse
+    }),
     'utf8'
   );
 

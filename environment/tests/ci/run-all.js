@@ -28,6 +28,7 @@ import validatePhase10RiskScanner from './phase10-risk-scanner.js';
 import validatePhase10CompilePolicy from './phase10-compile-policy.js';
 import validatePhase10WikiQuery from './phase10-wiki-query.js';
 import validatePhase10QueryDecisionUse from './phase10-query-decision-use.js';
+import validatePhase10QueryLints from './phase10-query-lints.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -58,7 +59,8 @@ const validators = [
   ['phase10-risk-scanner', validatePhase10RiskScanner],
   ['phase10-compile-policy', validatePhase10CompilePolicy],
   ['phase10-wiki-query', validatePhase10WikiQuery],
-  ['phase10-query-decision-use', validatePhase10QueryDecisionUse]
+  ['phase10-query-decision-use', validatePhase10QueryDecisionUse],
+  ['phase10-query-lints', validatePhase10QueryLints]
 ];
 
 for (const [name, validator] of validators) {

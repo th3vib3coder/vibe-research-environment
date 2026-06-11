@@ -358,6 +358,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:query-lints",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-query-lints.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:raw-zone",
     "paths": [
       "package.json",
@@ -468,6 +479,19 @@
     ],
     "task": "T10.3.1",
     "status": "implemented-query-decision-use-foundation",
+    "introducedAt": "2026-06-10"
+  },
+  {
+    "kind": "query-lints",
+    "name": "phase10-query-lints",
+    "paths": [
+      "environment/phase10/query-lints.js",
+      "environment/tests/ci/phase10-query-lints.js",
+      "environment/tests/ci/phase10-query-lints.test.js",
+      "environment/phase10/wiki-query.js"
+    ],
+    "task": "T10.3.2",
+    "status": "implemented-query-lints-foundation",
     "introducedAt": "2026-06-10"
   },
   {

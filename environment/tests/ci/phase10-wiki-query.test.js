@@ -259,6 +259,9 @@ test('wiki query writes schema-valid records with computed not-for-decision floo
 
     const record = await readJson(path.join(projectRoot, result.queryRecordPath));
     assert.equal(record.decisionUse.classification, 'informational');
+    const markdown = await readFile(path.join(projectRoot, result.queryMarkdownRecordPath), 'utf8');
+    assert.match(markdown, /query-output-is-metadata-not-law13-provenance/u);
+    assert.match(markdown, /decision-use: informational/u);
     assert.equal(await pathExists(path.join(wikiRoot(projectRoot), 'provenance-links')), false);
   });
 });
