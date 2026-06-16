@@ -176,7 +176,7 @@ async function readCompiledManifest(projectRoot, domainId, options, timestamp, o
   if (!Number.isFinite(expiresAt) || !Number.isFinite(nowMs)) {
     failQuery('E_PHASE10_QUERY_MANIFEST_TIME_INVALID', 'Manifest freshness metadata is invalid');
   }
-  if (expiresAt < nowMs) {
+  if (expiresAt <= nowMs) {
     if (overrideReason == null) {
       failQuery('E_PHASE10_QUERY_MANIFEST_STALE', 'Compiled wiki manifest is stale');
     }

@@ -192,6 +192,12 @@ test('wiki query rejects missing, inactive, and stale compiled manifest', async 
       'E_PHASE10_QUERY_MANIFEST_STALE'
     );
 
+    await installCompiledWiki(projectRoot, { expiresAt: TIMESTAMP });
+    await expectCode(
+      () => queryBasic(projectRoot),
+      'E_PHASE10_QUERY_MANIFEST_STALE'
+    );
+
     await expectCode(
       () => queryBasic(projectRoot, { freshnessOverrideReason: '' }),
       'E_PHASE10_QUERY_FRESHNESS_OVERRIDE_REASON_REQUIRED'
