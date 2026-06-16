@@ -33,6 +33,7 @@ import validatePhase10ExportGuard from './phase10-export-guard.js';
 import validatePhase10MarpExport from './phase10-marp-export.js';
 import validatePhase10PresentationStaleness from './phase10-presentation-staleness.js';
 import validatePhase10MultiDomainGate from './phase10-multi-domain-gate.js';
+import validatePhase10CrossDomainMerge from './phase10-cross-domain-merge.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -68,7 +69,8 @@ const validators = [
   ['phase10-export-guard', validatePhase10ExportGuard],
   ['phase10-marp-export', validatePhase10MarpExport],
   ['phase10-presentation-staleness', validatePhase10PresentationStaleness],
-  ['phase10-multi-domain-gate', validatePhase10MultiDomainGate]
+  ['phase10-multi-domain-gate', validatePhase10MultiDomainGate],
+  ['phase10-cross-domain-merge', validatePhase10CrossDomainMerge]
 ];
 
 for (const [name, validator] of validators) {

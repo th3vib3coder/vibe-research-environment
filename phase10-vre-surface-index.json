@@ -66,6 +66,18 @@
     "introducedAt": "2026-06-10"
   },
   {
+    "kind": "cross-domain-merge-planner",
+    "name": "phase10-cross-domain-merge",
+    "paths": [
+      "environment/phase10/cross-domain-merge.js",
+      "environment/tests/ci/phase10-cross-domain-merge.js",
+      "environment/tests/ci/phase10-cross-domain-merge.test.js"
+    ],
+    "task": "T10.5.1",
+    "status": "implemented-read-only-local-planner",
+    "introducedAt": "2026-06-16"
+  },
+  {
     "kind": "export-guard",
     "name": "phase10-export-guard",
     "paths": [
@@ -306,6 +318,17 @@
     "paths": [
       "package.json",
       "environment/tests/ci/phase10-compile-policy.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:cross-domain-merge",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-cross-domain-merge.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",

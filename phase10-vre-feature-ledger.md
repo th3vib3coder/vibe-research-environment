@@ -117,3 +117,42 @@ Target GREEN: `node --test environment/tests/ci/phase10-multi-domain-gate.test.j
 regenerated 75 surfaces. Aggregate, fail-closed probe, WIKI checks, full
 `node --test`, and Claude Code HAT 3 ACCEPT are complete via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase10/turns/claude-hat3-t10.5.0-verdict.md`.
+
+## T10.5.1 Cross-Domain Merge And Synthesis Trace
+
+T10.5.1 adds a read-only in-memory cross-domain merge/synthesis planner. The
+positive result is a local non-authoritative plan only: it is not persisted,
+not authoritative, grants no authorization, performs no operation, and writes
+nothing. The helper consumes the real T10.5.0 gate and cannot infer permission
+from schema presence, closeout documents, or multiple domain IDs.
+
+Changed Phase 10 VRE paths:
+
+- `package.json`
+- `phase9-vre-feature-ledger.md`
+- `phase10-vre-feature-ledger.md`
+- `phase10-vre-surface-index.json`
+- `environment/phase10/cross-domain-merge.js`
+- `environment/tests/ci/phase10-cross-domain-merge.js`
+- `environment/tests/ci/phase10-cross-domain-merge.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/ci/phase10-surface-index.js`
+- `environment/tests/ci/check-phase10-ledger.js`
+- `environment/tests/ci/check-phase10-ledger.test.js`
+
+Verification so far: RED-first module-missing failures and `ciValidators`
+`38 -> 39` mismatch were captured before production helper/count update.
+Target GREEN: `node --test environment/tests/ci/phase10-cross-domain-merge.test.js`
+15/15 PASS, `node environment/tests/ci/phase10-cross-domain-merge.js` PASS,
+`node environment/tests/ci/validate-counts.js` PASS, checker fixture tests
+28/28 PASS, and `node environment/tests/ci/phase10-surface-index.js`
+regenerated 77 surfaces. Aggregate, fail-closed probe, WIKI checks, full
+`node --test`, and Claude Code HAT 3 ACCEPT are complete via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase10/turns/claude-hat3-t10.5.1-verdict.md`.
+
+Anti-dup verified: no cross-domain query execution, query CLI, export
+packaging, MARP/presentation behavior, filesystem writers, schema edits,
+provenance-link writers, claim-ledger writers, claim-edge mutation, domain
+lifecycle mutation, Phase 12 runtime, role migration, source discovery,
+publication/network behavior, or automatic T10.5.2 opening.
