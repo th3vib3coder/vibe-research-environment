@@ -1,0 +1,546 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase11.research-packet.v1",
+  "title": "Phase 11 Research Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "packetId",
+    "phase",
+    "wave",
+    "taskId",
+    "objective",
+    "datasetInventory",
+    "datasets",
+    "surfaceRefs",
+    "sourceRefs",
+    "experiment",
+    "resultArtifacts",
+    "draftFinding",
+    "law9Harness",
+    "seamLog",
+    "createdAt",
+    "createdBy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase11.research-packet.v1"
+    },
+    "packetId": {
+      "type": "string",
+      "pattern": "^RP-[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "phase": {
+      "const": 11
+    },
+    "wave": {
+      "type": "string",
+      "pattern": "^11\\.[0-9A-Za-z.-]+$"
+    },
+    "taskId": {
+      "type": "string",
+      "pattern": "^T11\\.[0-9]+\\.[0-9]+$"
+    },
+    "objective": {
+      "$ref": "#/definitions/objective"
+    },
+    "datasetInventory": {
+      "$ref": "#/definitions/datasetInventory"
+    },
+    "datasets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/dataset"
+      }
+    },
+    "surfaceRefs": {
+      "$ref": "#/definitions/surfaceRefs"
+    },
+    "sourceRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/sourceRef"
+      }
+    },
+    "experiment": {
+      "$ref": "#/definitions/experiment"
+    },
+    "resultArtifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/resultArtifact"
+      }
+    },
+    "draftFinding": {
+      "$ref": "#/definitions/draftFinding"
+    },
+    "law9Harness": {
+      "$ref": "#/definitions/law9Harness"
+    },
+    "seamLog": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/seamLogEntry"
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdBy": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "definitions": {
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objectiveId",
+        "question"
+      ],
+      "properties": {
+        "objectiveId": {
+          "type": "string",
+          "pattern": "^OBJ-[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "datasetInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidencePath",
+        "evidenceSha256",
+        "closurePath",
+        "status"
+      ],
+      "properties": {
+        "evidencePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidenceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "closurePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "blocked",
+            "open"
+          ]
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "datasetId",
+        "sourceAccession",
+        "path",
+        "status",
+        "sha256",
+        "hashDeferredReason",
+        "selectedForExecution",
+        "cellTypeAnnotation"
+      ],
+      "properties": {
+        "datasetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceAccession": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PRESENT",
+            "PARTIAL_READY_FOR_NEXT_PACKET_SCAFFOLD_ONLY",
+            "STUB_BLOCKED_FOR_H5AD_USE",
+            "OPEN",
+            "OPEN_REQUIRES_LATER_FORMAT_CHECK",
+            "OPEN_HASH_DEFERRED_LARGE_FILE",
+            "OPEN_HASH_DEFERRED_NOT_FIRST_SLICE"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "hashDeferredReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selectedForExecution": {
+          "type": "boolean"
+        },
+        "cellTypeAnnotation": {
+          "$ref": "#/definitions/cellTypeAnnotation"
+        }
+      }
+    },
+    "cellTypeAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "key",
+        "derivationPlanRef"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "absent",
+            "present",
+            "derived-plan-required",
+            "derived-reviewed"
+          ]
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "derivationPlanRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "surfaceRefs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experimentManifestSchema",
+        "experimentBundleManifestSchema",
+        "experimentRegisterInputSchema",
+        "analysisManifestSchema",
+        "resultsBundleDiscoverInputSchema"
+      ],
+      "properties": {
+        "experimentManifestSchema": {
+          "const": "experiment-manifest.schema.json"
+        },
+        "experimentBundleManifestSchema": {
+          "const": "experiment-bundle-manifest.schema.json"
+        },
+        "experimentRegisterInputSchema": {
+          "const": "experiment-register-input.schema.json"
+        },
+        "analysisManifestSchema": {
+          "const": "phase9-analysis-manifest.schema.json"
+        },
+        "resultsBundleDiscoverInputSchema": {
+          "const": "results-bundle-discover-input.schema.json"
+        }
+      }
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "prior-confounder-report",
+            "literature-source",
+            "dataset-metadata",
+            "review-record",
+            "other"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experimentManifestRef",
+        "analysisManifestRef",
+        "resultBundleRef",
+        "executionStatus"
+      ],
+      "properties": {
+        "experimentManifestRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "analysisManifestRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resultBundleRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "executionStatus": {
+          "type": "string",
+          "enum": [
+            "not-run",
+            "planned",
+            "blocked",
+            "completed"
+          ]
+        }
+      }
+    },
+    "resultArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sizeBytes",
+        "sha256",
+        "hashDeferredReason"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "hashDeferredReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "draftFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "claimType",
+        "target",
+        "requiresCellTypeAnnotation",
+        "confounderStatus",
+        "medicalReviewRequired"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "scaffold-only",
+            "blocked",
+            "inconclusive",
+            "requires-medical-review",
+            "supported",
+            "conclusive"
+          ]
+        },
+        "claimType": {
+          "type": "string",
+          "enum": [
+            "none",
+            "non-quantitative",
+            "quantitative"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiresCellTypeAnnotation": {
+          "type": "boolean"
+        },
+        "confounderStatus": {
+          "type": "string",
+          "enum": [
+            "not-applicable",
+            "open",
+            "partially-controlled",
+            "controlled",
+            "resolved"
+          ]
+        },
+        "medicalReviewRequired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "law9Harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawCohort",
+        "conditionedCohort",
+        "matchedComparison",
+        "batchKey",
+        "donorPatientKey",
+        "studySourceKey",
+        "doubletSignal",
+        "ambientRna",
+        "crossPatientReproducibility",
+        "quantitativeClaimPath"
+      ],
+      "properties": {
+        "rawCohort": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "conditionedCohort": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "matchedComparison": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "batchKey": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "donorPatientKey": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "studySourceKey": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "doubletSignal": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "ambientRna": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "crossPatientReproducibility": {
+          "$ref": "#/definitions/harnessKey"
+        },
+        "quantitativeClaimPath": {
+          "type": "string",
+          "enum": [
+            "BLOCKED_OR_INCONCLUSIVE_UNTIL_KEY_RESOLVED",
+            "READY_FOR_QUANTITATIVE_CLAIM"
+          ]
+        }
+      }
+    },
+    "harnessKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "open",
+            "blocked",
+            "present-candidate",
+            "prior-evidence-present"
+          ]
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "seamLogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "description",
+        "status"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "missing-annotation",
+            "blocked-dataset",
+            "confounder-gap",
+            "environment-pin",
+            "manual-gap",
+            "other"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "blocked",
+            "resolved",
+            "deferred"
+          ]
+        }
+      }
+    }
+  }
+}

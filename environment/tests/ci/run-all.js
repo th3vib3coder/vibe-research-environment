@@ -35,6 +35,8 @@ import validatePhase10PresentationStaleness from './phase10-presentation-stalene
 import validatePhase10MultiDomainGate from './phase10-multi-domain-gate.js';
 import validatePhase10CrossDomainMerge from './phase10-cross-domain-merge.js';
 import validatePhase10CrossDomainQuery from './phase10-cross-domain-query.js';
+import checkPhase11Ledger from './check-phase11-ledger.js';
+import validatePhase11ResearchPacket from './phase11-research-packet.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -72,7 +74,9 @@ const validators = [
   ['phase10-presentation-staleness', validatePhase10PresentationStaleness],
   ['phase10-multi-domain-gate', validatePhase10MultiDomainGate],
   ['phase10-cross-domain-merge', validatePhase10CrossDomainMerge],
-  ['phase10-cross-domain-query', validatePhase10CrossDomainQuery]
+  ['phase10-cross-domain-query', validatePhase10CrossDomainQuery],
+  ['check-phase11-ledger', checkPhase11Ledger],
+  ['phase11-research-packet', validatePhase11ResearchPacket]
 ];
 
 for (const [name, validator] of validators) {
