@@ -1,10 +1,11 @@
 {
   "schemaVersion": "phase9.analysis-manifest.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
   "experimentId": "EXP-001",
-  "analysisId": "ANL-2026-04-23-invalid-001",
+  "analysisId": "ANL-2026-06-16-py314-heavy",
   "script": {
     "path": "analysis/scripts/diffexp.py",
-    "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "language": "python"
   },
   "inputs": [
@@ -31,32 +32,42 @@
   },
   "environment": {
     "interpreterKind": "python",
-    "interpreterId": "venv_scrna",
-    "interpreterVersion": "3.13.5",
-    "resolver": "operator-managed-venv",
-    "executableHint": "../../venv_scrna/Scripts/python.exe",
+    "interpreterId": "default-python",
+    "interpreterVersion": "3.14.0",
+    "resolver": "system",
+    "executableHint": "python",
     "resolutionStatus": "resolved",
-    "resolutionReason": "Pinned operator-managed venv verified before runner work.",
+    "resolutionReason": "This fixture lies and should be blocked semantically.",
     "dependencyLock": {
-      "path": "environment/phase11/requirements-venv-scrna.txt",
+      "path": "environment/phase11/requirements-python314.txt",
       "sha256": null,
-      "hashDeferredReason": "Operator-managed venv lock file is not tracked yet."
+      "hashDeferredReason": "Fixture intentionally unresolved for semantic rejection."
     },
     "dependencyPins": [
       {
-        "name": "anndata",
-        "version": "0.12.9",
-        "scope": "real-h5ad-read"
-      }
-    ],
-    "environmentFiles": [
+        "name": "numba",
+        "version": "0.61.0",
+        "scope": "heavy-scientific-stack"
+      },
       {
-        "path": "environment/phase11/hgsoc-cd8-script.js",
-        "sha256": null,
-        "hashDeferredReason": "Runtime source file hash is recorded by task evidence."
+        "name": "pynndescent",
+        "version": "0.5.13",
+        "scope": "heavy-scientific-stack"
+      },
+      {
+        "name": "umap",
+        "version": "0.5.7",
+        "scope": "heavy-scientific-stack"
       }
     ],
-    "knownSeams": []
+    "environmentFiles": [],
+    "knownSeams": [
+      {
+        "code": "PYTHON_3_14_NUMBA_PYNNDESCENT_UMAP",
+        "status": "blocked",
+        "description": "The seam is declared but resolutionStatus lies."
+      }
+    ]
   },
   "budget": {
     "maxRuntimeSeconds": 1800,
@@ -82,6 +93,6 @@
     "approvedAt": null,
     "reason": null
   },
-  "createdAt": "2026-04-23T12:10:00Z",
-  "createdBy": "sess-wave3-analysis"
+  "createdAt": "2026-06-16T00:00:00Z",
+  "createdBy": "sess-wave11-interpreter"
 }

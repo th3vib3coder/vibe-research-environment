@@ -200,3 +200,67 @@ Scope boundaries:
 - no CXCL13+ CD8 denominator, count, or fraction;
 - no export eligibility integration;
 - no biomedical claim promotion.
+
+## T11.1.1 Interpreter Manifest Contract Trace
+
+who: codex
+
+when: 2026-06-16
+
+why: Phase 9 analysis manifests already admitted Python/R syntax, but did not
+bind interpreter version, dependency lock, executable hint, environment file
+hash state, or the known Python 3.14 heavy-stack seam. T11.1.1 adds that
+manifest authority before T11.1.2 opens subprocess execution.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `environment/phase11/interpreter-manifest.js`
+- `environment/tests/ci/phase11-interpreter-manifest.js`
+- `environment/tests/ci/phase11-interpreter-manifest.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- the shared Phase 9 schema extension must be truly additive;
+- Python 3.14 with `numba`, `pynndescent`, UMAP, or `scanpy` must be rejected
+  semantically when claimed as resolved;
+- Python/R runtime rejection must remain until T11.1.2;
+- counts, `run-all.js`, and Phase 9/11 ledger checks must run before HAT 3.
+
+RED evidence captured before production files:
+
+- schema test rejected the new `environment` object and still accepted
+  Python/R manifests without it;
+- semantic test failed with missing
+  `environment/phase11/interpreter-manifest.js`;
+- `validate-counts` failed with `ciValidators` expected 45, got 46.
+
+verification:
+
+- schema test 9/9 PASS.
+- semantic test 4/4 PASS.
+- `validateAnalysisManifest` integration test 5/5 PASS.
+- `run-analysis` CLI test 12/12 PASS, including pinned Python manifest still
+  rejected before the executor opens.
+- CI validator PASS.
+- `validate-counts` PASS with `ciValidators` at 46.
+- Phase 9 and Phase 11 ledger checks PASS.
+- `run-all.js` PASS.
+- full `node --test --test-reporter=dot` PASS.
+- Wave 6 Scenario D plus aggregate acceptance regression PASS after the
+  pinned Python fixture repair.
+- `git diff --check` PASS with known Phase 9 ledger CRLF warning.
+
+reviewer: Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.1.1-interpreter-manifest-verdict-2026-06-16.md`.
+
+Scope boundaries:
+
+- no Python/R subprocess executor;
+- no real GSE184880 execution or H5AD read;
+- no notebook execution;
+- no CD8/CXCL13 denominator, count, or fraction;
+- no export eligibility integration;
+- no biomedical claim promotion.

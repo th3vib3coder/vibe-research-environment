@@ -16,6 +16,11 @@ import {
   ExperimentManifestBindingValidationError,
   resolveObjectiveExperimentManifestBinding
 } from './experiment-binding.js';
+import {
+  assertInterpreterManifestEnvironment,
+  assertInterpreterManifestEnvironmentPaths,
+  InterpreterManifestEnvironmentError
+} from '../phase11/interpreter-manifest.js';
 
 export const ANALYSIS_MANIFEST_SCHEMA_FILE = 'phase9-analysis-manifest.schema.json';
 export const ANALYSIS_MANIFEST_SCHEMA_VERSION = 'phase9.analysis-manifest.v1';
@@ -64,6 +69,18 @@ export async function validateAnalysisManifest(projectPath, manifest) {
   }
   for (const artifact of manifest.expectedArtifacts) {
     resolveProjectLocalPath(projectRoot, artifact.path, `expected artifact path (${artifact.kind})`);
+  }
+  try {
+    assertInterpreterManifestEnvironment(manifest);
+    assertInterpreterManifestEnvironmentPaths(
+      manifest,
+      (repoRelativePath, label) => resolveProjectLocalPath(projectRoot, repoRelativePath, label)
+    );
+  } catch (error) {
+    if (error instanceof InterpreterManifestEnvironmentError) {
+      throw new AnalysisManifestValidationError(error.message, { cause: error });
+    }
+    throw error;
   }
 
   const activePointer = await readActiveObjectivePointer(projectRoot);

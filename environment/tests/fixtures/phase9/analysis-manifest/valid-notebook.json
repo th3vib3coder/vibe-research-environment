@@ -32,6 +32,35 @@
       "analysis/notebooks/qc.ipynb"
     ]
   },
+  "environment": {
+    "interpreterKind": "notebook",
+    "interpreterId": "venv_scrna-jupyter",
+    "interpreterVersion": "3.13.5",
+    "resolver": "operator-managed-venv",
+    "executableHint": "../../venv_scrna/Scripts/jupyter.exe",
+    "resolutionStatus": "resolved",
+    "resolutionReason": "Interpreter identity is pinned; notebook runner stays unsupported until T11.1.2.",
+    "dependencyLock": {
+      "path": "environment/phase11/requirements-venv-scrna.txt",
+      "sha256": null,
+      "hashDeferredReason": "Operator-managed venv lock file is not tracked yet."
+    },
+    "dependencyPins": [
+      {
+        "name": "jupyter",
+        "version": "deferred",
+        "scope": "notebook-execution"
+      }
+    ],
+    "environmentFiles": [
+      {
+        "path": "environment/phase11/hgsoc-cd8-script.js",
+        "sha256": null,
+        "hashDeferredReason": "Runtime source file hash is recorded by task evidence."
+      }
+    ],
+    "knownSeams": []
+  },
   "budget": {
     "maxRuntimeSeconds": 2400,
     "maxMemoryGb": 12,

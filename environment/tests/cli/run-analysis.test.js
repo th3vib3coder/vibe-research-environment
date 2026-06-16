@@ -331,6 +331,45 @@ test('run-analysis --dry-run validates the manifest and returns a preview withou
   }
 });
 
+test('run-analysis keeps pinned Python manifests runtime-rejected until the Phase 11 executor opens', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-pinned-rejected-');
+  try {
+    const pythonFixture = await readFixtureJson('analysis-manifest', 'valid-python.json');
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-pinned-python-rejected-001',
+      scriptContents: "print('python runner must stay closed in T11.1.1')\n",
+      mutateManifest(manifest) {
+        manifest.script = pythonFixture.script;
+        manifest.command = pythonFixture.command;
+        manifest.environment = pythonFixture.environment;
+        manifest.inputs = pythonFixture.inputs;
+        manifest.outputs = pythonFixture.outputs;
+        manifest.expectedArtifacts = pythonFixture.expectedArtifacts;
+      },
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+      '--dry-run',
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.ok, false);
+    assert.equal(payload.code, 'E_ANALYSIS_TEMPLATE_UNSUPPORTED');
+    assert.match(payload.message, /supports only the reviewed Node-script command template/u);
+    assert.equal(await pathExists(context.laneRunsPath), false);
+    assert.deepEqual(await readObjectiveEvents(projectRoot), []);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
 test('run-analysis executes a safe script, writes stdout/stderr logs, appends lane runs, and records an objective event', async () => {
   const projectRoot = await createCliFixtureProject('vre-run-analysis-success-');
   try {

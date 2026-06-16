@@ -38,6 +38,7 @@ import validatePhase10CrossDomainQuery from './phase10-cross-domain-query.js';
 import checkPhase11Ledger from './check-phase11-ledger.js';
 import validatePhase11FirstResearchPacket from './phase11-first-research-packet.js';
 import validatePhase11HgsocCd8Script from './phase11-hgsoc-cd8-script.js';
+import validatePhase11InterpreterManifest from './phase11-interpreter-manifest.js';
 import validatePhase11ResearchPacket from './phase11-research-packet.js';
 import validatePhase11ScientificDerivationHarness from './phase11-scientific-derivation-harness.js';
 
@@ -81,6 +82,7 @@ const validators = [
   ['check-phase11-ledger', checkPhase11Ledger],
   ['phase11-first-research-packet', validatePhase11FirstResearchPacket],
   ['phase11-hgsoc-cd8-script', validatePhase11HgsocCd8Script],
+  ['phase11-interpreter-manifest', validatePhase11InterpreterManifest],
   ['phase11-research-packet', validatePhase11ResearchPacket],
   ['phase11-scientific-derivation-harness', validatePhase11ScientificDerivationHarness]
 ];

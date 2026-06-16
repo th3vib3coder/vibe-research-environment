@@ -1,10 +1,11 @@
 {
   "schemaVersion": "phase9.analysis-manifest.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
   "experimentId": "EXP-001",
-  "analysisId": "ANL-2026-04-23-invalid-001",
+  "analysisId": "ANL-2026-06-16-py-personal-path",
   "script": {
     "path": "analysis/scripts/diffexp.py",
-    "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
     "language": "python"
   },
   "inputs": [
@@ -34,7 +35,7 @@
     "interpreterId": "venv_scrna",
     "interpreterVersion": "3.13.5",
     "resolver": "operator-managed-venv",
-    "executableHint": "../../venv_scrna/Scripts/python.exe",
+    "executableHint": "C:/Users/Test-User/venv_scrna/Scripts/python.exe",
     "resolutionStatus": "resolved",
     "resolutionReason": "Pinned operator-managed venv verified before runner work.",
     "dependencyLock": {
@@ -49,13 +50,7 @@
         "scope": "real-h5ad-read"
       }
     ],
-    "environmentFiles": [
-      {
-        "path": "environment/phase11/hgsoc-cd8-script.js",
-        "sha256": null,
-        "hashDeferredReason": "Runtime source file hash is recorded by task evidence."
-      }
-    ],
+    "environmentFiles": [],
     "knownSeams": []
   },
   "budget": {
@@ -82,6 +77,6 @@
     "approvedAt": null,
     "reason": null
   },
-  "createdAt": "2026-04-23T12:10:00Z",
-  "createdBy": "sess-wave3-analysis"
+  "createdAt": "2026-06-16T00:00:00Z",
+  "createdBy": "sess-wave11-interpreter"
 }

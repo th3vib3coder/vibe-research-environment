@@ -279,6 +279,38 @@ async function seedExperimentManifest(projectRoot, objectiveId) {
   });
 }
 
+function defaultInterpreterEnvironment(language) {
+  if (language !== 'python') {
+    return null;
+  }
+  return {
+    interpreterKind: 'python',
+    interpreterId: 'venv_scrna',
+    interpreterVersion: '3.13.5',
+    resolver: 'operator-managed-venv',
+    executableHint: '../../venv_scrna/Scripts/python.exe',
+    resolutionStatus: 'resolved',
+    resolutionReason: 'Pinned fixture environment for pre-executor rejection.',
+    dependencyLock: {
+      path: 'environment/phase11/requirements-venv-scrna.txt',
+      sha256: null,
+      hashDeferredReason: 'Wave 6 fixture does not execute Python.'
+    },
+    dependencyPins: [
+      { name: 'anndata', version: '0.12.9', scope: 'fixture-pin' },
+      { name: 'numpy', version: '2.3.5', scope: 'fixture-pin' }
+    ],
+    environmentFiles: [],
+    knownSeams: [
+      {
+        code: 'PYTHON_3_14_NUMBA_PYNNDESCENT_UMAP',
+        status: 'blocked',
+        description: 'Fixture keeps Python 3.14 heavy stack fail-closed.'
+      }
+    ]
+  };
+}
+
 async function writeAnalysisManifest(projectRoot, objectiveId, {
   analysisId,
   manifestName,
@@ -287,7 +319,8 @@ async function writeAnalysisManifest(projectRoot, objectiveId, {
   scriptPath = `analysis/scripts/${manifestName.replace(/\.json$/u, '')}.mjs`,
   inputPath = `data/${manifestName.replace(/\.json$/u, '')}-input.json`,
   outputPath = `artifacts/${manifestName.replace(/\.json$/u, '')}-output.json`,
-  allowNetwork = false
+  allowNetwork = false,
+  environment = null
 }) {
   await mkdir(path.dirname(path.join(projectRoot, scriptPath)), { recursive: true });
   await mkdir(path.dirname(path.join(projectRoot, inputPath)), { recursive: true });
@@ -303,6 +336,7 @@ async function writeAnalysisManifest(projectRoot, objectiveId, {
     ""
   ].join('\n'), 'utf8');
 
+  const interpreterEnvironment = environment ?? defaultInterpreterEnvironment(language);
   const manifest = {
     schemaVersion: 'phase9.analysis-manifest.v1',
     objectiveId,
@@ -319,6 +353,7 @@ async function writeAnalysisManifest(projectRoot, objectiveId, {
       runner,
       argv: [scriptPath, '--input', inputPath, '--output', outputPath]
     },
+    ...(interpreterEnvironment == null ? {} : { environment: interpreterEnvironment }),
     budget: {
       maxRuntimeSeconds: 60,
       maxMemoryGb: 1,
@@ -996,6 +1031,7 @@ async function scenarioD(projectRoot, objectiveId) {
     analysisId: 'ANL-W6-D-BAD',
     manifestName: 'wave6-d-unsafe.json',
     language: 'python',
+    runner: 'python',
     scriptPath: 'analysis/scripts/wave6-d-unsafe.py'
   });
   const { manifest, manifestPath } = await writeAnalysisManifest(projectRoot, objectiveId, {

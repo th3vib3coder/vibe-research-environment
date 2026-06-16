@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "phase9.analysis-manifest.v1",
+  "objectiveId": "OBJ-2026-04-22-001",
+  "experimentId": "EXP-001",
+  "analysisId": "ANL-2026-06-16-r-no-env",
+  "script": {
+    "path": "analysis/scripts/diffexp.R",
+    "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+    "language": "r"
+  },
+  "inputs": [
+    {
+      "path": "data/input.rds",
+      "kind": "dataset",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "outputs": [
+    {
+      "path": "artifacts/results.csv",
+      "kind": "table",
+      "sha256": null,
+      "sizeBytes": null
+    }
+  ],
+  "command": {
+    "runner": "Rscript",
+    "argv": [
+      "analysis/scripts/diffexp.R"
+    ]
+  },
+  "budget": {
+    "maxRuntimeSeconds": 1800,
+    "maxMemoryGb": 8,
+    "allowNetwork": false
+  },
+  "safety": {
+    "destructive": false,
+    "treeWideWrite": false,
+    "externalCall": false
+  },
+  "taskKind": "analysis-execution-run",
+  "expectedArtifacts": [
+    {
+      "path": "artifacts/results.csv",
+      "kind": "table",
+      "required": true
+    }
+  ],
+  "humanApproval": {
+    "approved": false,
+    "approvedBy": null,
+    "approvedAt": null,
+    "reason": null
+  },
+  "createdAt": "2026-06-16T00:00:00Z",
+  "createdBy": "sess-wave11-interpreter"
+}

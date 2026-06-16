@@ -103,6 +103,20 @@ test('validateAnalysisManifest accepts same-transaction experiment registration 
   }
 });
 
+test('validateAnalysisManifest rejects Python 3.14 heavy stack resolved false-green', async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-analysis-manifest-py314-'));
+  try {
+    const manifest = await readFixture('analysis-manifest', 'invalid-python314-resolved-heavy-stack.json');
+
+    await assert.rejects(
+      validateAnalysisManifest(projectRoot, manifest),
+      /E_PHASE11_INTERPRETER_PY314_HEAVY_STACK_BLOCKED/
+    );
+  } finally {
+    await rm(projectRoot, { recursive: true, force: true });
+  }
+});
+
 test('validateAnalysisManifest rejects a manifest whose experiment manifest does not exist', async () => {
   const projectRoot = await mkdtemp(path.join(tmpdir(), 'vre-analysis-manifest-missing-exp-'));
   try {

@@ -30,6 +30,35 @@
       "analysis/scripts/diffexp.py"
     ]
   },
+  "environment": {
+    "interpreterKind": "python",
+    "interpreterId": "venv_scrna",
+    "interpreterVersion": "3.13.5",
+    "resolver": "operator-managed-venv",
+    "executableHint": "../../venv_scrna/Scripts/python.exe",
+    "resolutionStatus": "resolved",
+    "resolutionReason": "Pinned operator-managed venv verified before runner work.",
+    "dependencyLock": {
+      "path": "environment/phase11/requirements-venv-scrna.txt",
+      "sha256": null,
+      "hashDeferredReason": "Operator-managed venv lock file is not tracked yet."
+    },
+    "dependencyPins": [
+      {
+        "name": "anndata",
+        "version": "0.12.9",
+        "scope": "real-h5ad-read"
+      }
+    ],
+    "environmentFiles": [
+      {
+        "path": "environment/phase11/hgsoc-cd8-script.js",
+        "sha256": null,
+        "hashDeferredReason": "Runtime source file hash is recorded by task evidence."
+      }
+    ],
+    "knownSeams": []
+  },
   "budget": {
     "maxRuntimeSeconds": 1800,
     "maxMemoryGb": 8,
