@@ -4,6 +4,10 @@ import path from 'node:path';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
+import {
+  evaluateScientificInvariantBlockers
+} from '../phase11/scientific-invariant-blockers.js';
+
 const CLAIM_ID_PATTERN = /^C-[0-9]{3}$/u;
 const SCHEMA_VALIDATION_RELATIVE_PATH = path.join(
   '.vibe-science-environment',
@@ -18,6 +22,7 @@ export const EXPORT_ELIGIBILITY_REASON_CODES = Object.freeze({
   needsFreshSchemaValidation: 'needs_fresh_schema_validation',
   reviewDebtSignal: 'review_debt_signal',
   missingGovernanceProfileMetadata: 'missing_governance_profile_metadata',
+  scientificInvariantBlocked: 'scientific_invariant_blocked',
 });
 
 export const PROFILE_SAFETY_MODES = Object.freeze({
@@ -30,6 +35,7 @@ const BLOCKING_REASONS = new Set([
   EXPORT_ELIGIBILITY_REASON_CODES.zeroCitations,
   EXPORT_ELIGIBILITY_REASON_CODES.unverifiedCitations,
   EXPORT_ELIGIBILITY_REASON_CODES.needsFreshSchemaValidation,
+  EXPORT_ELIGIBILITY_REASON_CODES.scientificInvariantBlocked,
 ]);
 
 const ajv = new Ajv({
@@ -89,6 +95,18 @@ export async function exportEligibility(claimId, reader, options = {}) {
     claimId,
     options,
   );
+  const scientificInvariantEvidence = await resolveScientificInvariantEvidence(
+    claimId,
+    reader,
+    options,
+  );
+  const scientificInvariantResult = evaluateScientificInvariantBlockers({
+    operation: 'export',
+    claimId,
+    claim: head,
+    citations: citationChecks,
+    ...(scientificInvariantEvidence ?? {}),
+  });
 
   const reasons = [];
   if (head?.currentStatus !== 'PROMOTED') {
@@ -120,6 +138,10 @@ export async function exportEligibility(claimId, reader, options = {}) {
     reasons.push(EXPORT_ELIGIBILITY_REASON_CODES.needsFreshSchemaValidation);
   }
 
+  if (!scientificInvariantResult.ok) {
+    reasons.push(EXPORT_ELIGIBILITY_REASON_CODES.scientificInvariantBlocked);
+  }
+
   return {
     claimId,
     eligible: !reasons.some((reason) => BLOCKING_REASONS.has(reason)),
@@ -134,6 +156,7 @@ export async function exportEligibility(claimId, reader, options = {}) {
         : PROFILE_SAFETY_MODES.full,
     citations: cloneValue(citationChecks),
     schemaValidationRecord: cloneValue(schemaValidation.record),
+    scientificInvariantResult: cloneValue(scientificInvariantResult),
   };
 }
 
@@ -247,6 +270,69 @@ async function resolveSchemaValidationRecord(projectPath, claimId, options) {
     hasFreshSchemaValidation:
       Date.parse(record.validatedAt) >= Date.parse(requiredValidatedAfter),
   };
+}
+
+async function resolveScientificInvariantEvidence(claimId, reader, options) {
+  if (options.scientificInvariantEvidence !== undefined) {
+    return normalizeScientificInvariantEvidence(
+      options.scientificInvariantEvidence,
+      claimId,
+    );
+  }
+
+  if (options.scientificInvariantReviews !== undefined) {
+    if (!Array.isArray(options.scientificInvariantReviews)) {
+      throw new ExportEligibilityValidationError(
+        'scientificInvariantReviews override must be an array when provided.',
+      );
+    }
+
+    return normalizeScientificInvariantEvidence(
+      options.scientificInvariantReviews.find((entry) => entry?.claimId === claimId),
+      claimId,
+    );
+  }
+
+  if (typeof options.scientificInvariantLookup === 'function') {
+    return normalizeScientificInvariantEvidence(
+      await options.scientificInvariantLookup(claimId),
+      claimId,
+    );
+  }
+
+  if (typeof reader.listScientificInvariantReviews === 'function') {
+    const reviews = await reader.listScientificInvariantReviews({ claimId });
+    if (!Array.isArray(reviews)) {
+      return null;
+    }
+
+    return normalizeScientificInvariantEvidence(
+      reviews.find((entry) => entry?.claimId === claimId),
+      claimId,
+    );
+  }
+
+  return null;
+}
+
+function normalizeScientificInvariantEvidence(evidence, claimId) {
+  if (evidence == null) {
+    return null;
+  }
+
+  if (typeof evidence !== 'object' || Array.isArray(evidence)) {
+    throw new ExportEligibilityValidationError(
+      `Scientific invariant evidence for ${claimId} must be an object.`,
+    );
+  }
+
+  if (evidence.claimId != null && evidence.claimId !== claimId) {
+    throw new ExportEligibilityValidationError(
+      `Scientific invariant evidence claimId mismatch for ${claimId}.`,
+    );
+  }
+
+  return cloneValue(evidence);
 }
 
 function validateProvidedSchemaValidationRecord(record, claimId) {

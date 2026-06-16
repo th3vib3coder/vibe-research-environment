@@ -355,3 +355,89 @@ Reviewer non-blocking note applied: `check-phase9-ledger.js` maxBuffer
 hardening is explicitly in scope for this task. It only prevents noisy local
 git discovery output from truncating changed-file discovery and does not
 weaken ledger rules.
+
+## T11.1.3 Scientific Invariant Blockers Trace
+
+who: codex
+
+when: 2026-06-17
+
+why: T11.1.2 opened a manifest-gated Python subprocess corridor, but executor
+success is not scientific authority. T11.1.3 adds the fail-closed export/claim
+blocker layer for open confounders, killed or unverified citations, R2 reject,
+and blocked dependencies before any scientific result can be treated as
+claim-ready or export-ready.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/scientific-invariant-blockers.js`
+- `environment/lib/export-eligibility.js`
+- `environment/tests/lib/export-eligibility.test.js`
+- `environment/tests/ci/phase11-scientific-invariant-blockers.js`
+- `environment/tests/ci/phase11-scientific-invariant-blockers.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- scientific-substance claims must fail closed even without an opt-in flag;
+- killed, invalidated, retracted, or withdrawn citations block independently
+  of `verificationStatus`;
+- R2 `status:passed` and `verdict:ACCEPT` are required beyond synthesis when
+  scientific claim/export readiness requires R2;
+- blocked dependency checks must be transitive and block even when the current
+  claim head is `PROMOTED`;
+- counts, Phase 9 bridge ledger, Phase 11 ledger, and `run-all.js` must be
+  verified before HAT 3.
+
+RED evidence captured before production edits:
+
+- `node --test environment/tests/ci/phase11-scientific-invariant-blockers.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/phase11/scientific-invariant-blockers.js` existed;
+- `node --test environment/tests/lib/export-eligibility.test.js` showed the
+  existing export path still returned eligible for unsafe scientific invariant
+  evidence and for a scientific-substance claim without an opt-in flag.
+
+verification:
+
+- `node --test environment/tests/ci/phase11-scientific-invariant-blockers.test.js`
+  PASS 9/9.
+- `node --test environment/tests/lib/export-eligibility.test.js` PASS 8/8.
+- `node environment/tests/ci/phase11-scientific-invariant-blockers.js` PASS.
+- `node environment/tests/ci/validate-counts.js` PASS with `ciValidators` at
+  48.
+- Phase 9 and Phase 11 ledger checks PASS.
+- `node environment/tests/ci/run-all.js` PASS.
+- full `node --test --test-reporter=dot` PASS.
+- `git diff --check` PASS.
+
+Scope boundaries:
+
+- no real GSE184880 or H5AD read;
+- no CXCL13+ CD8 denominator, count, or fraction;
+- no Rscript or notebook execution;
+- no network;
+- no export packaging implementation;
+- no biomedical claim promotion.
+
+Reviewer outcome:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.1.3-scientific-invariant-blockers-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.1.3-scientific-invariant-blockers-verdict-2026-06-17.md`.
+
+Reviewer-confirmed verification:
+
+- production `exportEligibility(...)` integration is a hard blocking reason,
+  not an advisory detached checker;
+- scientific-substance claims fail closed without an opt-in flag;
+- killed citation lifecycle blocks independently from `VERIFIED`;
+- R2 reject/missing and transitive blocked dependencies fail closed;
+- non-scientific legacy export behavior remains compatible;
+- no real data read, fraction/count/denominator, export packaging, or claim
+  promotion is opened.

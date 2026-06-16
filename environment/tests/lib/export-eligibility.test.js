@@ -138,6 +138,65 @@ test('export eligibility fails closed on invalid schema-validation artifacts', a
   }
 });
 
+test('export eligibility blocks unsafe scientific invariant evidence', async () => {
+  const result = await exportEligibility(CLAIM_ID, createReader({
+    heads: [{
+      claimId: CLAIM_ID,
+      currentStatus: 'PROMOTED',
+      confidence: 0.9,
+      governanceProfileAtCreation: 'strict',
+      claimMetadata: { target: 'CXCL13+ CD8 fraction in HGSOC' },
+    }],
+    citations: [{
+      claimId: CLAIM_ID,
+      citationId: 'CIT-001',
+      verificationStatus: 'VERIFIED',
+      lifecycleStatus: 'retracted',
+    }],
+  }), {
+    scientificInvariantEvidence: {
+      r2Required: true,
+      r2Audit: { status: 'passed', verdict: 'ACCEPT' },
+      dependencies: [{ dependencyId: 'LAW9-HARNESS', status: 'ready' }],
+    },
+  });
+
+  assert.equal(result.eligible, false);
+  assert(result.reasons.includes(
+    EXPORT_ELIGIBILITY_REASON_CODES.scientificInvariantBlocked,
+  ));
+  assert.equal(
+    result.scientificInvariantResult.reasons.includes('citation_killed'),
+    true,
+  );
+});
+
+test('export eligibility fails closed for scientific-substance claim without opt-in flag', async () => {
+  const result = await exportEligibility(CLAIM_ID, createReader({
+    heads: [{
+      claimId: CLAIM_ID,
+      currentStatus: 'PROMOTED',
+      confidence: 0.9,
+      governanceProfileAtCreation: 'strict',
+      claimMetadata: {
+        target: 'CXCL13+ CD8 fraction in HGSOC',
+        scientific: undefined,
+      },
+    }],
+    citations: [{
+      claimId: CLAIM_ID,
+      citationId: 'CIT-001',
+      verificationStatus: 'VERIFIED',
+      lifecycleStatus: 'active',
+    }],
+  }));
+
+  assert.equal(result.eligible, false);
+  assert(result.reasons.includes(
+    EXPORT_ELIGIBILITY_REASON_CODES.scientificInvariantBlocked,
+  ));
+});
+
 function createReader({
   heads = [],
   unresolvedClaims = [],
