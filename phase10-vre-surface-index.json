@@ -78,6 +78,18 @@
     "introducedAt": "2026-06-16"
   },
   {
+    "kind": "cross-domain-query-boundary",
+    "name": "phase10-cross-domain-query",
+    "paths": [
+      "environment/phase10/cross-domain-query.js",
+      "environment/tests/ci/phase10-cross-domain-query.js",
+      "environment/tests/ci/phase10-cross-domain-query.test.js"
+    ],
+    "task": "T10.5.2",
+    "status": "implemented-read-only-local-boundary",
+    "introducedAt": "2026-06-16"
+  },
+  {
     "kind": "export-guard",
     "name": "phase10-export-guard",
     "paths": [
@@ -329,6 +341,17 @@
     "paths": [
       "package.json",
       "environment/tests/ci/phase10-cross-domain-merge.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:cross-domain-query",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-cross-domain-query.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",

@@ -91,6 +91,9 @@ export const PHASE10_PATHS = {
   crossDomainMerge: 'environment/phase10/cross-domain-merge.js',
   crossDomainMergeValidator: 'environment/tests/ci/phase10-cross-domain-merge.js',
   crossDomainMergeTest: 'environment/tests/ci/phase10-cross-domain-merge.test.js',
+  crossDomainQuery: 'environment/phase10/cross-domain-query.js',
+  crossDomainQueryValidator: 'environment/tests/ci/phase10-cross-domain-query.js',
+  crossDomainQueryTest: 'environment/tests/ci/phase10-cross-domain-query.test.js',
   marpTemplateMorningDigest: 'environment/templates/marp/morning-digest.marp.template.md',
   marpTemplateR2Verdict: 'environment/templates/marp/r2-verdict.marp.template.md',
   marpTemplateSynthesisConference: 'environment/templates/marp/synthesis-conference.marp.template.md',
@@ -189,6 +192,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.crossDomainMerge,
   PHASE10_PATHS.crossDomainMergeValidator,
   PHASE10_PATHS.crossDomainMergeTest,
+  PHASE10_PATHS.crossDomainQuery,
+  PHASE10_PATHS.crossDomainQueryValidator,
+  PHASE10_PATHS.crossDomainQueryTest,
   PHASE10_PATHS.marpTemplateMorningDigest,
   PHASE10_PATHS.marpTemplateR2Verdict,
   PHASE10_PATHS.marpTemplateSynthesisConference,
@@ -236,6 +242,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:presentation-staleness': 'phase10-presentation-staleness.js',
   'phase10:multi-domain-gate': 'phase10-multi-domain-gate.js',
   'phase10:cross-domain-merge': 'phase10-cross-domain-merge.js',
+  'phase10:cross-domain-query': 'phase10-cross-domain-query.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

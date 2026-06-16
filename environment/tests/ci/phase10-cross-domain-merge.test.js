@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { access } from 'node:fs/promises';
 import test from 'node:test';
 
 import {
@@ -212,12 +211,19 @@ test('merge plan is deterministic under domain input order changes', () => {
   assert.deepEqual(second.plan, first.plan);
 });
 
-test('T10.5.2 query files remain absent', async () => {
-  for (const file of [
-    'environment/phase10/cross-domain-query.js',
-    'environment/tests/ci/phase10-cross-domain-query.js',
-    'environment/tests/ci/phase10-cross-domain-query.test.js'
-  ]) {
-    await assert.rejects(() => access(file), /ENOENT/u);
-  }
+test('T10.5.2 query boundary does not reopen merge planner query scope', () => {
+  const result = evaluatePhase10CrossDomainMerge(request({ operation: 'query' }));
+
+  assert.equal(result.ok, false, JSON.stringify(result, null, 2));
+  assert.equal(result.persisted, false);
+  assert.equal(result.authoritative, false);
+  assert.equal(result.localProposalOnly, true);
+  assert.equal(result.authorizationGranted, false);
+  assert.equal(result.performsOperation, false);
+  assert.equal(result.performsWrite, false);
+  assert.equal(
+    result.issues.some((issue) => issue.code === 'E_PHASE10_CROSS_DOMAIN_QUERY_SCOPE_FORBIDDEN'),
+    true,
+    JSON.stringify(result.issues, null, 2)
+  );
 });

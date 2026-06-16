@@ -76,6 +76,8 @@ const MULTI_DOMAIN_GATE_INTRODUCED_AT = '2026-06-16';
 const MULTI_DOMAIN_GATE_TASK = 'T10.5.0';
 const CROSS_DOMAIN_MERGE_INTRODUCED_AT = '2026-06-16';
 const CROSS_DOMAIN_MERGE_TASK = 'T10.5.1';
+const CROSS_DOMAIN_QUERY_INTRODUCED_AT = '2026-06-16';
+const CROSS_DOMAIN_QUERY_TASK = 'T10.5.2';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -433,6 +435,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: CROSS_DOMAIN_MERGE_INTRODUCED_AT
   },
   {
+    kind: 'cross-domain-query-boundary',
+    name: 'phase10-cross-domain-query',
+    paths: [
+      'environment/phase10/cross-domain-query.js',
+      'environment/tests/ci/phase10-cross-domain-query.js',
+      'environment/tests/ci/phase10-cross-domain-query.test.js'
+    ],
+    task: CROSS_DOMAIN_QUERY_TASK,
+    status: 'implemented-read-only-local-boundary',
+    introducedAt: CROSS_DOMAIN_QUERY_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -593,6 +607,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-cross-domain-merge.js')) {
     paths.push('environment/tests/ci/phase10-cross-domain-merge.js');
   }
+  if (command.includes('phase10-cross-domain-query.js')) {
+    paths.push('environment/tests/ci/phase10-cross-domain-query.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -670,6 +687,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:presentation-staleness',
     'phase10:multi-domain-gate',
     'phase10:cross-domain-merge',
+    'phase10:cross-domain-query',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

@@ -37,6 +37,7 @@
     "phase10:presentation-staleness": "node environment/tests/ci/phase10-presentation-staleness.js",
     "phase10:multi-domain-gate": "node environment/tests/ci/phase10-multi-domain-gate.js",
     "phase10:cross-domain-merge": "node environment/tests/ci/phase10-cross-domain-merge.js",
+    "phase10:cross-domain-query": "node environment/tests/ci/phase10-cross-domain-query.js",
     "phase9:acceptance": "node environment/acceptance/run-wave6-acceptance.js --all",
     "phase9:acceptance:A": "node environment/acceptance/run-wave6-acceptance.js A",
     "phase9:acceptance:B": "node environment/acceptance/run-wave6-acceptance.js B",

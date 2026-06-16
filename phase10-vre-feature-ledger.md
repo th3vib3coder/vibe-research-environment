@@ -156,3 +156,53 @@ packaging, MARP/presentation behavior, filesystem writers, schema edits,
 provenance-link writers, claim-ledger writers, claim-edge mutation, domain
 lifecycle mutation, Phase 12 runtime, role migration, source discovery,
 publication/network behavior, or automatic T10.5.2 opening.
+
+## T10.5.2 Cross-Domain Query Boundary Trace
+
+T10.5.2 adds a read-only in-memory cross-domain query boundary/evaluator. The
+positive result is local-only and non-authoritative: it is not persisted, does
+not authorize a query, performs no operation, and writes nothing. The helper
+consumes the T10.5.0 query gate and T10.5.1 merge/synthesis policy evidence;
+it does not replace the single-domain `wiki-query.js` runner.
+
+Changed Phase 10 VRE paths:
+
+- `package.json`
+- `phase9-vre-feature-ledger.md`
+- `phase10-vre-feature-ledger.md`
+- `phase10-vre-surface-index.json`
+- `environment/phase10/cross-domain-query.js`
+- `environment/tests/ci/phase10-cross-domain-merge.test.js`
+- `environment/tests/ci/phase10-cross-domain-query.js`
+- `environment/tests/ci/phase10-cross-domain-query.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/ci/phase10-surface-index.js`
+- `environment/tests/ci/check-phase10-ledger.js`
+- `environment/tests/ci/check-phase10-ledger.test.js`
+
+Verification: RED-first module-missing failures and `ciValidators`
+`39 -> 40` mismatch were captured before production helper/count update.
+GREEN handoff evidence: `node --test
+environment/tests/ci/phase10-cross-domain-query.test.js` 15/15 PASS,
+`node environment/tests/ci/phase10-cross-domain-query.js` PASS,
+`node --test environment/tests/ci/phase10-cross-domain-merge.test.js`
+15/15 PASS, `node environment/tests/ci/validate-counts.js` PASS, checker
+fixture tests 29/29 PASS, `check-phase10-ledger` and `check-phase9-ledger`
+PASS, fail-closed probe returns expected `E_PHASE10_TRACE_MISSING`,
+`node environment/tests/ci/run-all.js` PASS, full `node --test` PASS
+1325 total / 1316 pass / 0 fail / 9 skipped, WIKI checks PASS, and
+`decision-gates.json` parses. Claude Code HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase10/turns/claude-hat3-t10.5.2-verdict.md`.
+
+Self-found aggregate hardening: full `node --test` exposed the obsolete
+T10.5.1 regression that required T10.5.2 files to remain absent. The test now
+asserts the enduring boundary instead: T10.5.1 still rejects
+`operation: "query"` and remains non-operational/non-authoritative after
+T10.5.2 opens.
+
+Anti-dup verified: no query runner, query-record writer, query markdown writer,
+cross-domain CLI, export profile/package, MARP/presentation behavior,
+filesystem writer, schema edit, provenance-link writer, claim-ledger writer,
+claim-edge mutation, domain lifecycle mutation, role migration, publication,
+or Wave 10.5 closeout behavior is opened by this task.

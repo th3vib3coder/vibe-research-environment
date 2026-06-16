@@ -60,6 +60,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:presentation-staleness': 'node environment/tests/ci/phase10-presentation-staleness.js',
         'phase10:multi-domain-gate': 'node environment/tests/ci/phase10-multi-domain-gate.js',
         'phase10:cross-domain-merge': 'node environment/tests/ci/phase10-cross-domain-merge.js',
+        'phase10:cross-domain-query': 'node environment/tests/ci/phase10-cross-domain-query.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
@@ -140,6 +141,9 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/cross-domain-merge.js',
       'environment/tests/ci/phase10-cross-domain-merge.js',
       'environment/tests/ci/phase10-cross-domain-merge.test.js',
+      'environment/phase10/cross-domain-query.js',
+      'environment/tests/ci/phase10-cross-domain-query.js',
+      'environment/tests/ci/phase10-cross-domain-query.test.js',
       'environment/schemas/phase10-presentation.schema.json',
       'environment/tests/schemas/phase10-presentation.schema.test.js',
       'environment/schemas/phase10-marp-template.schema.json',
@@ -585,6 +589,25 @@ test('phase10-ledger check covers cross-domain merge planner surfaces', async ()
       'environment/phase10/cross-domain-merge.js',
       'environment/tests/ci/phase10-cross-domain-merge.js',
       'environment/tests/ci/phase10-cross-domain-merge.test.js'
+    ]) {
+      await assert.rejects(
+        () => checkPhase10Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [changedFile]
+        }),
+        new RegExp(`E_PHASE10_TRACE_MISSING.*${changedFile.replaceAll('/', '\\/')}`, 'u')
+      );
+    }
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers cross-domain query boundary surfaces', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    for (const changedFile of [
+      'environment/phase10/cross-domain-query.js',
+      'environment/tests/ci/phase10-cross-domain-query.js',
+      'environment/tests/ci/phase10-cross-domain-query.test.js'
     ]) {
       await assert.rejects(
         () => checkPhase10Ledger({
