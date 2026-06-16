@@ -11,6 +11,7 @@ import {
 } from './phase9-surface-index.js';
 
 const execFileAsync = promisify(execFile);
+const GIT_OUTPUT_MAX_BUFFER = 64 * 1024 * 1024;
 
 export const PATHS = {
   vreLedger: 'phase9-vre-feature-ledger.md',
@@ -154,7 +155,10 @@ function parseGitStatusPaths(stdout, prefix = '') {
 
 async function commandSucceeds(command, args) {
   try {
-    await execFileAsync(command, args, { encoding: 'utf8' });
+    await execFileAsync(command, args, {
+      encoding: 'utf8',
+      maxBuffer: GIT_OUTPUT_MAX_BUFFER
+    });
     return true;
   } catch {
     return false;
@@ -180,7 +184,8 @@ async function isSpecLedgerInGitignoredTree(localRepoRoot, specLedgerRelativePat
       // Found host repo. Ask git if the file is ignored.
       try {
         await execFileAsync('git', ['-C', dir, 'check-ignore', path.relative(dir, absolutePath)], {
-          encoding: 'utf8'
+          encoding: 'utf8',
+          maxBuffer: GIT_OUTPUT_MAX_BUFFER
         });
         return true; // check-ignore exited 0 → path is ignored.
       } catch {
@@ -205,7 +210,7 @@ async function collectGitChangedFiles(repoPath, prefix = '') {
     const { stdout } = await execFileAsync(
       'git',
       ['-C', repoPath, 'diff', '--name-only', '--diff-filter=ACMRTUXB', `${baseRef}..HEAD`],
-      { encoding: 'utf8' }
+      { encoding: 'utf8', maxBuffer: GIT_OUTPUT_MAX_BUFFER }
     );
     for (const line of stdout.split(/\r?\n/u).map((value) => value.trim()).filter(Boolean)) {
       changed.add(`${prefix}${normalizeSlashes(line)}`);
@@ -215,7 +220,7 @@ async function collectGitChangedFiles(repoPath, prefix = '') {
   const { stdout: statusStdout } = await execFileAsync(
     'git',
     ['-C', repoPath, 'status', '--porcelain', '--untracked-files=all'],
-    { encoding: 'utf8' }
+    { encoding: 'utf8', maxBuffer: GIT_OUTPUT_MAX_BUFFER }
   );
   for (const file of parseGitStatusPaths(statusStdout, prefix)) {
     changed.add(file);

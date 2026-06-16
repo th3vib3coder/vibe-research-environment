@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, realpath, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { now } from '../control/_io.js';
@@ -25,6 +25,7 @@ import { readContinuityProfile, readLanePolicies } from './state.js';
 import { getTaskEntry } from './task-registry.js';
 import { getTaskAdapter } from './task-adapters.js';
 import { logGovernanceEventViaPlugin } from './governance-logger.js';
+import { evaluateInterpreterManifestEnvironment } from '../phase11/interpreter-manifest.js';
 
 function cloneValue(value) {
   return globalThis.structuredClone
@@ -47,6 +48,8 @@ const SAFE_RUN_ANALYSIS_ENV_KEYS = Object.freeze([
   'LC_CTYPE',
 ]);
 const APPROVED_NODE_SCRIPT_EXTENSIONS = new Set(['.js', '.mjs', '.cjs']);
+const APPROVED_PYTHON_SCRIPT_EXTENSIONS = new Set(['.py']);
+const FORBIDDEN_INTERPRETER_WRAPPER_EXTENSIONS = new Set(['.cmd', '.bat']);
 const ALLOWED_OUTPUT_ROOTS = new Set(['artifacts', 'outputs', 'results']);
 const PHASE9_LANE_RUNS_FILE = '.vibe-science-environment/orchestrator/lane-runs.jsonl';
 const PHASE9_RUN_LOGS_DIR = '.vibe-science-environment/orchestrator/analysis-run-logs';
@@ -152,48 +155,7 @@ function ensureAllowedOutputRoots(manifest) {
   }
 }
 
-function ensureApprovedCommandTemplate(projectRoot, manifest) {
-  if (manifest.script.language === 'notebook') {
-    throw new RunAnalysisCliError({
-      code: 'E_NOTEBOOK_EXECUTION_DEFERRED',
-      message: 'run-analysis v1 supports scripts only; notebook execution is deferred by the frozen Wave 3 plan.',
-    });
-  }
-
-  if (manifest.script.language !== 'other') {
-    throw new RunAnalysisCliError({
-      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
-      message: 'run-analysis v1 supports only the reviewed Node-script command template (`script.language=other`, `runner=other`).',
-    });
-  }
-
-  if (manifest.command.runner !== 'other') {
-    throw new RunAnalysisCliError({
-      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
-      message: `run-analysis v1 supports only runner=other; received ${manifest.command.runner}.`,
-    });
-  }
-
-  if (manifest.budget.allowNetwork !== false || manifest.safety.externalCall !== false) {
-    throw new RunAnalysisCliError({
-      code: 'E_ANALYSIS_TEMPLATE_INVALID',
-      message: 'run-analysis v1 requires allowNetwork=false and safety.externalCall=false.',
-    });
-  }
-
-  ensureAllowedOutputRoots(manifest);
-
-  const scriptAbsolutePath = resolveProjectLocalPath(projectRoot, manifest.script.path, 'script.path');
-  const extension = path.extname(manifest.script.path).toLowerCase();
-  if (!APPROVED_NODE_SCRIPT_EXTENSIONS.has(extension)) {
-    throw new RunAnalysisCliError({
-      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
-      message:
-        `run-analysis v1 supports only Node-compatible script extensions ` +
-        `(${[...APPROVED_NODE_SCRIPT_EXTENSIONS].join(', ')}).`,
-    });
-  }
-
+function ensureApprovedArgvTokens(projectRoot, manifest) {
   if (!Array.isArray(manifest.command.argv) || manifest.command.argv.length === 0) {
     throw new RunAnalysisCliError({
       code: 'E_ANALYSIS_TEMPLATE_INVALID',
@@ -234,6 +196,180 @@ function ensureApprovedCommandTemplate(projectRoot, manifest) {
       });
     }
     resolveProjectLocalPath(projectRoot, token, `command.argv token ${token}`);
+  }
+}
+
+function ensurePythonScientificRuntimeClosed(manifest) {
+  const inspectedValues = [
+    manifest.analysisId,
+    manifest.script.path,
+    ...manifest.inputs.flatMap((entry) => [entry.path, entry.kind]),
+    ...manifest.outputs.flatMap((entry) => [entry.path, entry.kind]),
+    ...manifest.expectedArtifacts.flatMap((entry) => [entry.path, entry.kind]),
+  ].map((value) => String(value ?? '').toLowerCase());
+
+  const forbidden = inspectedValues.some((value) =>
+    value.includes('gse184880')
+      || value.endsWith('.h5ad')
+      || value.includes('cxcl13')
+      || value.includes('cd8')
+      || value.includes('fraction')
+      || value.includes('denominator')
+      || /(?:^|[-_./])counts?(?:$|[-_./])/u.test(value)
+  );
+
+  if (forbidden) {
+    throw new RunAnalysisCliError({
+      code: 'E_PHASE11_SCIENTIFIC_RUNTIME_CLOSED',
+      message:
+        'T11.1.2 opens only the interpreter corridor; H5AD/GSE184880 reads and ' +
+        'CXCL13+ CD8 quantitative outputs remain blocked until the reviewed ' +
+        'scientific derivation and LAW 9 harness are ready.',
+    });
+  }
+}
+
+function reviewedInterpreterRoot(projectRoot, environment) {
+  const interpreterId = String(environment?.interpreterId ?? '').trim();
+  if (!/^[A-Za-z0-9._-]+$/u.test(interpreterId)) {
+    throw new RunAnalysisCliError({
+      code: 'E_PHASE11_INTERPRETER_VENV_ROOT_INVALID',
+      message: 'environment.interpreterId must identify one reviewed interpreter root segment.',
+    });
+  }
+
+  const executableHint = normalizeSlashes(String(environment?.executableHint ?? ''));
+  const parts = executableHint.split('/').filter(Boolean);
+  const rootIndex = parts.indexOf(interpreterId);
+  if (rootIndex === -1) {
+    throw new RunAnalysisCliError({
+      code: 'E_PHASE11_INTERPRETER_VENV_ROOT_MISSING',
+      message: 'environment.executableHint must include environment.interpreterId as the reviewed venv root.',
+    });
+  }
+
+  return path.resolve(projectRoot, ...parts.slice(0, rootIndex + 1));
+}
+
+async function resolvePythonInterpreterExecutable(projectRoot, manifest) {
+  const environment = manifest.environment ?? {};
+  const executableHint = String(environment.executableHint ?? '');
+  const extension = path.extname(executableHint).toLowerCase();
+  if (FORBIDDEN_INTERPRETER_WRAPPER_EXTENSIONS.has(extension)) {
+    throw new RunAnalysisCliError({
+      code: 'E_PHASE11_INTERPRETER_COMMAND_WRAPPER_FORBIDDEN',
+      message: 'Python interpreter executableHint must point to a binary, not a .cmd or .bat shell wrapper.',
+    });
+  }
+  if (process.platform === 'win32' && extension !== '.exe') {
+    throw new RunAnalysisCliError({
+      code: 'E_PHASE11_INTERPRETER_EXECUTABLE_INVALID',
+      message: 'Windows Python interpreter executableHint must point directly to a .exe binary.',
+    });
+  }
+
+  const reviewedRoot = reviewedInterpreterRoot(projectRoot, environment);
+  const executablePath = path.resolve(projectRoot, executableHint);
+  let rootRealPath;
+  let executableRealPath;
+  try {
+    rootRealPath = await realpath(reviewedRoot);
+    executableRealPath = await realpath(executablePath);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      throw new RunAnalysisCliError({
+        code: 'E_PHASE11_INTERPRETER_EXECUTABLE_MISSING',
+        message: 'Declared Python interpreter executable is missing; run-analysis will not fall back to host PATH.',
+      });
+    }
+    throw error;
+  }
+
+  const relativeToRoot = path.relative(rootRealPath, executableRealPath);
+  if (relativeToRoot.startsWith('..') || path.isAbsolute(relativeToRoot)) {
+    throw new RunAnalysisCliError({
+      code: 'E_PHASE11_INTERPRETER_EXECUTABLE_OUTSIDE_VENV',
+      message: 'Resolved Python interpreter executable must stay inside the reviewed venv root.',
+    });
+  }
+
+  return executableRealPath;
+}
+
+async function ensureApprovedCommandTemplate(projectRoot, manifest) {
+  if (manifest.script.language === 'notebook') {
+    throw new RunAnalysisCliError({
+      code: 'E_NOTEBOOK_EXECUTION_DEFERRED',
+      message: 'run-analysis v1 supports scripts only; notebook execution is deferred by the frozen Wave 3 plan.',
+    });
+  }
+
+  if (!['other', 'python'].includes(manifest.script.language)) {
+    throw new RunAnalysisCliError({
+      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
+      message: 'run-analysis supports only reviewed Node and T11.1.2 Python command templates.',
+    });
+  }
+
+  if (
+    (manifest.script.language === 'other' && manifest.command.runner !== 'other')
+    || (manifest.script.language === 'python' && manifest.command.runner !== 'python')
+  ) {
+    throw new RunAnalysisCliError({
+      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
+      message: `run-analysis does not support runner=${manifest.command.runner} for script.language=${manifest.script.language}.`,
+    });
+  }
+
+  if (manifest.budget.allowNetwork !== false || manifest.safety.externalCall !== false) {
+    throw new RunAnalysisCliError({
+      code: 'E_ANALYSIS_TEMPLATE_INVALID',
+      message: 'run-analysis v1 requires allowNetwork=false and safety.externalCall=false.',
+    });
+  }
+
+  ensureAllowedOutputRoots(manifest);
+
+  const scriptAbsolutePath = resolveProjectLocalPath(projectRoot, manifest.script.path, 'script.path');
+  const scriptExtension = path.extname(manifest.script.path).toLowerCase();
+  if (
+    manifest.script.language === 'other'
+    && !APPROVED_NODE_SCRIPT_EXTENSIONS.has(scriptExtension)
+  ) {
+    throw new RunAnalysisCliError({
+      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
+      message:
+        `run-analysis v1 supports only Node-compatible script extensions ` +
+        `(${[...APPROVED_NODE_SCRIPT_EXTENSIONS].join(', ')}).`,
+    });
+  }
+  if (
+    manifest.script.language === 'python'
+    && !APPROVED_PYTHON_SCRIPT_EXTENSIONS.has(scriptExtension)
+  ) {
+    throw new RunAnalysisCliError({
+      code: 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
+      message: 'T11.1.2 Python execution supports only .py script paths.',
+    });
+  }
+
+  ensureApprovedArgvTokens(projectRoot, manifest);
+
+  if (manifest.script.language === 'python') {
+    const environmentResult = evaluateInterpreterManifestEnvironment(manifest);
+    if (!environmentResult.ok) {
+      const issue = environmentResult.issues[0];
+      throw new RunAnalysisCliError({
+        code: issue.code,
+        message: issue.message,
+      });
+    }
+    ensurePythonScientificRuntimeClosed(manifest);
+    return {
+      command: await resolvePythonInterpreterExecutable(projectRoot, manifest),
+      args: manifest.command.argv,
+      scriptAbsolutePath,
+    };
   }
 
   return {
@@ -421,6 +557,12 @@ function coerceRunAnalysisError(error) {
 
   if (error instanceof AnalysisManifestValidationError) {
     const message = error.message;
+    if (typeof error.cause?.code === 'string' && error.cause.code.startsWith('E_PHASE11_')) {
+      return new RunAnalysisCliError({
+        code: error.cause.code,
+        message,
+      });
+    }
     if (/active objective pointer/u.test(message)) {
       return new RunAnalysisCliError({
         code: 'E_ACTIVE_OBJECTIVE_POINTER_MISSING',
@@ -489,7 +631,7 @@ export async function runAnalysisCommand(projectPath, { manifestPath, dryRun = f
       });
     }
 
-    const approvedTemplate = ensureApprovedCommandTemplate(projectRoot, manifest);
+    const approvedTemplate = await ensureApprovedCommandTemplate(projectRoot, manifest);
     await ensureManifestFilesExist(projectRoot, manifest);
 
     const relativeManifestPath = toRepoRelative(projectRoot, absoluteManifestPath);

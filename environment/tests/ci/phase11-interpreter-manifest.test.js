@@ -21,7 +21,7 @@ async function readAnalysisManifestFixture(fileName) {
   ), 'utf8'));
 }
 
-test('interpreter manifest accepts pinned Python without making it scientifically ready', async () => {
+test('interpreter manifest accepts pinned Python and opens only executor readiness', async () => {
   const manifest = await readAnalysisManifestFixture('valid-python.json');
 
   const result = evaluateInterpreterManifestEnvironment(manifest);
@@ -29,7 +29,7 @@ test('interpreter manifest accepts pinned Python without making it scientificall
   assert.equal(result.ok, true);
   assert.equal(result.runnable, true);
   assert.equal(result.scientificReady, false);
-  assert.equal(result.opensExecutor, false);
+  assert.equal(result.opensExecutor, true);
   assert.deepEqual(result.issues, []);
 });
 

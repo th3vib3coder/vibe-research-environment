@@ -188,11 +188,15 @@ export function evaluateInterpreterManifestEnvironment(manifest) {
   }
 
   const ok = issues.length === 0;
+  const opensExecutor = ok
+    && environment?.resolutionStatus === 'resolved'
+    && expectedKind === 'python'
+    && manifest.command?.runner === 'python';
   return {
     ok,
     runnable: ok && environment?.resolutionStatus === 'resolved',
     scientificReady: false,
-    opensExecutor: false,
+    opensExecutor,
     requiresEnvironment: true,
     issues
   };

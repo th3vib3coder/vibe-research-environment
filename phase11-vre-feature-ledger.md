@@ -264,3 +264,94 @@ Scope boundaries:
 - no CD8/CXCL13 denominator, count, or fraction;
 - no export eligibility integration;
 - no biomedical claim promotion.
+
+## T11.1.2 Interpreter Subprocess Executor Trace
+
+who: codex
+
+when: 2026-06-16
+
+why: T11.1.1 made Python manifests reproducible and semantically validated,
+but `run-analysis` still rejected every Python manifest. T11.1.2 opens the
+smallest Python-first subprocess corridor while keeping scientific authority,
+real H5AD reads, export, and claim promotion closed.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/orchestrator/execution-lane.js`
+- `environment/phase11/interpreter-manifest.js`
+- `environment/acceptance/wave6-harness.js`
+- `environment/tests/acceptance/wave6-harness.test.js`
+- `environment/tests/cli/run-analysis.test.js`
+- `environment/tests/ci/check-phase9-ledger.js`
+- `environment/tests/ci/phase11-interpreter-executor.js`
+- `environment/tests/ci/phase11-interpreter-executor.test.js`
+- `environment/tests/ci/phase11-interpreter-manifest.js`
+- `environment/tests/ci/phase11-interpreter-manifest.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- executable resolution must canonicalize with `realpath`, stay inside the
+  reviewed venv root, reject Windows `.cmd`/`.bat` wrappers, require the
+  executable to exist, and never fall back to host PATH;
+- Wave 6 Scenario D must fail closed for a concrete unsafe Python reason after
+  Python support opens;
+- open Python must not imply scientific readiness and must not read real
+  GSE184880/H5AD or emit authoritative CXCL13+ CD8 quantitative outputs;
+- existing Node `run-analysis` behavior must remain additive and green;
+- counts, `run-all.js`, and Phase 9/11 ledger checks must run before HAT 3.
+
+RED evidence captured before production edits:
+
+- `run-analysis` fake Python success/security tests failed because the runtime
+  still returned `E_ANALYSIS_TEMPLATE_UNSUPPORTED`;
+- the unresolved-environment test preserved the semantic `E_PHASE11_*` code
+  instead of collapsing it to a generic manifest failure;
+- `check-phase11-ledger` failed with `E_PHASE11_TRACE_MISSING` before this row
+  named the new executor validator.
+- `run-all.js` exposed Phase 9 checker stdout maxBuffer exhaustion in the
+  noisy local worktree before `check-phase9-ledger.js` set an explicit git
+  output buffer.
+
+verification so far:
+
+- `node --test environment/tests/cli/run-analysis.test.js` PASS 21/21.
+- `node --test environment/tests/ci/phase11-interpreter-manifest.test.js
+  environment/tests/ci/phase11-interpreter-executor.test.js` PASS 5/5.
+- `node environment/tests/ci/phase11-interpreter-manifest.js` PASS.
+- `node environment/tests/ci/phase11-interpreter-executor.js` PASS.
+- `node environment/tests/ci/validate-counts.js` PASS with `ciValidators` at
+  47.
+
+Scope boundaries:
+
+- fake interpreter CI proves spawn/env/timeout/log/output corridor mechanics
+  only; it is not a scientific authority;
+- no real GSE184880 or H5AD read;
+- no CXCL13+ CD8 denominator, count, or fraction;
+- no export eligibility integration;
+- no biomedical claim promotion;
+- Rscript and notebook execution remain deferred.
+
+Reviewer outcome:
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.1.2-interpreter-subprocess-executor-verdict-2026-06-16.md`.
+
+Additional reviewer-confirmed verification:
+
+- `node environment/tests/ci/check-phase9-ledger.js` PASS with expected
+  private-ledger diagnostic.
+- `node environment/tests/ci/check-phase11-ledger.js` PASS.
+- `node environment/tests/ci/run-all.js` PASS.
+- full `node --test --test-reporter=dot` PASS.
+- WIKI registry, entity exports, schema fields, lint, and mirror checks PASS.
+
+Reviewer non-blocking note applied: `check-phase9-ledger.js` maxBuffer
+hardening is explicitly in scope for this task. It only prevents noisy local
+git discovery output from truncating changed-file discovery and does not
+weaken ledger rules.

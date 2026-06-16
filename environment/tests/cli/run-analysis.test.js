@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, chmod, copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -298,6 +298,106 @@ const MISSING_OUTPUT_SCRIPT = `
 process.stdout.write('completed without writing output\\n');
 `;
 
+function fakePythonExecutableHint(rootName = 'fake-python-venv') {
+  return process.platform === 'win32'
+    ? `analysis/${rootName}/Scripts/python.exe`
+    : `analysis/${rootName}/bin/python`;
+}
+
+async function seedFakePythonInterpreter(projectRoot, rootName = 'fake-python-venv') {
+  const executableHint = fakePythonExecutableHint(rootName);
+  const executablePath = path.join(projectRoot, executableHint);
+  await mkdir(path.dirname(executablePath), { recursive: true });
+  await copyFile(process.execPath, executablePath);
+  if (process.platform !== 'win32') {
+    await chmod(executablePath, 0o755);
+  }
+  return executableHint;
+}
+
+async function seedFakePythonScriptPackage(projectRoot, scriptPath) {
+  const packagePath = `${path.posix.dirname(scriptPath)}/package.json`;
+  await writeProjectFile(projectRoot, packagePath, '{"type":"commonjs"}\n');
+}
+
+function mutateManifestToFakePython(manifest, {
+  executableHint = fakePythonExecutableHint(),
+  interpreterId = 'fake-python-venv',
+  inputPath = 'data/input.csv',
+  outputPath = 'artifacts/results.json',
+  scriptPath = 'analysis/scripts/fake-python-analysis.py',
+  resolutionStatus = 'resolved',
+} = {}) {
+  manifest.script = {
+    path: scriptPath,
+    sha256: 'abababababababababababababababababababababababababababababababab',
+    language: 'python',
+  };
+  manifest.inputs = [{ path: inputPath, kind: 'dataset', sha256: null, sizeBytes: null }];
+  manifest.outputs = [{ path: outputPath, kind: 'table', sha256: null, sizeBytes: null }];
+  manifest.command = {
+    runner: 'python',
+    argv: [scriptPath, '--input', inputPath, '--output', outputPath],
+  };
+  manifest.environment = {
+    interpreterKind: 'python',
+    interpreterId,
+    interpreterVersion: '3.13.5',
+    resolver: 'other',
+    executableHint,
+    resolutionStatus,
+    resolutionReason:
+      resolutionStatus === 'resolved'
+        ? 'CI fake interpreter proves corridor mechanics only.'
+        : 'Pinned interpreter unavailable in this fixture.',
+    dependencyLock: {
+      path: 'environment/phase11/fake-python-lock.txt',
+      sha256: null,
+      hashDeferredReason: 'CI fake interpreter has no scientific dependency lock.',
+    },
+    dependencyPins: [{ name: 'node-fake-python', version: process.version, scope: 'ci-corridor-only' }],
+    environmentFiles: [],
+    knownSeams: [],
+  };
+  manifest.expectedArtifacts = [{ path: outputPath, kind: 'table', required: true }];
+}
+
+const FAKE_PYTHON_SUCCESS_SCRIPT = `
+const { mkdir, readFile, writeFile } = require('node:fs/promises');
+const path = require('node:path');
+
+(async () => {
+  const args = process.argv.slice(2);
+  const input = args[args.indexOf('--input') + 1];
+  const output = args[args.indexOf('--output') + 1];
+  const raw = await readFile(input, 'utf8');
+  await mkdir(path.dirname(output), { recursive: true });
+  await writeFile(output, JSON.stringify({
+    ok: true,
+    fakeInterpreter: true,
+    scientificReady: false,
+    inputBytes: raw.length
+  }) + '\\n', 'utf8');
+  process.stdout.write('fake python corridor complete\\n');
+})().catch((error) => {
+  process.stderr.write(String(error?.stack ?? error) + '\\n');
+  process.exit(1);
+});
+`;
+
+const FAKE_PYTHON_FAILING_SCRIPT = `
+process.stderr.write('fake python failure\\n');
+process.exit(7);
+`;
+
+const FAKE_PYTHON_MISSING_OUTPUT_SCRIPT = `
+process.stdout.write('fake python omitted output\\n');
+`;
+
+const FAKE_PYTHON_SLOW_SCRIPT = `
+setTimeout(() => process.stdout.write('fake python should have timed out\\n'), 5000);
+`;
+
 test('run-analysis --dry-run validates the manifest and returns a preview without writing lane runs or events', async () => {
   const projectRoot = await createCliFixtureProject('vre-run-analysis-dry-run-');
   try {
@@ -331,20 +431,70 @@ test('run-analysis --dry-run validates the manifest and returns a preview withou
   }
 });
 
-test('run-analysis keeps pinned Python manifests runtime-rejected until the Phase 11 executor opens', async () => {
-  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-pinned-rejected-');
+test('run-analysis executes a pinned fake Python manifest through the durable corridor only', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-pinned-');
   try {
-    const pythonFixture = await readFixtureJson('analysis-manifest', 'valid-python.json');
+    const executableHint = await seedFakePythonInterpreter(projectRoot);
+    const scriptPath = 'analysis/scripts/fake-python-analysis.py';
     const context = await seedBoundAnalysisContext(projectRoot, {
-      analysisId: 'ANL-pinned-python-rejected-001',
-      scriptContents: "print('python runner must stay closed in T11.1.1')\n",
+      analysisId: 'ANL-pinned-python-001',
+      scriptPath,
+      inputPath: 'data/input.csv',
+      outputPath: 'artifacts/results.json',
+      scriptContents: FAKE_PYTHON_SUCCESS_SCRIPT,
       mutateManifest(manifest) {
-        manifest.script = pythonFixture.script;
-        manifest.command = pythonFixture.command;
-        manifest.environment = pythonFixture.environment;
-        manifest.inputs = pythonFixture.inputs;
-        manifest.outputs = pythonFixture.outputs;
-        manifest.expectedArtifacts = pythonFixture.expectedArtifacts;
+        mutateManifestToFakePython(manifest, { executableHint });
+      },
+    });
+    await seedFakePythonScriptPackage(projectRoot, scriptPath);
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    const payload = JSON.parse(result.stdout);
+    const failureLog = payload.stderrPath && payload.stderrPath.endsWith('.log')
+      ? await readFile(path.join(projectRoot, payload.stderrPath), 'utf8').catch((error) => String(error))
+      : '';
+    assert.equal(result.code, 0, `stdout=${result.stdout} stderr=${result.stderr} stderrLog=${failureLog}`);
+    assert.equal(result.stderr, '');
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'complete');
+    assert.equal(await pathExists(context.absoluteOutputPath), true);
+
+    const output = JSON.parse(await readFile(context.absoluteOutputPath, 'utf8'));
+    assert.equal(output.fakeInterpreter, true);
+    assert.equal(output.scientificReady, false);
+
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'complete']);
+    assert.equal(laneRuns.at(-1)?.runner, 'python');
+
+    const objectiveEvents = await readObjectiveEvents(projectRoot);
+    assert.equal(objectiveEvents.at(-1)?.kind, 'analysis-run');
+    assert.equal(objectiveEvents.at(-1)?.payload.status, 'complete');
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis rejects Python manifests whose interpreter environment is unresolved', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-env-blocked-');
+  try {
+    const executableHint = await seedFakePythonInterpreter(projectRoot);
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      scriptPath: 'analysis/scripts/env-blocked.py',
+      scriptContents: FAKE_PYTHON_SUCCESS_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, {
+          executableHint,
+          resolutionStatus: 'blocked',
+          scriptPath: 'analysis/scripts/env-blocked.py',
+        });
       },
     });
 
@@ -352,19 +502,323 @@ test('run-analysis keeps pinned Python manifests runtime-rejected until the Phas
       'run-analysis',
       '--manifest',
       context.manifestPath,
-      '--dry-run',
     ], {
       env: FIXTURE_KERNEL_ENV,
     });
 
     assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
-    assert.equal(result.stderr, '');
     const payload = JSON.parse(result.stdout);
-    assert.equal(payload.ok, false);
-    assert.equal(payload.code, 'E_ANALYSIS_TEMPLATE_UNSUPPORTED');
-    assert.match(payload.message, /supports only the reviewed Node-script command template/u);
+    assert.equal(payload.code, 'E_PHASE11_INTERPRETER_ENV_BLOCKED');
     assert.equal(await pathExists(context.laneRunsPath), false);
-    assert.deepEqual(await readObjectiveEvents(projectRoot), []);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis rejects Python executable hints that resolve outside the reviewed venv root', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-escape-');
+  try {
+    await seedFakePythonInterpreter(projectRoot, 'outside-venv');
+    const reviewedRoot = path.join(projectRoot, 'analysis', 'fake-python-venv');
+    await mkdir(reviewedRoot, { recursive: true });
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      scriptPath: 'analysis/scripts/escape.py',
+      scriptContents: FAKE_PYTHON_SUCCESS_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, {
+          executableHint: process.platform === 'win32'
+            ? 'analysis/fake-python-venv/../outside-venv/Scripts/python.exe'
+            : 'analysis/fake-python-venv/../outside-venv/bin/python',
+          scriptPath: 'analysis/scripts/escape.py',
+        });
+      },
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_PHASE11_INTERPRETER_EXECUTABLE_OUTSIDE_VENV');
+    assert.equal(await pathExists(context.laneRunsPath), false);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis rejects Windows command-wrapper interpreter hints', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-cmd-');
+  try {
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      scriptPath: 'analysis/scripts/wrapper.py',
+      scriptContents: FAKE_PYTHON_SUCCESS_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, {
+          executableHint: 'analysis/fake-python-venv/Scripts/python.cmd',
+          scriptPath: 'analysis/scripts/wrapper.py',
+        });
+      },
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_PHASE11_INTERPRETER_COMMAND_WRAPPER_FORBIDDEN');
+    assert.equal(await pathExists(context.laneRunsPath), false);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis rejects missing Python interpreter executables without PATH fallback', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-missing-');
+  try {
+    await mkdir(path.join(projectRoot, 'analysis', 'fake-python-venv'), { recursive: true });
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      scriptPath: 'analysis/scripts/missing-interpreter.py',
+      scriptContents: FAKE_PYTHON_SUCCESS_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, {
+          scriptPath: 'analysis/scripts/missing-interpreter.py',
+        });
+      },
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        PATH: path.dirname(process.execPath),
+      },
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_PHASE11_INTERPRETER_EXECUTABLE_MISSING');
+    assert.equal(await pathExists(context.laneRunsPath), false);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis keeps H5AD and CXCL13 CD8 quantitative authority closed under fake Python', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-science-closed-');
+  try {
+    const executableHint = await seedFakePythonInterpreter(projectRoot);
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      inputPath: 'data/GSE184880_full.h5ad',
+      outputPath: 'artifacts/cxcl13-cd8-fraction.json',
+      scriptPath: 'analysis/scripts/cxcl13-cd8-fraction.py',
+      scriptContents: FAKE_PYTHON_SUCCESS_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, {
+          executableHint,
+          inputPath: 'data/GSE184880_full.h5ad',
+          outputPath: 'artifacts/cxcl13-cd8-fraction.json',
+          scriptPath: 'analysis/scripts/cxcl13-cd8-fraction.py',
+        });
+      },
+    });
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_PHASE11_SCIENTIFIC_RUNTIME_CLOSED');
+    assert.equal(await pathExists(context.absoluteOutputPath), false);
+    assert.equal(await pathExists(context.laneRunsPath), false);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis records a non-zero fake Python script as a failed lane run', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-fail-');
+  try {
+    const executableHint = await seedFakePythonInterpreter(projectRoot);
+    const scriptPath = 'analysis/scripts/failing-python.py';
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-python-fail-001',
+      scriptPath,
+      scriptContents: FAKE_PYTHON_FAILING_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, { executableHint, scriptPath });
+      },
+    });
+    await seedFakePythonScriptPackage(projectRoot, scriptPath);
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_ANALYSIS_RUN_FAILED');
+    assert.equal(payload.exitCode, 7);
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'failed']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis marks missing fake Python outputs as failed after exit zero', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-missing-output-');
+  try {
+    const executableHint = await seedFakePythonInterpreter(projectRoot);
+    const scriptPath = 'analysis/scripts/missing-output-python.py';
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-python-missing-001',
+      scriptPath,
+      scriptContents: FAKE_PYTHON_MISSING_OUTPUT_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, { executableHint, scriptPath });
+      },
+    });
+    await seedFakePythonScriptPackage(projectRoot, scriptPath);
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_EXPECTED_OUTPUT_MISSING');
+    assert.equal(payload.exitCode, 0);
+    assert.deepEqual(payload.missingOutputs, ['artifacts/results.json']);
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'failed']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis interrupts a fake Python script at the operator timeout cap', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-python-timeout-');
+  try {
+    const executableHint = await seedFakePythonInterpreter(projectRoot);
+    const scriptPath = 'analysis/scripts/slow-python.py';
+    const context = await seedBoundAnalysisContext(projectRoot, {
+      analysisId: 'ANL-python-timeout-001',
+      scriptPath,
+      scriptContents: FAKE_PYTHON_SLOW_SCRIPT,
+      mutateManifest(manifest) {
+        mutateManifestToFakePython(manifest, { executableHint, scriptPath });
+      },
+    });
+    await seedFakePythonScriptPackage(projectRoot, scriptPath);
+
+    const result = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      context.manifestPath,
+    ], {
+      env: {
+        ...FIXTURE_KERNEL_ENV,
+        VRE_RUN_ANALYSIS_TIMEOUT_MS: '400',
+      },
+    });
+
+    assert.equal(result.code, 1, `stdout=${result.stdout} stderr=${result.stderr}`);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.code, 'E_ANALYSIS_RUN_INTERRUPTED');
+    assert.equal(payload.status, 'interrupted');
+    const laneRuns = await readPhase9LaneRuns(projectRoot);
+    assert.deepEqual(laneRuns.map((record) => record.status), ['running', 'interrupted']);
+  } finally {
+    await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('run-analysis keeps Rscript and notebook execution deferred', async () => {
+  const projectRoot = await createCliFixtureProject('vre-run-analysis-r-notebook-deferred-');
+  try {
+    const rContext = await seedBoundAnalysisContext(projectRoot, {
+      manifestPath: 'analysis/manifests/rscript.json',
+      scriptPath: 'analysis/scripts/deferred-r.R',
+      scriptContents: 'writeLines("deferred")\n',
+      mutateManifest(manifest) {
+        manifest.script.language = 'r';
+        manifest.command.runner = 'Rscript';
+        manifest.environment = {
+          interpreterKind: 'r',
+          interpreterId: 'renv-local',
+          interpreterVersion: '4.4.0',
+          resolver: 'renv',
+          executableHint: 'analysis/renv-local/bin/Rscript',
+          resolutionStatus: 'resolved',
+          resolutionReason: 'Fixture proves R stays deferred.',
+          dependencyLock: {
+            path: 'environment/phase11/fake-renv.lock',
+            sha256: null,
+            hashDeferredReason: 'R runner deferred in T11.1.2.',
+          },
+          dependencyPins: [{ name: 'renv', version: '1.0.0', scope: 'deferred-fixture' }],
+          environmentFiles: [],
+          knownSeams: [],
+        };
+      },
+    });
+    const notebookFixture = await readFixtureJson('analysis-manifest', 'valid-notebook.json');
+    const {
+      experimentRegistration: _experimentRegistration,
+      ...notebookManifest
+    } = notebookFixture;
+    const notebookManifestPath = 'analysis/manifests/notebook.json';
+    await writeProjectFile(projectRoot, notebookManifestPath, `${JSON.stringify({
+      ...notebookManifest,
+      objectiveId: 'OBJ-001',
+      experimentId: 'EXP-021',
+      analysisId: 'ANL-notebook-deferred-001',
+    }, null, 2)}\n`);
+
+    const rResult = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      rContext.manifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+    const notebookResult = await runVre(projectRoot, [
+      'run-analysis',
+      '--manifest',
+      notebookManifestPath,
+    ], {
+      env: FIXTURE_KERNEL_ENV,
+    });
+
+    assert.equal(JSON.parse(rResult.stdout).code, 'E_ANALYSIS_TEMPLATE_UNSUPPORTED');
+    assert.equal(JSON.parse(notebookResult.stdout).code, 'E_NOTEBOOK_EXECUTION_DEFERRED');
+    assert.equal(await pathExists(rContext.laneRunsPath), false);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
   }

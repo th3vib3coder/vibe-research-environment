@@ -25,7 +25,7 @@ export default async function validatePhase11InterpreterManifest() {
   );
 
   assert(validPython.ok, `Valid pinned Python manifest failed: ${JSON.stringify(validPython.issues)}`);
-  assert(validPython.opensExecutor === false, 'T11.1.1 must not open subprocess execution.');
+  assert(validPython.opensExecutor === true, 'T11.1.2 opens the Python executor for resolved interpreter manifests.');
   assert(validPython.scientificReady === false, 'Interpreter readiness cannot imply scientific readiness.');
   assert(python314.ok === false, 'Python 3.14 heavy stack resolved false-green must fail.');
   assert(

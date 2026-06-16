@@ -1032,7 +1032,12 @@ async function scenarioD(projectRoot, objectiveId) {
     manifestName: 'wave6-d-unsafe.json',
     language: 'python',
     runner: 'python',
-    scriptPath: 'analysis/scripts/wave6-d-unsafe.py'
+    scriptPath: 'analysis/scripts/wave6-d-unsafe.py',
+    environment: {
+      ...defaultInterpreterEnvironment('python'),
+      resolutionStatus: 'blocked',
+      resolutionReason: 'Wave 6 Scenario D keeps unsafe Python fail-closed after T11.1.2 opens Python.'
+    }
   });
   const { manifest, manifestPath } = await writeAnalysisManifest(projectRoot, objectiveId, {
     analysisId: 'ANL-W6-D-SAFE',
@@ -1073,7 +1078,7 @@ async function scenarioD(projectRoot, objectiveId) {
   return {
     artifacts,
     assertions: {
-      directScriptDeniedAndLogged: artifacts.unsafeExecution.code === 'E_ANALYSIS_TEMPLATE_UNSUPPORTED',
+      directScriptDeniedAndLogged: artifacts.unsafeExecution.code === 'E_PHASE11_INTERPRETER_ENV_BLOCKED',
       sanctionedManifestAllowedAndLogged: artifacts.sanctionedRun.status === 'complete',
       laneRunRecordHasProvenance: artifacts.laneRunRecords.some((record) =>
         record.manifestPath === manifestPath && record.status === 'complete'

@@ -305,7 +305,7 @@ test('Scenario D blocks direct execution and allows sanctioned manifest executio
     const bundle = await readJson(path.join(result.bundleDir, 'evidence-bundle.json'));
     assert.deepEqual(bundle.realSurfaces.sort(), realSurfaceByScenario.D.toSorted());
     assert.equal(bundle.artifacts.unsafeExecution.realSurface, 'runAnalysisCommand');
-    assert.equal(bundle.artifacts.unsafeExecution.code, 'E_ANALYSIS_TEMPLATE_UNSUPPORTED');
+    assert.equal(bundle.artifacts.unsafeExecution.code, 'E_PHASE11_INTERPRETER_ENV_BLOCKED');
     assert.equal(bundle.artifacts.sanctionedRun.status, 'complete');
     assert.equal(bundle.artifacts.sanctionedRun.realSurface, 'runAnalysisCommand');
   });
