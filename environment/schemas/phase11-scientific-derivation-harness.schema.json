@@ -1,0 +1,281 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase11.scientific-derivation-harness.v1",
+  "title": "Phase 11 Scientific Derivation Harness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "phase",
+    "wave",
+    "taskId",
+    "packetRef",
+    "datasetInventoryRef",
+    "cd8Derivation",
+    "law9Harness",
+    "readiness",
+    "createdAt",
+    "createdBy"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase11.scientific-derivation-harness.v1" },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^SDH-[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "phase": { "const": 11 },
+    "wave": { "const": "11.1" },
+    "taskId": { "const": "T11.1.0" },
+    "packetRef": { "$ref": "#/definitions/packetRef" },
+    "datasetInventoryRef": { "$ref": "#/definitions/datasetInventoryRef" },
+    "cd8Derivation": { "$ref": "#/definitions/cd8Derivation" },
+    "law9Harness": { "$ref": "#/definitions/law9Harness" },
+    "readiness": { "$ref": "#/definitions/readiness" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "createdBy": { "type": "string", "minLength": 1 }
+  },
+  "definitions": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "sha256"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "review-record",
+            "metric-report",
+            "packet-evidence",
+            "inventory-evidence",
+            "control-artifact"
+          ]
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/definitions/hash" }
+      }
+    },
+    "packetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packetId",
+        "packetTaskId",
+        "packetSchemaVersion",
+        "evidencePath",
+        "evidenceSha256"
+      ],
+      "properties": {
+        "packetId": { "const": "RP-HGSOC-CXCL13-CD8-001" },
+        "packetTaskId": { "const": "T11.0.3" },
+        "packetSchemaVersion": { "const": "phase11.research-packet.v1" },
+        "evidencePath": { "type": "string", "minLength": 1 },
+        "evidenceSha256": { "$ref": "#/definitions/hash" }
+      }
+    },
+    "datasetInventoryRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidencePath", "evidenceSha256", "selectedSlice"],
+      "properties": {
+        "evidencePath": { "type": "string", "minLength": 1 },
+        "evidenceSha256": { "$ref": "#/definitions/hash" },
+        "selectedSlice": { "const": "GSE184880-HGSOC" }
+      }
+    },
+    "cd8Derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "derivationType",
+        "reviewedCellTypeKey",
+        "acceptedLabels",
+        "markerPolicy",
+        "humanReview",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["blocked", "present-unreviewed", "reviewed-accepted"]
+        },
+        "derivationType": {
+          "type": "string",
+          "enum": [
+            "blocked",
+            "metadata-key",
+            "human-reviewed-celltype-key",
+            "human-reviewed-marker-policy"
+          ]
+        },
+        "reviewedCellTypeKey": { "type": ["string", "null"] },
+        "acceptedLabels": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "markerPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requiredMarkers", "exclusionMarkers", "decisionRule"],
+          "properties": {
+            "requiredMarkers": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "exclusionMarkers": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "decisionRule": { "type": "string", "minLength": 1 }
+          }
+        },
+        "humanReview": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": [
+            "reviewerId",
+            "reviewerRole",
+            "decision",
+            "decidedAt",
+            "decisionArtifactPath",
+            "decisionArtifactSha256",
+            "agentSelfReview"
+          ],
+          "properties": {
+            "reviewerId": { "type": "string", "minLength": 1 },
+            "reviewerRole": {
+              "type": "string",
+              "enum": ["medical-operator", "scientific-supervisor", "principal-investigator"]
+            },
+            "decision": { "enum": ["accepted", "rejected", "changes-requested"] },
+            "decidedAt": { "type": "string", "format": "date-time" },
+            "decisionArtifactPath": { "type": "string", "minLength": 1 },
+            "decisionArtifactSha256": { "$ref": "#/definitions/hash" },
+            "agentSelfReview": { "const": false }
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/evidenceRef" }
+        }
+      }
+    },
+    "law9Harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quantitativeClaimPath", "components"],
+      "properties": {
+        "quantitativeClaimPath": {
+          "type": "string",
+          "enum": [
+            "BLOCKED_OR_INCONCLUSIVE_UNTIL_KEY_RESOLVED",
+            "READY_FOR_QUANTITATIVE_CLAIM"
+          ]
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rawCohort",
+            "conditionedCohort",
+            "matchedComparison",
+            "batchKey",
+            "donorPatientKey",
+            "studySourceKey",
+            "doubletSignal",
+            "ambientRna",
+            "crossPatientReproducibility"
+          ],
+          "properties": {
+            "rawCohort": { "$ref": "#/definitions/law9Component" },
+            "conditionedCohort": { "$ref": "#/definitions/law9Component" },
+            "matchedComparison": { "$ref": "#/definitions/law9Component" },
+            "batchKey": { "$ref": "#/definitions/law9Component" },
+            "donorPatientKey": { "$ref": "#/definitions/law9Component" },
+            "studySourceKey": { "$ref": "#/definitions/law9Component" },
+            "doubletSignal": { "$ref": "#/definitions/law9Component" },
+            "ambientRna": { "$ref": "#/definitions/law9Component" },
+            "crossPatientReproducibility": { "$ref": "#/definitions/law9Component" }
+          }
+        }
+      }
+    },
+    "law9Component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["componentId", "status", "evidenceRefs", "controlEvidence"],
+      "properties": {
+        "componentId": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["complete", "partial", "open", "blocked", "present-candidate"]
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "controlEvidence": { "$ref": "#/definitions/controlEvidence" }
+      }
+    },
+    "controlEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "method",
+        "summary",
+        "decision",
+        "artifactPath",
+        "artifactSha256",
+        "metric"
+      ],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "method": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "decision": { "enum": ["passed", "failed", "blocked"] },
+        "artifactPath": { "type": "string", "minLength": 1 },
+        "artifactSha256": { "$ref": "#/definitions/hash" },
+        "metric": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": [
+            "metricName",
+            "value",
+            "threshold",
+            "direction",
+            "passed",
+            "evidenceRef"
+          ],
+          "properties": {
+            "metricName": { "type": "string", "minLength": 1 },
+            "value": { "type": "number" },
+            "threshold": { "type": "number" },
+            "direction": { "enum": ["gte", "lte"] },
+            "passed": { "type": "boolean" },
+            "evidenceRef": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readyForQuantitativeRun",
+        "prohibitsFractionInThisTask",
+        "nextAllowedTask"
+      ],
+      "properties": {
+        "readyForQuantitativeRun": { "type": "boolean" },
+        "prohibitsFractionInThisTask": { "const": true },
+        "nextAllowedTask": { "type": "string", "pattern": "^T11\\.1\\.[1-9][0-9]*$" }
+      }
+    }
+  }
+}

@@ -139,3 +139,64 @@ Local real-data evidence:
 - CXCL13 gene-symbol presence was verified in all selected h5ad files.
 - output remains a blocked packet because reviewed CD8 derivation is absent
   and the LAW 9 batch/donor harness is incomplete.
+
+## T11.1.0 Scientific Derivation Harness Contract Trace
+
+who: codex
+
+when: 2026-06-16
+
+why: T11.0.3 proved that GSE184880 HGSOC files are present, hash-bound,
+backed-r-readable, and CXCL13-present, but the quantitative path is still
+blocked by absent reviewed CD8 derivation and incomplete LAW 9 batch/donor
+harness evidence. T11.1.0 adds the positive contract for that scientific
+authority before any Python/R runner or fraction work.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `environment/phase11/scientific-derivation-harness.js`
+- `environment/schemas/phase11-scientific-derivation-harness.schema.json`
+- `environment/tests/schemas/phase11-scientific-derivation-harness.schema.test.js`
+- `environment/tests/ci/phase11-scientific-derivation-harness.js`
+- `environment/tests/ci/phase11-scientific-derivation-harness.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- LAW 9 `complete` means evidence-of-control, not key presence or a
+  `confounderStatus` string.
+- batch and study-source completion require passing metric evidence; an iLISI
+  value below threshold remains blocking.
+- reviewed CD8 derivation requires an identifiable human reviewer decision
+  artifact with hash; agent self-review is forbidden.
+
+RED evidence captured before production files:
+
+- schema test failed with missing
+  `phase11-scientific-derivation-harness.schema.json`;
+- semantic test failed with missing
+  `environment/phase11/scientific-derivation-harness.js`.
+
+verification:
+
+- schema test 5/5 PASS.
+- semantic test 18/18 PASS.
+- CI validator PASS.
+- `validate-counts` PASS with `schemas/schemaTests/ciValidators` at 70/70/45.
+- Phase 9 and Phase 11 ledger checks PASS.
+- `run-all.js` PASS.
+- full `node --test --test-reporter=dot` PASS.
+- `git diff --check` PASS with known Phase 9 ledger CRLF warning.
+
+reviewer: Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.1.0-scientific-derivation-harness-verdict-2026-06-16.md`.
+
+Scope boundaries:
+
+- no real GSE184880 execution;
+- no Python/R runner;
+- no CXCL13+ CD8 denominator, count, or fraction;
+- no export eligibility integration;
+- no biomedical claim promotion.
