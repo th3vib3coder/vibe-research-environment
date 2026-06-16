@@ -72,6 +72,8 @@ const MARP_EXPORT_INTRODUCED_AT = '2026-06-16';
 const MARP_EXPORT_TASK = 'T10.4.1';
 const PRESENTATION_STALENESS_INTRODUCED_AT = '2026-06-16';
 const PRESENTATION_STALENESS_TASK = 'T10.4.2';
+const MULTI_DOMAIN_GATE_INTRODUCED_AT = '2026-06-16';
+const MULTI_DOMAIN_GATE_TASK = 'T10.5.0';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -405,6 +407,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: PRESENTATION_STALENESS_INTRODUCED_AT
   },
   {
+    kind: 'multi-domain-gate',
+    name: 'phase10-multi-domain-gate',
+    paths: [
+      'environment/phase10/multi-domain-gate.js',
+      'environment/tests/ci/phase10-multi-domain-gate.js',
+      'environment/tests/ci/phase10-multi-domain-gate.test.js'
+    ],
+    task: MULTI_DOMAIN_GATE_TASK,
+    status: 'implemented-read-only-gate-classifier',
+    introducedAt: MULTI_DOMAIN_GATE_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -559,6 +573,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-presentation-staleness.js')) {
     paths.push('environment/tests/ci/phase10-presentation-staleness.js');
   }
+  if (command.includes('phase10-multi-domain-gate.js')) {
+    paths.push('environment/tests/ci/phase10-multi-domain-gate.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -634,6 +651,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:export-guard',
     'phase10:marp-export',
     'phase10:presentation-staleness',
+    'phase10:multi-domain-gate',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

@@ -85,6 +85,9 @@ export const PHASE10_PATHS = {
   presentationStaleness: 'environment/phase10/presentation-staleness.js',
   presentationStalenessValidator: 'environment/tests/ci/phase10-presentation-staleness.js',
   presentationStalenessTest: 'environment/tests/ci/phase10-presentation-staleness.test.js',
+  multiDomainGate: 'environment/phase10/multi-domain-gate.js',
+  multiDomainGateValidator: 'environment/tests/ci/phase10-multi-domain-gate.js',
+  multiDomainGateTest: 'environment/tests/ci/phase10-multi-domain-gate.test.js',
   marpTemplateMorningDigest: 'environment/templates/marp/morning-digest.marp.template.md',
   marpTemplateR2Verdict: 'environment/templates/marp/r2-verdict.marp.template.md',
   marpTemplateSynthesisConference: 'environment/templates/marp/synthesis-conference.marp.template.md',
@@ -177,6 +180,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.presentationStaleness,
   PHASE10_PATHS.presentationStalenessValidator,
   PHASE10_PATHS.presentationStalenessTest,
+  PHASE10_PATHS.multiDomainGate,
+  PHASE10_PATHS.multiDomainGateValidator,
+  PHASE10_PATHS.multiDomainGateTest,
   PHASE10_PATHS.marpTemplateMorningDigest,
   PHASE10_PATHS.marpTemplateR2Verdict,
   PHASE10_PATHS.marpTemplateSynthesisConference,
@@ -222,6 +228,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:export-guard': 'phase10-export-guard.js',
   'phase10:marp-export': 'phase10-marp-export.js',
   'phase10:presentation-staleness': 'phase10-presentation-staleness.js',
+  'phase10:multi-domain-gate': 'phase10-multi-domain-gate.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

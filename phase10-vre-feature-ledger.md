@@ -85,3 +85,35 @@ state in:
 - `vibe-science/blueprints/private/phase10-implementation-plan/08-hat3-t10-0-1-closure-2026-06-07.md`
 - `vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
 - `vibe-science/blueprints/private/WIKI_VRE/log.md`
+
+## T10.5.0 Multi-Domain Gate Trace
+
+T10.5.0 adds a read-only multi-domain gate classifier. The positive result is
+only future HAT-task eligibility; it never grants authorization and never
+performs merge, synthesis, query, export, provenance, claim, lifecycle, CLI, or
+schema behavior.
+
+Changed Phase 10 VRE paths:
+
+- `package.json`
+- `phase9-vre-feature-ledger.md`
+- `phase10-vre-feature-ledger.md`
+- `phase10-vre-surface-index.json`
+- `environment/phase10/multi-domain-gate.js`
+- `environment/tests/ci/phase10-multi-domain-gate.js`
+- `environment/tests/ci/phase10-multi-domain-gate.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/ci/phase10-surface-index.js`
+- `environment/tests/ci/check-phase10-ledger.js`
+- `environment/tests/ci/check-phase10-ledger.test.js`
+
+Verification so far: RED-first module-missing failures and `ciValidators`
+`37 -> 38` mismatch were captured before production code/count update.
+Target GREEN: `node --test environment/tests/ci/phase10-multi-domain-gate.test.js`
+12/12 PASS, `node environment/tests/ci/phase10-multi-domain-gate.js` PASS,
+`node environment/tests/ci/validate-counts.js` PASS, checker fixture tests
+27/27 PASS, and `node environment/tests/ci/phase10-surface-index.js`
+regenerated 75 surfaces. Aggregate, fail-closed probe, WIKI checks, full
+`node --test`, and Claude Code HAT 3 ACCEPT are complete via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase10/turns/claude-hat3-t10.5.0-verdict.md`.
