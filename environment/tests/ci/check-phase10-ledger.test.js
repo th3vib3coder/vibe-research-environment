@@ -55,6 +55,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:wiki-query': 'node environment/tests/ci/phase10-wiki-query.js',
         'phase10:query-decision-use': 'node environment/tests/ci/phase10-query-decision-use.js',
         'phase10:query-lints': 'node environment/tests/ci/phase10-query-lints.js',
+        'phase10:export-guard': 'node environment/tests/ci/phase10-export-guard.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
@@ -120,6 +121,9 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/query-lints.js',
       'environment/tests/ci/phase10-query-lints.js',
       'environment/tests/ci/phase10-query-lints.test.js',
+      'environment/phase10/export-guard.js',
+      'environment/tests/ci/phase10-export-guard.js',
+      'environment/tests/ci/phase10-export-guard.test.js',
       'environment/orchestrator/task-registry/phase10-wiki-lint.json',
       'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
@@ -454,6 +458,25 @@ test('phase10-ledger check covers query-lints surfaces', async () => {
       'environment/phase10/query-lints.js',
       'environment/tests/ci/phase10-query-lints.js',
       'environment/tests/ci/phase10-query-lints.test.js'
+    ]) {
+      await assert.rejects(
+        () => checkPhase10Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [changedFile]
+        }),
+        new RegExp(`E_PHASE10_TRACE_MISSING.*${changedFile.replaceAll('/', '\\/')}`, 'u')
+      );
+    }
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers export-guard surfaces', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    for (const changedFile of [
+      'environment/phase10/export-guard.js',
+      'environment/tests/ci/phase10-export-guard.js',
+      'environment/tests/ci/phase10-export-guard.test.js'
     ]) {
       await assert.rejects(
         () => checkPhase10Ledger({

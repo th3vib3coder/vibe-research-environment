@@ -66,6 +66,18 @@
     "introducedAt": "2026-06-10"
   },
   {
+    "kind": "export-guard",
+    "name": "phase10-export-guard",
+    "paths": [
+      "environment/phase10/export-guard.js",
+      "environment/tests/ci/phase10-export-guard.js",
+      "environment/tests/ci/phase10-export-guard.test.js"
+    ],
+    "task": "T10.4.0",
+    "status": "implemented-export-guard-foundation",
+    "introducedAt": "2026-06-16"
+  },
+  {
     "kind": "feature-ledger",
     "name": "phase10-vre-feature-ledger",
     "paths": [
@@ -296,6 +308,17 @@
     "paths": [
       "package.json",
       "environment/tests/cli/domain-cli.test.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:export-guard",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-export-guard.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",

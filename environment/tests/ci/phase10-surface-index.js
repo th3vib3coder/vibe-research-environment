@@ -66,6 +66,8 @@ const QUERY_DECISION_USE_INTRODUCED_AT = '2026-06-10';
 const QUERY_DECISION_USE_TASK = 'T10.3.1';
 const QUERY_LINTS_INTRODUCED_AT = '2026-06-10';
 const QUERY_LINTS_TASK = 'T10.3.2';
+const EXPORT_GUARD_INTRODUCED_AT = '2026-06-16';
+const EXPORT_GUARD_TASK = 'T10.4.0';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -352,6 +354,18 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: QUERY_LINTS_INTRODUCED_AT
   },
   {
+    kind: 'export-guard',
+    name: 'phase10-export-guard',
+    paths: [
+      'environment/phase10/export-guard.js',
+      'environment/tests/ci/phase10-export-guard.js',
+      'environment/tests/ci/phase10-export-guard.test.js'
+    ],
+    task: EXPORT_GUARD_TASK,
+    status: 'implemented-export-guard-foundation',
+    introducedAt: EXPORT_GUARD_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -497,6 +511,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-query-lints.js')) {
     paths.push('environment/tests/ci/phase10-query-lints.js');
   }
+  if (command.includes('phase10-export-guard.js')) {
+    paths.push('environment/tests/ci/phase10-export-guard.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -569,6 +586,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:wiki-query',
     'phase10:query-decision-use',
     'phase10:query-lints',
+    'phase10:export-guard',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

@@ -76,6 +76,9 @@ export const PHASE10_PATHS = {
   queryLints: 'environment/phase10/query-lints.js',
   queryLintsValidator: 'environment/tests/ci/phase10-query-lints.js',
   queryLintsTest: 'environment/tests/ci/phase10-query-lints.test.js',
+  exportGuard: 'environment/phase10/export-guard.js',
+  exportGuardValidator: 'environment/tests/ci/phase10-export-guard.js',
+  exportGuardTest: 'environment/tests/ci/phase10-export-guard.test.js',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -152,6 +155,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.queryLints,
   PHASE10_PATHS.queryLintsValidator,
   PHASE10_PATHS.queryLintsTest,
+  PHASE10_PATHS.exportGuard,
+  PHASE10_PATHS.exportGuardValidator,
+  PHASE10_PATHS.exportGuardTest,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -187,6 +193,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:wiki-query': 'phase10-wiki-query.js',
   'phase10:query-decision-use': 'phase10-query-decision-use.js',
   'phase10:query-lints': 'phase10-query-lints.js',
+  'phase10:export-guard': 'phase10-export-guard.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 
