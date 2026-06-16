@@ -70,6 +70,8 @@ const EXPORT_GUARD_INTRODUCED_AT = '2026-06-16';
 const EXPORT_GUARD_TASK = 'T10.4.0';
 const MARP_EXPORT_INTRODUCED_AT = '2026-06-16';
 const MARP_EXPORT_TASK = 'T10.4.1';
+const PRESENTATION_STALENESS_INTRODUCED_AT = '2026-06-16';
+const PRESENTATION_STALENESS_TASK = 'T10.4.2';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -387,6 +389,22 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: MARP_EXPORT_INTRODUCED_AT
   },
   {
+    kind: 'presentation-staleness',
+    name: 'phase10-presentation-staleness',
+    paths: [
+      'environment/phase10/presentation-staleness.js',
+      'environment/schemas/phase10-presentation.schema.json',
+      'environment/tests/schemas/phase10-presentation.schema.test.js',
+      'environment/schemas/phase10-marp-template.schema.json',
+      'environment/tests/schemas/phase10-marp-template.schema.test.js',
+      'environment/tests/ci/phase10-presentation-staleness.js',
+      'environment/tests/ci/phase10-presentation-staleness.test.js'
+    ],
+    task: PRESENTATION_STALENESS_TASK,
+    status: 'implemented-read-only-staleness-checker',
+    introducedAt: PRESENTATION_STALENESS_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -538,6 +556,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-marp-export.js')) {
     paths.push('environment/tests/ci/phase10-marp-export.js');
   }
+  if (command.includes('phase10-presentation-staleness.js')) {
+    paths.push('environment/tests/ci/phase10-presentation-staleness.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -612,6 +633,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:query-lints',
     'phase10:export-guard',
     'phase10:marp-export',
+    'phase10:presentation-staleness',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

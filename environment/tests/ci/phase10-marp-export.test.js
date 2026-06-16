@@ -250,5 +250,4 @@ test('adapter rejects writer, renderer, public sharing, and export package field
   }
 
   assert.equal(await pathMissing('environment/tests/cli/domain-export.test.js'), true);
-  assert.equal(await pathMissing('environment/phase10/presentation-staleness.js'), true);
 });

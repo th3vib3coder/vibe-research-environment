@@ -7,7 +7,6 @@ import {
 } from '../../phase10/export-guard.js';
 
 const FORBIDDEN_SIDE_EFFECT_PATHS = [
-  'environment/phase10/presentation-staleness.js',
   'environment/tests/cli/domain-export.test.js'
 ];
 

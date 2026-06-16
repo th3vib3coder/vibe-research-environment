@@ -34,6 +34,7 @@
     "phase10:query-lints": "node environment/tests/ci/phase10-query-lints.js",
     "phase10:export-guard": "node environment/tests/ci/phase10-export-guard.js",
     "phase10:marp-export": "node environment/tests/ci/phase10-marp-export.js",
+    "phase10:presentation-staleness": "node environment/tests/ci/phase10-presentation-staleness.js",
     "phase9:acceptance": "node environment/acceptance/run-wave6-acceptance.js --all",
     "phase9:acceptance:A": "node environment/acceptance/run-wave6-acceptance.js A",
     "phase9:acceptance:B": "node environment/acceptance/run-wave6-acceptance.js B",

@@ -82,6 +82,9 @@ export const PHASE10_PATHS = {
   marpExport: 'environment/phase10/marp-export.js',
   marpExportValidator: 'environment/tests/ci/phase10-marp-export.js',
   marpExportTest: 'environment/tests/ci/phase10-marp-export.test.js',
+  presentationStaleness: 'environment/phase10/presentation-staleness.js',
+  presentationStalenessValidator: 'environment/tests/ci/phase10-presentation-staleness.js',
+  presentationStalenessTest: 'environment/tests/ci/phase10-presentation-staleness.test.js',
   marpTemplateMorningDigest: 'environment/templates/marp/morning-digest.marp.template.md',
   marpTemplateR2Verdict: 'environment/templates/marp/r2-verdict.marp.template.md',
   marpTemplateSynthesisConference: 'environment/templates/marp/synthesis-conference.marp.template.md',
@@ -171,6 +174,9 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.marpExport,
   PHASE10_PATHS.marpExportValidator,
   PHASE10_PATHS.marpExportTest,
+  PHASE10_PATHS.presentationStaleness,
+  PHASE10_PATHS.presentationStalenessValidator,
+  PHASE10_PATHS.presentationStalenessTest,
   PHASE10_PATHS.marpTemplateMorningDigest,
   PHASE10_PATHS.marpTemplateR2Verdict,
   PHASE10_PATHS.marpTemplateSynthesisConference,
@@ -215,6 +221,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:query-lints': 'phase10-query-lints.js',
   'phase10:export-guard': 'phase10-export-guard.js',
   'phase10:marp-export': 'phase10-marp-export.js',
+  'phase10:presentation-staleness': 'phase10-presentation-staleness.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 

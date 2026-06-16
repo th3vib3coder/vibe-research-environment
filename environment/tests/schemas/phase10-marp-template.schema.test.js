@@ -9,6 +9,8 @@ const validMarpTemplate = {
   templateId: 'MARP-001',
   domainId: 'KDOM-001',
   name: 'Evidence Review',
+  fileName: 'evidence-review.marp.template.md',
+  templateVersion: 'a'.repeat(64),
   theme: 'default',
   allowedDirectives: ['paginate', 'footer'],
   placeholders: ['title', 'body'],
@@ -31,4 +33,13 @@ test('phase10-marp-template.schema rejects embedded render commands', async () =
   fixture.renderCommand = 'marp deck.md';
 
   await expectInvalid(SCHEMA_FILE, fixture, /additional/u);
+});
+
+test('phase10-marp-template.schema requires template file SHA metadata', async () => {
+  for (const field of ['fileName', 'templateVersion']) {
+    const fixture = clone(validMarpTemplate);
+    delete fixture[field];
+
+    await expectInvalid(SCHEMA_FILE, fixture, /required/u);
+  }
 });

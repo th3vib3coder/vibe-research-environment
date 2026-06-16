@@ -31,6 +31,7 @@ import validatePhase10QueryDecisionUse from './phase10-query-decision-use.js';
 import validatePhase10QueryLints from './phase10-query-lints.js';
 import validatePhase10ExportGuard from './phase10-export-guard.js';
 import validatePhase10MarpExport from './phase10-marp-export.js';
+import validatePhase10PresentationStaleness from './phase10-presentation-staleness.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -64,7 +65,8 @@ const validators = [
   ['phase10-query-decision-use', validatePhase10QueryDecisionUse],
   ['phase10-query-lints', validatePhase10QueryLints],
   ['phase10-export-guard', validatePhase10ExportGuard],
-  ['phase10-marp-export', validatePhase10MarpExport]
+  ['phase10-marp-export', validatePhase10MarpExport],
+  ['phase10-presentation-staleness', validatePhase10PresentationStaleness]
 ];
 
 for (const [name, validator] of validators) {

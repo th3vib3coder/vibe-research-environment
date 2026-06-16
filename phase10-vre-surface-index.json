@@ -400,6 +400,17 @@
   },
   {
     "kind": "package-script",
+    "name": "phase10:presentation-staleness",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-presentation-staleness.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
     "name": "phase10:query-decision-use",
     "paths": [
       "package.json",
@@ -505,6 +516,22 @@
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",
     "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "presentation-staleness",
+    "name": "phase10-presentation-staleness",
+    "paths": [
+      "environment/phase10/presentation-staleness.js",
+      "environment/schemas/phase10-presentation.schema.json",
+      "environment/tests/schemas/phase10-presentation.schema.test.js",
+      "environment/schemas/phase10-marp-template.schema.json",
+      "environment/tests/schemas/phase10-marp-template.schema.test.js",
+      "environment/tests/ci/phase10-presentation-staleness.js",
+      "environment/tests/ci/phase10-presentation-staleness.test.js"
+    ],
+    "task": "T10.4.2",
+    "status": "implemented-read-only-staleness-checker",
+    "introducedAt": "2026-06-16"
   },
   {
     "kind": "projection-helper",

@@ -9,6 +9,8 @@
     "templateId",
     "domainId",
     "name",
+    "fileName",
+    "templateVersion",
     "theme",
     "allowedDirectives",
     "placeholders",
@@ -29,6 +31,14 @@
     "name": {
       "type": "string",
       "minLength": 1
+    },
+    "fileName": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+\\.marp\\.template\\.md$"
+    },
+    "templateVersion": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     },
     "theme": {
       "type": "string",

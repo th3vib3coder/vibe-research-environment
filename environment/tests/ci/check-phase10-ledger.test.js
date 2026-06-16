@@ -57,6 +57,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:query-lints': 'node environment/tests/ci/phase10-query-lints.js',
         'phase10:export-guard': 'node environment/tests/ci/phase10-export-guard.js',
         'phase10:marp-export': 'node environment/tests/ci/phase10-marp-export.js',
+        'phase10:presentation-staleness': 'node environment/tests/ci/phase10-presentation-staleness.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
@@ -128,6 +129,13 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/marp-export.js',
       'environment/tests/ci/phase10-marp-export.js',
       'environment/tests/ci/phase10-marp-export.test.js',
+      'environment/phase10/presentation-staleness.js',
+      'environment/tests/ci/phase10-presentation-staleness.js',
+      'environment/tests/ci/phase10-presentation-staleness.test.js',
+      'environment/schemas/phase10-presentation.schema.json',
+      'environment/tests/schemas/phase10-presentation.schema.test.js',
+      'environment/schemas/phase10-marp-template.schema.json',
+      'environment/tests/schemas/phase10-marp-template.schema.test.js',
       'environment/templates/marp/morning-digest.marp.template.md',
       'environment/templates/marp/r2-verdict.marp.template.md',
       'environment/templates/marp/synthesis-conference.marp.template.md',
@@ -508,6 +516,29 @@ test('phase10-ledger check covers MARP adapter helper, validator, and templates'
       'environment/tests/ci/phase10-marp-export.js',
       'environment/tests/ci/phase10-marp-export.test.js',
       'environment/templates/marp/decision-support-query.marp.template.md'
+    ]) {
+      await assert.rejects(
+        () => checkPhase10Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [changedFile]
+        }),
+        new RegExp(`E_PHASE10_TRACE_MISSING.*${changedFile.replaceAll('/', '\\/')}`, 'u')
+      );
+    }
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers presentation staleness surfaces', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    for (const changedFile of [
+      'environment/phase10/presentation-staleness.js',
+      'environment/tests/ci/phase10-presentation-staleness.js',
+      'environment/tests/ci/phase10-presentation-staleness.test.js',
+      'environment/schemas/phase10-presentation.schema.json',
+      'environment/tests/schemas/phase10-presentation.schema.test.js',
+      'environment/schemas/phase10-marp-template.schema.json',
+      'environment/tests/schemas/phase10-marp-template.schema.test.js'
     ]) {
       await assert.rejects(
         () => checkPhase10Ledger({
