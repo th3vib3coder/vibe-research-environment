@@ -55,3 +55,44 @@ HAT 3 reviewer cleanup applied before commit:
 - replaced a fail-closed but dead `claimReady` ternary with explicit
   `claimReady: false` plus a scaffold-only comment in
   `environment/phase11/research-packet.js`.
+
+## T11.0.2 HGSOC CD8 Script Formalization Trace
+
+Changed Phase 11 VRE paths:
+
+- `phase11-vre-feature-ledger.md`
+- `environment/phase11/hgsoc-cd8-script.js`
+- `environment/phase11/hgsoc_cd8_synthetic.py`
+- `environment/schemas/phase11-hgsoc-cd8-script-contract.schema.json`
+- `environment/tests/schemas/phase11-hgsoc-cd8-script-contract.schema.test.js`
+- `environment/tests/ci/phase11-hgsoc-cd8-script.js`
+- `environment/tests/ci/phase11-hgsoc-cd8-script.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- task ships a reviewed synthetic-only Python artifact, not contract-only.
+- default Python 3.14 is not authoritative for real h5ad; the contract pins
+  `venv_scrna` Python 3.13.5 plus `anndata==0.12.9` and `numpy==2.3.5`.
+- the pinned interpreter hint is repository-relative:
+  `../../venv_scrna/Scripts/python.exe`.
+- synthetic fixture is deterministic in-repo data, not sampled from GSE184880.
+- heavy stack imports (`scanpy`, `numba`, `pynndescent`, `umap`) are deferred
+  and fail closed if they appear in the reviewed script source.
+
+Required inherited blockers:
+
+- T11.0.2 performs no real GSE184880 execution and produces no claim.
+- `GSE111976_full.h5ad` remains blocked as an invalid/stub h5ad input.
+- real h5ad execution remains deferred to T11.0.3 with backed-r read policy.
+- absent cell-type annotation and incomplete LAW 9 keep the quantitative path
+  blocked even when the synthetic CD8/CXCL13 arithmetic is green.
+
+RED evidence captured before production files:
+
+- schema test failed with missing
+  `phase11-hgsoc-cd8-script-contract.schema.json`;
+- script semantic test failed with missing
+  `environment/phase11/hgsoc-cd8-script.js`;
+- `validate-counts` failed with `schemaTests` expected 68, got 69.

@@ -1,0 +1,306 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase11.hgsoc-cd8-script-contract.v1",
+  "title": "Phase 11 HGSOC CD8 Script Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "scriptId",
+    "phase",
+    "wave",
+    "taskId",
+    "packetRef",
+    "datasetInventoryRef",
+    "executionBoundary",
+    "environmentPin",
+    "h5adReadPolicy",
+    "cellTypePolicy",
+    "geneIdPolicy",
+    "syntheticFixture",
+    "analysisLogic",
+    "law9Boundary",
+    "outputContract",
+    "seamLog",
+    "createdAt",
+    "createdBy"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase11.hgsoc-cd8-script-contract.v1" },
+    "scriptId": {
+      "type": "string",
+      "pattern": "^SCRIPT-[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "phase": { "const": 11 },
+    "wave": { "type": "string", "pattern": "^11\\.[0-9A-Za-z.-]+$" },
+    "taskId": { "const": "T11.0.2" },
+    "packetRef": { "$ref": "#/definitions/packetRef" },
+    "datasetInventoryRef": { "$ref": "#/definitions/datasetInventoryRef" },
+    "executionBoundary": { "$ref": "#/definitions/executionBoundary" },
+    "environmentPin": { "$ref": "#/definitions/environmentPin" },
+    "h5adReadPolicy": { "$ref": "#/definitions/h5adReadPolicy" },
+    "cellTypePolicy": { "$ref": "#/definitions/cellTypePolicy" },
+    "geneIdPolicy": { "$ref": "#/definitions/geneIdPolicy" },
+    "syntheticFixture": { "$ref": "#/definitions/syntheticFixture" },
+    "analysisLogic": { "$ref": "#/definitions/analysisLogic" },
+    "law9Boundary": { "$ref": "#/definitions/law9Boundary" },
+    "outputContract": { "$ref": "#/definitions/outputContract" },
+    "seamLog": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/seamLogEntry" }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "createdBy": { "type": "string", "minLength": 1 }
+  },
+  "definitions": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "packetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packetId",
+        "packetSchemaVersion",
+        "packetTaskId",
+        "evidencePath",
+        "evidenceSha256"
+      ],
+      "properties": {
+        "packetId": { "const": "RP-HGSOC-CXCL13-CD8-001" },
+        "packetSchemaVersion": { "const": "phase11.research-packet.v1" },
+        "packetTaskId": { "const": "T11.0.1" },
+        "evidencePath": { "type": "string", "minLength": 1 },
+        "evidenceSha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "datasetInventoryRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidencePath",
+        "closurePath",
+        "evidenceSha256",
+        "status"
+      ],
+      "properties": {
+        "evidencePath": { "type": "string", "minLength": 1 },
+        "closurePath": { "type": "string", "minLength": 1 },
+        "evidenceSha256": { "$ref": "#/definitions/sha256" },
+        "status": { "const": "accepted" }
+      }
+    },
+    "executionBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "noRealDataExecutionInTask",
+        "syntheticFixtureOnly",
+        "forbiddenDatasetIds",
+        "forbiddenRealDataAccessions",
+        "deferredRealDataTask"
+      ],
+      "properties": {
+        "mode": { "const": "synthetic-only" },
+        "noRealDataExecutionInTask": { "const": true },
+        "syntheticFixtureOnly": { "const": true },
+        "forbiddenDatasetIds": {
+          "type": "array",
+          "minItems": 1,
+          "contains": { "const": "gse111976-full-h5ad" },
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbiddenRealDataAccessions": {
+          "type": "array",
+          "minItems": 2,
+          "contains": { "const": "GSE184880" },
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "deferredRealDataTask": { "const": "T11.0.3" }
+      }
+    },
+    "environmentPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interpreterId",
+        "pythonVersion",
+        "resolver",
+        "executableHint",
+        "defaultPythonPolicy",
+        "dependencyPins",
+        "deferredHeavyImports"
+      ],
+      "properties": {
+        "interpreterId": { "const": "venv_scrna" },
+        "pythonVersion": { "const": "3.13.5" },
+        "resolver": { "const": "operator-managed-venv" },
+        "executableHint": { "const": "../../venv_scrna/Scripts/python.exe" },
+        "defaultPythonPolicy": { "const": "not-authoritative-for-real-h5ad" },
+        "dependencyPins": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/definitions/dependencyPin" }
+        },
+        "deferredHeavyImports": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string",
+            "enum": ["scanpy", "numba", "pynndescent", "umap"]
+          }
+        }
+      }
+    },
+    "dependencyPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "scope"],
+      "properties": {
+        "name": { "type": "string", "enum": ["anndata", "numpy"] },
+        "version": { "type": "string", "minLength": 1 },
+        "scope": { "const": "future-real-h5ad-lane" }
+      }
+    },
+    "h5adReadPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "realH5adExecution",
+        "requiredReadMode",
+        "rawMatrixLoadPolicy",
+        "stubDatasetPolicy"
+      ],
+      "properties": {
+        "realH5adExecution": { "const": "deferred" },
+        "requiredReadMode": { "const": "backed-r" },
+        "rawMatrixLoadPolicy": { "const": "forbidden-in-t11.0.2" },
+        "stubDatasetPolicy": { "const": "block-gse111976-full-h5ad" }
+      }
+    },
+    "cellTypePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "key", "acceptedLabels", "absentAnnotationPolicy"],
+      "properties": {
+        "source": { "const": "derived-reviewed-required" },
+        "key": { "const": "cell_type_reviewed" },
+        "acceptedLabels": {
+          "type": "array",
+          "minItems": 1,
+          "contains": { "const": "CD8 T cell" },
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "absentAnnotationPolicy": { "const": "block-quantitative-claim" }
+      }
+    },
+    "geneIdPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primaryKey",
+        "allowedAlternateKeys",
+        "markerGene",
+        "ambiguityPolicy"
+      ],
+      "properties": {
+        "primaryKey": { "const": "gene_symbol" },
+        "allowedAlternateKeys": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "markerGene": { "const": "CXCL13" },
+        "ambiguityPolicy": { "const": "fail-closed" }
+      }
+    },
+    "syntheticFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seed",
+        "generator",
+        "generationMethod",
+        "fixtureSha256",
+        "expectedCellCount",
+        "expectedCd8CellCount"
+      ],
+      "properties": {
+        "seed": { "const": 1102 },
+        "generator": { "const": "environment/phase11/hgsoc_cd8_synthetic.py --synthetic-smoke" },
+        "generationMethod": { "type": "string", "minLength": 1 },
+        "fixtureSha256": { "$ref": "#/definitions/sha256" },
+        "expectedCellCount": { "const": 6 },
+        "expectedCd8CellCount": { "const": 4 }
+      }
+    },
+    "analysisLogic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "denominator",
+        "cxcl13PositiveThreshold",
+        "expectedCxcl13PositiveCd8Cells",
+        "expectedCxcl13PositiveFraction"
+      ],
+      "properties": {
+        "denominator": { "const": "derived-cd8-cells-only" },
+        "cxcl13PositiveThreshold": { "const": 0 },
+        "expectedCxcl13PositiveCd8Cells": { "const": 2 },
+        "expectedCxcl13PositiveFraction": { "const": 0.5 }
+      }
+    },
+    "law9Boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quantitativeClaimStatus",
+        "confounderStatus",
+        "packetHarnessRequired",
+        "medicalReviewRequired"
+      ],
+      "properties": {
+        "quantitativeClaimStatus": { "const": "blocked" },
+        "confounderStatus": { "const": "open" },
+        "packetHarnessRequired": { "const": true },
+        "medicalReviewRequired": { "const": true }
+      }
+    },
+    "outputContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resultMode",
+        "promotesClaim",
+        "claimReady",
+        "performsRealDataAnalysis",
+        "syntheticOutputSha256",
+        "requiredKeys"
+      ],
+      "properties": {
+        "resultMode": { "const": "synthetic-smoke-only" },
+        "promotesClaim": { "const": false },
+        "claimReady": { "const": false },
+        "performsRealDataAnalysis": { "const": false },
+        "syntheticOutputSha256": { "$ref": "#/definitions/sha256" },
+        "requiredKeys": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "seamLogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "description", "status"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["environment-pin", "real-data-deferred", "manual-gap", "other"]
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["open", "blocked", "resolved", "deferred"] }
+      }
+    }
+  }
+}
