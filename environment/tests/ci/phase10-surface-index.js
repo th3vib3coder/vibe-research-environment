@@ -68,6 +68,8 @@ const QUERY_LINTS_INTRODUCED_AT = '2026-06-10';
 const QUERY_LINTS_TASK = 'T10.3.2';
 const EXPORT_GUARD_INTRODUCED_AT = '2026-06-16';
 const EXPORT_GUARD_TASK = 'T10.4.0';
+const MARP_EXPORT_INTRODUCED_AT = '2026-06-16';
+const MARP_EXPORT_TASK = 'T10.4.1';
 
 export const PHASE10_SCHEMA_CONTRACTS = Object.freeze([
   ['phase10.knowledge-domain.v1', 'phase10-knowledge-domain.schema.json', 'phase10-knowledge-domain.schema.test.js'],
@@ -366,6 +368,25 @@ const STATIC_PHASE10_SURFACES = Object.freeze([
     introducedAt: EXPORT_GUARD_INTRODUCED_AT
   },
   {
+    kind: 'marp-presentation-adapter',
+    name: 'phase10-marp-export',
+    paths: [
+      'environment/phase10/marp-export.js',
+      'environment/tests/ci/phase10-marp-export.js',
+      'environment/tests/ci/phase10-marp-export.test.js',
+      'environment/templates/marp/morning-digest.marp.template.md',
+      'environment/templates/marp/r2-verdict.marp.template.md',
+      'environment/templates/marp/synthesis-conference.marp.template.md',
+      'environment/templates/marp/synthesis-preprint.marp.template.md',
+      'environment/templates/marp/decision-support-query.marp.template.md',
+      'environment/templates/marp/contradiction-audit-query.marp.template.md',
+      'environment/templates/marp/hypothesis-discussion.marp.template.md'
+    ],
+    task: MARP_EXPORT_TASK,
+    status: 'implemented-local-marp-adapter',
+    introducedAt: MARP_EXPORT_INTRODUCED_AT
+  },
+  {
     kind: 'hard-dependency',
     name: 'phase9.claim-edge.v1 dependency',
     paths: ['environment/schemas/phase9-claim-edge.schema.json']
@@ -514,6 +535,9 @@ function scriptSurface(scriptName, command) {
   if (command.includes('phase10-export-guard.js')) {
     paths.push('environment/tests/ci/phase10-export-guard.js');
   }
+  if (command.includes('phase10-marp-export.js')) {
+    paths.push('environment/tests/ci/phase10-marp-export.js');
+  }
   if (command.includes('phase10-claim-edge-projection.js')) {
     paths.push('environment/tests/ci/phase10-claim-edge-projection.js');
   }
@@ -587,6 +611,7 @@ export async function generatePhase10SurfaceIndex(options = {}) {
     'phase10:query-decision-use',
     'phase10:query-lints',
     'phase10:export-guard',
+    'phase10:marp-export',
     'phase10:raw-zone',
     'phase10:source-bundles',
     'test:phase10-scaffold'

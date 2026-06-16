@@ -79,6 +79,16 @@ export const PHASE10_PATHS = {
   exportGuard: 'environment/phase10/export-guard.js',
   exportGuardValidator: 'environment/tests/ci/phase10-export-guard.js',
   exportGuardTest: 'environment/tests/ci/phase10-export-guard.test.js',
+  marpExport: 'environment/phase10/marp-export.js',
+  marpExportValidator: 'environment/tests/ci/phase10-marp-export.js',
+  marpExportTest: 'environment/tests/ci/phase10-marp-export.test.js',
+  marpTemplateMorningDigest: 'environment/templates/marp/morning-digest.marp.template.md',
+  marpTemplateR2Verdict: 'environment/templates/marp/r2-verdict.marp.template.md',
+  marpTemplateSynthesisConference: 'environment/templates/marp/synthesis-conference.marp.template.md',
+  marpTemplateSynthesisPreprint: 'environment/templates/marp/synthesis-preprint.marp.template.md',
+  marpTemplateDecisionSupportQuery: 'environment/templates/marp/decision-support-query.marp.template.md',
+  marpTemplateContradictionAuditQuery: 'environment/templates/marp/contradiction-audit-query.marp.template.md',
+  marpTemplateHypothesisDiscussion: 'environment/templates/marp/hypothesis-discussion.marp.template.md',
   curatorWikiLintTask: 'environment/orchestrator/task-registry/phase10-wiki-lint.json',
   curatorWikiCompileTask: 'environment/orchestrator/task-registry/phase10-wiki-compile.json',
   implementationLog: '../vibe-science/blueprints/private/phase10-implementation-plan/phase10-implementation-log.md',
@@ -158,6 +168,16 @@ const REQUIRED_FILES = [
   PHASE10_PATHS.exportGuard,
   PHASE10_PATHS.exportGuardValidator,
   PHASE10_PATHS.exportGuardTest,
+  PHASE10_PATHS.marpExport,
+  PHASE10_PATHS.marpExportValidator,
+  PHASE10_PATHS.marpExportTest,
+  PHASE10_PATHS.marpTemplateMorningDigest,
+  PHASE10_PATHS.marpTemplateR2Verdict,
+  PHASE10_PATHS.marpTemplateSynthesisConference,
+  PHASE10_PATHS.marpTemplateSynthesisPreprint,
+  PHASE10_PATHS.marpTemplateDecisionSupportQuery,
+  PHASE10_PATHS.marpTemplateContradictionAuditQuery,
+  PHASE10_PATHS.marpTemplateHypothesisDiscussion,
   PHASE10_PATHS.curatorWikiLintTask,
   PHASE10_PATHS.curatorWikiCompileTask,
   PHASE10_PATHS.implementationLog,
@@ -194,6 +214,7 @@ const REQUIRED_PACKAGE_SCRIPTS = {
   'phase10:query-decision-use': 'phase10-query-decision-use.js',
   'phase10:query-lints': 'phase10-query-lints.js',
   'phase10:export-guard': 'phase10-export-guard.js',
+  'phase10:marp-export': 'phase10-marp-export.js',
   'test:phase10-scaffold': 'phase10-surface-index.test.js'
 };
 
@@ -312,6 +333,7 @@ function isPhase10CoveredPath(pathValue) {
     || pathValue.startsWith('phase10-')
     || pathValue.startsWith('environment/tests/ci/phase10-')
     || pathValue.startsWith('environment/tests/ci/check-phase10-')
+    || pathValue.startsWith('environment/templates/marp/')
     || pathValue.startsWith('environment/schemas/phase10-')
     || pathValue.startsWith('environment/tests/schemas/phase10-')
     || pathValue.startsWith('environment/phase10/')

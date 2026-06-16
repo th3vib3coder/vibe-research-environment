@@ -227,6 +227,25 @@
     "introducedAt": "2026-06-07"
   },
   {
+    "kind": "marp-presentation-adapter",
+    "name": "phase10-marp-export",
+    "paths": [
+      "environment/phase10/marp-export.js",
+      "environment/tests/ci/phase10-marp-export.js",
+      "environment/tests/ci/phase10-marp-export.test.js",
+      "environment/templates/marp/morning-digest.marp.template.md",
+      "environment/templates/marp/r2-verdict.marp.template.md",
+      "environment/templates/marp/synthesis-conference.marp.template.md",
+      "environment/templates/marp/synthesis-preprint.marp.template.md",
+      "environment/templates/marp/decision-support-query.marp.template.md",
+      "environment/templates/marp/contradiction-audit-query.marp.template.md",
+      "environment/templates/marp/hypothesis-discussion.marp.template.md"
+    ],
+    "task": "T10.4.1",
+    "status": "implemented-local-marp-adapter",
+    "introducedAt": "2026-06-16"
+  },
+  {
     "kind": "package-script",
     "name": "build:phase10-surface-index",
     "paths": [
@@ -363,6 +382,17 @@
     "paths": [
       "package.json",
       "environment/tests/ci/phase10-law13-lint.js"
+    ],
+    "task": "T10.0.1",
+    "status": "planned-or-active-scaffold",
+    "introducedAt": "2026-06-07"
+  },
+  {
+    "kind": "package-script",
+    "name": "phase10:marp-export",
+    "paths": [
+      "package.json",
+      "environment/tests/ci/phase10-marp-export.js"
     ],
     "task": "T10.0.1",
     "status": "planned-or-active-scaffold",

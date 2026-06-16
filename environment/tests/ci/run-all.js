@@ -30,6 +30,7 @@ import validatePhase10WikiQuery from './phase10-wiki-query.js';
 import validatePhase10QueryDecisionUse from './phase10-query-decision-use.js';
 import validatePhase10QueryLints from './phase10-query-lints.js';
 import validatePhase10ExportGuard from './phase10-export-guard.js';
+import validatePhase10MarpExport from './phase10-marp-export.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -62,7 +63,8 @@ const validators = [
   ['phase10-wiki-query', validatePhase10WikiQuery],
   ['phase10-query-decision-use', validatePhase10QueryDecisionUse],
   ['phase10-query-lints', validatePhase10QueryLints],
-  ['phase10-export-guard', validatePhase10ExportGuard]
+  ['phase10-export-guard', validatePhase10ExportGuard],
+  ['phase10-marp-export', validatePhase10MarpExport]
 ];
 
 for (const [name, validator] of validators) {

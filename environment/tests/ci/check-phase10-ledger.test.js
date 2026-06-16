@@ -56,6 +56,7 @@ async function withFixtureWorkspace(fn, options = {}) {
         'phase10:query-decision-use': 'node environment/tests/ci/phase10-query-decision-use.js',
         'phase10:query-lints': 'node environment/tests/ci/phase10-query-lints.js',
         'phase10:export-guard': 'node environment/tests/ci/phase10-export-guard.js',
+        'phase10:marp-export': 'node environment/tests/ci/phase10-marp-export.js',
         'phase10:raw-zone': 'node environment/tests/ci/phase10-raw-zone.js',
         'phase10:source-bundles': 'node environment/tests/ci/phase10-source-bundles.js',
         'test:phase10-scaffold': 'node --test environment/tests/ci/phase10-surface-index.test.js environment/tests/ci/check-phase10-ledger.test.js'
@@ -124,6 +125,16 @@ async function withFixtureWorkspace(fn, options = {}) {
       'environment/phase10/export-guard.js',
       'environment/tests/ci/phase10-export-guard.js',
       'environment/tests/ci/phase10-export-guard.test.js',
+      'environment/phase10/marp-export.js',
+      'environment/tests/ci/phase10-marp-export.js',
+      'environment/tests/ci/phase10-marp-export.test.js',
+      'environment/templates/marp/morning-digest.marp.template.md',
+      'environment/templates/marp/r2-verdict.marp.template.md',
+      'environment/templates/marp/synthesis-conference.marp.template.md',
+      'environment/templates/marp/synthesis-preprint.marp.template.md',
+      'environment/templates/marp/decision-support-query.marp.template.md',
+      'environment/templates/marp/contradiction-audit-query.marp.template.md',
+      'environment/templates/marp/hypothesis-discussion.marp.template.md',
       'environment/orchestrator/task-registry/phase10-wiki-lint.json',
       'environment/orchestrator/task-registry/phase10-wiki-compile.json'
     ]) {
@@ -477,6 +488,26 @@ test('phase10-ledger check covers export-guard surfaces', async () => {
       'environment/phase10/export-guard.js',
       'environment/tests/ci/phase10-export-guard.js',
       'environment/tests/ci/phase10-export-guard.test.js'
+    ]) {
+      await assert.rejects(
+        () => checkPhase10Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [changedFile]
+        }),
+        new RegExp(`E_PHASE10_TRACE_MISSING.*${changedFile.replaceAll('/', '\\/')}`, 'u')
+      );
+    }
+  }, { sparseTrace: true });
+});
+
+test('phase10-ledger check covers MARP adapter helper, validator, and templates', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    for (const changedFile of [
+      'environment/phase10/marp-export.js',
+      'environment/tests/ci/phase10-marp-export.js',
+      'environment/tests/ci/phase10-marp-export.test.js',
+      'environment/templates/marp/decision-support-query.marp.template.md'
     ]) {
       await assert.rejects(
         () => checkPhase10Ledger({
