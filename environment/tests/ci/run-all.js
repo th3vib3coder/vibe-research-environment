@@ -36,6 +36,7 @@ import validatePhase10MultiDomainGate from './phase10-multi-domain-gate.js';
 import validatePhase10CrossDomainMerge from './phase10-cross-domain-merge.js';
 import validatePhase10CrossDomainQuery from './phase10-cross-domain-query.js';
 import checkPhase11Ledger from './check-phase11-ledger.js';
+import validatePhase11FirstResearchPacket from './phase11-first-research-packet.js';
 import validatePhase11HgsocCd8Script from './phase11-hgsoc-cd8-script.js';
 import validatePhase11ResearchPacket from './phase11-research-packet.js';
 
@@ -77,6 +78,7 @@ const validators = [
   ['phase10-cross-domain-merge', validatePhase10CrossDomainMerge],
   ['phase10-cross-domain-query', validatePhase10CrossDomainQuery],
   ['check-phase11-ledger', checkPhase11Ledger],
+  ['phase11-first-research-packet', validatePhase11FirstResearchPacket],
   ['phase11-hgsoc-cd8-script', validatePhase11HgsocCd8Script],
   ['phase11-research-packet', validatePhase11ResearchPacket]
 ];

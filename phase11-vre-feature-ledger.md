@@ -96,3 +96,46 @@ RED evidence captured before production files:
 - script semantic test failed with missing
   `environment/phase11/hgsoc-cd8-script.js`;
 - `validate-counts` failed with `schemaTests` expected 68, got 69.
+
+## T11.0.3 First Research Packet Execution Trace
+
+Changed Phase 11 VRE paths:
+
+- `phase11-vre-feature-ledger.md`
+- `environment/phase11/first-research-packet.js`
+- `environment/phase11/first_research_packet_probe.py`
+- `environment/tests/ci/phase11-first-research-packet.js`
+- `environment/tests/ci/phase11-first-research-packet.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- blocked packet must be actionable, with exact unblock conditions and owner.
+- real H5AD reads are local-only and must stay out of CI.
+- execution-time H5AD hashes must be recomputed and compared to T11.0.0.
+- `phase11.research-packet.v1` must be reused unless a new schema is justified.
+
+Required inherited blockers:
+
+- no reviewed CD8 cell-type derivation key exists for GSE184880.
+- LAW 9 batch/donor harness is incomplete for quantitative claims.
+- `GSE111976_full.h5ad` remains blocked as an invalid/stub h5ad input.
+- T11.0.2 synthetic arithmetic cannot become real-data authority.
+- scratch `analysis/scripts/hgsoc_cd8_subset.py` remains non-authoritative.
+
+RED evidence captured before production files:
+
+- `node --test environment/tests/ci/phase11-first-research-packet.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` for
+  `environment/phase11/first-research-packet.js`.
+
+Local real-data evidence:
+
+- `../../venv_scrna/Scripts/python.exe` executed
+  `environment/phase11/first_research_packet_probe.py` outside CI.
+- nine GSE184880 HGSOC h5ad files were opened with `backed="r"` only.
+- execution-time SHA-256 hashes matched T11.0.0 inventory hashes for all files.
+- CXCL13 gene-symbol presence was verified in all selected h5ad files.
+- output remains a blocked packet because reviewed CD8 derivation is absent
+  and the LAW 9 batch/donor harness is incomplete.
