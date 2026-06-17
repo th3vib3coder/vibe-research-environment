@@ -1411,5 +1411,9 @@ Claude Code non-author HAT 1 ACCEPT recorded via
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.3-research-runbook-handoff-verdict-2026-06-17.md`.
 
-Commit/push/CI closure is pending. T11.3.3 remains not closed until the scoped
-VRE commit is pushed and CI is green.
+Commit/push/CI closure:
+
+- VRE commit `9dbb730678367d86b5fffbfda161992c82dffd78` was pushed to `origin/main` and `origin/fix/control-plane-lock-eperm-windows`; GitHub Actions run `27693689233` completed with conclusion `success`.
+
+T11.3.3 is closed, pushed, and CI-green. Phase 11 remains open; next task is
+T11.3.4 Phase 11 Full Closeout behind a fresh HAT 1 STOP.
