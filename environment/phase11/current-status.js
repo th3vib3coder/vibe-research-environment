@@ -5,6 +5,13 @@ const REQUIRED_CARRY_FORWARD_IDS = Object.freeze([
   'GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE'
 ]);
 
+const REQUIRED_CLOSED_PHASE11_AUTHORITY_SOURCES = Object.freeze([
+  'environment/closures/phase11-full-closeout-2026-06-17.md',
+  'environment/closures/phase11-full-closeout-evidence-2026-06-17.json',
+  'C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/'
+    + 'claude-hat3-t11.3.4-phase-11-full-closeout-verdict-2026-06-17.md'
+]);
+
 const COUNT_ROWS = Object.freeze([
   ['bundleManifests', 'Install bundle manifests', 'Manifest bundle installazione'],
   ['schemas', 'Schemas', 'Schemi'],
@@ -37,6 +44,8 @@ export const CURRENT_STATUS_REASON_CODES = Object.freeze({
   privateWikiCiDependency: 'E_PHASE11_CURRENT_STATUS_PRIVATE_WIKI_CI_DEPENDENCY',
   snapshotDrift: 'E_PHASE11_CURRENT_STATUS_SNAPSHOT_DRIFT',
   phase11Closed: 'E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED',
+  phase11ClosedAuthorityMissing:
+    'E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED_AUTHORITY_MISSING',
   missingLatestClosedEvidence: 'E_PHASE11_CURRENT_STATUS_LATEST_CLOSED_MISSING',
   missingCarryForward: 'E_PHASE11_CURRENT_STATUS_CARRY_FORWARD_MISSING',
   readmeMarkerMissing: 'E_PHASE11_CURRENT_STATUS_README_MARKER_MISSING',
@@ -132,10 +141,6 @@ function validateAuthority(authority) {
     issues.push(issue(CURRENT_STATUS_REASON_CODES.snapshotDrift));
   }
 
-  if (authority?.phaseStatus === 'closed') {
-    issues.push(issue(CURRENT_STATUS_REASON_CODES.phase11Closed));
-  }
-
   const latest = authority?.latestClosedTask;
   if (
     !hasText(latest?.taskId)
@@ -144,6 +149,30 @@ function validateAuthority(authority) {
     || latest?.ciConclusion !== 'success'
   ) {
     issues.push(issue(CURRENT_STATUS_REASON_CODES.missingLatestClosedEvidence));
+  }
+
+  if (authority?.phaseStatus === 'closed') {
+    const current = authority?.currentTask;
+    if (
+      latest?.taskId !== 'T11.3.4' ||
+      latest?.status !== 'closed-pushed-ci-green' ||
+      latest?.ciConclusion !== 'success' ||
+      !hasText(latest?.commit) ||
+      !hasText(latest?.ciRun) ||
+      current?.status !== 'phase-closed'
+    ) {
+      issues.push(issue(CURRENT_STATUS_REASON_CODES.phase11Closed));
+    }
+
+    const authoritySources = new Set(authority?.authoritySources ?? []);
+    for (const source of REQUIRED_CLOSED_PHASE11_AUTHORITY_SOURCES) {
+      if (!authoritySources.has(source)) {
+        issues.push(issue(
+          CURRENT_STATUS_REASON_CODES.phase11ClosedAuthorityMissing,
+          { source }
+        ));
+      }
+    }
   }
 
   const carriedIds = new Set((authority?.carryForward ?? []).map((item) => item.id));
@@ -203,6 +232,27 @@ export function renderReadmeSurfaceCountsItalian(model) {
 export function renderReadmeCurrentStatusEnglish(model) {
   const latest = model.latestClosedTask;
   const current = model.currentTask;
+  if (model.phaseStatus === 'closed') {
+    return [
+      '## Current Status',
+      '',
+      'Phase 11 is closed as a VRE research-environment foundation at',
+      `\`${latest.commit}\` with GitHub Actions run`,
+      `\`${latest.ciRun}\` (${latest.ciConclusion}).`,
+      '',
+      'No active Phase 11 implementation task is open. Phase 12 remains gated',
+      'by the reviewed phase-entry guard and requires a future explicit HAT',
+      'cycle with real research evidence or a scoped operator override.',
+      '',
+      'Carry-forward and deferred items remain visible:',
+      '',
+      renderCarryForwardRows(model.carryForward),
+      '',
+      'For live CI state, check GitHub Actions. This README is a generated',
+      'repository projection, not a biomedical result or claim-ready report.'
+    ].join('\n');
+  }
+
   return [
     '## Current Status',
     '',
@@ -226,6 +276,28 @@ export function renderReadmeCurrentStatusEnglish(model) {
 export function renderReadmeCurrentStatusItalian(model) {
   const latest = model.latestClosedTask;
   const current = model.currentTask;
+  if (model.phaseStatus === 'closed') {
+    return [
+      '## Stato Corrente',
+      '',
+      'Phase 11 e chiusa come fondazione VRE per ambiente di ricerca al commit',
+      `\`${latest.commit}\` con GitHub Actions run`,
+      `\`${latest.ciRun}\` (${latest.ciConclusion}).`,
+      '',
+      'Nessun task implementativo Phase 11 e aperto. Phase 12 resta bloccata',
+      'dal phase-entry guard revisionato e richiede un futuro ciclo HAT',
+      'esplicito con evidenza di ricerca reale o override operatore scoped.',
+      '',
+      'Carry-forward e deferral restano visibili:',
+      '',
+      renderCarryForwardRows(model.carryForward),
+      '',
+      'Per lo stato CI live, controlla GitHub Actions. Questo README e una',
+      'proiezione generata del repository, non un risultato biomedico o report',
+      'claim-ready.'
+    ].join('\n');
+  }
+
   return [
     '## Stato Corrente',
     '',

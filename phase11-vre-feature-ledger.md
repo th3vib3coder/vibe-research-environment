@@ -1490,5 +1490,63 @@ Claude Code non-author HAT 1 ACCEPT recorded via
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.4-phase-11-full-closeout-verdict-2026-06-17.md`.
 
-Commit/push/CI closure is pending. Codex authored this patch and did not
-self-ACCEPT it.
+Commit/push/CI closure:
+
+- VRE commit `7b855c7487b13bea42f8b125c66a013c5e70a377` was pushed to
+  `origin/main` and `origin/fix/control-plane-lock-eperm-windows`;
+- GitHub Actions run `27698616871` completed with conclusion `success`.
+
+Codex authored this patch and did not self-ACCEPT it. The post-CI generated
+status projection now records Phase 11 closed against the substantive
+`7b855c7` closeout commit, not against the projection commit itself.
+
+## T11.3.4 Phase 11 Full Closeout Status Projection Trace
+
+who: Codex authored the post-CI status projection after Claude Code HAT 3
+ACCEPT and GitHub Actions success for `7b855c7`.
+
+when: 2026-06-17.
+
+why: After the closeout commit was CI-green, README/current-status could not
+remain at `hat3-reviewed-accepted-pending-commit`. The previous current-status
+guard rejected every `phaseStatus:"closed"` to prevent premature closeout; now
+that guard must allow closure only when it is backed by T11.3.4 closeout
+evidence, HAT 3 ACCEPT, and CI-green commit identity.
+
+what:
+
+- `README.md`
+- `environment/phase11/current-status.js`
+- `environment/tests/ci/phase11-current-status.test.js`
+- `environment/tests/fixtures/phase11/current-status-authority.json`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/00-index.md`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/06-wave-11-3-doc-truth-and-process.md`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/phase11-implementation-log.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+verification:
+
+- RED: the old current-status guard would fail any `phaseStatus:"closed"` with
+  `E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED`;
+- GREEN: closed status is now accepted only when latest closed task is
+  `T11.3.4`, status is `closed-pushed-ci-green`, CI conclusion is success,
+  current task status is `phase-closed`, and closeout/HAT3 authority sources
+  are present;
+- RED regression: a closed status without T11.3.4 closeout authority still
+  fails with `E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED` and
+  `E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED_AUTHORITY_MISSING`;
+- final verification is recorded in the supplemental review request and
+  accepted by Claude Code before the status projection commit.
+
+reviewer:
+
+Claude Code HAT 3 ACCEPT for the closeout explicitly required refreshing the
+current-status projection after CI-green. Claude Code supplemental non-author
+HAT 3 ACCEPT for this post-CI projection is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-supplemental-t11.3.4-phase11-closed-status-projection-verdict-2026-06-17.md`.

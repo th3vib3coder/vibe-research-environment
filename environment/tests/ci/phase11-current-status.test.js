@@ -75,6 +75,34 @@ function makeAuthority(overrides = {}) {
   };
 }
 
+function makeClosedAuthority(overrides = {}) {
+  return makeAuthority({
+    phaseStatus: 'closed',
+    latestClosedWave: '11.3',
+    latestClosedTask: {
+      taskId: 'T11.3.4',
+      name: 'Phase 11 Full Closeout',
+      commit: '7b855c7487b13bea42f8b125c66a013c5e70a377',
+      ciRun: '27698616871',
+      ciConclusion: 'success',
+      status: 'closed-pushed-ci-green'
+    },
+    currentTask: {
+      taskId: 'none',
+      name: 'Phase 11 closed',
+      status: 'phase-closed'
+    },
+    authoritySources: [
+      ...makeAuthority().authoritySources,
+      'environment/closures/phase11-full-closeout-2026-06-17.md',
+      'environment/closures/phase11-full-closeout-evidence-2026-06-17.json',
+      'C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/'
+        + 'claude-hat3-t11.3.4-phase-11-full-closeout-verdict-2026-06-17.md'
+    ],
+    ...overrides
+  });
+}
+
 function makeReadme(authority = makeAuthority()) {
   const model = buildCurrentStatusModel(authority, COUNTS);
   let markdown = [
@@ -123,6 +151,19 @@ function makeReadme(authority = makeAuthority()) {
 
 test('valid README and WIKI generated projections pass', () => {
   const authority = makeAuthority();
+  const model = buildCurrentStatusModel(authority, COUNTS);
+  const result = validateCurrentStatusProjection({
+    authority,
+    counts: COUNTS,
+    readmeMarkdown: makeReadme(authority),
+    wikiMarkdown: renderWikiCurrentStatus(model)
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.issues, null, 2));
+});
+
+test('valid Phase 11 closed projection passes only after T11.3.4 closeout', () => {
+  const authority = makeClosedAuthority();
   const model = buildCurrentStatusModel(authority, COUNTS);
   const result = validateCurrentStatusProjection({
     authority,
@@ -234,7 +275,7 @@ test('missing carry-forward item fails closed', () => {
   ));
 });
 
-test('Phase 11 full-closeout overclaim fails closed', () => {
+test('Phase 11 full-closeout without T11.3.4 authority fails closed', () => {
   const authority = makeAuthority({ phaseStatus: 'closed' });
   const result = validateCurrentStatusProjection({
     authority,
@@ -246,5 +287,8 @@ test('Phase 11 full-closeout overclaim fails closed', () => {
   assert.equal(result.ok, false);
   assert(result.issues.some((issue) =>
     issue.code === CURRENT_STATUS_REASON_CODES.phase11Closed
+  ));
+  assert(result.issues.some((issue) =>
+    issue.code === CURRENT_STATUS_REASON_CODES.phase11ClosedAuthorityMissing
   ));
 });

@@ -619,13 +619,13 @@ Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-STATUS:EN:BEGIN -->
 ## Current Status
 
-Phase 11 is open; Wave 11.2 is closed at
-`9dbb730678367d86b5fffbfda161992c82dffd78` with GitHub Actions run
-`27693689233` (success).
+Phase 11 is closed as a VRE research-environment foundation at
+`7b855c7487b13bea42f8b125c66a013c5e70a377` with GitHub Actions run
+`27698616871` (success).
 
-Active task: `T11.3.4` - Phase 11 Full Closeout
-(hat3-reviewed-accepted-pending-commit). This task keeps README and WIKI status generated
-from a tracked VRE snapshot; CI must not read a sibling private WIKI checkout.
+No active Phase 11 implementation task is open. Phase 12 remains gated
+by the reviewed phase-entry guard and requires a future explicit HAT
+cycle with real research evidence or a scoped operator override.
 
 Carry-forward and deferred items remain visible:
 
@@ -636,8 +636,8 @@ Carry-forward and deferred items remain visible:
 | `W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001` | deferred | Persisted multi-domain execution, durable records, CLI verbs, and filesystem writers remain future HAT work. |
 | `GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE` | deferred | Graphify remains a navigation track until a real-data run proves concrete navigation pain. |
 
-For live CI state, check GitHub Actions. This README is a generated repository
-projection, not a Phase 11 full closeout.
+For live CI state, check GitHub Actions. This README is a generated
+repository projection, not a biomedical result or claim-ready report.
 <!-- VRE:CURRENT-STATUS:EN:END -->
 
 ---
@@ -1266,13 +1266,13 @@ Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-STATUS:IT:BEGIN -->
 ## Stato Corrente
 
-Phase 11 e aperta; Wave 11.2 e chiusa al commit
-`9dbb730678367d86b5fffbfda161992c82dffd78` con GitHub Actions run
-`27693689233` (success).
+Phase 11 e chiusa come fondazione VRE per ambiente di ricerca al commit
+`7b855c7487b13bea42f8b125c66a013c5e70a377` con GitHub Actions run
+`27698616871` (success).
 
-Task attivo: `T11.3.4` - Phase 11 Full Closeout
-(hat3-reviewed-accepted-pending-commit). Questo task mantiene README e WIKI generati da una
-snapshot VRE tracciata; la CI non deve leggere una WIKI privata affiancata.
+Nessun task implementativo Phase 11 e aperto. Phase 12 resta bloccata
+dal phase-entry guard revisionato e richiede un futuro ciclo HAT
+esplicito con evidenza di ricerca reale o override operatore scoped.
 
 Carry-forward e deferral restano visibili:
 
@@ -1283,6 +1283,7 @@ Carry-forward e deferral restano visibili:
 | `W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001` | deferred | Persisted multi-domain execution, durable records, CLI verbs, and filesystem writers remain future HAT work. |
 | `GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE` | deferred | Graphify remains a navigation track until a real-data run proves concrete navigation pain. |
 
-Per lo stato CI live, controlla GitHub Actions. Questo README e una proiezione
-generata del repository, non un full closeout di Phase 11.
+Per lo stato CI live, controlla GitHub Actions. Questo README e una
+proiezione generata del repository, non un risultato biomedico o report
+claim-ready.
 <!-- VRE:CURRENT-STATUS:IT:END -->
