@@ -5,11 +5,11 @@ Phase: 11
 Phase Status: open
 Active Wave: 11.3
 Latest Closed Wave: 11.2
-Latest Closed Task: T11.2.5 - Wave 11.2 Closeout
-Latest Closed Commit: b44602e018f31be873e87d1d9f2932a9a9ceaf0c
-Latest Closed CI: 27674943083 success
-Current Task: T11.3.0 - Generated Current Status
-Current Task Status: hat2-implementation-open
+Latest Closed Task: T11.3.0 - Generated Current Status
+Latest Closed Commit: cbd884b71ef305761f67d7578c93046c12b1c61b
+Latest Closed CI: 27680552049 success
+Current Task: T11.3.1 - Ledger Row Budget
+Current Task Status: hat3-reviewed-accepted-pending-commit
 Source Strategy: tracked-vre-snapshot
 
 ## Surface Counts
@@ -32,7 +32,7 @@ Source Strategy: tracked-vre-snapshot
 | Integration tests | 15 |
 | CLI tests | 11 |
 | Schema tests | 70 |
-| CI validators | 56 |
+| CI validators | 57 |
 
 ## Carry-Forward And Deferred Items
 
@@ -49,6 +49,8 @@ Source Strategy: tracked-vre-snapshot
 - WIKI_VRE/closures/phase10-full-closeout-2026-06-16.md
 - phase11-implementation-plan/00-index.md
 - phase11-implementation-plan/01-entry-gates-and-scope.md
+- phase11-implementation-plan/45-hat1-stop-t11-3-1-ledger-row-budget-2026-06-17.md
+- phase11-implementation-plan/46-hat3-t11-3-1-ledger-row-budget-closure-2026-06-17.md
 - phase11-implementation-plan/07-graphify-reconciliation.md
 
 ## Boundary

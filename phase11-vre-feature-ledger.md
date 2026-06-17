@@ -1214,3 +1214,59 @@ Reviewer-confirmed verification:
   9 skipped;
 - no runtime, cleanup, real-data, export, Graphify runtime, or biomedical
   scope was opened.
+
+## T11.3.1 Ledger Row Budget Trace
+
+Changed Phase 11 VRE paths:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/ledger-row-budget.js`
+- `environment/tests/ci/phase11-ledger-row-budget.js`
+- `environment/tests/ci/phase11-ledger-row-budget.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/45-hat1-stop-t11-3-1-ledger-row-budget-2026-06-17.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+Summary:
+
+- adds a forward-only Phase 11 ledger budget helper and CI validator;
+- grandfathers pre-T11.3.1 ledger prose;
+- enforces compact-or-linked evidence for T11.3.1+ sections;
+- compares task ids semantically, so `T11.3.10` is post-policy;
+- rejects malformed post-policy headings and evidence links that do not
+  resolve on disk.
+
+RED evidence captured before GREEN:
+
+- target test failed with `ERR_MODULE_NOT_FOUND` before the helper existed;
+- `validate-counts` failed `ciValidators` expected 56, got 57;
+- `run-all.js` failed before count, trace, and validator wiring repair.
+
+Verification plan:
+
+- targeted ledger-row-budget test and validator;
+- `validate-counts` with `ciValidators:57`;
+- explicit Phase 9/11 ledger probes;
+- `run-all.js`, full `npm run check`, WIKI checks, and Claude Code HAT 3.
+
+Scope boundaries:
+
+- no historical ledger rewrite;
+- no Phase 11 full closeout;
+- no T11.3.2 phase-entry validator or T11.3.3 runbook;
+- no real H5AD/GEO read, export, Graphify runtime, scratch cleanup, EOF-only
+  cleanup, or biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.1-ledger-row-budget-verdict-2026-06-17.md`.
+
+Codex HAT 3 handoff authored at
+`C:/Users/Test-User/Desktop/Tesi_Python_scRNA/nuove_skill/vibe-science/blueprints/private/phase11-implementation-plan/46-hat3-t11-3-1-ledger-row-budget-closure-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.1-ledger-row-budget-verdict-2026-06-17.md`.

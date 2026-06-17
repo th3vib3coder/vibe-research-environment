@@ -609,7 +609,7 @@ not copied from a private WIKI checkout.
 | Integration tests | 15 |
 | CLI tests | 11 |
 | Schema tests | 70 |
-| CI validators | 56 |
+| CI validators | 57 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -620,11 +620,11 @@ Update these counts only in the same patch that changes the counted surface.
 ## Current Status
 
 Phase 11 is open; Wave 11.2 is closed at
-`b44602e018f31be873e87d1d9f2932a9a9ceaf0c` with GitHub Actions run
-`27674943083` (success).
+`cbd884b71ef305761f67d7578c93046c12b1c61b` with GitHub Actions run
+`27680552049` (success).
 
-Active task: `T11.3.0` - Generated Current Status
-(hat2-implementation-open). This task keeps README and WIKI status generated
+Active task: `T11.3.1` - Ledger Row Budget
+(hat3-reviewed-accepted-pending-commit). This task keeps README and WIKI status generated
 from a tracked VRE snapshot; CI must not read a sibling private WIKI checkout.
 
 Carry-forward and deferred items remain visible:
@@ -1256,7 +1256,7 @@ copiati da una WIKI privata affiancata.
 | Test integrazione | 15 |
 | Test CLI | 11 |
 | Test schema | 70 |
-| Validator CI | 56 |
+| Validator CI | 57 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->
@@ -1267,11 +1267,11 @@ Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 ## Stato Corrente
 
 Phase 11 e aperta; Wave 11.2 e chiusa al commit
-`b44602e018f31be873e87d1d9f2932a9a9ceaf0c` con GitHub Actions run
-`27674943083` (success).
+`cbd884b71ef305761f67d7578c93046c12b1c61b` con GitHub Actions run
+`27680552049` (success).
 
-Task attivo: `T11.3.0` - Generated Current Status
-(hat2-implementation-open). Questo task mantiene README e WIKI generati da una
+Task attivo: `T11.3.1` - Ledger Row Budget
+(hat3-reviewed-accepted-pending-commit). Questo task mantiene README e WIKI generati da una
 snapshot VRE tracciata; la CI non deve leggere una WIKI privata affiancata.
 
 Carry-forward e deferral restano visibili:

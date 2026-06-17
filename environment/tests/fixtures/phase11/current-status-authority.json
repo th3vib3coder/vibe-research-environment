@@ -4,25 +4,25 @@
   "snapshotMatchesCanonicalPrivateWiki": true,
   "canonicalPrivateWikiSource": {
     "path": "C:/Users/Test-User/Desktop/Tesi_Python_scRNA/nuove_skill/vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json",
-    "checkedBy": "T11.3.0 HAT2/HAT3 handoff, not by repository CI"
+    "checkedBy": "T11.3.1 HAT2/HAT3 handoff, not by repository CI"
   },
   "phase": 11,
   "phaseStatus": "open",
   "activeWave": "11.3",
   "latestClosedWave": "11.2",
   "latestClosedTask": {
-    "taskId": "T11.2.5",
-    "name": "Wave 11.2 Closeout",
-    "status": "closed-pushed-ci-green",
-    "commit": "b44602e018f31be873e87d1d9f2932a9a9ceaf0c",
-    "ciRun": "27674943083",
-    "ciConclusion": "success",
-    "githubActionsUrl": "https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27674943083"
-  },
-  "currentTask": {
     "taskId": "T11.3.0",
     "name": "Generated Current Status",
-    "status": "hat2-implementation-open"
+    "status": "closed-pushed-ci-green",
+    "commit": "cbd884b71ef305761f67d7578c93046c12b1c61b",
+    "ciRun": "27680552049",
+    "ciConclusion": "success",
+    "githubActionsUrl": "https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27680552049"
+  },
+  "currentTask": {
+    "taskId": "T11.3.1",
+    "name": "Ledger Row Budget",
+    "status": "hat3-reviewed-accepted-pending-commit"
   },
   "carryForward": [
     {
@@ -51,6 +51,8 @@
     "WIKI_VRE/closures/phase10-full-closeout-2026-06-16.md",
     "phase11-implementation-plan/00-index.md",
     "phase11-implementation-plan/01-entry-gates-and-scope.md",
+    "phase11-implementation-plan/45-hat1-stop-t11-3-1-ledger-row-budget-2026-06-17.md",
+    "phase11-implementation-plan/46-hat3-t11-3-1-ledger-row-budget-closure-2026-06-17.md",
     "phase11-implementation-plan/07-graphify-reconciliation.md"
   ],
   "generatedAt": "2026-06-17"
