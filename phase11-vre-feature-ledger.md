@@ -912,3 +912,97 @@ Claude Code non-author HAT 1 ACCEPT after amendment recorded via
 
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.3-wiki-fidelity-integration-verdict-2026-06-17.md`.
+
+## T11.2.4 Research-Loop Governance Flake Trace
+
+Changed Phase 11 VRE paths:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/tests/cli/research-loop.test.js`
+- `environment/phase11/doctor-drift-detector.js`
+- `environment/tests/fixtures/phase11/state-source-taxonomy.json`
+- `environment/tests/ci/phase11-state-source-taxonomy.js`
+- `environment/tests/ci/phase11-state-source-taxonomy.test.js`
+- `environment/tests/ci/phase11-doctor-drift-detector.js`
+- `environment/tests/ci/phase11-doctor-drift-detector.test.js`
+- `environment/tests/ci/phase11-doctor-reconcile-mode.js`
+- `environment/tests/ci/phase11-doctor-reconcile-mode.test.js`
+- `environment/tests/ci/phase11-wiki-fidelity-observer.js`
+- `environment/tests/ci/phase11-wiki-fidelity-observer.test.js`
+
+HAT 1 binding conditions honored in HAT 2:
+
+- the fix extends the existing governance-event identity helpers instead of
+  adding an event-type-only selector;
+- the selector keys on `event_type`, `source_component`, `objective_id`, and
+  relevant `details` identity;
+- duplicate matching events remain fail-closed;
+- state-risk closure requires evidence pointing at the deterministic
+  regression and duplicate-guard tests.
+
+RED evidence captured before GREEN:
+
+- `node --test --test-name-pattern="research-loop logs objective_blocked governance event for rule-only blocker" environment/tests/cli/research-loop.test.js`
+  failed with `2 !== 1` after seeding an unrelated governance event into the
+  capture file while the old total-count assertion remained;
+- `node --test --test-name-pattern="reviewed-closed state-risk without closure evidence fails closed" environment/tests/ci/phase11-state-source-taxonomy.test.js`
+  failed because the taxonomy validator ignored evidence-less closed risks;
+- `node --test --test-name-pattern="reviewed-closed state-risk without closure evidence is reported" environment/tests/ci/phase11-doctor-drift-detector.test.js`
+  failed because the doctor report accepted an evidence-less closed risk.
+
+GREEN verification:
+
+- targeted seeded-unrelated governance regression PASS;
+- duplicate matching event guard PASS;
+- taxonomy evidence-less closure test PASS;
+- doctor evidence-less closure test PASS;
+- `node --test environment/tests/cli/research-loop.test.js` PASS 48/48;
+- `node --test environment/tests/ci/phase11-state-source-taxonomy.test.js`
+  PASS 11/11;
+- `node environment/tests/ci/phase11-state-source-taxonomy.js` PASS;
+- `node --test environment/tests/ci/phase11-doctor-drift-detector.test.js`
+  PASS 12/12;
+- `node environment/tests/ci/phase11-doctor-drift-detector.js` PASS;
+- `node --test environment/tests/ci/phase11-doctor-reconcile-mode.test.js`
+  PASS 12/12;
+- `node environment/tests/ci/phase11-doctor-reconcile-mode.js` PASS;
+- `node --test environment/tests/ci/phase11-wiki-fidelity-observer.test.js`
+  PASS 9/9;
+- `node environment/tests/ci/phase11-wiki-fidelity-observer.js` PASS;
+- `node environment/tests/ci/validate-counts.js` PASS, counts unchanged;
+- explicit `node environment/tests/ci/check-phase11-ledger.js
+  --changed-file=...` PASS for the T11.2.4 VRE delta;
+- explicit `node environment/tests/ci/check-phase9-ledger.js
+  --changed-file=...` PASS after Phase 9 bridge row 172 and the private Phase
+  9 implementation-status ledger note were both included;
+- `node environment/tests/ci/run-all.js` PASS;
+- `npm run check` PASS with 1496 tests, 1487 pass, 0 fail, 9 skipped;
+- `git diff --check` PASS;
+- WIKI checks PASS after generated registry/export refresh: local `wiki-lint`
+  issueCount 0, `sync-mirror --check` changed 0, `build-registries --check`
+  changed 0, `audit-entity-exports` ok with 0 errors and 6 pre-existing
+  missing-owner warnings, `audit-schema-fields` ok, and
+  `generate-vre-coverage --check` ok.
+
+Scope boundaries:
+
+- no Wave 11.2 closeout;
+- no Phase 11 full closeout;
+- no root `vre doctor` CLI;
+- no private-WIKI write from VRE runtime;
+- no scratch deletion or cleanup;
+- no automatic semantic decision or authority regeneration;
+- no real H5AD read, fraction/count/denominator, export packaging, or
+  biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.2.4-research-loop-governance-flake-verdict-2026-06-17.md`.
+
+Codex HAT 3 handoff authored at
+`C:/Users/Test-User/Desktop/Tesi_Python_scRNA/nuove_skill/vibe-science/blueprints/private/phase11-implementation-plan/40-hat3-t11-2-4-research-loop-governance-flake-closure-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.4-research-loop-governance-flake-verdict-2026-06-17.md`.

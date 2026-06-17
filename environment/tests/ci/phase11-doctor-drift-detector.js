@@ -4,6 +4,17 @@ import {
   DOCTOR_DRIFT_REASON_CODES
 } from '../../phase11/doctor-drift-detector.js';
 
+function closedResearchLoopGovernanceFlake() {
+  return {
+    status: 'reviewed-closed',
+    closureEvidence: {
+      testPath: 'environment/tests/cli/research-loop.test.js',
+      regressionTest: 'research-loop logs objective_blocked governance event for rule-only blocker',
+      duplicateGuardTest: 'governance event selector fails closed on duplicate matching events'
+    }
+  };
+}
+
 function makeObservedState(overrides = {}) {
   return {
     checks: {
@@ -29,9 +40,7 @@ function makeObservedState(overrides = {}) {
       }
     ],
     stateRisks: {
-      'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': {
-        status: 'open-wave-11.2-backlog'
-      }
+      'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
     },
     proposedActions: [],
     ...overrides

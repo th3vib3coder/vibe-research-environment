@@ -33,6 +33,17 @@ const capturedCurrentLiveSourceGaps = [
   'Current generated count: **0**.'
 ].join('\n');
 
+function closedResearchLoopGovernanceFlake() {
+  return {
+    status: 'reviewed-closed',
+    closureEvidence: {
+      testPath: 'environment/tests/cli/research-loop.test.js',
+      regressionTest: 'research-loop logs objective_blocked governance event for rule-only blocker',
+      duplicateGuardTest: 'governance event selector fails closed on duplicate matching events'
+    }
+  };
+}
+
 async function readRealWikiText(relativePath, fallback) {
   try {
     return await readFile(path.join(wikiRoot, relativePath), 'utf8');
@@ -90,9 +101,7 @@ function buildReport(taxonomy, evidence) {
       ...buildWikiFidelityObservedState(evidence),
       gateExpectations: [],
       stateRisks: {
-        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': {
-          status: 'open-wave-11.2-backlog'
-        }
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
       },
       proposedActions: []
     }
@@ -173,7 +182,7 @@ test('coverage summary, ownership summary, and page count must agree', async () 
       ...observed,
       gateExpectations: [],
       stateRisks: {
-        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': { status: 'open' }
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
       }
     }
   });
@@ -216,7 +225,7 @@ test('workspace VRE coverage paths normalize before doctor handoff', async () =>
       ...observed,
       gateExpectations: [],
       stateRisks: {
-        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': { status: 'open' }
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
       }
     }
   });
@@ -264,7 +273,7 @@ test('helper output is reconcile-bounded with no executed actions', async () => 
       ...observed,
       gateExpectations: [],
       stateRisks: {
-        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': { status: 'open' }
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
       }
     }
   });
@@ -303,7 +312,7 @@ test('current on-disk WIKI artifacts expose the real false green', async () => {
       ...observed,
       gateExpectations: [],
       stateRisks: {
-        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': { status: 'open' }
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
       }
     }
   });

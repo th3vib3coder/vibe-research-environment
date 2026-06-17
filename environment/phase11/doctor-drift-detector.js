@@ -8,6 +8,9 @@ export const DOCTOR_DRIFT_REASON_CODES = Object.freeze({
     'E_PHASE11_DOCTOR_AUTHORITY_REGENERATION_BLOCKED',
   scratchCleanupBlocked: 'E_PHASE11_DOCTOR_SCRATCH_CLEANUP_BLOCKED',
   stateRiskMissing: 'E_PHASE11_DOCTOR_STATE_RISK_MISSING',
+  stateRiskStatusMismatch: 'E_PHASE11_DOCTOR_STATE_RISK_STATUS_MISMATCH',
+  stateRiskClosureEvidenceMissing:
+    'E_PHASE11_DOCTOR_STATE_RISK_CLOSURE_EVIDENCE_MISSING',
   ledgerCheckNotGreen: 'E_PHASE11_DOCTOR_LEDGER_CHECK_NOT_GREEN',
   shippedEvidenceNotGreen: 'E_PHASE11_DOCTOR_SHIPPED_EVIDENCE_NOT_GREEN'
 });
@@ -16,6 +19,10 @@ function normalizePath(pathValue) {
   return String(pathValue ?? '')
     .replace(/\\/g, '/')
     .replace(/^\.\//, '');
+}
+
+function hasText(value) {
+  return typeof value === 'string' && value.trim() !== '';
 }
 
 function hasPassingStatus(check) {
@@ -221,7 +228,8 @@ function checkStateRisks({ sources, stateRisks, issues }) {
       continue;
     }
 
-    if (stateRisks[source.followUpId] == null) {
+    const observedRisk = stateRisks[source.followUpId];
+    if (observedRisk == null) {
       issues.push(issue(
         DOCTOR_DRIFT_REASON_CODES.stateRiskMissing,
         {
@@ -230,6 +238,40 @@ function checkStateRisks({ sources, stateRisks, issues }) {
           requiredTreatment: source.requiredTreatment
         }
       ));
+      continue;
+    }
+
+    if (
+      source.status === 'reviewed-closed'
+      && observedRisk.status !== 'reviewed-closed'
+    ) {
+      issues.push(issue(
+        DOCTOR_DRIFT_REASON_CODES.stateRiskStatusMismatch,
+        {
+          sourceId: source.id,
+          followUpId: source.followUpId,
+          expectedStatus: source.status,
+          actualStatus: observedRisk.status
+        }
+      ));
+    }
+
+    if (source.status === 'reviewed-closed') {
+      const evidence = observedRisk.closureEvidence ?? {};
+      if (
+        !hasText(evidence.testPath)
+        || !hasText(evidence.regressionTest)
+        || !hasText(evidence.duplicateGuardTest)
+      ) {
+        issues.push(issue(
+          DOCTOR_DRIFT_REASON_CODES.stateRiskClosureEvidenceMissing,
+          {
+            sourceId: source.id,
+            followUpId: source.followUpId,
+            expectedStatus: source.status
+          }
+        ));
+      }
     }
   }
 }

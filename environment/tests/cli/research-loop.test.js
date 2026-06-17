@@ -291,6 +291,40 @@ async function readGovernanceEvents(capturePath) {
   }
 }
 
+const GOVERNANCE_SOURCE_COMPONENT = 'vre/orchestrator/autonomy-runtime';
+
+function governanceDetailsMatch(event, details) {
+  return Object.entries(details).every(([key, value]) =>
+    Object.is(event.details?.[key], value)
+  );
+}
+
+function selectGovernanceEvents(events, {
+  eventType,
+  eventTypes,
+  objectiveId,
+  sourceComponent = GOVERNANCE_SOURCE_COMPONENT,
+  details = {}
+}) {
+  const acceptedTypes = eventTypes ?? [eventType];
+  return events.filter((event) =>
+    acceptedTypes.includes(event.event_type)
+      && event.source_component === sourceComponent
+      && event.objective_id === objectiveId
+      && governanceDetailsMatch(event, details)
+  );
+}
+
+function assertSingleGovernanceEvent(events, criteria) {
+  const matches = selectGovernanceEvents(events, criteria);
+  assert.equal(
+    matches.length,
+    1,
+    `expected exactly one matching governance event, got ${matches.length}`
+  );
+  return matches[0];
+}
+
 function assertNoDetailsLeak(event, forbiddenValues) {
   const serialized = JSON.stringify(event.details ?? {});
   for (const value of forbiddenValues) {
@@ -304,7 +338,7 @@ function assertNoDetailsLeak(event, forbiddenValues) {
 
 function assertObjectiveBlockedGovernanceEvent(event, { objectiveId, blockerCode, severity }) {
   assert.equal(event.event_type, 'objective_blocked');
-  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.source_component, GOVERNANCE_SOURCE_COMPONENT);
   assert.equal(event.objective_id, objectiveId);
   assert.equal(event.severity, severity);
   assert.deepEqual(event.details, {
@@ -320,7 +354,7 @@ function assertLoopIterationGovernanceEvent(event, {
   memorySyncStatus = 'synced'
 }) {
   assert.equal(event.event_type, 'loop_iteration');
-  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.source_component, GOVERNANCE_SOURCE_COMPONENT);
   assert.equal(event.objective_id, objectiveId);
   assert.equal(event.severity, 'info');
   assert.deepEqual(event.details, {
@@ -338,7 +372,7 @@ function assertHeartbeatGovernanceEvent(event, {
   rateLimitWindowMs
 }) {
   assert.equal(event.event_type, 'heartbeat');
-  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.source_component, GOVERNANCE_SOURCE_COMPONENT);
   assert.equal(event.objective_id, objectiveId);
   assert.equal(event.severity, 'info');
   assert.match(event.details.wakeIdHash, /^WAK-[a-f0-9]{12}$/u);
@@ -364,7 +398,7 @@ function assertHeartbeatGovernanceEvent(event, {
 
 function assertSemanticDriftGovernanceEvent(event, { objectiveId, phase }) {
   assert.equal(event.event_type, 'semantic_drift_detected');
-  assert.equal(event.source_component, 'vre/orchestrator/autonomy-runtime');
+  assert.equal(event.source_component, GOVERNANCE_SOURCE_COMPONENT);
   assert.equal(event.objective_id, objectiveId);
   assert.equal(event.severity, 'warning');
   assert.deepEqual(event.details, {
@@ -420,6 +454,30 @@ async function withEnvOverrides(overrides, fn) {
     }
   }
 }
+
+test('governance event selector fails closed on duplicate matching events', () => {
+  const event = {
+    event_type: 'objective_blocked',
+    source_component: GOVERNANCE_SOURCE_COMPONENT,
+    objective_id: 'OBJ-DUPLICATE-GUARD',
+    severity: 'warning',
+    details: {
+      blockerCode: 'E_DUPLICATE_GUARD',
+      severity: 'warning'
+    }
+  };
+
+  assert.throws(
+    () => assertSingleGovernanceEvent([event, { ...event }], {
+      eventType: 'objective_blocked',
+      objectiveId: 'OBJ-DUPLICATE-GUARD',
+      details: {
+        blockerCode: 'E_DUPLICATE_GUARD'
+      }
+    }),
+    /expected exactly one matching governance event, got 2/u
+  );
+});
 
 async function readObjectiveHandoffs(projectRoot, objectiveId = 'OBJ-001') {
   return readJsonl(path.join(projectRoot, '.vibe-science-environment', 'objectives', objectiveId, 'handoffs.jsonl'));
@@ -864,6 +922,16 @@ test('research-loop logs objective_blocked governance event for rule-only blocke
       active: true,
       sessionId: 'sess-research-loop-governance'
     });
+    await writeFile(capturePath, `${JSON.stringify({
+      event_type: 'objective_blocked',
+      source_component: 'vre/orchestrator/autonomy-runtime',
+      objective_id: 'OBJ-UNRELATED',
+      severity: 'warning',
+      details: {
+        blockerCode: 'E_UNRELATED_CAPTURE_EVENT',
+        severity: 'warning'
+      }
+    })}\n`);
 
     const result = await runVre(projectRoot, [
       'research-loop',
@@ -883,13 +951,20 @@ test('research-loop logs objective_blocked governance event for rule-only blocke
     assert.equal(payload.status, 'blocked');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    assert.equal(governanceEvents.length, 1);
-    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+    assert.equal(governanceEvents.length, 2);
+    const blockedEvent = assertSingleGovernanceEvent(governanceEvents, {
+      eventType: 'objective_blocked',
+      objectiveId: 'OBJ-001',
+      details: {
+        blockerCode: 'E_LLM_REASONING_REQUIRED'
+      }
+    });
+    assertObjectiveBlockedGovernanceEvent(blockedEvent, {
       objectiveId: 'OBJ-001',
       blockerCode: 'E_LLM_REASONING_REQUIRED',
       severity: 'warning'
     });
-    assertNoDetailsLeak(governanceEvents[0], [
+    assertNoDetailsLeak(blockedEvent, [
       'No sanctioned next slice is mechanically derivable',
       projectRoot,
       'resume-snapshot.json'
@@ -1702,13 +1777,19 @@ test('research-loop logs objective_blocked governance event for terminal queue w
     assert.equal(result.stopReason, 'queue-terminal-without-event');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    assert.equal(governanceEvents.length, 1);
-    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+    const blockedEvent = assertSingleGovernanceEvent(governanceEvents, {
+      eventType: 'objective_blocked',
+      objectiveId: context.objectiveId,
+      details: {
+        blockerCode: 'E_QUEUE_TERMINAL_WITHOUT_EVENT'
+      }
+    });
+    assertObjectiveBlockedGovernanceEvent(blockedEvent, {
       objectiveId: context.objectiveId,
       blockerCode: 'E_QUEUE_TERMINAL_WITHOUT_EVENT',
       severity: 'critical'
     });
-    assertNoDetailsLeak(governanceEvents[0], [
+    assertNoDetailsLeak(blockedEvent, [
       'Queue shows terminal task',
       'analysis-execution-run:ANL-loop-governance-qwoe-001',
       'SECRET-seq117-qwoe',
@@ -1843,13 +1924,19 @@ test('research-loop objective_blocked governance details redact incomplete-at-cr
     assert.equal(resumed.stopReason, 'incomplete-at-crash');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    assert.equal(governanceEvents.length, 1);
-    assertObjectiveBlockedGovernanceEvent(governanceEvents[0], {
+    const blockedEvent = assertSingleGovernanceEvent(governanceEvents, {
+      eventType: 'objective_blocked',
+      objectiveId: context.objectiveId,
+      details: {
+        blockerCode: 'E_TASK_INCOMPLETE_AT_CRASH'
+      }
+    });
+    assertObjectiveBlockedGovernanceEvent(blockedEvent, {
       objectiveId: context.objectiveId,
       blockerCode: 'E_TASK_INCOMPLETE_AT_CRASH',
       severity: 'critical'
     });
-    assertNoDetailsLeak(governanceEvents[0], [
+    assertNoDetailsLeak(blockedEvent, [
       'analysis-execution-run:ANL-SECRET-seq117',
       'ANL-SECRET-seq117',
       'SECRET-seq117-incomplete',
@@ -2314,14 +2401,19 @@ test('research-loop logs objective_blocked governance event for budget-exhausted
     assert.equal(payload.stopReason, 'budget-exhausted');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    const objectiveBlockedEvents = governanceEvents.filter((event) => event.event_type === 'objective_blocked');
-    assert.equal(objectiveBlockedEvents.length, 1);
-    assertObjectiveBlockedGovernanceEvent(objectiveBlockedEvents[0], {
+    const blockedEvent = assertSingleGovernanceEvent(governanceEvents, {
+      eventType: 'objective_blocked',
+      objectiveId: context.objectiveId,
+      details: {
+        blockerCode: 'E_BUDGET_EXHAUSTED'
+      }
+    });
+    assertObjectiveBlockedGovernanceEvent(blockedEvent, {
       objectiveId: context.objectiveId,
       blockerCode: 'E_BUDGET_EXHAUSTED',
       severity: 'warning'
     });
-    assertNoDetailsLeak(objectiveBlockedEvents[0], [
+    assertNoDetailsLeak(blockedEvent, [
       'The effective runtime budget is exhausted.',
       projectRoot,
       'resume-snapshot.json'
@@ -2354,9 +2446,14 @@ test('research-loop logs loop_iteration governance event after a reviewed loop i
     assert.equal(result.status, 'slice-complete');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    const loopEvents = governanceEvents.filter((event) => event.event_type === 'loop_iteration');
-    assert.equal(loopEvents.length, 1);
-    assertLoopIterationGovernanceEvent(loopEvents[0], {
+    const loopEvent = assertSingleGovernanceEvent(governanceEvents, {
+      eventType: 'loop_iteration',
+      objectiveId: context.objectiveId,
+      details: {
+        iterationCount: 1
+      }
+    });
+    assertLoopIterationGovernanceEvent(loopEvent, {
       objectiveId: context.objectiveId,
       iterationCount: 1
     });
@@ -2389,7 +2486,10 @@ test('research-loop logs heartbeat governance event for an eligible heartbeat ti
     assert.equal(result.status, 'slice-complete');
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    const c3Events = governanceEvents.filter((event) => ['heartbeat', 'loop_iteration'].includes(event.event_type));
+    const c3Events = selectGovernanceEvents(governanceEvents, {
+      eventTypes: ['heartbeat', 'loop_iteration'],
+      objectiveId: context.objectiveId
+    });
     assert.deepEqual(c3Events.map((event) => event.event_type), [
       'heartbeat',
       'loop_iteration'
@@ -2456,7 +2556,10 @@ test('research-loop rate-limits heartbeat governance without suppressing loop_it
     }));
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    const c3Events = governanceEvents.filter((event) => ['heartbeat', 'loop_iteration'].includes(event.event_type));
+    const c3Events = selectGovernanceEvents(governanceEvents, {
+      eventTypes: ['heartbeat', 'loop_iteration'],
+      objectiveId: context.objectiveId
+    });
     assert.deepEqual(c3Events.map((event) => event.event_type), [
       'heartbeat',
       'loop_iteration'
@@ -2537,7 +2640,10 @@ test('research-loop loop_iteration and heartbeat governance details redact wake 
     }));
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    const c3Events = governanceEvents.filter((event) => ['heartbeat', 'loop_iteration'].includes(event.event_type));
+    const c3Events = selectGovernanceEvents(governanceEvents, {
+      eventTypes: ['heartbeat', 'loop_iteration'],
+      objectiveId: context.objectiveId
+    });
     assert.deepEqual(c3Events.map((event) => event.event_type), [
       'heartbeat',
       'loop_iteration'
@@ -2598,8 +2704,16 @@ test('research-loop honors VRE_HEARTBEAT_MIN_INTERVAL_MS for process-local heart
     }));
 
     const governanceEvents = await readGovernanceEvents(capturePath);
-    assert.equal(governanceEvents.length, 2);
-    for (const event of governanceEvents) {
+    const heartbeatEvents = selectGovernanceEvents(governanceEvents, {
+      eventType: 'heartbeat',
+      objectiveId: context.objectiveId,
+      details: {
+        outcome: 'duplicate-wake-id',
+        rateLimitWindowMs: 10
+      }
+    });
+    assert.equal(heartbeatEvents.length, 2);
+    for (const event of heartbeatEvents) {
       assertHeartbeatGovernanceEvent(event, {
         objectiveId: context.objectiveId,
         outcome: 'duplicate-wake-id',

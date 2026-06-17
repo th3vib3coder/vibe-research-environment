@@ -11,6 +11,17 @@ async function loadTaxonomy() {
   return readJson('environment/tests/fixtures/phase11/state-source-taxonomy.json');
 }
 
+function closedResearchLoopGovernanceFlake() {
+  return {
+    status: 'reviewed-closed',
+    closureEvidence: {
+      testPath: 'environment/tests/cli/research-loop.test.js',
+      regressionTest: 'research-loop logs objective_blocked governance event for rule-only blocker',
+      duplicateGuardTest: 'governance event selector fails closed on duplicate matching events'
+    }
+  };
+}
+
 function makeObservedState(overrides = {}) {
   return {
     checks: {
@@ -36,9 +47,7 @@ function makeObservedState(overrides = {}) {
       }
     ],
     stateRisks: {
-      'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': {
-        status: 'open-wave-11.2-backlog'
-      }
+      'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
     },
     proposedActions: [],
     ...overrides
@@ -192,6 +201,25 @@ test('missing research-loop governance flake state-risk is reported', async () =
   assert.equal(report.ok, false);
   assert(report.issues.some((issue) =>
     issue.code === DOCTOR_DRIFT_REASON_CODES.stateRiskMissing
+      && issue.followUpId === 'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001'
+  ));
+});
+
+test('reviewed-closed state-risk without closure evidence is reported', async () => {
+  const report = buildDoctorDriftReport({
+    taxonomy: await loadTaxonomy(),
+    observedState: makeObservedState({
+      stateRisks: {
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': {
+          status: 'reviewed-closed'
+        }
+      }
+    })
+  });
+
+  assert.equal(report.ok, false);
+  assert(report.issues.some((issue) =>
+    issue.code === DOCTOR_DRIFT_REASON_CODES.stateRiskClosureEvidenceMissing
       && issue.followUpId === 'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001'
   ));
 });

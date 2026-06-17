@@ -153,7 +153,14 @@ function makeValidTaxonomy(overrides = {}) {
         path: 'environment/tests/cli/research-loop.test.js',
         owner: 'wave-11.2',
         followUpId: 'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001',
-        requiredTreatment: 'make governance-event counting order-independent or reset shared state'
+        requiredTreatment: 'make governance-event counting order-independent or reset shared state',
+        status: 'reviewed-closed',
+        closureTaskId: 'T11.2.4',
+        closureEvidence: {
+          testPath: 'environment/tests/cli/research-loop.test.js',
+          regressionTest: 'research-loop logs objective_blocked governance event for rule-only blocker',
+          duplicateGuardTest: 'governance event selector fails closed on duplicate matching events'
+        }
       }
     ],
     downstreamBindings: [
@@ -289,6 +296,23 @@ test('missing research-loop governance flake state-risk entry fails closed', () 
   assert.equal(result.ok, false);
   assert(result.issues.some((issue) =>
     issue.code === PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES.followUpMissing
+  ));
+});
+
+test('reviewed-closed state-risk without closure evidence fails closed', () => {
+  const taxonomy = makeValidTaxonomy();
+  const stateRisk = taxonomy.sources.find((source) =>
+    source.followUpId === 'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001'
+  );
+  stateRisk.status = 'reviewed-closed';
+  delete stateRisk.closureEvidence;
+
+  const result = validateStateSourceTaxonomy(taxonomy);
+
+  assert.equal(result.ok, false);
+  assert(result.issues.some((issue) =>
+    issue.code === PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES.stateRiskClosureEvidenceMissing
+      && issue.sourceId === 'research-loop-governance-flake'
   ));
 });
 

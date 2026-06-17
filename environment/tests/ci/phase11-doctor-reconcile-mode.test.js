@@ -23,6 +23,17 @@ async function loadTaxonomy() {
   return readJson('environment/tests/fixtures/phase11/state-source-taxonomy.json');
 }
 
+function closedResearchLoopGovernanceFlake() {
+  return {
+    status: 'reviewed-closed',
+    closureEvidence: {
+      testPath: 'environment/tests/cli/research-loop.test.js',
+      regressionTest: 'research-loop logs objective_blocked governance event for rule-only blocker',
+      duplicateGuardTest: 'governance event selector fails closed on duplicate matching events'
+    }
+  };
+}
+
 function makeObservedState(overrides = {}) {
   return {
     checks: {
@@ -36,9 +47,7 @@ function makeObservedState(overrides = {}) {
     coverageEntries: [],
     gateExpectations: [],
     stateRisks: {
-      'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': {
-        status: 'open-wave-11.2-backlog'
-      }
+      'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
     },
     proposedActions: [],
     ...overrides

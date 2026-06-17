@@ -60,9 +60,17 @@ export const PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES = Object.freeze({
   researchScratchAutoDelete: 'E_PHASE11_STATE_RESEARCH_SCRATCH_AUTO_DELETE',
   followUpMissing: 'E_PHASE11_STATE_FOLLOW_UP_MISSING',
   stateRiskTreatmentMissing: 'E_PHASE11_STATE_RISK_TREATMENT_MISSING',
+  stateRiskStatusMissing: 'E_PHASE11_STATE_RISK_STATUS_MISSING',
+  stateRiskStatusInvalid: 'E_PHASE11_STATE_RISK_STATUS_INVALID',
+  stateRiskClosureEvidenceMissing: 'E_PHASE11_STATE_RISK_CLOSURE_EVIDENCE_MISSING',
   downstreamBindingMissing: 'E_PHASE11_STATE_DOWNSTREAM_BINDING_MISSING',
   downstreamRuleMissing: 'E_PHASE11_STATE_DOWNSTREAM_RULE_MISSING'
 });
+
+const STATE_RISK_STATUSES = Object.freeze([
+  'open-wave-11.2-backlog',
+  'reviewed-closed'
+]);
 
 function hasText(value) {
   return typeof value === 'string' && value.trim() !== '';
@@ -184,6 +192,33 @@ function validateStateRisk(source, issues) {
       PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES.stateRiskTreatmentMissing,
       { sourceId: source.id }
     ));
+  }
+
+  if (!hasText(source.status)) {
+    issues.push(issue(
+      PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES.stateRiskStatusMissing,
+      { sourceId: source.id }
+    ));
+  } else if (!STATE_RISK_STATUSES.includes(source.status)) {
+    issues.push(issue(
+      PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES.stateRiskStatusInvalid,
+      { sourceId: source.id, status: source.status }
+    ));
+  }
+
+  if (source.status === 'reviewed-closed') {
+    const evidence = source.closureEvidence ?? {};
+    if (
+      !hasText(source.closureTaskId)
+      || !hasText(evidence.testPath)
+      || !hasText(evidence.regressionTest)
+      || !hasText(evidence.duplicateGuardTest)
+    ) {
+      issues.push(issue(
+        PHASE11_STATE_SOURCE_TAXONOMY_REASON_CODES.stateRiskClosureEvidenceMissing,
+        { sourceId: source.id, followUpId: source.followUpId }
+      ));
+    }
   }
 }
 

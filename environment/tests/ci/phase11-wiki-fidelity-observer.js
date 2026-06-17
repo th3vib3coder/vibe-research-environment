@@ -30,6 +30,17 @@ const capturedCurrentLiveSourceGaps = [
   'Current generated count: **0**.'
 ].join('\n');
 
+function closedResearchLoopGovernanceFlake() {
+  return {
+    status: 'reviewed-closed',
+    closureEvidence: {
+      testPath: 'environment/tests/cli/research-loop.test.js',
+      regressionTest: 'research-loop logs objective_blocked governance event for rule-only blocker',
+      duplicateGuardTest: 'governance event selector fails closed on duplicate matching events'
+    }
+  };
+}
+
 async function readRealWikiText(relativePath, fallback) {
   try {
     return await readFile(path.join(wikiRoot, relativePath), 'utf8');
@@ -94,7 +105,7 @@ export default async function validatePhase11WikiFidelityObserver() {
       ...observed,
       gateExpectations: [],
       stateRisks: {
-        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': { status: 'open' }
+        'FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001': closedResearchLoopGovernanceFlake()
       },
       proposedActions: []
     }
