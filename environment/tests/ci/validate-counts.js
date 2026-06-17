@@ -1,6 +1,6 @@
 import { assert, collectFiles, isDirectRun } from './_helpers.js';
 
-const expectedCounts = {
+export const expectedCounts = {
   bundleManifests: 11,
   schemas: 70,
   templates: 8,
@@ -17,7 +17,7 @@ const expectedCounts = {
   integrationTests: 15,
   cliTests: 11,
   schemaTests: 70,
-  ciValidators: 55
+  ciValidators: 56
 };
 
 export default async function validateCounts() {

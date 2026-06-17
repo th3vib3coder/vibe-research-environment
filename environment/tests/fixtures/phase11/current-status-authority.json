@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "phase11.current-status-authority.v1",
+  "sourceStrategy": "tracked-vre-snapshot",
+  "snapshotMatchesCanonicalPrivateWiki": true,
+  "canonicalPrivateWikiSource": {
+    "path": "C:/Users/Test-User/Desktop/Tesi_Python_scRNA/nuove_skill/vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json",
+    "checkedBy": "T11.3.0 HAT2/HAT3 handoff, not by repository CI"
+  },
+  "phase": 11,
+  "phaseStatus": "open",
+  "activeWave": "11.3",
+  "latestClosedWave": "11.2",
+  "latestClosedTask": {
+    "taskId": "T11.2.5",
+    "name": "Wave 11.2 Closeout",
+    "status": "closed-pushed-ci-green",
+    "commit": "b44602e018f31be873e87d1d9f2932a9a9ceaf0c",
+    "ciRun": "27674943083",
+    "ciConclusion": "success",
+    "githubActionsUrl": "https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27674943083"
+  },
+  "currentTask": {
+    "taskId": "T11.3.0",
+    "name": "Generated Current Status",
+    "status": "hat2-implementation-open"
+  },
+  "carryForward": [
+    {
+      "id": "FU-EOF-NOISE-CLEANUP",
+      "status": "open non-blocking",
+      "summary": "Persistent EOF-only tracked diffs in environment/phase10/domain-lifecycle.js and environment/tests/cli/domain-cli.test.js remain out of scope."
+    },
+    {
+      "id": "W10.4-DEFERRED-EXPORT-PACKAGING-001",
+      "status": "deferred",
+      "summary": "Full export package/profile materialization and CLI writer scope remain future HAT work."
+    },
+    {
+      "id": "W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001",
+      "status": "deferred",
+      "summary": "Persisted multi-domain execution, durable records, CLI verbs, and filesystem writers remain future HAT work."
+    },
+    {
+      "id": "GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE",
+      "status": "deferred",
+      "summary": "Graphify remains a navigation track until a real-data run proves concrete navigation pain."
+    }
+  ],
+  "authoritySources": [
+    "WIKI_VRE/state/decision-gates.json",
+    "WIKI_VRE/closures/phase10-full-closeout-2026-06-16.md",
+    "phase11-implementation-plan/00-index.md",
+    "phase11-implementation-plan/01-entry-gates-and-scope.md",
+    "phase11-implementation-plan/07-graphify-reconciliation.md"
+  ],
+  "generatedAt": "2026-06-17"
+}

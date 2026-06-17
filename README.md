@@ -585,37 +585,60 @@ npm run check:phase9-ledger
 Current validator coverage includes counts, CI workflow, Phase 9 ledger rules,
 surface index, write sandbox, no-personal-path checks, and closeout honesty.
 
+<!-- VRE:CURRENT-SURFACE-COUNTS:EN:BEGIN -->
 ### Current Surface Counts
 
-At the current Wave 5 v2.1 evidence-side closeout, the VRE validators expect:
+These counts are generated from the repository CI count validator. They are
+not copied from a private WIKI checkout.
 
 | Surface | Count |
 |---|---:|
 | Install bundle manifests | 11 |
-| Schemas | 54 |
+| Schemas | 70 |
+| Templates | 8 |
 | Eval tasks | 25 |
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
-| CI validators | 15 |
+| Audit tests | 1 |
+| Control/orchestrator tests | 30 |
+| Compatibility tests | 5 |
+| Flow tests | 8 |
+| Library tests | 23 |
+| Eval tests | 2 |
+| Install tests | 5 |
+| Integration tests | 15 |
+| CLI tests | 11 |
+| Schema tests | 70 |
+| CI validators | 56 |
 
-These counts are enforced by repository validators and should be updated only
-with the code that changes the surface.
+Update these counts only in the same patch that changes the counted surface.
+<!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
 
 ---
 
+<!-- VRE:CURRENT-STATUS:EN:BEGIN -->
 ## Current Status
 
-Wave 5 v2.1 is complete on the evidence side. The implementation trail for seq
-`113-130` landed, R2 inline pending is zero, and seq `130` records `R2 inline
-OK`.
+Phase 11 is open; Wave 11.2 is closed at
+`b44602e018f31be873e87d1d9f2932a9a9ceaf0c` with GitHub Actions run
+`27674943083` (success).
 
-The operator gate flip from `wave-5-implementation-allowed.status` to
-`completed` is intentionally separate. Wave 6 is formally unlocked after that
-operator action. The operating rule remains: Phase 10 does not begin before
-Phase 9 is complete.
+Active task: `T11.3.0` - Generated Current Status
+(hat2-implementation-open). This task keeps README and WIKI status generated
+from a tracked VRE snapshot; CI must not read a sibling private WIKI checkout.
 
-For live CI state, check GitHub Actions. This README describes the repository
-surface, not a guarantee about every future commit.
+Carry-forward and deferred items remain visible:
+
+| ID | Status | Summary |
+|---|---|---|
+| `FU-EOF-NOISE-CLEANUP` | open non-blocking | Persistent EOF-only tracked diffs in environment/phase10/domain-lifecycle.js and environment/tests/cli/domain-cli.test.js remain out of scope. |
+| `W10.4-DEFERRED-EXPORT-PACKAGING-001` | deferred | Full export package/profile materialization and CLI writer scope remain future HAT work. |
+| `W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001` | deferred | Persisted multi-domain execution, durable records, CLI verbs, and filesystem writers remain future HAT work. |
+| `GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE` | deferred | Graphify remains a navigation track until a real-data run proves concrete navigation pain. |
+
+For live CI state, check GitHub Actions. This README is a generated repository
+projection, not a Phase 11 full closeout.
+<!-- VRE:CURRENT-STATUS:EN:END -->
 
 ---
 
@@ -1209,33 +1232,57 @@ npm run check:phase9-ledger
 La validazione corrente copre counts, workflow CI, regole ledger Phase 9,
 surface index, write sandbox, no-personal-path e closeout honesty.
 
+<!-- VRE:CURRENT-SURFACE-COUNTS:IT:BEGIN -->
 ### Conteggi Di Superficie Correnti
 
-Alla chiusura evidence-side Wave 5 v2.1, i validatori VRE si aspettano:
+Questi conteggi sono generati dal validator CI del repository. Non sono
+copiati da una WIKI privata affiancata.
 
 | Superficie | Conteggio |
 |---|---:|
-| Install bundle manifests | 11 |
-| Schemi | 54 |
-| Eval tasks | 25 |
-| Eval metrics | 5 |
-| Eval benchmarks | 5 |
-| CI validators | 15 |
+| Manifest bundle installazione | 11 |
+| Schemi | 70 |
+| Template | 8 |
+| Task eval | 25 |
+| Metriche eval | 5 |
+| Benchmark eval | 5 |
+| Test audit | 1 |
+| Test control/orchestrator | 30 |
+| Test compatibilita | 5 |
+| Test flow | 8 |
+| Test libreria | 23 |
+| Test eval | 2 |
+| Test installazione | 5 |
+| Test integrazione | 15 |
+| Test CLI | 11 |
+| Test schema | 70 |
+| Validator CI | 56 |
 
-Questi conteggi sono enforced dai validatori del repo e vanno aggiornati solo
-insieme al codice che cambia la superficie.
+Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
+<!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->
 
 ---
 
+<!-- VRE:CURRENT-STATUS:IT:BEGIN -->
 ## Stato Corrente
 
-Wave 5 v2.1 e' completa lato evidenza. Il trail implementativo seq `113-130`
-e' landed, `R2 inline pending` e' zero, e seq `130` registra `R2 inline OK`.
+Phase 11 e aperta; Wave 11.2 e chiusa al commit
+`b44602e018f31be873e87d1d9f2932a9a9ceaf0c` con GitHub Actions run
+`27674943083` (success).
 
-Il flip operatore da `wave-5-implementation-allowed.status` a `completed` resta
-separato di proposito. Wave 6 si sblocca formalmente dopo quell'azione
-operatore. La regola operativa resta: Phase 10 non inizia prima che Phase 9 sia
-terminata.
+Task attivo: `T11.3.0` - Generated Current Status
+(hat2-implementation-open). Questo task mantiene README e WIKI generati da una
+snapshot VRE tracciata; la CI non deve leggere una WIKI privata affiancata.
 
-Per lo stato CI live, controlla GitHub Actions. Questo README descrive la
-superficie del repository, non garantisce lo stato di ogni commit futuro.
+Carry-forward e deferral restano visibili:
+
+| ID | Status | Summary |
+|---|---|---|
+| `FU-EOF-NOISE-CLEANUP` | open non-blocking | Persistent EOF-only tracked diffs in environment/phase10/domain-lifecycle.js and environment/tests/cli/domain-cli.test.js remain out of scope. |
+| `W10.4-DEFERRED-EXPORT-PACKAGING-001` | deferred | Full export package/profile materialization and CLI writer scope remain future HAT work. |
+| `W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001` | deferred | Persisted multi-domain execution, durable records, CLI verbs, and filesystem writers remain future HAT work. |
+| `GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE` | deferred | Graphify remains a navigation track until a real-data run proves concrete navigation pain. |
+
+Per lo stato CI live, controlla GitHub Actions. Questo README e una proiezione
+generata del repository, non un full closeout di Phase 11.
+<!-- VRE:CURRENT-STATUS:IT:END -->

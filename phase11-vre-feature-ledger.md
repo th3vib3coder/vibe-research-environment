@@ -1105,3 +1105,112 @@ Reviewer-confirmed verification:
   the new per-wave closeout validator;
 - `run-all.js` and full `npm run check` passed with 1503 tests, 1494 pass,
   0 fail, and 9 skipped.
+
+## T11.3.0 Generated Current Status Trace
+
+Changed Phase 11 VRE paths:
+
+- `README.md`
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/current-status.js`
+- `environment/tests/fixtures/phase11/current-status-authority.json`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `environment/tests/ci/phase11-current-status.js`
+- `environment/tests/ci/phase11-current-status.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+HAT 1 binding conditions honored in HAT 2:
+
+- README English and Italian current-status and surface-count sections are
+  marker-bounded generated projections, not hand-maintained stale prose;
+- the CI validator reads only tracked VRE files: README plus
+  `environment/tests/fixtures/phase11/current-status-authority.json` and
+  `environment/tests/fixtures/phase11/current-status-wiki.md`;
+- the private WIKI authority relation is recorded as a HAT handoff
+  cross-check, not as a sibling `../vibe-science` CI dependency;
+- surface counts come from live `expectedCounts` exported by
+  `environment/tests/ci/validate-counts.js`;
+- carry-forward/deferred items enumerate `FU-EOF-NOISE-CLEANUP`,
+  `W10.4-DEFERRED-EXPORT-PACKAGING-001`,
+  `W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001`, and
+  `GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE`.
+
+RED evidence captured before GREEN:
+
+- `node --test environment/tests/ci/phase11-current-status.test.js` failed
+  with `ERR_MODULE_NOT_FOUND` before `environment/phase11/current-status.js`
+  existed;
+- the new fail-closed test suite covers stale English/Italian README status,
+  stale surface counts, private sibling-WIKI CI dependency, snapshot drift
+  against canonical private WIKI, missing carry-forward items, and Phase 11
+  full-closeout overclaim;
+- `validate-counts` required `ciValidators` to move from 55 to 56 after the
+  new non-test CI validator was added;
+- `run-all.js` required explicit wiring for `phase11-current-status`.
+
+verification:
+
+- `node --test environment/tests/ci/phase11-current-status.test.js` PASS 8/8;
+- `node environment/tests/ci/phase11-current-status.js` PASS;
+- `node environment/tests/ci/validate-counts.js` PASS with
+  `ciValidators:56`;
+- explicit `node environment/tests/ci/check-phase11-ledger.js
+  --changed-file=...` PASS for the T11.3.0 VRE delta;
+- explicit `node environment/tests/ci/check-phase9-ledger.js
+  --changed-file=...` PASS after including Phase 9 bridge row 174 and the
+  private Phase 9 implementation-status ledger path;
+- `node environment/tests/ci/run-all.js` PASS;
+- full `npm run check` PASS with 1511 tests, 1502 pass, 0 fail, and
+  9 skipped;
+- WIKI checks PASS: `build-registries --check`, `wiki-lint`,
+  `sync-mirror --check`, `audit-schema-fields`, and
+  `generate-vre-coverage --check`;
+- WIKI entity export audit PASS with no errors and the six pre-existing
+  Phase 11 missing-owner warnings unchanged;
+- `git diff --check` PASS;
+- decision gates JSON and current-status authority JSON parse PASS;
+- tracked VRE `current-status-wiki.md` and private WIKI
+  `state/current-status.md` compare equal.
+
+Scope boundaries:
+
+- no Phase 11 full closeout;
+- no root `vre doctor` CLI;
+- no private-WIKI read from repository CI;
+- no VRE runtime writing into the private WIKI;
+- no runtime-spawned WIKI generator;
+- no scratch deletion or cleanup;
+- no automatic semantic decision or authority regeneration;
+- no real H5AD/GEO read, fraction/count/denominator, export packaging, or
+  biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.0-generated-current-status-verdict-2026-06-17.md`.
+
+Codex HAT 3 handoff authored at
+`C:/Users/Test-User/Desktop/Tesi_Python_scRNA/nuove_skill/vibe-science/blueprints/private/phase11-implementation-plan/44-hat3-t11-3-0-generated-current-status-closure-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.0-generated-current-status-verdict-2026-06-17.md`.
+
+Reviewer-confirmed verification:
+
+- validator probe rejected private sibling-WIKI CI dependency, snapshot drift,
+  Phase 11 closed overclaim, missing Graphify deferral, manual README drift,
+  count mismatch, and edited WIKI projection;
+- README EN/IT marker blocks contain Phase 11/Wave 11.2 truth and no stale
+  Wave 5 status prose;
+- counts are live from `expectedCounts`, with `ciValidators:56`;
+- tracked VRE `current-status-wiki.md` and private WIKI
+  `state/current-status.md` are byte-identical;
+- full `npm run check` passed with 1511 tests, 1502 pass, 0 fail, and
+  9 skipped;
+- no runtime, cleanup, real-data, export, Graphify runtime, or biomedical
+  scope was opened.
