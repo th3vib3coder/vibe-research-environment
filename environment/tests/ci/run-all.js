@@ -49,6 +49,7 @@ import validatePhase11StateSourceTaxonomy from './phase11-state-source-taxonomy.
 import validatePhase11DoctorDriftDetector from './phase11-doctor-drift-detector.js';
 import validatePhase11DoctorReconcileMode from './phase11-doctor-reconcile-mode.js';
 import validatePhase11WikiFidelityObserver from './phase11-wiki-fidelity-observer.js';
+import validatePhase11Wave112Closeout from './phase11-wave-11-2-closeout.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -100,7 +101,8 @@ const validators = [
   ['phase11-state-source-taxonomy', validatePhase11StateSourceTaxonomy],
   ['phase11-doctor-drift-detector', validatePhase11DoctorDriftDetector],
   ['phase11-doctor-reconcile-mode', validatePhase11DoctorReconcileMode],
-  ['phase11-wiki-fidelity-observer', validatePhase11WikiFidelityObserver]
+  ['phase11-wiki-fidelity-observer', validatePhase11WikiFidelityObserver],
+  ['phase11-wave-11-2-closeout', validatePhase11Wave112Closeout]
 ];
 
 for (const [name, validator] of validators) {

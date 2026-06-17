@@ -1006,3 +1006,102 @@ Codex HAT 3 handoff authored at
 
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.4-research-loop-governance-flake-verdict-2026-06-17.md`.
+
+## T11.2.5 Wave 11.2 Closeout Trace
+
+Changed Phase 11 VRE paths:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/tests/fixtures/phase11/wave-11-2-closeout.json`
+- `environment/tests/ci/phase11-wave-11-2-closeout.js`
+- `environment/tests/ci/phase11-wave-11-2-closeout.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `../vibe-science/blueprints/private/WIKI_VRE/closures/phase11-wave-11-2-closeout-2026-06-17.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/closures/phase11-wave-11-2-closeout-evidence-2026-06-17.json`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+HAT 1 binding conditions honored in HAT 2:
+
+- the closeout markdown carries a real `## Delivery Attestation` fenced JSON
+  block, outside code fences;
+- the closeout markdown is checked with `validate-closeout-honesty.js` against
+  linked evidence files;
+- the new validator follows the `phase11-wave-11-1-closeout.js` per-wave
+  pattern, not the general closeout-honesty linter surface;
+- REQUIRED_TASKS are `T11.2.0` through `T11.2.4`;
+- FORBIDDEN_BOUNDARIES include root doctor CLI, private-WIKI runtime writes,
+  runtime-spawned generators, semantic auto-resolution, real H5AD/GEO reads,
+  export packaging, claim promotion, and Phase 11 full closeout.
+
+RED evidence captured before GREEN:
+
+- `node --test environment/tests/ci/phase11-wave-11-2-closeout.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before the validator existed;
+- `node environment/tests/ci/validate-counts.js` failed with
+  `ciValidators` expected 54, got 55 before the count was updated;
+- `node environment/tests/ci/run-all.js` failed through the aggregate count
+  and Phase 11 trace checks before count and ledger repair;
+- explicit `node environment/tests/ci/check-phase9-ledger.js
+  --changed-file=...` failed until the Phase 9 bridge row and private Phase 9
+  status-ledger note were included;
+- explicit `node environment/tests/ci/check-phase11-ledger.js
+  --changed-file=...` failed with `E_PHASE11_TRACE_MISSING` before this trace
+  named the new closeout files.
+
+verification:
+
+- `node --test environment/tests/ci/phase11-wave-11-2-closeout.test.js`
+  PASS 7/7;
+- `node environment/tests/ci/phase11-wave-11-2-closeout.js` PASS;
+- `node environment/tests/ci/validate-counts.js` PASS with
+  `ciValidators:55`;
+- explicit `node environment/tests/ci/check-phase11-ledger.js
+  --changed-file=...` PASS for the T11.2.5 VRE delta;
+- explicit `node environment/tests/ci/check-phase9-ledger.js
+  --changed-file=...` PASS after Phase 9 bridge row 173 and the private Phase
+  9 implementation-status ledger note were both included;
+- `node environment/tests/ci/run-all.js` PASS;
+- full `npm run check` PASS;
+- WIKI checks PASS: `build-registries --check`, `audit-entity-exports`,
+  `audit-schema-fields`, `wiki-lint`, `sync-mirror --check`,
+  `generate-vre-coverage --check`, and closeout-honesty validation against
+  the Wave 11.2 closeout markdown;
+- `git diff --check` PASS;
+- decision gates JSON and closeout evidence JSON parse PASS.
+
+Scope boundaries:
+
+- closes Wave 11.2 state-reconciliation foundation only;
+- no Phase 11 full closeout;
+- no root `vre doctor` CLI;
+- no private-WIKI write from VRE runtime;
+- no runtime-spawned WIKI generator;
+- no scratch deletion or cleanup beyond the already-reviewed owned-marker
+  planner contract;
+- no automatic semantic decision or authority regeneration;
+- no real H5AD/GEO read, fraction/count/denominator, export packaging, or
+  biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.2.5-wave-11.2-closeout-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.5-wave-11.2-closeout-verdict-2026-06-17.md`.
+
+Reviewer-confirmed verification:
+
+- fail-closed fixture probes covered missing task, non-closed task, missing
+  commit, non-green CI, missing follow-up closure, forbidden boundary,
+  Phase 11 full-closeout overclaim, and weakened follow-up evidence;
+- all five Wave 11.2 roster commits were grounded as ancestors of
+  `origin/main`;
+- the T11.2.4 governance-flake follow-up closure was grounded in the
+  authoritative closed evidence, not in a historical open gate snapshot;
+- Delivery Attestation and closeout-honesty checks are real and distinct from
+  the new per-wave closeout validator;
+- `run-all.js` and full `npm run check` passed with 1503 tests, 1494 pass,
+  0 fail, and 9 skipped.

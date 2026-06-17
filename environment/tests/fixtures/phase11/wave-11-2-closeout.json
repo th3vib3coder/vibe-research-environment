@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "phase11.wave11_2.closeout.v1",
+  "phase": 11,
+  "wave": "11.2",
+  "phase11Status": "open",
+  "closeoutClaim": "state-reconciliation-foundation",
+  "closedAt": "2026-06-17",
+  "tasks": [
+    {
+      "taskId": "T11.2.0",
+      "name": "State-Source Taxonomy",
+      "status": "closed-pushed-ci-green",
+      "commit": "064cb768173395327b8b3165a79566ab454db91c",
+      "ciRun": "27659773549",
+      "ciConclusion": "success",
+      "deliveredSurface": "state-source-taxonomy"
+    },
+    {
+      "taskId": "T11.2.1",
+      "name": "Doctor Drift Detector",
+      "status": "closed-pushed-ci-green",
+      "commit": "94920878c43382635350b992f6d15313deee9769",
+      "ciRun": "27661167360",
+      "ciConclusion": "success",
+      "deliveredSurface": "read-only-doctor-drift-detector-helper"
+    },
+    {
+      "taskId": "T11.2.2",
+      "name": "Doctor Reconcile Mode",
+      "status": "closed-pushed-ci-green",
+      "commit": "d3f534907f73f8383cf5f898890f3a332c1c55d1",
+      "ciRun": "27664530420",
+      "ciConclusion": "success",
+      "deliveredSurface": "bounded-doctor-reconcile-mode-helper"
+    },
+    {
+      "taskId": "T11.2.3",
+      "name": "WIKI Fidelity Observer",
+      "status": "closed-pushed-ci-green",
+      "commit": "011b119ff2158247d4dc22fe4112fcf29a508834",
+      "ciRun": "27667207681",
+      "ciConclusion": "success",
+      "deliveredSurface": "wiki-fidelity-observer"
+    },
+    {
+      "taskId": "T11.2.4",
+      "name": "Research-Loop Governance Flake",
+      "status": "closed-pushed-ci-green",
+      "commit": "1f7fcc257e9afcd990418e3c25a82fc0b81124fa",
+      "ciRun": "27670625590",
+      "ciConclusion": "success",
+      "deliveredSurface": "research-loop-governance-flake-closure"
+    }
+  ],
+  "followUpClosures": {
+    "researchLoopGovernanceFlake": {
+      "followUpId": "FU-P11-RESEARCH-LOOP-GOVERNANCE-FLAKE-001",
+      "status": "closed-pushed-ci-green",
+      "closureTaskId": "T11.2.4",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.4-research-loop-governance-flake-verdict-2026-06-17.md",
+      "commit": "1f7fcc257e9afcd990418e3c25a82fc0b81124fa",
+      "ciRun": "27670625590",
+      "taxonomyStateRiskStatus": "reviewed-closed",
+      "doctorEvidenceBacked": true
+    }
+  },
+  "foundationClaims": {
+    "stateSourceTaxonomyReviewed": true,
+    "doctorDriftDetectorReadOnly": true,
+    "doctorReconcileBoundedPlanner": true,
+    "wikiFidelityObserverRealArtifact": true,
+    "researchLoopGovernanceFlakeClosed": true
+  },
+  "forbiddenBoundaries": {
+    "rootDoctorCli": false,
+    "privateWikiRuntimeWrite": false,
+    "runtimeSpawnedGenerator": false,
+    "scratchCleanupOutsideOwnedMarkerRules": false,
+    "semanticAutoResolution": false,
+    "authorityRegeneration": false,
+    "realH5adRead": false,
+    "realGeoRead": false,
+    "cxcl13Cd8Denominator": false,
+    "cxcl13Cd8Count": false,
+    "cxcl13Cd8Fraction": false,
+    "exportPackaging": false,
+    "claimPromotion": false,
+    "phase11FullCloseout": false
+  }
+}
