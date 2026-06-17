@@ -441,3 +441,77 @@ Reviewer-confirmed verification:
 - non-scientific legacy export behavior remains compatible;
 - no real data read, fraction/count/denominator, export packaging, or claim
   promotion is opened.
+
+## T11.1.4 Coverage And Regression Harness Trace
+
+who: codex
+
+when: 2026-06-17
+
+why: T11.1.0 through T11.1.3 were individually green, but Claude Code and an
+independent pre-review identified a modular false-green risk: fake execution,
+the scientific derivation harness, scientific invariant blockers, and export
+eligibility could pass in isolation while the combined path leaked authority.
+T11.1.4 adds the focused regression harness and hardens structural scientific
+lineage classification.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/scientific-invariant-blockers.js`
+- `environment/tests/ci/phase11-coverage-regression-harness.js`
+- `environment/tests/ci/phase11-coverage-regression-harness.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- structural-lineage RED must block through the production export decision,
+  not only helper-level fixtures;
+- if the writing/export caller cannot supply structural scientific evidence
+  for a real decision, HAT 2 must stop and re-hand off before GREEN;
+- HAT 3 must show new T11.1.4 Phase 11 and Phase 9 bridge ledger rows naming
+  touched shared CI files; checker pass alone is insufficient;
+- classifier hardening must preserve existing T11.1.3 killed-citation, R2,
+  transitive dependency, text/harness substance detection, and legacy
+  non-scientific pass-through behavior;
+- counts, `run-all.js`, Phase 9/11 ledger checks, and WIKI checks must be
+  recomputed from the actual diff.
+
+RED evidence captured before production hardening:
+
+- `node --test environment/tests/ci/phase11-coverage-regression-harness.test.js`
+  failed because a keyword-free structural scientific lineage claim returned
+  `eligible:true` through `exportEligibility(...)`;
+- `node environment/tests/ci/phase11-coverage-regression-harness.js` failed on
+  the same structural-lineage export path;
+- `node environment/tests/ci/validate-counts.js` failed `ciValidators`
+  expected 48, got 49;
+- `node environment/tests/ci/run-all.js` failed before the new validator was
+  wired and before Phase 11 ledger trace existed.
+
+verification so far:
+
+- `node --test environment/tests/ci/phase11-coverage-regression-harness.test.js`
+  PASS 9/9.
+- `node environment/tests/ci/phase11-coverage-regression-harness.js` PASS.
+- `node --test environment/tests/ci/phase11-scientific-invariant-blockers.test.js`
+  PASS 9/9.
+- `node --test environment/tests/lib/export-eligibility.test.js` PASS 8/8.
+- `node environment/tests/ci/validate-counts.js` PASS with `ciValidators` at
+  49.
+
+Scope boundaries:
+
+- no real GSE184880 or H5AD read;
+- no CXCL13+ CD8 denominator, count, or fraction;
+- no Rscript or notebook execution;
+- no network;
+- no export packaging implementation;
+- no biomedical claim promotion.
+
+Reviewer outcome:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.1.4-coverage-regression-harness-verdict-2026-06-17.md`.

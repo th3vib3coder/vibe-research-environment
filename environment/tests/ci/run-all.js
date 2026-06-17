@@ -43,6 +43,7 @@ import validatePhase11InterpreterManifest from './phase11-interpreter-manifest.j
 import validatePhase11ResearchPacket from './phase11-research-packet.js';
 import validatePhase11ScientificDerivationHarness from './phase11-scientific-derivation-harness.js';
 import validatePhase11ScientificInvariantBlockers from './phase11-scientific-invariant-blockers.js';
+import validatePhase11CoverageRegressionHarness from './phase11-coverage-regression-harness.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -88,7 +89,8 @@ const validators = [
   ['phase11-interpreter-manifest', validatePhase11InterpreterManifest],
   ['phase11-research-packet', validatePhase11ResearchPacket],
   ['phase11-scientific-derivation-harness', validatePhase11ScientificDerivationHarness],
-  ['phase11-scientific-invariant-blockers', validatePhase11ScientificInvariantBlockers]
+  ['phase11-scientific-invariant-blockers', validatePhase11ScientificInvariantBlockers],
+  ['phase11-coverage-regression-harness', validatePhase11CoverageRegressionHarness]
 ];
 
 for (const [name, validator] of validators) {

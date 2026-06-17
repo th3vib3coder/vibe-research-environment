@@ -17,7 +17,7 @@ const expectedCounts = {
   integrationTests: 15,
   cliTests: 11,
   schemaTests: 70,
-  ciValidators: 48
+  ciValidators: 49
 };
 
 export default async function validateCounts() {

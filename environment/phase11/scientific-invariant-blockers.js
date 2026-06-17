@@ -44,6 +44,19 @@ const BLOCKED_DEPENDENCY_STATUSES = new Set([
   'unknown'
 ]);
 
+const STRUCTURAL_SCIENCE_VALUES = Object.freeze([
+  'analysis-derived-result',
+  'analysis-output',
+  'assay-result',
+  'conditioned-result',
+  'derived-result',
+  'law9-harness',
+  'quantitative-output',
+  'quantitative-result',
+  'reviewed-derivation',
+  'scientific-output'
+]);
+
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
@@ -66,6 +79,69 @@ function textMatchesScience(value) {
   }
 
   return SCIENCE_TEXT_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+function normalizeStructuralValue(value) {
+  return typeof value === 'string'
+    ? value.trim().toLowerCase().replaceAll('_', '-')
+    : '';
+}
+
+function structuralValueSignalsScience(value) {
+  const normalized = normalizeStructuralValue(value);
+  if (normalized === '') {
+    return false;
+  }
+
+  return STRUCTURAL_SCIENCE_VALUES.some((signal) => normalized.includes(signal));
+}
+
+function objectHasStructuralScienceSignal(value, seen = new Set()) {
+  if (value == null || typeof value !== 'object') {
+    return false;
+  }
+
+  if (seen.has(value)) {
+    return false;
+  }
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    return value.some((entry) => objectHasStructuralScienceSignal(entry, seen));
+  }
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (structuralValueSignalsScience(key) || structuralValueSignalsScience(entry)) {
+      return true;
+    }
+
+    if (entry != null && typeof entry === 'object'
+      && objectHasStructuralScienceSignal(entry, seen)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasStructuralScientificLineage(claim) {
+  if (claim == null || typeof claim !== 'object') {
+    return false;
+  }
+
+  const metadata = claim.claimMetadata;
+  if (metadata == null || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return false;
+  }
+
+  return [
+    metadata.analysisLineage,
+    metadata.scientificLineage,
+    metadata.derivationLineage,
+    metadata.evidenceClass,
+    metadata.resultKind,
+    metadata.outputKind
+  ].some((value) => objectHasStructuralScienceSignal(value));
 }
 
 function collectClaimText(claim) {
@@ -103,6 +179,10 @@ function hasScientificSubstance(input) {
     || input?.scientificDerivationHarnessResult != null
     || input?.law9Harness != null
   ) {
+    return true;
+  }
+
+  if (hasStructuralScientificLineage(claim)) {
     return true;
   }
 
