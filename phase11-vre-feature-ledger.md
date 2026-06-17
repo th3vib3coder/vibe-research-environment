@@ -1339,4 +1339,13 @@ Claude Code non-author HAT 3 REDIRECT recorded via
 Claude Code non-author HAT 3 redirect-fix ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-redirect-fix-verdict-2026-06-17.md`.
 
-HAT 3 is reviewed-accepted and pending scoped commit/push/CI.
+Commit/push/CI closure:
+
+- VRE commit `1b38312ac2874c24a8da9fb35e47290642de119a` was pushed to
+  `origin/main` and `origin/fix/control-plane-lock-eperm-windows`;
+- GitHub Actions run `27688981736` completed with conclusion `success`;
+- duplicate GitHub Actions run `27688981326` also completed with conclusion
+  `success`.
+
+T11.3.2 is closed, pushed, and CI-green. Phase 11 remains open; next task is
+T11.3.3 Research Runbook Handoff behind a fresh HAT 1 STOP.

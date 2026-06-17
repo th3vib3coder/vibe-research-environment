@@ -620,11 +620,11 @@ Update these counts only in the same patch that changes the counted surface.
 ## Current Status
 
 Phase 11 is open; Wave 11.2 is closed at
-`845f2ebb04a66b01d87527c73effeb39ea9ab3f7` with GitHub Actions run
-`27683993596` (success).
+`1b38312ac2874c24a8da9fb35e47290642de119a` with GitHub Actions run
+`27688981736` (success).
 
-Active task: `T11.3.2` - Phase-entry Validator
-(hat3-reviewed-accepted-pending-commit). This task keeps README and WIKI status generated
+Active task: `T11.3.3` - Research Runbook Handoff
+(not-started-awaiting-hat1-stop). This task keeps README and WIKI status generated
 from a tracked VRE snapshot; CI must not read a sibling private WIKI checkout.
 
 Carry-forward and deferred items remain visible:
@@ -1267,11 +1267,11 @@ Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 ## Stato Corrente
 
 Phase 11 e aperta; Wave 11.2 e chiusa al commit
-`845f2ebb04a66b01d87527c73effeb39ea9ab3f7` con GitHub Actions run
-`27683993596` (success).
+`1b38312ac2874c24a8da9fb35e47290642de119a` con GitHub Actions run
+`27688981736` (success).
 
-Task attivo: `T11.3.2` - Phase-entry Validator
-(hat3-reviewed-accepted-pending-commit). Questo task mantiene README e WIKI generati da una
+Task attivo: `T11.3.3` - Research Runbook Handoff
+(not-started-awaiting-hat1-stop). Questo task mantiene README e WIKI generati da una
 snapshot VRE tracciata; la CI non deve leggere una WIKI privata affiancata.
 
 Carry-forward e deferral restano visibili:

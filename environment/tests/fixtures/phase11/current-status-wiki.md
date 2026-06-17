@@ -5,11 +5,11 @@ Phase: 11
 Phase Status: open
 Active Wave: 11.3
 Latest Closed Wave: 11.2
-Latest Closed Task: T11.3.1 - Ledger Row Budget
-Latest Closed Commit: 845f2ebb04a66b01d87527c73effeb39ea9ab3f7
-Latest Closed CI: 27683993596 success
-Current Task: T11.3.2 - Phase-entry Validator
-Current Task Status: hat3-reviewed-accepted-pending-commit
+Latest Closed Task: T11.3.2 - Phase-entry Validator
+Latest Closed Commit: 1b38312ac2874c24a8da9fb35e47290642de119a
+Latest Closed CI: 27688981736 success
+Current Task: T11.3.3 - Research Runbook Handoff
+Current Task Status: not-started-awaiting-hat1-stop
 Source Strategy: tracked-vre-snapshot
 
 ## Surface Counts
@@ -62,6 +62,9 @@ Source Strategy: tracked-vre-snapshot
 - phase11-implementation-plan/50-hat3-t11-3-2-phase-entry-validator-redirect-fix-closure-2026-06-17.md
 - C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-verdict-2026-06-17.md
 - C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-redirect-fix-verdict-2026-06-17.md
+- phase11-implementation-plan/06-wave-11-3-doc-truth-and-process.md
+- https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27688981736
+- https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27688981326
 
 ## Boundary
 
