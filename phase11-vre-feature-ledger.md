@@ -317,7 +317,7 @@ RED evidence captured before production edits:
   noisy local worktree before `check-phase9-ledger.js` set an explicit git
   output buffer.
 
-verification so far:
+verification:
 
 - `node --test environment/tests/cli/run-analysis.test.js` PASS 21/21.
 - `node --test environment/tests/ci/phase11-interpreter-manifest.test.js
@@ -649,3 +649,81 @@ Claude Code non-author HAT 1 ACCEPT recorded via
 
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.0-state-source-taxonomy-verdict-2026-06-17.md`.
+
+## T11.2.1 Doctor Drift Detector Trace
+
+who: codex
+
+when: 2026-06-17
+
+why: T11.2.0 classified Wave 11.2 authorities, projections, runtime ledgers,
+CI enforcement, scratch/noise, and state-risk surfaces, but still had no
+read-only doctor that could report drift without deleting scratch, regenerating
+authorities, or silently treating local noise as live VRE state. T11.2.1 adds
+that report-only layer before any reconcile or cleanup task opens.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/doctor-drift-detector.js`
+- `environment/tests/ci/phase11-doctor-drift-detector.js`
+- `environment/tests/ci/phase11-doctor-drift-detector.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- the detector must be literally read-only and emit `actions: []`;
+- taxonomy `kind`, `path`, `cleanupPolicy`, `cleanupEligible`, and
+  `regenerationAllowed` are the binding source for classification;
+- authority regeneration attempts are reported as semantic conflicts, not
+  executed;
+- `analysis/`, `audit.config.yaml`, `audit/`, and nested `vibe-science/`
+  remain never-auto-delete operator/research scratch;
+- `.tmp-vre-*` and `.tmp/` are classified as owned scratch only when the
+  taxonomy names an explicit cleanup owner;
+- T11.2.1 stays unbundled from T11.2.2 reconcile and Wave 11.2 closeout.
+
+RED evidence captured before GREEN:
+
+- `node --test environment/tests/ci/phase11-doctor-drift-detector.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/phase11/doctor-drift-detector.js` existed;
+- `node environment/tests/ci/check-phase11-ledger.js --changed-file ...`
+  failed with `E_PHASE11_TRACE_MISSING` before this trace named the new
+  helper and validator paths.
+
+verification so far:
+
+- `node --test environment/tests/ci/phase11-doctor-drift-detector.test.js`
+  PASS 11/11.
+- `node environment/tests/ci/phase11-doctor-drift-detector.js` PASS.
+- `node environment/tests/ci/validate-counts.js` PASS with `ciValidators`
+  at 52.
+- explicit Phase 9 and Phase 11 ledger probes PASS with T11.2.1 changed files
+  and private Phase 9 ledger note included.
+- `node environment/tests/ci/run-all.js` PASS.
+- WIKI registry, entity export, schema field, lint, mirror, coverage, and
+  decision-gate JSON checks PASS.
+- `git diff --check` PASS.
+- `npm run check` PASS with 1472 tests, 1463 pass, 0 fail, 9 skipped.
+
+Scope boundaries:
+
+- no `vre doctor` CLI;
+- no projection generator execution;
+- no scratch deletion or cleanup;
+- no semantic reconciliation or automatic conflict resolution;
+- no Wave 11.2 closeout;
+- no Phase 11 full closeout;
+- no real H5AD read, fraction/count/denominator, export packaging, or
+  biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.2.1-doctor-drift-detector-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.1-doctor-drift-detector-verdict-2026-06-17.md`.

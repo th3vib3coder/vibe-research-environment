@@ -46,6 +46,7 @@ import validatePhase11ScientificInvariantBlockers from './phase11-scientific-inv
 import validatePhase11CoverageRegressionHarness from './phase11-coverage-regression-harness.js';
 import validatePhase11Wave111Closeout from './phase11-wave-11-1-closeout.js';
 import validatePhase11StateSourceTaxonomy from './phase11-state-source-taxonomy.js';
+import validatePhase11DoctorDriftDetector from './phase11-doctor-drift-detector.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -94,7 +95,8 @@ const validators = [
   ['phase11-scientific-invariant-blockers', validatePhase11ScientificInvariantBlockers],
   ['phase11-coverage-regression-harness', validatePhase11CoverageRegressionHarness],
   ['phase11-wave-11-1-closeout', validatePhase11Wave111Closeout],
-  ['phase11-state-source-taxonomy', validatePhase11StateSourceTaxonomy]
+  ['phase11-state-source-taxonomy', validatePhase11StateSourceTaxonomy],
+  ['phase11-doctor-drift-detector', validatePhase11DoctorDriftDetector]
 ];
 
 for (const [name, validator] of validators) {
