@@ -727,3 +727,88 @@ Claude Code non-author HAT 1 ACCEPT recorded via
 
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.1-doctor-drift-detector-verdict-2026-06-17.md`.
+
+## T11.2.2 Doctor Reconcile Mode Trace
+
+who: codex
+
+when: 2026-06-17
+
+why: T11.2.1 can report drift but intentionally emits no actions. T11.2.2
+opens the narrow reconcile layer that turns those report issues into safe,
+reviewable plans, while allowing actual deletion only for taxonomy-owned
+scratch under explicit non-dry-run and post-canonicalization safety checks.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/doctor-reconcile-mode.js`
+- `environment/tests/ci/phase11-doctor-reconcile-mode.js`
+- `environment/tests/ci/phase11-doctor-reconcile-mode.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- reconcile plans must be derived from T11.2.1 doctor report issues and the
+  T11.2.0 taxonomy, never from caller-supplied destructive actions;
+- `analysis/`, `audit.config.yaml`, `audit/`, and nested `vibe-science/`
+  remain protected `never-auto-delete` scratch;
+- `.tmp-vre-*` and `.tmp/` cleanup requires taxonomy `cleanupEligible:true`,
+  `cleanupPolicy: owned-cleanup`, and matching `cleanupOwner`;
+- dry-run is the default and must mutate nothing;
+- before any unlink/rm, the target is realpath-canonicalized and re-checked
+  for workspace containment plus protected-path membership;
+- non-dry-run scratch cleanup requires an owned-scratch marker at the cleanup
+  root, `.vre-owned-scratch.json`, with matching `sourceId` and
+  `cleanupOwner`, so opaque Windows/MSYS links fail closed before mutation;
+- projection regeneration is plan-only and never spawns WIKI generators;
+- authority regeneration and semantic conflicts are reported, not resolved.
+
+RED evidence captured before GREEN:
+
+- `node --test environment/tests/ci/phase11-doctor-reconcile-mode.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/phase11/doctor-reconcile-mode.js` existed;
+- `node environment/tests/ci/validate-counts.js` failed with
+  `ciValidators` expected 52, got 53 before the count was updated.
+
+verification:
+
+- `node --test environment/tests/ci/phase11-doctor-reconcile-mode.test.js`
+  PASS 12/12, including dry-run no-mutation, explicit owned scratch delete
+  with marker, protected `analysis/` block, caller action rejection,
+  Node-recognized symlink/junction block, native `ln.exe`/junction-like
+  protected/outside file survival, projection plan-only, authority conflict,
+  source/path mismatch, and invalid report fail-closed cases;
+- `node environment/tests/ci/phase11-doctor-reconcile-mode.js` PASS;
+- synthetic Claude-shape `.tmp-evil -> protected-data` and
+  `.tmp-out -> outside` probe blocked with `executed=0`; both files survived;
+- `node environment/tests/ci/validate-counts.js` PASS with
+  `ciValidators:53`;
+- explicit Phase 11 and Phase 9 ledger probes PASS;
+- `node environment/tests/ci/run-all.js` PASS;
+- WIKI checks PASS after export inventory/registry/mirror refresh;
+- `git diff --check` PASS;
+- `npm run check` PASS with 1484 tests, 1475 pass, 0 fail, 9 skipped.
+
+Scope boundaries:
+
+- no root `vre doctor` CLI;
+- no private-WIKI write from VRE runtime;
+- no shell-spawned projection generator;
+- no authority regeneration;
+- no semantic conflict resolution;
+- no Wave 11.2 closeout;
+- no Phase 11 full closeout;
+- no real H5AD read, fraction/count/denominator, export packaging, or
+  biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.2.2-doctor-reconcile-mode-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.2-doctor-reconcile-mode-second-redirect-fix-verdict-2026-06-17.md`.

@@ -47,6 +47,7 @@ import validatePhase11CoverageRegressionHarness from './phase11-coverage-regress
 import validatePhase11Wave111Closeout from './phase11-wave-11-1-closeout.js';
 import validatePhase11StateSourceTaxonomy from './phase11-state-source-taxonomy.js';
 import validatePhase11DoctorDriftDetector from './phase11-doctor-drift-detector.js';
+import validatePhase11DoctorReconcileMode from './phase11-doctor-reconcile-mode.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -96,7 +97,8 @@ const validators = [
   ['phase11-coverage-regression-harness', validatePhase11CoverageRegressionHarness],
   ['phase11-wave-11-1-closeout', validatePhase11Wave111Closeout],
   ['phase11-state-source-taxonomy', validatePhase11StateSourceTaxonomy],
-  ['phase11-doctor-drift-detector', validatePhase11DoctorDriftDetector]
+  ['phase11-doctor-drift-detector', validatePhase11DoctorDriftDetector],
+  ['phase11-doctor-reconcile-mode', validatePhase11DoctorReconcileMode]
 ];
 
 for (const [name, validator] of validators) {
