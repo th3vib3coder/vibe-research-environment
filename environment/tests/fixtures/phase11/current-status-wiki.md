@@ -9,7 +9,7 @@ Latest Closed Task: T11.3.2 - Phase-entry Validator
 Latest Closed Commit: 1b38312ac2874c24a8da9fb35e47290642de119a
 Latest Closed CI: 27688981736 success
 Current Task: T11.3.3 - Research Runbook Handoff
-Current Task Status: not-started-awaiting-hat1-stop
+Current Task Status: hat3-accepted-pending-commit
 Source Strategy: tracked-vre-snapshot
 
 ## Surface Counts
@@ -32,7 +32,7 @@ Source Strategy: tracked-vre-snapshot
 | Integration tests | 15 |
 | CLI tests | 11 |
 | Schema tests | 70 |
-| CI validators | 58 |
+| CI validators | 59 |
 
 ## Carry-Forward And Deferred Items
 
@@ -65,6 +65,10 @@ Source Strategy: tracked-vre-snapshot
 - phase11-implementation-plan/06-wave-11-3-doc-truth-and-process.md
 - https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27688981736
 - https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27688981326
+- phase11-implementation-plan/51-hat1-stop-t11-3-3-research-runbook-handoff-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.3-research-runbook-handoff-verdict-2026-06-17.md
+- phase11-implementation-plan/52-hat3-t11-3-3-research-runbook-handoff-closure-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.3-research-runbook-handoff-verdict-2026-06-17.md
 
 ## Boundary
 

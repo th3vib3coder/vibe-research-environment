@@ -1349,3 +1349,67 @@ Commit/push/CI closure:
 
 T11.3.2 is closed, pushed, and CI-green. Phase 11 remains open; next task is
 T11.3.3 Research Runbook Handoff behind a fresh HAT 1 STOP.
+
+## T11.3.3 Research Runbook Handoff Trace
+
+who: Codex authored the HAT 2 patch after Claude Code non-author HAT 1
+ACCEPT with binding provenance-fidelity and tracked-CI-authority amendments.
+
+when: 2026-06-17.
+
+why: Operators need a machine-checked handoff from the real GSE184880
+blocked packet to Elisa/Goette review without letting the document imply a
+completed CD8/CXCL13 result, a Phase 12 bridge, or agent authority over
+biomedical claims.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `README.md`
+- `environment/phase11/research-runbook.js`
+- `environment/runbooks/phase11-research-runbook.md`
+- `environment/tests/fixtures/phase11/current-status-authority.json`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `environment/tests/fixtures/phase11/research-runbook-authority.json`
+- `environment/tests/ci/phase11-research-runbook.js`
+- `environment/tests/ci/phase11-research-runbook.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+verification:
+
+- RED: `node --test environment/tests/ci/phase11-research-runbook.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before the helper existed;
+- RED cases in the target suite fail closed on wrong total cells, wrong
+  per-file SHA-256, stale snapshot total, sibling-private WIKI CI authority,
+  CD8/claim/Phase 12 overclaim, missing medical boundary, and Graphify or
+  scratch authority leakage;
+- GREEN: target test PASS 8/8;
+- GREEN: semantic validator PASS;
+- GREEN: `validate-counts` PASS with `ciValidators:59`;
+- GREEN: `phase11-current-status` PASS after regenerating README and
+  tracked WIKI projection to the live `ciValidators:59` count and HAT3-accepted
+  pending-commit task status.
+- GREEN final: `run-all.js` PASS; `npm run check` PASS; `git diff --check`
+  PASS; WIKI lint/mirror/registry/schema/protocol checks PASS; Claude Code
+  independently re-ran a fidelity mutation battery and `npm run check`.
+
+scope:
+
+- documentation/CI-only handoff;
+- no real H5AD/GEO read in CI, no new analysis, no CD8 denominator/count/
+  fraction, no Graphify authority, no export packaging, no Phase 12 bridge,
+  no scratch cleanup, no EOF-only cleanup, and no biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.3-research-runbook-handoff-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.3-research-runbook-handoff-verdict-2026-06-17.md`.
+
+Commit/push/CI closure is pending. T11.3.3 remains not closed until the scoped
+VRE commit is pushed and CI is green.

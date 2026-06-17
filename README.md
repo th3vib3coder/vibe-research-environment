@@ -609,7 +609,7 @@ not copied from a private WIKI checkout.
 | Integration tests | 15 |
 | CLI tests | 11 |
 | Schema tests | 70 |
-| CI validators | 58 |
+| CI validators | 59 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -624,7 +624,7 @@ Phase 11 is open; Wave 11.2 is closed at
 `27688981736` (success).
 
 Active task: `T11.3.3` - Research Runbook Handoff
-(not-started-awaiting-hat1-stop). This task keeps README and WIKI status generated
+(hat3-accepted-pending-commit). This task keeps README and WIKI status generated
 from a tracked VRE snapshot; CI must not read a sibling private WIKI checkout.
 
 Carry-forward and deferred items remain visible:
@@ -1256,7 +1256,7 @@ copiati da una WIKI privata affiancata.
 | Test integrazione | 15 |
 | Test CLI | 11 |
 | Test schema | 70 |
-| Validator CI | 58 |
+| Validator CI | 59 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->
@@ -1271,7 +1271,7 @@ Phase 11 e aperta; Wave 11.2 e chiusa al commit
 `27688981736` (success).
 
 Task attivo: `T11.3.3` - Research Runbook Handoff
-(not-started-awaiting-hat1-stop). Questo task mantiene README e WIKI generati da una
+(hat3-accepted-pending-commit). Questo task mantiene README e WIKI generati da una
 snapshot VRE tracciata; la CI non deve leggere una WIKI privata affiancata.
 
 Carry-forward e deferral restano visibili:
