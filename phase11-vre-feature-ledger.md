@@ -812,3 +812,103 @@ Claude Code non-author HAT 1 ACCEPT recorded via
 
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.2-doctor-reconcile-mode-second-redirect-fix-verdict-2026-06-17.md`.
+
+who: codex
+
+when: 2026-06-17
+
+why: T11.2.2 can report and plan around WIKI drift only when a caller supplies
+trusted `observedState`. T11.2.3 adds a read-only WIKI fidelity observer that
+derives the doctor-facing WIKI checks and coverage entries from supplied WIKI
+evidence, so stale or contradictory WIKI coverage cannot remain a hand-waved
+green check.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/wiki-fidelity-observer.js`
+- `environment/tests/ci/phase11-wiki-fidelity-observer.js`
+- `environment/tests/ci/phase11-wiki-fidelity-observer.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `../vibe-science/blueprints/private/WIKI_VRE/entities/phase11-wiki-fidelity-observer-js.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+HAT 1 amendments bound in HAT 2:
+
+- freshness is non-circular: the primary signal is cross-artifact disagreement,
+  not a caller-typed expected date;
+- the real current WIKI artifacts
+  `coverage-summary.json`, `ownership-resolution-summary.json`, and
+  `live-source-gaps.md` must be probed through the helper and
+  `buildDoctorDriftReport`;
+- WIKI coverage paths are normalized from
+  `vibe-research-environment/<path>` to VRE-repo-relative paths only, while
+  sibling `vibe-science/` remains distinct from nested
+  `vibe-research-environment/vibe-science/`;
+- downstream reconcile proof must show `executedActions: []` and projection
+  plans with `execute:false`;
+- `doctor-drift-detector.js`, `doctor-reconcile-mode.js`, and the T11.2.0
+  taxonomy fixture remain immutable surfaces for this task.
+
+RED evidence captured before GREEN:
+
+- `node --test environment/tests/ci/phase11-wiki-fidelity-observer.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/phase11/wiki-fidelity-observer.js` existed;
+- `node environment/tests/ci/phase11-wiki-fidelity-observer.js` failed with
+  the same missing helper before implementation;
+- `node environment/tests/ci/validate-counts.js` failed with
+  `ciValidators` expected 53, got 54 before the count was updated;
+- `node environment/tests/ci/run-all.js` failed with
+  `E_PHASE11_TRACE_MISSING environment/phase11/wiki-fidelity-observer.js`
+  before this ledger trace was added.
+
+verification:
+
+- `node --test environment/tests/ci/phase11-wiki-fidelity-observer.test.js`
+  PASS 9/9, including registry drift, mirror drift, non-circular coverage
+  freshness, three-source count mismatch, VRE path normalization,
+  sibling-vs-nested `vibe-science/`, fail-closed malformed evidence,
+  reconcile boundedness, real on-disk WIKI artifact drift, and no spawn/write
+  source scan;
+- `node environment/tests/ci/phase11-wiki-fidelity-observer.js` PASS;
+- `node environment/tests/ci/validate-counts.js` PASS with
+  `ciValidators:54`;
+- explicit `node environment/tests/ci/check-phase11-ledger.js
+  --changed-file=...` PASS for the T11.2.3 VRE delta;
+- explicit `node environment/tests/ci/check-phase9-ledger.js
+  --changed-file=...` PASS after Phase 9 bridge row 171 and the private Phase
+  9 implementation-status ledger note were both included;
+- `node environment/tests/ci/run-all.js` PASS;
+- WIKI checks PASS: `build-registries --check`, `audit-entity-exports`
+  with 0 errors and 6 pre-existing missing-owner warnings, `audit-schema-fields`,
+  `wiki-lint` issueCount 0, `sync-mirror --check` changed 0, and
+  `generate-vre-coverage --check`;
+- `git diff --check` PASS;
+- decision gates JSON parse PASS;
+- `npm run check` PASS with 1493 tests, 1484 pass, 0 fail, 9 skipped.
+
+Scope boundaries:
+
+- no root `vre doctor` CLI;
+- no private-WIKI write from VRE runtime;
+- no shell-spawned WIKI generator;
+- no scratch deletion or cleanup;
+- no automatic semantic decision or authority regeneration;
+- no Wave 11.2 closeout;
+- no Phase 11 full closeout;
+- no real H5AD read, fraction/count/denominator, export packaging, or
+  biomedical claim promotion.
+
+reviewer:
+
+Claude Code non-author HAT 1 REDIRECT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.2.3-wiki-fidelity-integration-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 1 ACCEPT after amendment recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.2.3-wiki-fidelity-integration-rereview-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.2.3-wiki-fidelity-integration-verdict-2026-06-17.md`.
