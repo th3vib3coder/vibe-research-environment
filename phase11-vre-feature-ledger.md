@@ -515,3 +515,68 @@ Reviewer outcome:
 
 Claude Code non-author HAT 1 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.1.4-coverage-regression-harness-verdict-2026-06-17.md`.
+
+## T11.1.5 Wave 11.1 Closeout Trace
+
+who: codex
+
+when: 2026-06-17
+
+why: T11.1.0 through T11.1.4 are closed and CI-green, but Wave 11.1 must close
+as a scientific-lane foundation, not as a biomedical result. Claude Code HAT 1
+ACCEPT required a fail-closed closeout fixture and validator, plus independent
+grounding of the five-task roster against git and GitHub Actions before HAT 3.
+
+what:
+
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/tests/fixtures/phase11/wave-11-1-closeout.json`
+- `environment/tests/ci/phase11-wave-11-1-closeout.js`
+- `environment/tests/ci/phase11-wave-11-1-closeout.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+
+HAT 1 amendments bound in HAT 2:
+
+- ground-truth each roster commit as an ancestor of `origin/main` and each CI
+  run as success/matching head SHA via git/gh; fixture self-consistency is not
+  sufficient;
+- add new diff-grounded Phase 11 closeout trace and Phase 9 bridge row because
+  `validate-counts.js` and `run-all.js` are touched;
+- close Wave 11.1 only; Phase 11 remains open and Wave 11.2 remains unopened;
+- preserve no biomedical claim, real-data read, fraction, Rscript/notebook,
+  network, export packaging, or claim-promotion boundaries.
+
+RED evidence captured before GREEN:
+
+- `node --test environment/tests/ci/phase11-wave-11-1-closeout.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before the validator existed;
+- `node environment/tests/ci/validate-counts.js` failed `ciValidators`
+  expected 49, got 50;
+- `node environment/tests/ci/check-phase11-ledger.js` failed
+  `E_PHASE11_TRACE_MISSING` for the closeout validator;
+- `node environment/tests/ci/run-all.js` failed on the count invariant and
+  missing Phase 11 trace before wiring/count/ledger updates.
+
+verification so far:
+
+- `node --test environment/tests/ci/phase11-wave-11-1-closeout.test.js`
+  PASS 7/7.
+- `node environment/tests/ci/phase11-wave-11-1-closeout.js` PASS.
+
+Scope boundaries:
+
+- no real GSE184880 or H5AD read;
+- no CXCL13+ CD8 denominator, count, or fraction;
+- no Rscript or notebook execution;
+- no network;
+- no export packaging implementation;
+- no biomedical claim promotion;
+- no Wave 11.2 opening;
+- no Phase 11 full closeout.
+
+Reviewer outcome:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.1.5-wave-11.1-closeout-verdict-2026-06-17.md`.
