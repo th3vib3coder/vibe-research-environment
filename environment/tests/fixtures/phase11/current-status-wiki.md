@@ -5,10 +5,10 @@ Phase: 11
 Phase Status: open
 Active Wave: 11.3
 Latest Closed Wave: 11.2
-Latest Closed Task: T11.3.0 - Generated Current Status
-Latest Closed Commit: cbd884b71ef305761f67d7578c93046c12b1c61b
-Latest Closed CI: 27680552049 success
-Current Task: T11.3.1 - Ledger Row Budget
+Latest Closed Task: T11.3.1 - Ledger Row Budget
+Latest Closed Commit: 845f2ebb04a66b01d87527c73effeb39ea9ab3f7
+Latest Closed CI: 27683993596 success
+Current Task: T11.3.2 - Phase-entry Validator
 Current Task Status: hat3-reviewed-accepted-pending-commit
 Source Strategy: tracked-vre-snapshot
 
@@ -32,7 +32,7 @@ Source Strategy: tracked-vre-snapshot
 | Integration tests | 15 |
 | CLI tests | 11 |
 | Schema tests | 70 |
-| CI validators | 57 |
+| CI validators | 58 |
 
 ## Carry-Forward And Deferred Items
 
@@ -51,7 +51,17 @@ Source Strategy: tracked-vre-snapshot
 - phase11-implementation-plan/01-entry-gates-and-scope.md
 - phase11-implementation-plan/45-hat1-stop-t11-3-1-ledger-row-budget-2026-06-17.md
 - phase11-implementation-plan/46-hat3-t11-3-1-ledger-row-budget-closure-2026-06-17.md
+- phase11-implementation-plan/47-hat1-stop-t11-3-2-phase-entry-validator-2026-06-17.md
+- phase11-implementation-plan/48-hat1-stop-t11-3-2-phase-entry-validator-amended-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.2-phase-entry-validator-verdict-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.2-phase-entry-validator-amended-verdict-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.1-ledger-row-budget-verdict-2026-06-17.md
+- https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27683993596
 - phase11-implementation-plan/07-graphify-reconciliation.md
+- phase11-implementation-plan/49-hat3-t11-3-2-phase-entry-validator-closure-2026-06-17.md
+- phase11-implementation-plan/50-hat3-t11-3-2-phase-entry-validator-redirect-fix-closure-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-verdict-2026-06-17.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-redirect-fix-verdict-2026-06-17.md
 
 ## Boundary
 

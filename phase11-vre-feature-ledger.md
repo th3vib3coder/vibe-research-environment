@@ -1270,3 +1270,73 @@ Codex HAT 3 handoff authored at
 
 Claude Code non-author HAT 3 ACCEPT recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.1-ledger-row-budget-verdict-2026-06-17.md`.
+
+## T11.3.2 Phase-entry Validator Trace
+
+who: Codex authored the HAT 2 patch after Claude Code non-author HAT 1
+ACCEPT of the amended STOP.
+
+when: 2026-06-17.
+
+why: Phase 12+ entry needs a deterministic guard that refuses process-only
+closeout evidence, synthetic/fake research evidence, blocked first-packet
+artifacts, unreviewed medical evidence, missing lineage, killed citations,
+and blocked dependencies before the next phase can open.
+
+what:
+
+- `README.md`
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/phase-entry-gate.js`
+- `environment/tests/ci/phase11-phase-entry-gate.js`
+- `environment/tests/ci/phase11-phase-entry-gate.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/fixtures/phase11/current-status-authority.json`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+verification:
+
+- RED: `node --test environment/tests/ci/phase11-phase-entry-gate.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before the helper existed;
+- REDIRECT: Claude Code proved an evaluator-bypass false green where artifact
+  metadata, lineage, and review fields returned `eligible` without
+  `scientificInvariantInput`, `researchPacket`, or
+  `firstResearchPacketExecution`;
+- RED: the new no-evaluator regression failed with `decision:"eligible"`
+  before the redirect fix;
+- RED: `check-phase11-ledger` failed `E_PHASE11_TRACE_MISSING` before
+  this trace existed;
+- RED: explicit `check-phase9-ledger --changed-file ...` failed
+  `E_SPEC_LEDGER_UPDATE_REQUIRED` before the private Phase 9 note;
+- GREEN: phase-entry gate target test PASS 17/17;
+- GREEN: semantic validator PASS and requires
+  `substance_evaluator_required` for the evaluator bypass;
+- GREEN: `validate-counts` PASS with `ciValidators:58`;
+- GREEN: `phase11-current-status`, `check-phase11-ledger`,
+  explicit Phase 9 ledger probe, `phase11-ledger-row-budget`, `run-all.js`,
+  `git diff --check`, WIKI lint, and WIKI mirror check PASS after
+  regenerating the tracked README/current-status projection for T11.3.2.
+
+scope:
+
+- no Phase 11 or Phase 12 closeout;
+- no real H5AD/GEO read, export packaging, Graphify runtime, root doctor CLI,
+  scratch cleanup, EOF-only cleanup, biomedical claim promotion, or override
+  that authorizes claims/export/runtime.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.2-phase-entry-validator-amended-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 REDIRECT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 redirect-fix ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-redirect-fix-verdict-2026-06-17.md`.
+
+HAT 3 is reviewed-accepted and pending scoped commit/push/CI.

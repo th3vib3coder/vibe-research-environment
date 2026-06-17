@@ -52,6 +52,7 @@ import validatePhase11WikiFidelityObserver from './phase11-wiki-fidelity-observe
 import validatePhase11Wave112Closeout from './phase11-wave-11-2-closeout.js';
 import validatePhase11CurrentStatus from './phase11-current-status.js';
 import validatePhase11LedgerRowBudget from './phase11-ledger-row-budget.js';
+import validatePhase11PhaseEntryGate from './phase11-phase-entry-gate.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -106,7 +107,8 @@ const validators = [
   ['phase11-wiki-fidelity-observer', validatePhase11WikiFidelityObserver],
   ['phase11-wave-11-2-closeout', validatePhase11Wave112Closeout],
   ['phase11-current-status', validatePhase11CurrentStatus],
-  ['phase11-ledger-row-budget', validatePhase11LedgerRowBudget]
+  ['phase11-ledger-row-budget', validatePhase11LedgerRowBudget],
+  ['phase11-phase-entry-gate', validatePhase11PhaseEntryGate]
 ];
 
 for (const [name, validator] of validators) {

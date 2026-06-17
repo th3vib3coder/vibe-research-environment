@@ -11,17 +11,17 @@
   "activeWave": "11.3",
   "latestClosedWave": "11.2",
   "latestClosedTask": {
-    "taskId": "T11.3.0",
-    "name": "Generated Current Status",
-    "status": "closed-pushed-ci-green",
-    "commit": "cbd884b71ef305761f67d7578c93046c12b1c61b",
-    "ciRun": "27680552049",
-    "ciConclusion": "success",
-    "githubActionsUrl": "https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27680552049"
-  },
-  "currentTask": {
     "taskId": "T11.3.1",
     "name": "Ledger Row Budget",
+    "status": "closed-pushed-ci-green",
+    "commit": "845f2ebb04a66b01d87527c73effeb39ea9ab3f7",
+    "ciRun": "27683993596",
+    "ciConclusion": "success",
+    "githubActionsUrl": "https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27683993596"
+  },
+  "currentTask": {
+    "taskId": "T11.3.2",
+    "name": "Phase-entry Validator",
     "status": "hat3-reviewed-accepted-pending-commit"
   },
   "carryForward": [
@@ -53,7 +53,17 @@
     "phase11-implementation-plan/01-entry-gates-and-scope.md",
     "phase11-implementation-plan/45-hat1-stop-t11-3-1-ledger-row-budget-2026-06-17.md",
     "phase11-implementation-plan/46-hat3-t11-3-1-ledger-row-budget-closure-2026-06-17.md",
-    "phase11-implementation-plan/07-graphify-reconciliation.md"
+    "phase11-implementation-plan/47-hat1-stop-t11-3-2-phase-entry-validator-2026-06-17.md",
+    "phase11-implementation-plan/48-hat1-stop-t11-3-2-phase-entry-validator-amended-2026-06-17.md",
+    "C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.2-phase-entry-validator-verdict-2026-06-17.md",
+    "C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.2-phase-entry-validator-amended-verdict-2026-06-17.md",
+    "C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.1-ledger-row-budget-verdict-2026-06-17.md",
+    "https://github.com/th3vib3coder/vibe-research-environment/actions/runs/27683993596",
+    "phase11-implementation-plan/07-graphify-reconciliation.md",
+    "phase11-implementation-plan/49-hat3-t11-3-2-phase-entry-validator-closure-2026-06-17.md",
+    "phase11-implementation-plan/50-hat3-t11-3-2-phase-entry-validator-redirect-fix-closure-2026-06-17.md",
+    "C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-verdict-2026-06-17.md",
+    "C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.2-phase-entry-validator-redirect-fix-verdict-2026-06-17.md"
   ],
   "generatedAt": "2026-06-17"
 }
