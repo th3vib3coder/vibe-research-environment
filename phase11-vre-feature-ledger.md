@@ -1417,3 +1417,78 @@ Commit/push/CI closure:
 
 T11.3.3 is closed, pushed, and CI-green. Phase 11 remains open; next task is
 T11.3.4 Phase 11 Full Closeout behind a fresh HAT 1 STOP.
+
+## T11.3.4 Phase 11 Full Closeout Trace
+
+who: Codex authored the HAT 2 patch after Claude Code non-author HAT 1
+ACCEPT with binding delivery-attestation and ground-truth roster amendments.
+
+when: 2026-06-17.
+
+why: Phase 11 needs a fail-closed full closeout for the VRE
+research-environment foundation without converting process completion into a
+biomedical result, Phase 12 opening, export path, claim promotion, Graphify
+authorization, or scratch cleanup.
+
+what:
+
+- `README.md`
+- `.github/workflows/ci.yml`
+- `phase11-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `environment/phase11/phase-11-closeout.js`
+- `environment/closures/phase11-full-closeout-2026-06-17.md`
+- `environment/closures/phase11-full-closeout-evidence-2026-06-17.json`
+- `environment/tests/fixtures/phase11/phase-11-closeout.json`
+- `environment/tests/fixtures/phase11/current-status-authority.json`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `environment/tests/ci/phase11-full-closeout.js`
+- `environment/tests/ci/phase11-full-closeout.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/00-index.md`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/06-wave-11-3-doc-truth-and-process.md`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/54-hat3-t11-3-4-phase-11-full-closeout-closure-2026-06-17.md`
+- `../vibe-science/blueprints/private/phase11-implementation-plan/phase11-implementation-log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/closures/phase11-full-closeout-2026-06-17.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/closures/phase11-full-closeout-evidence-2026-06-17.json`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+verification:
+
+- RED: `node --test environment/tests/ci/phase11-full-closeout.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before `phase-11-closeout.js` existed;
+- RED cases fail closed on missing task rows, wrong commit or CI run,
+  evidence-only T11.0.0 represented as runtime, GSE184880 overclaim,
+  missing Elisa/Gotte medical boundary, missing carry-forward, opened Phase
+  12/Graphify/export/claim/scratch boundaries, docs-only evidence, and missing
+  delivery attestation or closeout-honesty validation;
+- GREEN so far: target test PASS 10/10; semantic validator PASS; `README.md`
+  and tracked current-status projection regenerated to `ciValidators:60` and
+  `hat2-authored-hat3-pending`;
+- final aggregate, ledger, WIKI, and `npm run check` verification are recorded
+  in the HAT 3 handoff artifact before non-author review.
+
+scope:
+
+- closeout is limited to Phase 11 research-environment foundation state;
+- GSE184880 remains blocked-actionable, with no CD8/CXCL13 denominator,
+  count, fraction, supported finding, conclusive finding, claim-ready status,
+  export-ready status, or publication-ready status;
+- no Phase 12 entry, Graphify runtime, export packaging, persisted multi-domain
+  execution, real H5AD/GEO read, network use, root doctor cleanup, scratch
+  cleanup, or EOF-only cleanup is opened.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat1-t11.3.4-phase-11-full-closeout-verdict-2026-06-17.md`.
+
+Claude Code non-author HAT 3 ACCEPT recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-hat3-t11.3.4-phase-11-full-closeout-verdict-2026-06-17.md`.
+
+Commit/push/CI closure is pending. Codex authored this patch and did not
+self-ACCEPT it.

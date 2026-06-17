@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "phase11.full_closeout.evidence.v1",
+  "phase": 11,
+  "closedAt": "2026-06-17",
+  "closeoutClaim": "research-environment-foundation",
+  "fixture": "environment/tests/fixtures/phase11/phase-11-closeout.json",
+  "validator": "environment/tests/ci/phase11-full-closeout.js",
+  "test": "environment/tests/ci/phase11-full-closeout.test.js",
+  "taskCount": 20,
+  "committedTaskCount": 19,
+  "evidenceOnlyTaskCount": 1,
+  "latestSubstantiveClosedCommit": "9dbb730678367d86b5fffbfda161992c82dffd78",
+  "latestStatusProjectionCommit": "932578e88a9a8a8f43df5679de70876becbe91e8",
+  "realDataPacketStatus": "blocked-actionable",
+  "claimPromotion": false,
+  "phase12Entry": false,
+  "graphify": false,
+  "exportPackaging": false,
+  "persistedMultiDomainExecution": false,
+  "medicalAuthority": "Elisa/Gotte required for biomedical interpretation",
+  "carryForward": [
+    "FU-EOF-NOISE-CLEANUP",
+    "W10.4-DEFERRED-EXPORT-PACKAGING-001",
+    "W10.5-DEFERRED-PERSISTED-MULTI-DOMAIN-EXECUTION-001",
+    "GRAPHIFY-DEFERRED-NOT-READY-FOR-BRIDGE"
+  ]
+}
