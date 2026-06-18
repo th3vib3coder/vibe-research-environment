@@ -12,6 +12,13 @@ const REQUIRED_CLOSED_PHASE11_AUTHORITY_SOURCES = Object.freeze([
     + 'claude-hat3-t11.3.4-phase-11-full-closeout-verdict-2026-06-17.md'
 ]);
 
+const REQUIRED_PHASE12_SCAFFOLD_AUTHORITY_SOURCES = Object.freeze([
+  'environment/closures/phase12-full-closeout-2026-06-18.md',
+  'environment/closures/phase12-full-closeout-evidence-2026-06-18.json',
+  'environment/tests/fixtures/phase12/phase-12-closeout.json',
+  'environment/tests/ci/phase12-full-closeout.js'
+]);
+
 const COUNT_ROWS = Object.freeze([
   ['bundleManifests', 'Install bundle manifests', 'Manifest bundle installazione'],
   ['schemas', 'Schemas', 'Schemi'],
@@ -46,6 +53,12 @@ export const CURRENT_STATUS_REASON_CODES = Object.freeze({
   phase11Closed: 'E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED',
   phase11ClosedAuthorityMissing:
     'E_PHASE11_CURRENT_STATUS_PHASE11_CLOSED_AUTHORITY_MISSING',
+  phase12ScaffoldClosed:
+    'E_PHASE11_CURRENT_STATUS_PHASE12_SCAFFOLD_CLOSED_INVALID',
+  phase12ScaffoldAuthorityMissing:
+    'E_PHASE11_CURRENT_STATUS_PHASE12_SCAFFOLD_AUTHORITY_MISSING',
+  phase12LiveRuntimeOpen:
+    'E_PHASE11_CURRENT_STATUS_PHASE12_LIVE_RUNTIME_OPEN',
   missingLatestClosedEvidence: 'E_PHASE11_CURRENT_STATUS_LATEST_CLOSED_MISSING',
   missingCarryForward: 'E_PHASE11_CURRENT_STATUS_CARRY_FORWARD_MISSING',
   readmeMarkerMissing: 'E_PHASE11_CURRENT_STATUS_README_MARKER_MISSING',
@@ -175,6 +188,38 @@ function validateAuthority(authority) {
     }
   }
 
+  if (authority?.phase12ScaffoldStatus === 'closed') {
+    const scaffold = authority?.phase12ScaffoldCloseout ?? {};
+    if (
+      scaffold.status !== 'scaffold-closed-live-runtime-closed' ||
+      scaffold.stackCommit !== 'f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2' ||
+      scaffold.ciRun !== '27742208747' ||
+      scaffold.ciConclusion !== 'success'
+    ) {
+      issues.push(issue(CURRENT_STATUS_REASON_CODES.phase12ScaffoldClosed));
+    }
+
+    if (
+      scaffold.liveRuntimeAllowed !== false ||
+      scaffold.providerAutomationAllowed !== false ||
+      scaffold.guiClipboardRelayAllowed !== false ||
+      scaffold.claimExportAllowed !== false ||
+      scaffold.biomedicalClaimAllowed !== false
+    ) {
+      issues.push(issue(CURRENT_STATUS_REASON_CODES.phase12LiveRuntimeOpen));
+    }
+
+    const authoritySources = new Set(authority?.authoritySources ?? []);
+    for (const source of REQUIRED_PHASE12_SCAFFOLD_AUTHORITY_SOURCES) {
+      if (!authoritySources.has(source)) {
+        issues.push(issue(
+          CURRENT_STATUS_REASON_CODES.phase12ScaffoldAuthorityMissing,
+          { source }
+        ));
+      }
+    }
+  }
+
   const carriedIds = new Set((authority?.carryForward ?? []).map((item) => item.id));
   for (const id of REQUIRED_CARRY_FORWARD_IDS) {
     if (!carriedIds.has(id)) {
@@ -196,6 +241,8 @@ export function buildCurrentStatusModel(authority, counts) {
     latestClosedWave: authority?.latestClosedWave ?? null,
     latestClosedTask: authority?.latestClosedTask ?? {},
     currentTask: authority?.currentTask ?? {},
+    phase12ScaffoldStatus: authority?.phase12ScaffoldStatus ?? null,
+    phase12ScaffoldCloseout: authority?.phase12ScaffoldCloseout ?? null,
     carryForward: authority?.carryForward ?? [],
     authoritySources: authority?.authoritySources ?? [],
     sourceStrategy: authority?.sourceStrategy ?? null,
@@ -233,6 +280,8 @@ export function renderReadmeCurrentStatusEnglish(model) {
   const latest = model.latestClosedTask;
   const current = model.currentTask;
   if (model.phaseStatus === 'closed') {
+    const phase12Closed = model.phase12ScaffoldStatus === 'closed';
+    const phase12 = model.phase12ScaffoldCloseout ?? {};
     return [
       '## Current Status',
       '',
@@ -240,9 +289,28 @@ export function renderReadmeCurrentStatusEnglish(model) {
       `\`${latest.commit}\` with GitHub Actions run`,
       `\`${latest.ciRun}\` (${latest.ciConclusion}).`,
       '',
-      'No active Phase 11 implementation task is open. Phase 12 remains gated',
-      'by the reviewed phase-entry guard and requires a future explicit HAT',
-      'cycle with real research evidence or a scoped operator override.',
+      phase12Closed
+        ? 'Phase 12 scaffold is closed as a governed adversarial-relay foundation at'
+        : 'No active Phase 11 implementation task is open. Phase 12 runtime is not open',
+      phase12Closed
+        ? `\`${phase12.stackCommit}\` with GitHub Actions run`
+        : 'and remains controlled by phase-entry review plus future explicit HAT',
+      phase12Closed
+        ? `\`${phase12.ciRun}\` (${phase12.ciConclusion}).`
+        : 'cycle with real research evidence or a scoped operator override.',
+      '',
+      phase12Closed
+        ? 'Live Phase 12 runtime remains closed: no adversarial run-state,'
+        : 'Phase 12 live runtime remains closed.',
+      phase12Closed
+        ? 'provider automation, GUI/clipboard relay, Phase 10 publication or'
+        : '',
+      phase12Closed
+        ? 'writeback, Graphify execution/writeback, claim/export, real-data'
+        : '',
+      phase12Closed
+        ? 'reads, or biomedical claim authority is open.'
+        : '',
       '',
       'Carry-forward and deferred items remain visible:',
       '',
@@ -277,6 +345,8 @@ export function renderReadmeCurrentStatusItalian(model) {
   const latest = model.latestClosedTask;
   const current = model.currentTask;
   if (model.phaseStatus === 'closed') {
+    const phase12Closed = model.phase12ScaffoldStatus === 'closed';
+    const phase12 = model.phase12ScaffoldCloseout ?? {};
     return [
       '## Stato Corrente',
       '',
@@ -284,9 +354,28 @@ export function renderReadmeCurrentStatusItalian(model) {
       `\`${latest.commit}\` con GitHub Actions run`,
       `\`${latest.ciRun}\` (${latest.ciConclusion}).`,
       '',
-      'Nessun task implementativo Phase 11 e aperto. Phase 12 resta bloccata',
-      'dal phase-entry guard revisionato e richiede un futuro ciclo HAT',
-      'esplicito con evidenza di ricerca reale o override operatore scoped.',
+      phase12Closed
+        ? 'Lo scaffold Phase 12 e chiuso come fondazione adversarial-relay'
+        : 'Nessun task implementativo Phase 11 e aperto. Il runtime Phase 12 non e aperto',
+      phase12Closed
+        ? `governata al commit \`${phase12.stackCommit}\` con GitHub Actions run`
+        : 'e resta controllato da phase-entry review piu futuro ciclo HAT',
+      phase12Closed
+        ? `\`${phase12.ciRun}\` (${phase12.ciConclusion}).`
+        : 'esplicito con evidenza di ricerca reale o override operatore scoped.',
+      '',
+      phase12Closed
+        ? 'Il runtime live Phase 12 resta chiuso: nessun run-state avversario,'
+        : 'Il runtime live Phase 12 resta chiuso.',
+      phase12Closed
+        ? 'automazione provider, relay GUI/clipboard, pubblicazione o writeback'
+        : '',
+      phase12Closed
+        ? 'Phase 10, esecuzione/writeback Graphify, claim/export, letture'
+        : '',
+      phase12Closed
+        ? 'real-data o autorita di claim biomedico sono aperti.'
+        : '',
       '',
       'Carry-forward e deferral restano visibili:',
       '',
@@ -333,6 +422,11 @@ export function renderWikiCurrentStatus(model) {
     `Latest Closed CI: ${latest.ciRun} ${latest.ciConclusion}`,
     `Current Task: ${model.currentTask.taskId} - ${model.currentTask.name}`,
     `Current Task Status: ${model.currentTask.status}`,
+    `Phase 12 Scaffold Status: ${model.phase12ScaffoldStatus ?? 'not-closed'}`,
+    `Phase 12 Scaffold Commit: ${model.phase12ScaffoldCloseout?.stackCommit ?? 'n/a'}`,
+    `Phase 12 Live Runtime: ${
+      model.phase12ScaffoldCloseout?.liveRuntimeAllowed === false ? 'closed' : 'not-opened'
+    }`,
     `Source Strategy: ${model.sourceStrategy}`,
     '',
     '## Surface Counts',

@@ -60,6 +60,7 @@ import validatePhase12BridgeValidators from './phase12-bridge-validators.js';
 import validatePhase12ManualRelayDryRun from './phase12-manual-relay-dry-run.js';
 import validatePhase12LoopController from './phase12-loop-controller.js';
 import validatePhase12AcceptanceHarness from './phase12-acceptance-harness.js';
+import validatePhase12FullCloseout from './phase12-full-closeout.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -122,7 +123,8 @@ const validators = [
   ['phase12-manual-relay-dry-run', validatePhase12ManualRelayDryRun],
   ['phase12-loop-controller', validatePhase12LoopController],
   ['phase12-bridge-validators', validatePhase12BridgeValidators],
-  ['phase12-acceptance-harness', validatePhase12AcceptanceHarness]
+  ['phase12-acceptance-harness', validatePhase12AcceptanceHarness],
+  ['phase12-full-closeout', validatePhase12FullCloseout]
 ];
 
 for (const [name, validator] of validators) {

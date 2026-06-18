@@ -272,6 +272,59 @@ Codex authored this HAT 2 implementation and must not self-ACCEPT it. The
 HAT 3 handoff requires Claude Code non-author review before any commit/push or
 Phase 12 continuation.
 
+## 2026-06-18 - T12.7.0 Phase 12 Full Closeout
+
+status: `hat2-authored-pending-hat3-review`
+
+files:
+
+- `README.md`
+- `environment/phase11/current-status.js`
+- `environment/phase12/phase-12-closeout.js`
+- `environment/closures/phase12-full-closeout-2026-06-18.md`
+- `environment/closures/phase12-full-closeout-evidence-2026-06-18.json`
+- `environment/tests/fixtures/phase12/phase-12-closeout.json`
+- `environment/tests/fixtures/phase11/current-status-authority.json`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `environment/tests/ci/phase12-full-closeout.js`
+- `environment/tests/ci/phase12-full-closeout.test.js`
+- `environment/tests/ci/phase11-current-status.test.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/ci/run-all.js`
+- `phase9-vre-feature-ledger.md`
+- `phase12-vre-feature-ledger.md`
+
+verification:
+
+- RED: `node --test environment/tests/ci/phase12-full-closeout.test.js`
+  failed because the test file was absent before implementation.
+- RED: `validate-counts` would fail until `ciValidators` moved from 65 to 66.
+- RED: aggregate `run-all.js` would fail until closeout validator wiring.
+- RED: stale README/current-status text would remain "Phase 12 remains gated"
+  until the generated projection was refreshed.
+- GREEN pending final run: target closeout test, direct closeout validator,
+  current-status validator, `validate-counts`, `run-all.js`, ledger checks, and
+  `npm run check`.
+
+scope:
+
+- closes Phase 12 only as a governed adversarial-relay scaffold;
+- pins stack commit `f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2` and GitHub
+  Actions run `27742208747` as the scaffold baseline;
+- keeps live runtime, provider automation, GUI/clipboard relay,
+  `.vibe-science-environment/adversarial-*` run state, Phase 10
+  publication/writeback, Graphify execution/writeback, claim/export,
+  real-data reads, biomedical claims, commit, and push closed.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat1-t12.7.0-phase-12-full-closeout-verdict-2026-06-18.md`.
+
+Codex authored this HAT 2 implementation and must not self-ACCEPT it. Claude
+Code non-author HAT 3 review is required before any Phase 12 closeout claim is
+accepted and before any commit/push.
+
 Claude Code HAT 3 ACCEPT is recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.2.0-manual-relay-dry-run-verdict-2026-06-18.md`.
 

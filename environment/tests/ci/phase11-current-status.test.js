@@ -103,6 +103,31 @@ function makeClosedAuthority(overrides = {}) {
   });
 }
 
+function makePhase12ClosedAuthority(overrides = {}) {
+  return makeClosedAuthority({
+    phase12ScaffoldStatus: 'closed',
+    phase12ScaffoldCloseout: {
+      status: 'scaffold-closed-live-runtime-closed',
+      stackCommit: 'f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2',
+      ciRun: '27742208747',
+      ciConclusion: 'success',
+      liveRuntimeAllowed: false,
+      providerAutomationAllowed: false,
+      guiClipboardRelayAllowed: false,
+      claimExportAllowed: false,
+      biomedicalClaimAllowed: false
+    },
+    authoritySources: [
+      ...makeClosedAuthority().authoritySources,
+      'environment/closures/phase12-full-closeout-2026-06-18.md',
+      'environment/closures/phase12-full-closeout-evidence-2026-06-18.json',
+      'environment/tests/fixtures/phase12/phase-12-closeout.json',
+      'environment/tests/ci/phase12-full-closeout.js'
+    ],
+    ...overrides
+  });
+}
+
 function makeReadme(authority = makeAuthority()) {
   const model = buildCurrentStatusModel(authority, COUNTS);
   let markdown = [
@@ -173,6 +198,41 @@ test('valid Phase 11 closed projection passes only after T11.3.4 closeout', () =
   });
 
   assert.equal(result.ok, true, JSON.stringify(result.issues, null, 2));
+});
+
+test('valid Phase 12 scaffold-closed projection replaces gated wording', () => {
+  const authority = makePhase12ClosedAuthority();
+  const model = buildCurrentStatusModel(authority, COUNTS);
+  const readmeMarkdown = makeReadme(authority);
+  const result = validateCurrentStatusProjection({
+    authority,
+    counts: COUNTS,
+    readmeMarkdown,
+    wikiMarkdown: renderWikiCurrentStatus(model)
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.issues, null, 2));
+  assert(readmeMarkdown.includes('Phase 12 scaffold is closed'));
+  assert(!readmeMarkdown.includes('Phase 12 remains gated'));
+});
+
+test('stale Phase 12 gated wording fails after scaffold closeout', () => {
+  const authority = makePhase12ClosedAuthority();
+  const staleReadme = makeReadme(authority).replace(
+    'Phase 12 scaffold is closed as a governed adversarial-relay foundation at',
+    'No active Phase 11 implementation task is open. Phase 12 remains gated'
+  );
+  const result = validateCurrentStatusProjection({
+    authority,
+    counts: COUNTS,
+    readmeMarkdown: staleReadme,
+    wikiMarkdown: renderWikiCurrentStatus(buildCurrentStatusModel(authority, COUNTS))
+  });
+
+  assert.equal(result.ok, false);
+  assert(result.issues.some((issue) =>
+    issue.code === CURRENT_STATUS_REASON_CODES.readmeCurrentStatusEnglishMismatch
+  ));
 });
 
 test('stale English README status fails closed', () => {

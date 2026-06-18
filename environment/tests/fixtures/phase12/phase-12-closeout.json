@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "phase12.full_closeout.v1",
+  "phase": 12,
+  "phase12Status": "scaffold-closed-live-runtime-closed",
+  "closeoutClaim": "governed-adversarial-relay-scaffold",
+  "closedAt": "2026-06-18",
+  "phase12StackCommit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+  "phase12StackCiRun": "27742208747",
+  "phase12StackCiConclusion": "success",
+  "liveRuntimeActivation": null,
+  "tasks": [
+    {
+      "taskId": "T12.0.0",
+      "status": "closed-documentation-state-only",
+      "documentationOnly": true,
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.0.0-phase12-plan-freeze-verdict-2026-06-18.md"
+    },
+    {
+      "taskId": "T12.1.0",
+      "status": "closed-pushed-ci-green",
+      "commit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+      "ciRun": "27742208747",
+      "ciConclusion": "success",
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.1.0-artifact-contracts-verdict-2026-06-18.md"
+    },
+    {
+      "taskId": "T12.2.0",
+      "status": "closed-pushed-ci-green",
+      "commit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+      "ciRun": "27742208747",
+      "ciConclusion": "success",
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.2.0-manual-relay-dry-run-verdict-2026-06-18.md"
+    },
+    {
+      "taskId": "T12.3.0",
+      "status": "closed-pushed-ci-green",
+      "commit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+      "ciRun": "27742208747",
+      "ciConclusion": "success",
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.3.0-cli-and-adapter-surface-verdict-2026-06-18.md"
+    },
+    {
+      "taskId": "T12.4.0",
+      "status": "closed-pushed-ci-green",
+      "commit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+      "ciRun": "27742208747",
+      "ciConclusion": "success",
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.4.0-bounded-loop-controller-verdict-2026-06-18.md"
+    },
+    {
+      "taskId": "T12.5.0",
+      "status": "closed-pushed-ci-green",
+      "commit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+      "ciRun": "27742208747",
+      "ciConclusion": "success",
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.5.0-phase10-phase11-bridge-validators-verdict-2026-06-18.md"
+    },
+    {
+      "taskId": "T12.6.0",
+      "status": "closed-pushed-ci-green",
+      "commit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+      "ciRun": "27742208747",
+      "ciConclusion": "success",
+      "hat3Verdict": "ACCEPT",
+      "hat3AcceptRelay": "C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.6.0-acceptance-harness-verdict-2026-06-18.md"
+    }
+  ],
+  "liveRuntime": {
+    "enabled": false,
+    "runStateCreated": false,
+    "readyForAutonomousExecution": false
+  },
+  "forbiddenBoundaries": {
+    "liveRuntime": false,
+    "phase12RunState": false,
+    "providerAutomation": false,
+    "guiClipboardRelay": false,
+    "phase10Publication": false,
+    "phase10Writeback": false,
+    "graphifyExecution": false,
+    "graphifyWriteback": false,
+    "graphifyAsEvidence": false,
+    "claimLedgerMutation": false,
+    "claimEdgeCreation": false,
+    "exportPackaging": false,
+    "realDataRead": false,
+    "biomedicalClaim": false,
+    "privateWikiCiDependency": false
+  },
+  "evidencePolicy": {
+    "docsTestsCloseoutsReviewerAcceptSubstituteForResearchEvidence": false,
+    "reviewVerdictAsLaw13Provenance": false,
+    "queryOutputAsLaw13Provenance": false,
+    "graphifyOutputAsImplementationEvidence": false,
+    "siblingPrivateWikiRequiredForCi": false,
+    "biomedicalClaimAuthority": false
+  },
+  "residualRisks": [
+    {
+      "id": "PHASE12-LIVE-RUNTIME-DEFERRED",
+      "status": "deferred",
+      "summary": "No live adversarial loop or run-state is opened by Phase 12."
+    },
+    {
+      "id": "PHASE12-PROVIDER-GUI-DEFERRED",
+      "status": "deferred",
+      "summary": "Provider automation and GUI/clipboard relay remain out of v1 scope."
+    },
+    {
+      "id": "PHASE12-PUBLICATION-GRAPHIFY-DEFERRED",
+      "status": "deferred",
+      "summary": "Phase 10 publication/writeback and Graphify execution remain closed."
+    },
+    {
+      "id": "PHASE12-BIOMEDICAL-AUTHORITY-DEFERRED",
+      "status": "deferred",
+      "summary": "No biomedical claim authority is granted to Codex or Claude."
+    }
+  ],
+  "deliveryAttestation": {
+    "present": true,
+    "statusProjectionRefreshed": true,
+    "closeoutHonestyValidated": true,
+    "exitGateResults": ["PASS", "DEFERRED"]
+  }
+}

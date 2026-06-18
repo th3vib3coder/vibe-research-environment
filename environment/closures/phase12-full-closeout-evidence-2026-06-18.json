@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "phase12.full_closeout.evidence.v1",
+  "phase": 12,
+  "closedAt": "2026-06-18",
+  "closeoutClaim": "governed-adversarial-relay-scaffold",
+  "fixture": "../tests/fixtures/phase12/phase-12-closeout.json",
+  "validator": "../tests/ci/phase12-full-closeout.js",
+  "test": "../tests/ci/phase12-full-closeout.test.js",
+  "phase12StackCommit": "f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2",
+  "phase12StackCiRun": "27742208747",
+  "phase12StackCiConclusion": "success",
+  "taskCount": 7,
+  "documentationOnlyTaskCount": 1,
+  "committedTaskCount": 6,
+  "liveRuntimeActivation": null,
+  "liveRuntime": false,
+  "providerAutomation": false,
+  "guiClipboardRelay": false,
+  "phase12RunState": false,
+  "phase10PublicationOrWriteback": false,
+  "graphifyExecutionOrWriteback": false,
+  "graphifyAsEvidence": false,
+  "claimOrExport": false,
+  "realDataRead": false,
+  "biomedicalClaimAuthority": false,
+  "siblingPrivateWikiRequiredForCi": false,
+  "carryForward": [
+    "PHASE12-LIVE-RUNTIME-DEFERRED",
+    "PHASE12-PROVIDER-GUI-DEFERRED",
+    "PHASE12-PUBLICATION-GRAPHIFY-DEFERRED",
+    "PHASE12-BIOMEDICAL-AUTHORITY-DEFERRED"
+  ]
+}

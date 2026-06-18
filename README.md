@@ -609,7 +609,7 @@ not copied from a private WIKI checkout.
 | Integration tests | 15 |
 | CLI tests | 12 |
 | Schema tests | 78 |
-| CI validators | 65 |
+| CI validators | 66 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -623,9 +623,14 @@ Phase 11 is closed as a VRE research-environment foundation at
 `7b855c7487b13bea42f8b125c66a013c5e70a377` with GitHub Actions run
 `27698616871` (success).
 
-No active Phase 11 implementation task is open. Phase 12 remains gated
-by the reviewed phase-entry guard and requires a future explicit HAT
-cycle with real research evidence or a scoped operator override.
+Phase 12 scaffold is closed as a governed adversarial-relay foundation at
+`f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2` with GitHub Actions run
+`27742208747` (success).
+
+Live Phase 12 runtime remains closed: no adversarial run-state,
+provider automation, GUI/clipboard relay, Phase 10 publication or
+writeback, Graphify execution/writeback, claim/export, real-data
+reads, or biomedical claim authority is open.
 
 Carry-forward and deferred items remain visible:
 
@@ -1256,7 +1261,7 @@ copiati da una WIKI privata affiancata.
 | Test integrazione | 15 |
 | Test CLI | 12 |
 | Test schema | 78 |
-| Validator CI | 65 |
+| Validator CI | 66 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->
@@ -1270,9 +1275,14 @@ Phase 11 e chiusa come fondazione VRE per ambiente di ricerca al commit
 `7b855c7487b13bea42f8b125c66a013c5e70a377` con GitHub Actions run
 `27698616871` (success).
 
-Nessun task implementativo Phase 11 e aperto. Phase 12 resta bloccata
-dal phase-entry guard revisionato e richiede un futuro ciclo HAT
-esplicito con evidenza di ricerca reale o override operatore scoped.
+Lo scaffold Phase 12 e chiuso come fondazione adversarial-relay
+governata al commit `f5af4f1ceb8c10c1ae6115ec2e9934e29f6e7ec2` con GitHub Actions run
+`27742208747` (success).
+
+Il runtime live Phase 12 resta chiuso: nessun run-state avversario,
+automazione provider, relay GUI/clipboard, pubblicazione o writeback
+Phase 10, esecuzione/writeback Graphify, claim/export, letture
+real-data o autorita di claim biomedico sono aperti.
 
 Carry-forward e deferral restano visibili:
 
