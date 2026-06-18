@@ -244,3 +244,72 @@ Claude Code HAT 1 amendment confirmation is recorded via
 
 Codex authored this HAT 2 implementation and must not self-ACCEPT it. HAT 3
 requires Claude Code non-author review before any scoped commit/push.
+
+## T13.1.3 L1 Missing-Skill Degrade
+
+who: Codex authored the pure L1 missing-skill degrade report builder after
+Claude Code non-author HAT 1 ACCEPT and scoped operator GO.
+
+when: 2026-06-18.
+
+why: Phase 13 Wave 1 needs missing L1 skills to degrade visibly instead of
+silently proceeding as if a skill ran. The degrade behavior must stay separate
+from the base availability report so T13.1.2 remains true: the probe reports
+availability only and does not emit `SKILL_UNAVAILABLE`.
+
+what:
+
+- `environment/autonomous/l1/skill-probe.js`
+- `environment/tests/autonomous/l1/degrade.test.js`
+- `package.json`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `README.md`
+- `phase9-vre-feature-ledger.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/phase13-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/sources/phase13-implementation-plan.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l1/degrade.test.js` failed with
+  missing `buildMissingSkillDegradeReport` export before implementation.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `autonomousTests` expected `3`, got `4` after the counted test was added.
+- RED: package script probe failed with `E_PHASE13_TEST_SCRIPT_MISSING_DEGRADE`
+  before `degrade.test.js` was wired into `test:phase13`.
+- RED: `node environment/tests/ci/check-phase13-ledger.js` failed with
+  `E_PHASE13_TRACE_MISSING environment/tests/autonomous/l1/degrade.test.js`
+  before this row existed.
+- GREEN so far: target degrade test PASS 7/7; existing skill-probe test PASS
+  8/8; `npm run test:phase13` PASS 27/27; `validate-counts.js` PASS with
+  `autonomousTests=4`; `phase11-current-status.js` PASS.
+- Final aggregate GREEN verification is recorded in the HAT 3 handoff before
+  non-author review.
+
+scope:
+
+- This row opens only a pure policy-level degrade report builder and tests.
+- `evaluateSkillAvailability(...)` remains the clean availability report and
+  still serializes without `SKILL_UNAVAILABLE`.
+- `buildMissingSkillDegradeReport(...)` consumes a clean availability report and
+  emits `SKILL_UNAVAILABLE` only for missing required targets.
+- Missing optional targets remain visible but non-blocking.
+- The degrade report records `runtimeOpened:false`,
+  `skillInvocationAttempted:false`, and `providerAutomationInvoked:false`.
+- no L1 runtime consumer, L0 reasoning loop, L2 utility, L4 swarm, L5 capstone,
+  skill invocation, skill installation, provider automation, GUI/clipboard
+  relay, live Phase 12 run state, claim/export, publication/Graphify writeback,
+  real-data read, biomedical claim, commit, or push is opened by this row.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.1.3-l1-missing-skill-degrade-verdict-2026-06-18.md`.
+
+Codex authored this HAT 2 implementation and must not self-ACCEPT it. HAT 3
+requires Claude Code non-author review before any scoped commit/push.

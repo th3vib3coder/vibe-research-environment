@@ -131,6 +131,88 @@ function buildSummary(targetResults) {
   };
 }
 
+function assertAvailabilityReport(report) {
+  assertObject(
+    report,
+    'E_PHASE13_L1_DEGRADE_REPORT_REQUIRED',
+    'availabilityReport'
+  );
+  if (
+    report.schemaVersion !== 'phase13.l1-skill-availability-report.v1'
+    || report.runtimeOpened !== false
+    || report.skillInvocationAttempted !== false
+    || report.degradeApplied !== false
+    || !Array.isArray(report.targetResults)
+  ) {
+    fail(
+      'E_PHASE13_L1_DEGRADE_REPORT_REQUIRED',
+      'availability report must be a clean L1 probe report'
+    );
+  }
+}
+
+function assertTargetResult(row) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) {
+    fail('E_PHASE13_L1_DEGRADE_RESULT_INVALID', 'target result must be an object');
+  }
+  const stageId = requireNonBlankString(
+    row.stageId,
+    'E_PHASE13_L1_DEGRADE_RESULT_INVALID',
+    'stageId'
+  );
+  const targetId = requireNonBlankString(
+    row.targetId,
+    'E_PHASE13_L1_DEGRADE_RESULT_INVALID',
+    'targetId'
+  );
+  const targetKind = requireNonBlankString(
+    row.targetKind,
+    'E_PHASE13_L1_DEGRADE_RESULT_INVALID',
+    'targetKind'
+  );
+  if (row.status !== 'available' && row.status !== 'missing') {
+    fail('E_PHASE13_L1_DEGRADE_RESULT_INVALID', 'target status must be known');
+  }
+  if (row.runtimeOpened !== false || row.skillInvocationAttempted !== false) {
+    fail('E_PHASE13_L1_DEGRADE_RESULT_INVALID', 'target result must be policy-only');
+  }
+  return {
+    stageId,
+    targetId,
+    targetKind,
+    required: row.required === true,
+    status: row.status
+  };
+}
+
+function buildRequiredGap(row, operatorAction) {
+  return {
+    marker: 'SKILL_UNAVAILABLE',
+    stageId: row.stageId,
+    targetId: row.targetId,
+    targetKind: row.targetKind,
+    required: true,
+    status: 'missing',
+    operatorAction,
+    claimedStageRan: false,
+    fabricatedOutput: false
+  };
+}
+
+function buildOptionalGap(row) {
+  return {
+    marker: 'OPTIONAL_SKILL_MISSING',
+    stageId: row.stageId,
+    targetId: row.targetId,
+    targetKind: row.targetKind,
+    required: false,
+    status: 'missing',
+    blocking: false,
+    claimedStageRan: false,
+    fabricatedOutput: false
+  };
+}
+
 export function evaluateSkillAvailability(tableInput, registryInput) {
   const table = normalizeTable(tableInput);
   const registry = normalizeRegistry(registryInput);
@@ -179,5 +261,54 @@ export function evaluateSkillAvailability(tableInput, registryInput) {
     targetResults,
     vibeNamingStates: buildVibeNamingStates(registry),
     summary: buildSummary(targetResults)
+  };
+}
+
+export function buildMissingSkillDegradeReport(availabilityReport, options = {}) {
+  assertAvailabilityReport(availabilityReport);
+  const operatorAction = typeof options.operatorAction === 'string'
+    && options.operatorAction.trim() !== ''
+    ? options.operatorAction.trim()
+    : 'install-or-route-to-human';
+  const seen = new Set();
+  const requiredGaps = [];
+  const optionalGaps = [];
+
+  for (const rawRow of availabilityReport.targetResults) {
+    const row = assertTargetResult(rawRow);
+    const key = targetKey(row.stageId, row.targetId);
+    if (seen.has(key)) {
+      fail('E_PHASE13_L1_DEGRADE_DUPLICATE_RESULT', `duplicate result ${key}`);
+    }
+    seen.add(key);
+    if (row.status !== 'missing') {
+      continue;
+    }
+    if (row.required) {
+      requiredGaps.push(buildRequiredGap(row, operatorAction));
+    } else {
+      optionalGaps.push(buildOptionalGap(row));
+    }
+  }
+
+  return {
+    schemaVersion: 'phase13.l1-missing-skill-degrade.v1',
+    phase: 13,
+    layer: 'L1',
+    artifact: 'missing-skill-degrade-report',
+    policyOnly: true,
+    generatedFrom: 'availability-report',
+    runtimeOpened: false,
+    skillInvocationAttempted: false,
+    providerAutomationInvoked: false,
+    degradeApplied: requiredGaps.length > 0,
+    blocking: requiredGaps.length > 0,
+    requiredGaps,
+    optionalGaps,
+    summary: {
+      requiredGapCount: requiredGaps.length,
+      optionalGapCount: optionalGaps.length,
+      totalGapCount: requiredGaps.length + optionalGaps.length
+    }
   };
 }
