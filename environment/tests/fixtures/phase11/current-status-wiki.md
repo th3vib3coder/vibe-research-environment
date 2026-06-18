@@ -1,6 +1,6 @@
 # VRE Current Status Projection
 
-Generated At: 2026-06-17
+Generated At: 2026-06-18
 Phase: 11
 Phase Status: closed
 Active Wave: 11.3
@@ -17,7 +17,7 @@ Source Strategy: tracked-vre-snapshot
 | Surface | Count |
 |---|---:|
 | Install bundle manifests | 11 |
-| Schemas | 70 |
+| Schemas | 78 |
 | Templates | 8 |
 | Eval tasks | 25 |
 | Eval metrics | 5 |
@@ -30,9 +30,9 @@ Source Strategy: tracked-vre-snapshot
 | Eval tests | 2 |
 | Install tests | 5 |
 | Integration tests | 15 |
-| CLI tests | 11 |
-| Schema tests | 70 |
-| CI validators | 60 |
+| CLI tests | 12 |
+| Schema tests | 78 |
+| CI validators | 65 |
 
 ## Carry-Forward And Deferred Items
 

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "phase12.relay-run.v1",
+  "runId": "RUN-20260618-000001-t12-2-accept",
+  "objectiveId": null,
+  "phaseScope": "phase12",
+  "activeAuthor": "codex",
+  "counterReviewer": "claude-code",
+  "operator": "carmine",
+  "createdAt": "2026-06-18T00:00:00.000Z",
+  "updatedAt": "2026-06-18T00:00:00.000Z",
+  "state": "ACCEPTED",
+  "relaySubstrate": "filesystem",
+  "maxIterations": 2,
+  "budget": {
+    "maxTurns": 6,
+    "maxWallMinutes": 45,
+    "maxCostUsd": null
+  },
+  "providerAutomationAllowed": false,
+  "guiAutomationAllowed": false
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase12.relay-evidence-bundle.v1",
+  "title": "Phase 12 relay evidence bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "artifacts",
+    "reviewArtifacts",
+    "finalVerdictRef",
+    "scenarioCoverage",
+    "validation",
+    "tracking",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase12.relay-evidence-bundle.v1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifactRef" }
+    },
+    "reviewArtifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reviewArtifactRef" }
+    },
+    "finalVerdictRef": { "$ref": "#/$defs/relativePath" },
+    "scenarioCoverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scenarioId", "result", "evidenceRefs"],
+        "properties": {
+          "scenarioId": { "type": "string", "minLength": 1 },
+          "result": { "enum": ["pass", "fail", "not_run"] },
+          "evidenceRefs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "result", "evidenceRef", "sha256"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "result": { "enum": ["pass", "fail", "not_run"] },
+          "evidenceRef": { "type": "string", "minLength": 1 },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "tracking": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["governanceEventRefs", "ledgerRefs", "provenanceRefs"],
+      "properties": {
+        "governanceEventRefs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ledgerRefs": { "type": "array", "items": { "type": "string" } },
+        "provenanceRefs": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "^(?:[A-Za-z]:|/|\\\\)" }
+    },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "type"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "type": {
+          "enum": ["candidate", "source", "patch", "run-state", "validation-log", "ledger-ref"]
+        }
+      }
+    },
+    "reviewArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "type"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "type": { "enum": ["review", "rebuttal", "final-verdict"] }
+      }
+    }
+  }
+}

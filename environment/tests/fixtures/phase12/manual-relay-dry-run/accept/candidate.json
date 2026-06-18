@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "phase12.relay-candidate.v1",
+  "runId": "RUN-20260618-000001-t12-2-accept",
+  "artifactId": "CAND-ACCEPT",
+  "artifactKind": "plan",
+  "author": "codex",
+  "createdAt": "2026-06-18T00:00:00.000Z",
+  "artifactPath": "candidate.md",
+  "sourceRefs": [
+    "phase12-implementation-plan/17-hat1-stop-t12-2-0-manual-relay-dry-run-2026-06-18.md"
+  ],
+  "changedFiles": [],
+  "claimBoundary": "implementation-candidate",
+  "validationPerformed": [
+    "node environment/tests/ci/phase12-artifact-contracts.js"
+  ],
+  "knownLimits": []
+}

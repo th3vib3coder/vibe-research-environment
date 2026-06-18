@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "phase12.relay-final-verdict.v1",
+  "runId": "RUN-20260618-000002-t12-2-redirect",
+  "verdictId": "VERDICT-REDIRECT",
+  "relayVerdictType": "phase12-relay-verdict",
+  "author": "codex",
+  "candidateAuthor": "codex",
+  "acceptedBy": null,
+  "reviewedArtifacts": [
+    "CAND-REDIRECT"
+  ],
+  "finalState": "BLOCKED",
+  "iterationsUsed": 1,
+  "accepted": false,
+  "blockingFindings": [
+    {
+      "findingId": "FIND-REDIRECT-001",
+      "summary": "Redirect requires author action."
+    }
+  ],
+  "requiredFollowup": [
+    "Re-run review after required actions are complete."
+  ],
+  "residualRisk": [
+    "This path intentionally remains unaccepted."
+  ],
+  "operatorGoRef": null,
+  "closureSignalStatus": {
+    "implementationMatchesPlan": "pass",
+    "testsPass": "not_applicable",
+    "risksHandled": "fail",
+    "duplicationAvoided": "pass",
+    "hatsAligned": "pass",
+    "noRegression": "not_applicable"
+  },
+  "createdAt": "2026-06-18T00:00:00.000Z"
+}

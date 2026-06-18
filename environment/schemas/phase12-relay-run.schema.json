@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase12.relay-run.v1",
+  "title": "Phase 12 relay run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "phaseScope",
+    "activeAuthor",
+    "counterReviewer",
+    "operator",
+    "createdAt",
+    "updatedAt",
+    "state",
+    "relaySubstrate",
+    "maxIterations",
+    "budget",
+    "providerAutomationAllowed",
+    "guiAutomationAllowed"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase12.relay-run.v1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "objectiveId": { "type": ["string", "null"] },
+    "phaseScope": {
+      "enum": ["phase10", "phase11", "phase12", "cross-phase"]
+    },
+    "activeAuthor": { "type": "string", "minLength": 1 },
+    "counterReviewer": { "type": "string", "minLength": 1 },
+    "operator": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "state": {
+      "enum": [
+        "DRAFT",
+        "REVIEW_REQUESTED",
+        "REDIRECTED",
+        "BLOCKED",
+        "ACCEPTED",
+        "ABORTED",
+        "STALE"
+      ]
+    },
+    "relaySubstrate": { "const": "filesystem" },
+    "maxIterations": { "type": "integer", "minimum": 1 },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxTurns", "maxWallMinutes", "maxCostUsd"],
+      "properties": {
+        "maxTurns": { "type": "integer", "minimum": 1 },
+        "maxWallMinutes": { "type": "integer", "minimum": 1 },
+        "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "operatorOverride": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "scope": { "type": "string" },
+        "allowsRuntime": { "type": "boolean" }
+      }
+    },
+    "providerAutomationAllowed": { "const": false },
+    "guiAutomationAllowed": { "const": false }
+  }
+}

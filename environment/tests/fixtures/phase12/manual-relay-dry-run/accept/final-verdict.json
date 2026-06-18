@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "phase12.relay-final-verdict.v1",
+  "runId": "RUN-20260618-000001-t12-2-accept",
+  "verdictId": "VERDICT-ACCEPT",
+  "relayVerdictType": "phase12-relay-verdict",
+  "author": "codex",
+  "candidateAuthor": "codex",
+  "acceptedBy": "claude-code",
+  "reviewedArtifacts": [
+    "CAND-ACCEPT"
+  ],
+  "finalState": "ACCEPTED",
+  "iterationsUsed": 1,
+  "accepted": true,
+  "blockingFindings": [],
+  "requiredFollowup": [],
+  "residualRisk": [],
+  "operatorGoRef": "gate:phase-12-t12.2.0",
+  "closureSignalStatus": {
+    "implementationMatchesPlan": "pass",
+    "testsPass": "pass",
+    "risksHandled": "pass",
+    "duplicationAvoided": "pass",
+    "hatsAligned": "pass",
+    "noRegression": "pass"
+  },
+  "createdAt": "2026-06-18T00:00:00.000Z"
+}

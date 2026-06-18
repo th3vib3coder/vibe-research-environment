@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "phase12.relay-evidence-bundle.v1",
+  "runId": "RUN-20260618-000002-t12-2-redirect",
+  "artifacts": [
+    {
+      "path": "run.json",
+      "sha256": "822cd051b31984f427dfbc7277cb77a5179949d872ce47c2b05539c6a62f0035",
+      "type": "run-state"
+    },
+    {
+      "path": "candidate.json",
+      "sha256": "53fb6b4c80fa09a79595d5439d810bf08f63bc1f1345eb3d4fadc36df9f90d77",
+      "type": "candidate"
+    },
+    {
+      "path": "candidate.md",
+      "sha256": "6df0bb64bc96eecc61f5b091e4829515c28493f239ca0dbf97c35593493ae411",
+      "type": "candidate"
+    }
+  ],
+  "reviewArtifacts": [
+    {
+      "path": "review.json",
+      "sha256": "7e056abefa2c7a3fc001b56717778633de181ba3b91089c79417ec9535d59414",
+      "type": "review"
+    },
+    {
+      "path": "rebuttal.json",
+      "sha256": "38ee0dc54533a390d20231ea896328f00e6bfbb96fcb538de3aa4e3d16da84cf",
+      "type": "rebuttal"
+    },
+    {
+      "path": "final-verdict.json",
+      "sha256": "20d9b5f1d403cd85e68691e58a4ab1bc3d887c32095816ba166e2bd8165c106a",
+      "type": "final-verdict"
+    }
+  ],
+  "finalVerdictRef": "final-verdict.json",
+  "scenarioCoverage": [
+    {
+      "scenarioId": "redirect",
+      "result": "fail",
+      "evidenceRefs": [
+        "dry-run-log.txt"
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "command": "node environment/tests/ci/phase12-manual-relay-dry-run.js",
+      "result": "not_run",
+      "evidenceRef": "dry-run-log.txt",
+      "sha256": "b0674f554e1ca563de17426f2138f7c9b78aaa6b489179403444453a7b0139fe"
+    }
+  ],
+  "tracking": {
+    "governanceEventRefs": [],
+    "ledgerRefs": [
+      "phase12-vre-feature-ledger.md"
+    ],
+    "provenanceRefs": []
+  },
+  "createdAt": "2026-06-18T00:00:00.000Z"
+}

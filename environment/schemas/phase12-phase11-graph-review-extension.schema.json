@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase12.phase11-graph-review-extension.v1",
+  "title": "Phase 12 Phase 11 Graphify review extension",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "graphAsNavigationOnlyChecked",
+    "unsafeIndexingChecked",
+    "staleGraphChecked",
+    "sourceReadRequired",
+    "wikiVreAuthorityPreserved",
+    "checkedGraphRunRefs",
+    "checkedWikiRefs",
+    "checkedSourceRefs",
+    "staleGraphMetadataRefs"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase12.phase11-graph-review-extension.v1" },
+    "graphAsNavigationOnlyChecked": { "type": "boolean" },
+    "unsafeIndexingChecked": { "type": "boolean" },
+    "staleGraphChecked": { "type": "boolean" },
+    "sourceReadRequired": { "type": "boolean" },
+    "wikiVreAuthorityPreserved": { "type": "boolean" },
+    "checkedGraphRunRefs": { "type": "array", "items": { "type": "string" } },
+    "checkedWikiRefs": { "type": "array", "items": { "type": "string" } },
+    "checkedSourceRefs": { "type": "array", "items": { "type": "string" } },
+    "staleGraphMetadataRefs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

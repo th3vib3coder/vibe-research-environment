@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "phase12.acceptance-harness-fixtures.v1",
+  "residualRisks": [
+    "fixture-only acceptance does not open live provider automation",
+    "operator decisions remain external gates"
+  ],
+  "scenarios": [
+    {
+      "id": "A",
+      "description": "plan review ACCEPT by non-author reviewer",
+      "variant": "accept",
+      "evidenceFiles": [
+        "evidence/A-candidate.md",
+        "evidence/A-review.md",
+        "evidence/A-validation.json"
+      ],
+      "expected": { "ok": true, "finalState": "ACCEPTED", "codes": [] },
+      "acceptanceSummary": { "residualRisks": [] }
+    },
+    {
+      "id": "B",
+      "description": "self-ACCEPT rejection",
+      "variant": "self-accept",
+      "evidenceFiles": [
+        "evidence/B-candidate.md",
+        "evidence/B-review.md",
+        "evidence/B-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "SCHEMA_INVALID",
+        "codes": ["E_PHASE12_SELF_ACCEPT_FORBIDDEN"]
+      },
+      "acceptanceSummary": { "residualRisks": ["self-certification trap"] }
+    },
+    {
+      "id": "C",
+      "description": "REDIRECT without required actions is rejected",
+      "variant": "redirect-empty",
+      "evidenceFiles": [
+        "evidence/C-candidate.md",
+        "evidence/C-review.md",
+        "evidence/C-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "SCHEMA_INVALID",
+        "codes": ["E_PHASE12_REDIRECT_ACTION_REQUIRED"]
+      },
+      "acceptanceSummary": { "residualRisks": ["empty redirect loop"] }
+    },
+    {
+      "id": "D",
+      "description": "BLOCK requires explicit operator decision evidence",
+      "variant": "block-needs-operator",
+      "operatorDecisionRequired": true,
+      "evidenceFiles": [
+        "evidence/D-candidate.md",
+        "evidence/D-review.md",
+        "evidence/D-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "BLOCKED",
+        "codes": ["E_PHASE12_OPERATOR_DECISION_EVIDENCE_REQUIRED"]
+      },
+      "acceptanceSummary": { "residualRisks": ["operator handoff required"] }
+    },
+    {
+      "id": "E",
+      "description": "stale packet is rejected",
+      "variant": "stale",
+      "evidenceFiles": [
+        "evidence/E-candidate.md",
+        "evidence/E-review.md",
+        "evidence/E-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "STALE_CONTEXT",
+        "codes": ["E_PHASE12_STALE_CONTEXT"]
+      },
+      "acceptanceSummary": { "residualRisks": ["stale relay packet"] }
+    },
+    {
+      "id": "F",
+      "description": "budget cap is terminal",
+      "variant": "budget-cap",
+      "turnsUsed": 8,
+      "evidenceFiles": [
+        "evidence/F-candidate.md",
+        "evidence/F-review.md",
+        "evidence/F-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "BUDGET_EXHAUSTED",
+        "codes": ["E_PHASE12_TURN_BUDGET_EXHAUSTED"]
+      },
+      "acceptanceSummary": { "residualRisks": ["budget exhausted"] }
+    },
+    {
+      "id": "G",
+      "description": "Phase 10 query output cannot become LAW 13 provenance",
+      "variant": "phase10-provenance-bypass",
+      "evidenceFiles": [
+        "evidence/G-candidate.md",
+        "evidence/G-review.md",
+        "evidence/G-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "SCHEMA_INVALID",
+        "codes": ["E_PHASE12_QUERY_OUTPUT_NOT_PROVENANCE"]
+      },
+      "acceptanceSummary": { "residualRisks": ["provenance bypass attempt"] }
+    },
+    {
+      "id": "H",
+      "description": "Phase 11 graph output cannot be implementation evidence",
+      "variant": "graph-evidence",
+      "evidenceFiles": [
+        "evidence/H-candidate.md",
+        "evidence/H-review.md",
+        "evidence/H-validation.json"
+      ],
+      "expected": {
+        "ok": false,
+        "finalState": "SCHEMA_INVALID",
+        "codes": ["E_PHASE12_GRAPH_PATH_NOT_IMPLEMENTATION_PROOF"]
+      },
+      "acceptanceSummary": { "residualRisks": ["graph-as-proof overclaim"] }
+    }
+  ]
+}

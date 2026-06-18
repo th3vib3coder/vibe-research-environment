@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "phase12.relay-review.v1",
+  "runId": "RUN-20260618-000002-t12-2-redirect",
+  "reviewId": "REV-REDIRECT",
+  "reviewer": "claude-code",
+  "reviewedArtifactRef": "CAND-REDIRECT",
+  "mode": [
+    "code-review"
+  ],
+  "verdict": "REDIRECT",
+  "severity": "P2",
+  "findings": [
+    {
+      "findingId": "FIND-REDIRECT-001",
+      "summary": "Candidate needs a hash recompute."
+    }
+  ],
+  "requiredActions": [
+    "Recompute evidence bundle hashes from disk."
+  ],
+  "residualRisk": [
+    "Redirect path is a dry-run fixture, not runtime evidence."
+  ],
+  "selfCertificationCheck": "reviewer-did-not-author-reviewed-artifact",
+  "createdAt": "2026-06-18T00:00:00.000Z"
+}

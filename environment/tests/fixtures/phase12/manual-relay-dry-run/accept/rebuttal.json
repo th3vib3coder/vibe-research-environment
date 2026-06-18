@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "phase12.relay-rebuttal.v1",
+  "runId": "RUN-20260618-000001-t12-2-accept",
+  "rebuttalId": "REB-ACCEPT",
+  "author": "codex",
+  "respondsToReviewId": "REV-ACCEPT",
+  "createdAt": "2026-06-18T00:00:00.000Z",
+  "acceptedFindings": [],
+  "rejectedFindings": [],
+  "changesMade": [
+    "Explicit no-rebuttal record: review accepted first pass."
+  ],
+  "residualRisks": [],
+  "operatorDecisionsRequired": []
+}

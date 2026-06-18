@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "phase12.relay-rebuttal.v1",
+  "runId": "RUN-20260618-000002-t12-2-redirect",
+  "rebuttalId": "REB-REDIRECT",
+  "author": "codex",
+  "respondsToReviewId": "REV-REDIRECT",
+  "createdAt": "2026-06-18T00:00:00.000Z",
+  "acceptedFindings": [
+    "FIND-REDIRECT-001"
+  ],
+  "rejectedFindings": [],
+  "changesMade": [
+    "Recorded redirect requirement; no ACCEPT claimed."
+  ],
+  "residualRisks": [
+    "A future iteration would be required before ACCEPT."
+  ],
+  "operatorDecisionsRequired": []
+}

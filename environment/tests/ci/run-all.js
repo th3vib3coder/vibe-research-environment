@@ -55,6 +55,11 @@ import validatePhase11LedgerRowBudget from './phase11-ledger-row-budget.js';
 import validatePhase11PhaseEntryGate from './phase11-phase-entry-gate.js';
 import validatePhase11ResearchRunbook from './phase11-research-runbook.js';
 import validatePhase11FullCloseout from './phase11-full-closeout.js';
+import validatePhase12ArtifactContracts from './phase12-artifact-contracts.js';
+import validatePhase12BridgeValidators from './phase12-bridge-validators.js';
+import validatePhase12ManualRelayDryRun from './phase12-manual-relay-dry-run.js';
+import validatePhase12LoopController from './phase12-loop-controller.js';
+import validatePhase12AcceptanceHarness from './phase12-acceptance-harness.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -112,7 +117,12 @@ const validators = [
   ['phase11-ledger-row-budget', validatePhase11LedgerRowBudget],
   ['phase11-phase-entry-gate', validatePhase11PhaseEntryGate],
   ['phase11-research-runbook', validatePhase11ResearchRunbook],
-  ['phase11-full-closeout', validatePhase11FullCloseout]
+  ['phase11-full-closeout', validatePhase11FullCloseout],
+  ['phase12-artifact-contracts', validatePhase12ArtifactContracts],
+  ['phase12-manual-relay-dry-run', validatePhase12ManualRelayDryRun],
+  ['phase12-loop-controller', validatePhase12LoopController],
+  ['phase12-bridge-validators', validatePhase12BridgeValidators],
+  ['phase12-acceptance-harness', validatePhase12AcceptanceHarness]
 ];
 
 for (const [name, validator] of validators) {

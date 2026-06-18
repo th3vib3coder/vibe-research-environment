@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase12.relay-final-verdict.v1",
+  "title": "Phase 12 relay final verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "verdictId",
+    "relayVerdictType",
+    "author",
+    "candidateAuthor",
+    "acceptedBy",
+    "reviewedArtifacts",
+    "finalState",
+    "iterationsUsed",
+    "accepted",
+    "blockingFindings",
+    "requiredFollowup",
+    "residualRisk",
+    "operatorGoRef",
+    "closureSignalStatus",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase12.relay-final-verdict.v1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "verdictId": { "type": "string", "minLength": 1 },
+    "relayVerdictType": { "enum": ["phase12-relay-verdict", "relay-verdict"] },
+    "author": { "type": "string", "minLength": 1 },
+    "candidateAuthor": { "type": "string", "minLength": 1 },
+    "acceptedBy": { "type": ["string", "null"] },
+    "reviewedArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "finalState": {
+      "enum": [
+        "ACCEPTED",
+        "BLOCKED",
+        "ABORTED_BY_OPERATOR",
+        "BUDGET_EXHAUSTED",
+        "ITERATION_LIMIT_REACHED",
+        "STALE_CONTEXT",
+        "SCHEMA_INVALID"
+      ]
+    },
+    "iterationsUsed": { "type": "integer", "minimum": 0 },
+    "accepted": { "type": "boolean" },
+    "blockingFindings": { "type": "array", "items": { "type": "object" } },
+    "requiredFollowup": { "type": "array", "items": { "type": "string" } },
+    "residualRisk": { "type": "array", "items": { "type": "string" } },
+    "operatorGoRef": { "type": ["string", "null"] },
+    "closureSignalStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implementationMatchesPlan",
+        "testsPass",
+        "risksHandled",
+        "duplicationAvoided",
+        "hatsAligned",
+        "noRegression"
+      ],
+      "properties": {
+        "implementationMatchesPlan": { "$ref": "#/$defs/signal" },
+        "testsPass": { "$ref": "#/$defs/signal" },
+        "risksHandled": { "$ref": "#/$defs/signal" },
+        "duplicationAvoided": { "$ref": "#/$defs/signal" },
+        "hatsAligned": { "$ref": "#/$defs/signal" },
+        "noRegression": { "$ref": "#/$defs/signal" }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "signal": { "enum": ["pass", "fail", "not_applicable"] }
+  }
+}

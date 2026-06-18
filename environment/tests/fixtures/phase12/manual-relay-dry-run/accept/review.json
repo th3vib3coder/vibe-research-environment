@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "phase12.relay-review.v1",
+  "runId": "RUN-20260618-000001-t12-2-accept",
+  "reviewId": "REV-ACCEPT",
+  "reviewer": "claude-code",
+  "reviewedArtifactRef": "CAND-ACCEPT",
+  "mode": [
+    "hat3-review"
+  ],
+  "verdict": "ACCEPT",
+  "severity": "NONE",
+  "findings": [],
+  "requiredActions": [],
+  "residualRisk": [],
+  "selfCertificationCheck": "reviewer-did-not-author-reviewed-artifact",
+  "createdAt": "2026-06-18T00:00:00.000Z"
+}

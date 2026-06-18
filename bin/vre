@@ -31,6 +31,11 @@ import {
   unlinkObjectiveFromDomain
 } from '../environment/phase10/domain-lifecycle.js';
 import {
+  buildManualRelayPacket,
+  buildManualRelayStatus,
+  Phase12ManualAdapterError
+} from '../environment/phase12/manual-adapter.js';
+import {
   normalizeWakeCallerIdentity,
   ResearchLoopCliError,
   runResearchLoopCommand
@@ -257,6 +262,7 @@ const PHASE9_ROOTS = [...new Set(PHASE9_STUB_DEFINITIONS.map((definition) => def
 const KNOWN_COMMANDS = [
   ...Object.keys(DISPATCH_TABLE).filter((commandName) => !commandName.includes(' ')),
   ...PHASE9_ROOTS,
+  'adversarial',
   'domain',
   'init'
 ].sort();
@@ -529,6 +535,17 @@ function namedPhase10ErrorPayload(command, code, message, extra = {}) {
     command,
     code,
     phase10: true,
+    message,
+    ...extra
+  };
+}
+
+function namedPhase12ErrorPayload(command, code, message, extra = {}) {
+  return {
+    ok: false,
+    command,
+    code,
+    phase12: true,
     message,
     ...extra
   };
@@ -1429,6 +1446,59 @@ async function runInit(repoRoot) {
   return 0;
 }
 
+const ADVERSARIAL_ACTIONS = Object.freeze(['packet', 'status']);
+const ADVERSARIAL_PROVIDER_OPTIONS = Object.freeze([
+  'adapter',
+  'auto',
+  'exec',
+  'provider'
+]);
+
+function providerAutomationOption(parsed) {
+  return ADVERSARIAL_PROVIDER_OPTIONS.find((optionName) =>
+    Object.hasOwn(parsed.options, optionName)
+  ) ?? null;
+}
+
+async function runAdversarialCommand(repoRoot, action, parsed) {
+  if (parsed.positionals.length > 0) {
+    throw new Phase12ManualAdapterError({
+      code: 'E_PHASE12_ADVERSARIAL_USAGE',
+      exitCode: 3,
+      message: `adversarial ${action} does not accept positional arguments.`,
+      extra: { positionals: parsed.positionals }
+    });
+  }
+
+  if (parsed.options.json !== true && parsed.options.json !== 'true') {
+    throw new Phase12ManualAdapterError({
+      code: 'E_PHASE12_ADVERSARIAL_JSON_REQUIRED',
+      exitCode: 3,
+      message: `adversarial ${action} requires --json.`
+    });
+  }
+
+  const forbiddenOption = providerAutomationOption(parsed);
+  if (forbiddenOption != null) {
+    throw new Phase12ManualAdapterError({
+      code: 'E_PHASE12_PROVIDER_AUTOMATION_DISABLED',
+      exitCode: 3,
+      message: 'Phase 12 adversarial CLI is manual-only.',
+      extra: { option: forbiddenOption }
+    });
+  }
+
+  if (action === 'status') {
+    return buildManualRelayStatus(repoRoot, {
+      fixturePath: parsed.options.fixture
+    });
+  }
+
+  return buildManualRelayPacket(repoRoot, {
+    fixturePath: parsed.options.fixture
+  });
+}
+
 export async function main(argv = process.argv) {
   const startedAt = Date.now();
   const [, , subcommand, ...rest] = argv;
@@ -1520,6 +1590,58 @@ export async function main(argv = process.argv) {
         return error.exitCode ?? 1;
       }
       process.stderr.write(`vre: domain ${action}: ${error.message}\n`);
+      return 1;
+    }
+  }
+
+  if (subcommand === 'adversarial') {
+    const [action, ...adversarialRest] = rest;
+    if (!action || !ADVERSARIAL_ACTIONS.includes(action)) {
+      writeJsonPayload(namedPhase12ErrorPayload(
+        action ? `adversarial ${action}` : 'adversarial',
+        action
+          ? 'E_PHASE12_ADVERSARIAL_UNKNOWN_ACTION'
+          : 'E_PHASE12_ADVERSARIAL_USAGE',
+        action
+          ? `Unknown adversarial action: ${action}`
+          : 'adversarial requires an action.',
+        {
+          allowed: ADVERSARIAL_ACTIONS.map((candidate) =>
+            `adversarial ${candidate}`
+          )
+        }
+      ));
+      return action ? 2 : 3;
+    }
+
+    const repoRoot = resolveRepoRoot(process.cwd());
+    if (!repoRoot) {
+      writeJsonPayload(namedPhase12ErrorPayload(
+        `adversarial ${action}`,
+        'NOT_IN_VRE_REPO',
+        'current directory is not inside a VRE repository root'
+      ));
+      return 3;
+    }
+
+    try {
+      writeJsonPayload(await runAdversarialCommand(
+        repoRoot,
+        action,
+        parseLongOptions(adversarialRest)
+      ));
+      return 0;
+    } catch (error) {
+      if (error instanceof Phase12ManualAdapterError) {
+        writeJsonPayload(namedPhase12ErrorPayload(
+          `adversarial ${action}`,
+          error.code,
+          error.message,
+          error.extra
+        ));
+        return error.exitCode ?? 1;
+      }
+      process.stderr.write(`vre: adversarial ${action}: ${error.message}\n`);
       return 1;
     }
   }

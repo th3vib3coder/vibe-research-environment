@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "phase12.phase10-law13-review-extension.v1",
+  "relayVerdictType": "phase12-relay-verdict",
+  "law13StatusChecked": true,
+  "provenanceRefsChecked": true,
+  "queryNotProvenanceCheck": true,
+  "r2PathRequired": true,
+  "r2PathPresent": true,
+  "suppositionIsolationChecked": true,
+  "checkedAssertionRefs": [],
+  "checkedProvenanceRefs": [],
+  "checkedSourceRefs": [],
+  "evidenceBundleRefs": []
+}

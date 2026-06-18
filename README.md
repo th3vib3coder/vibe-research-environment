@@ -594,7 +594,7 @@ not copied from a private WIKI checkout.
 | Surface | Count |
 |---|---:|
 | Install bundle manifests | 11 |
-| Schemas | 70 |
+| Schemas | 78 |
 | Templates | 8 |
 | Eval tasks | 25 |
 | Eval metrics | 5 |
@@ -607,9 +607,9 @@ not copied from a private WIKI checkout.
 | Eval tests | 2 |
 | Install tests | 5 |
 | Integration tests | 15 |
-| CLI tests | 11 |
-| Schema tests | 70 |
-| CI validators | 60 |
+| CLI tests | 12 |
+| Schema tests | 78 |
+| CI validators | 65 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -1241,7 +1241,7 @@ copiati da una WIKI privata affiancata.
 | Superficie | Conteggio |
 |---|---:|
 | Manifest bundle installazione | 11 |
-| Schemi | 70 |
+| Schemi | 78 |
 | Template | 8 |
 | Task eval | 25 |
 | Metriche eval | 5 |
@@ -1254,9 +1254,9 @@ copiati da una WIKI privata affiancata.
 | Test eval | 2 |
 | Test installazione | 5 |
 | Test integrazione | 15 |
-| Test CLI | 11 |
-| Test schema | 70 |
-| Validator CI | 60 |
+| Test CLI | 12 |
+| Test schema | 78 |
+| Validator CI | 65 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->

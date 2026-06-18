@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase12.phase10-law13-review-extension.v1",
+  "title": "Phase 12 Phase 10 LAW 13 review extension",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "relayVerdictType",
+    "law13StatusChecked",
+    "provenanceRefsChecked",
+    "queryNotProvenanceCheck",
+    "r2PathRequired",
+    "r2PathPresent",
+    "suppositionIsolationChecked",
+    "checkedAssertionRefs",
+    "checkedProvenanceRefs",
+    "checkedSourceRefs",
+    "evidenceBundleRefs"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase12.phase10-law13-review-extension.v1" },
+    "relayVerdictType": { "enum": ["phase12-relay-verdict", "relay-verdict"] },
+    "law13StatusChecked": { "type": "boolean" },
+    "provenanceRefsChecked": { "type": "boolean" },
+    "queryNotProvenanceCheck": { "type": "boolean" },
+    "r2PathRequired": { "type": "boolean" },
+    "r2PathPresent": { "type": "boolean" },
+    "suppositionIsolationChecked": { "type": "boolean" },
+    "checkedAssertionRefs": { "type": "array", "items": { "type": "string" } },
+    "checkedProvenanceRefs": { "type": "array", "items": { "type": "string" } },
+    "checkedSourceRefs": { "type": "array", "items": { "type": "string" } },
+    "evidenceBundleRefs": { "type": "array", "items": { "type": "string" } }
+  }
+}
