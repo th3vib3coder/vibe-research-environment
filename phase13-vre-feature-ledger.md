@@ -390,3 +390,82 @@ Claude Code HAT 3 ACCEPT is recorded via
 Codex authored this implementation and did not self-ACCEPT it. Scoped commit
 and push may proceed only by explicit path staging, excluding pre-existing
 Phase 10 diffs and scratch/noise.
+
+## T13.3.2 L0 Readiness Classifier
+
+who: Codex authored the pure L0 readiness classifier after Claude Code
+non-author HAT 1 ACCEPT and scoped operator GO.
+
+when: 2026-06-18.
+
+why: T13.3.1 repaired provider kernel projections, but `kernel.mode:"full"`
+does not mean L0 is safe to run. Wave 3 needs a deterministic fail-closed
+classifier that turns the remaining capability degraded reasons plus explicit
+halt and multi-operator evidence into blockers/warnings before any future L0
+selector HAT can open.
+
+what:
+
+- `environment/autonomous/l0/preflight.js`
+- `environment/tests/autonomous/l0/preflight.test.js`
+- `README.md`
+- `package.json`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `phase9-vre-feature-ledger.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/phase13-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/sources/phase13-implementation-plan.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/preflight.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/autonomous/l0/preflight.js` existed.
+- RED: `node environment/tests/ci/validate-counts.js` must fail with
+  `autonomousTests` expected `5`, got `6` if the counted test is present
+  without the count repair.
+- RED: `node environment/tests/ci/run-all.js` failed
+  `phase11-current-status` until README/current-status projections were
+  regenerated from the new `autonomousTests=6` count.
+- GREEN: target L0 readiness test PASS 7/7; `npm run test:phase13`
+  PASS 43/43; `validate-counts.js` PASS with `autonomousTests=6`;
+  `phase11-current-status.js` PASS; explicit Phase 9 and Phase 13 ledger
+  checks PASS; `run-all.js` PASS; `npm run check` PASS 1703 tests, 1694 pass,
+  0 fail, 9 skipped; `git diff --check` PASS with CRLF warning only for the
+  ledger.
+
+scope:
+
+- This row opens only a pure injected-input readiness classifier under
+  `environment/autonomous/l0/`.
+- The classifier reads no filesystem state, shells out to nothing, calls no
+  `bin/vre`, creates no run state, reads no real research data, and always
+  returns `runtimeOpened:false`.
+- It classifies kernel non-full, unavailable projections, stale memory, missing
+  command contracts, missing halt evidence, invalid halt operator, and
+  incomplete `{Carmine, Elisa}` operator evidence as blockers.
+- Connector, automation, domain-pack bundle absence, and unresolved-R2 derived
+  count remain visible warnings unless an injected run profile requires them.
+- The happy path uses explicitly `injected-hypothetical` halt evidence; it does
+  not imply the halt runtime exists.
+- no L0 selector/runtime, halt CLI runtime, L1 runtime consumer,
+  L2-authoritative wiki behavior, L4 swarm, L5 capstone, provider automation,
+  GUI/clipboard relay, live Phase 12 run state, claim/export,
+  publication/Graphify writeback, real-data read, biomedical claim, commit, or
+  push is opened by this row.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.3.2-l0-readiness-classifier-verdict-2026-06-18.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat3-t13.3.2-l0-readiness-classifier-verdict-2026-06-18.md`.
+
+Codex authored this implementation and did not self-ACCEPT it. Scoped commit
+and push may proceed only by explicit path staging, excluding pre-existing
+Phase 10 diffs and scratch/noise.
