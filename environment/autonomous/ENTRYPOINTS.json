@@ -12,6 +12,12 @@
       "action": "run",
       "layer": "future-gated",
       "runtimeOpened": false
+    },
+    {
+      "command": "autonomous halt",
+      "action": "halt",
+      "layer": "l0-halt-request-contract",
+      "runtimeOpened": false
     }
   ]
 }

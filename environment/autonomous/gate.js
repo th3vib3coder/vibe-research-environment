@@ -2,6 +2,11 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  Phase13L0HaltError,
+  writeL0HaltRequestFromOptions
+} from './l0/halt.js';
+
 export const AUTONOMY_TIER_ENV = 'VRE_AUTONOMY_TIER';
 export const ENTRYPOINTS_PATH = 'environment/autonomous/ENTRYPOINTS.json';
 
@@ -86,7 +91,12 @@ export function assertAutonomyEnabled({ command, env = process.env } = {}) {
   }
 }
 
-export async function runAutonomousEntrypoint({ action, env = process.env } = {}) {
+export async function runAutonomousEntrypoint({
+  action,
+  env = process.env,
+  repoRoot = null,
+  options = {}
+} = {}) {
   const entrypoint = await findAutonomousEntrypoint(action);
   if (!entrypoint) {
     throw new Phase13AutonomyError(
@@ -97,6 +107,32 @@ export async function runAutonomousEntrypoint({ action, env = process.env } = {}
   }
 
   assertAutonomyEnabled({ command: entrypoint.command, env });
+
+  if (action === 'halt') {
+    if (typeof repoRoot !== 'string' || repoRoot.trim() === '') {
+      throw new Phase13AutonomyError(
+        'E_PHASE13_AUTONOMOUS_REPO_REQUIRED',
+        'autonomous halt requires a VRE repository root.',
+        { command: entrypoint.command, exitCode: 3 }
+      );
+    }
+    try {
+      return await writeL0HaltRequestFromOptions(repoRoot, options);
+    } catch (error) {
+      if (error instanceof Phase13L0HaltError) {
+        throw new Phase13AutonomyError(
+          error.code,
+          error.message,
+          {
+            command: entrypoint.command,
+            exitCode: error.exitCode,
+            extra: error.extra
+          }
+        );
+      }
+      throw error;
+    }
+  }
 
   return {
     ok: false,

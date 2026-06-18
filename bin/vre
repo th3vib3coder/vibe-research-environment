@@ -1706,7 +1706,9 @@ export async function main(argv = process.argv) {
     try {
       const payload = await runAutonomousEntrypoint({
         action,
-        env: process.env
+        env: process.env,
+        repoRoot,
+        options: parsed.options
       });
       writeJsonPayload(payload);
       return payload.ok === true ? 0 : 2;

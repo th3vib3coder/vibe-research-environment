@@ -391,6 +391,88 @@ Codex authored this implementation and did not self-ACCEPT it. Scoped commit
 and push may proceed only by explicit path staging, excluding pre-existing
 Phase 10 diffs and scratch/noise.
 
+## T13.3.3 L0 Operator Halt Request Contract
+
+who: Codex authored the deterministic L0 halt request contract after two
+Claude Code non-author HAT 1 ACCEPT reviews and scoped operator GO.
+
+when: 2026-06-18.
+
+why: T13.3.2 could only satisfy the L0 readiness classifier with
+`injected-hypothetical` halt evidence. Before any future L0 selector/runtime
+HAT, Wave 3 needs a reviewed operator-owned halt request artifact plus a
+pre-iteration guard, without claiming process-kill semantics or opening L0.
+
+what:
+
+- `bin/vre`
+- `environment/autonomous/ENTRYPOINTS.json`
+- `environment/autonomous/gate.js`
+- `environment/autonomous/l0/halt.js`
+- `environment/tests/autonomous/l0/halt.test.js`
+- `README.md`
+- `package.json`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `phase9-vre-feature-ledger.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/phase13-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/sources/phase13-implementation-plan.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+verification:
+
+- RED: `VRE_AUTONOMY_TIER=phase13 node bin/vre autonomous halt --json
+  --operator Carmine --reason "red missing halt"` failed with
+  `E_PHASE13_AUTONOMOUS_UNKNOWN_ACTION` before `autonomous halt` existed.
+- RED: `node --test environment/tests/autonomous/l0/halt.test.js` failed
+  because the test file was absent before implementation.
+- RED: `node environment/tests/ci/run-all.js` failed
+  `phase11-current-status` until README/current-status projections were
+  regenerated from the new `autonomousTests=7` count and failed
+  `check-phase13-ledger` until this row traced `halt.js`.
+- GREEN: target L0 halt test PASS 8/8; `validate-counts.js` PASS with
+  `autonomousTests=7`; `phase11-current-status.js` PASS;
+  `npm run test:phase13` PASS 51/51; explicit Phase9/13 ledger checks PASS;
+  `run-all.js` PASS; `npm run check` PASS 1711 tests, 1702 pass, 0 fail,
+  9 skipped.
+
+scope:
+
+- This row opens only the deterministic `autonomous halt` request safety
+  surface under the Phase 13 autonomy tier.
+- The command writes a reviewed halt request artifact only under
+  `.vibe-science-environment/autonomous/l0/halt-request.json`.
+- Allowed halt operators are exactly `{Carmine, Elisa}`.
+- The artifact records `reviewed-runtime-evidence`,
+  `checked-before-next-l0-iteration`, `interruptsWithinOneIteration:true`,
+  `resumeRequiresOperatorGo:true`, `actualProcessKill:false`,
+  `runtimeOpened:false`, and `l0RuntimeAllowed:false`.
+- The pre-iteration guard fails closed with `E_L0_OPERATOR_HALT_REQUESTED`
+  before any future L0 work runs.
+- `classifyL0Readiness()` consumes helper-produced reviewed halt guard evidence
+  without weakening its existing blockers.
+- no L0 selector/runtime, process kill, signal/AbortController interruption,
+  Phase 9 objective lifecycle mutation, L1 runtime consumer,
+  L2-authoritative wiki behavior, L4 swarm, L5 capstone, provider automation,
+  GUI/clipboard relay, live Phase 12 run state, claim/export,
+  publication/Graphify writeback, real-data read, biomedical claim, commit, or
+  push is opened by this row.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.3.3-l0-operator-halt-contract-verdict-2026-06-18.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat3-t13.3.3-l0-operator-halt-contract-verdict-2026-06-18.md`.
+
+Codex authored this implementation and did not self-ACCEPT it. Scoped commit
+and push are authorized by the standing operator instruction after non-author
+HAT 3 ACCEPT, with pre-existing Phase 10 diffs and scratch/noise excluded.
+
 ## T13.3.2 L0 Readiness Classifier
 
 who: Codex authored the pure L0 readiness classifier after Claude Code
