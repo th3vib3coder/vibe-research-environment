@@ -313,3 +313,80 @@ Claude Code HAT 1 ACCEPT is recorded via
 
 Codex authored this HAT 2 implementation and must not self-ACCEPT it. HAT 3
 requires Claude Code non-author review before any scoped commit/push.
+
+## T13.2.2 L2 Ingestion Utilities
+
+who: Codex authored the pure L2 ingest utility module after Claude Code
+non-author HAT 1 ACCEPT and scoped operator GO.
+
+when: 2026-06-18.
+
+why: Phase 13 Wave 2 needs a small VRE-local L2 utility layer before any later
+autonomous ingestion work. T13.2.1 allowed only five GROUNDED+L2 rows to be
+consumed, so this task adopts only dependency-free behavior shapes for alias
+normalization, injected staleness status, text structure detection, approximate
+token estimation, and stable extraction failure wrapping.
+
+what:
+
+- `environment/autonomous/l2/ingest-utils.js`
+- `environment/tests/autonomous/l2/ingest-utils.test.js`
+- `package.json`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `README.md`
+- `phase9-vre-feature-ledger.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/phase13-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/sources/phase13-implementation-plan.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l2/ingest-utils.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/autonomous/l2/ingest-utils.js` existed.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `autonomousTests` expected `4`, got `5` after the counted test was added.
+- GREEN: target L2 ingest utility test PASS 9/9; `npm run test:phase13`
+  PASS 36/36; `validate-counts.js` PASS with `autonomousTests=5`;
+  `phase11-current-status.js` PASS.
+- GREEN: explicit Phase 9 and Phase 13 ledger checks PASS; `run-all.js`
+  PASS; `npm run check` PASS 1696/1687/0/9; `git diff --check` PASS with
+  CRLF warnings only for ledger files.
+- REVIEW: Claude Code non-author HAT 3 ACCEPT recorded no blocker and two
+  non-blocking hardening notes for a later pass.
+
+scope:
+
+- This row opens only pure L2 utility code and tests under
+  `environment/autonomous/l2/`.
+- The utility layer reads no filesystem, shells no `git`, imports no `zod`, and
+  adds no runtime dependency.
+- Alias normalization uses only a VRE-local dependency-free map shape; it does
+  not adopt `normalizeGraph` or `validateGraph`.
+- Staleness is computed only from injected changed-file metadata.
+- Utility outputs record `sourcePath`, `provenanceClass`, and
+  `runtimeOpened:false`.
+- Wiki/query/chat/review output is rejected as LAW 13 provenance.
+- no L2-authoritative wiki behavior, wikilink/frontmatter parser,
+  `fingerprint.ts`, multi-parser fallback, Hermes L0 guardrail, L1 runtime
+  consumer, L0 reasoning loop, L4 swarm, L5 capstone, provider automation,
+  GUI/clipboard relay, live Phase 12 run state, claim/export,
+  publication/Graphify writeback, real-data read, biomedical claim, commit, or
+  push is opened by this row.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.2.2-l2-ingest-utils-verdict-2026-06-18.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat3-t13.2.2-l2-ingest-utils-verdict-2026-06-18.md`.
+
+Codex authored this implementation and did not self-ACCEPT it. Scoped commit
+and push may proceed only by explicit path staging, excluding pre-existing
+Phase 10 diffs and scratch/noise.
