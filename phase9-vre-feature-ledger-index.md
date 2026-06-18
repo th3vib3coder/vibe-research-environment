@@ -13,7 +13,7 @@ Exactly ONE file has `status = active` at any time. All others are
 
 | file | status | seq range | opened | closed | notes |
 |---|---|---|---|---|---|
-| `phase9-vre-feature-ledger.md` | active | `000–…` | 2026-04-21 | — | First ledger. Bootstrap row `000 = TRACKING-BOOTSTRAP`. Created by Wave 0 `T0.1a` after explicit operator GO. |
+| `phase9-vre-feature-ledger.md` | active | `000–…` | 2026-04-21 | — | First ledger. Bootstrap row `000 = TRACKING-BOOTSTRAP`. Created by Wave 0 `T0.1a` after explicit operator GO. Phase 14 lane appends here starting with `PH14-TRACKING-BOOTSTRAP` while the active ledger remains this file. |
 
 ## Rotation Rule
 
