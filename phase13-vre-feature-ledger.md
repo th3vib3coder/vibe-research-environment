@@ -167,3 +167,80 @@ Claude Code HAT 3 ACCEPT is recorded via
 Codex authored this HAT 2 implementation and did not self-ACCEPT it. Commit and
 push are authorized only for the scoped T13.1.1 patch after non-author HAT 3
 ACCEPT.
+
+## T13.1.2 L1 Installed-Skill Availability Probe
+
+who: Codex authored the pure L1 availability probe after Claude Code
+non-author HAT 1 ACCEPT, HAT 1 amendment confirmation, and scoped operator GO.
+
+when: 2026-06-18.
+
+why: The Phase 13 L1 playbook needs a deterministic way to mark table targets
+as available or missing before any runtime consumer can exist. The probe must
+preserve the naming distinction between host skills, Vibe Science workflow
+targets, and future Codex-global installs without invoking any skill.
+
+what:
+
+- `environment/autonomous/l1/skill-probe.js`
+- `environment/tests/autonomous/l1/skill-probe.test.js`
+- `package.json`
+- `environment/tests/ci/validate-counts.js`
+- `environment/phase11/current-status.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `README.md`
+- `phase9-vre-feature-ledger.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/phase13-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/sources/phase13-implementation-plan.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l1/skill-probe.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/autonomous/l1/skill-probe.js` existed.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `autonomousTests` expected `2`, got `3` after the counted test was added.
+- RED: `node environment/tests/ci/check-phase13-ledger.js` failed with
+  `E_PHASE13_TRACE_MISSING environment/autonomous/l1/skill-probe.js` before
+  this row existed.
+- RED: `node environment/tests/ci/phase11-current-status.js` failed until
+  README and WIKI current-status projections were regenerated from the updated
+  count authority.
+- RED: explicit `node environment/tests/ci/check-phase9-ledger.js
+  --changed-file=package.json
+  --changed-file=environment/tests/ci/validate-counts.js` failed with
+  `E_VRE_LEDGER_UPDATE_REQUIRED` before Phase9 bridge row 190.
+- RED: `node --test environment/tests/autonomous/l1/skill-probe.test.js`
+  failed the blank identifier regression before `stageId` and `targetId` were
+  normalized as non-empty strings.
+- GREEN verification is recorded in the HAT 3 handoff before non-author review.
+
+scope:
+
+- This row opens only a pure registry-injected availability probe and tests.
+- The probe reads no real `.codex/skills`, provider, browser, GUI, scheduler, or
+  runtime host state.
+- The probe marks targets as `available` or `missing` and records
+  `skillInvocationAttempted:false`, `runtimeOpened:false`, and
+  `degradeApplied:false`.
+- T13.1.3 `SKILL_UNAVAILABLE` degrade remains deferred.
+- no L1 runtime consumer, L0 reasoning loop, L2 utility, L4 swarm, L5 capstone,
+  provider automation, GUI/clipboard relay, live Phase 12 run state,
+  claim/export, publication/Graphify writeback, real-data read, biomedical
+  claim, commit, or push is opened by this row.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.1.2-l1-skill-probe-verdict-2026-06-18.md`.
+
+Claude Code HAT 1 amendment confirmation is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.1.2-l1-skill-probe-amendment-confirm-2026-06-18.md`.
+
+Codex authored this HAT 2 implementation and must not self-ACCEPT it. HAT 3
+requires Claude Code non-author review before any scoped commit/push.
