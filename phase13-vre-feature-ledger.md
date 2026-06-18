@@ -47,6 +47,7 @@ what:
 - `../vibe-science/blueprints/private/WIKI_VRE/log.md`
 - `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
 - `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+- `C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/codex-hat3-t13.1.1-l1-decision-table-review-request-2026-06-18.md`
 - `C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/codex-hat3-t13.0.1-wave0-tracking-isolation-review-request-2026-06-18.md`
 
 verification:
@@ -91,4 +92,73 @@ via
 
 Codex authored this HAT 2 implementation and did not self-ACCEPT it. Commit and
 push are authorized only for the scoped T13.0.1 patch after non-author HAT 3
+ACCEPT.
+
+## T13.1.1 L1 Decision Table Artifact
+
+who: Codex authored the L1 policy-only decision table artifact after Claude
+Code non-author HAT 1 ACCEPT and scoped operator GO.
+
+when: 2026-06-18.
+
+why: Phase 13 Wave 1 needs a deterministic stage-to-skill policy map before
+any L1 runtime, availability probe, or missing-skill degrade path can be built.
+The table must preserve the design distinction between Vibe Science workflow
+use and ordinary host skills, and it must keep closeout/adversarial review
+explicit instead of implicit.
+
+what:
+
+- `environment/autonomous/l1/stage-skill-table.json`
+- `environment/tests/autonomous/l1/decision-table.test.js`
+- `package.json`
+- `environment/tests/ci/validate-counts.js`
+- `environment/phase11/current-status.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `README.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/phase13-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase13-implementation-plan/15-hat3-t13-1-1-l1-decision-table-closure-2026-06-18.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/sources/phase13-implementation-plan.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l1/decision-table.test.js`
+  failed with `ENOENT` before
+  `environment/autonomous/l1/stage-skill-table.json` existed.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `autonomousTests` expected `1`, got `2` after the counted test was added.
+- RED: `node environment/tests/ci/check-phase13-ledger.js` failed with
+  `E_PHASE13_TRACE_MISSING environment/autonomous/l1/stage-skill-table.json`
+  before this row existed.
+- RED: `node environment/tests/ci/phase11-current-status.js` failed until
+  README and WIKI current-status projections were regenerated from the updated
+  count authority.
+- GREEN verification is recorded in the HAT 3 handoff before non-author review.
+
+scope:
+
+- This row opens only policy data and tests for the L1 decision table.
+- `vibe` is classified as `vibe-science-workflow`, not as a guaranteed ordinary
+  host skill.
+- T13.1.2 availability probing and T13.1.3 missing-skill degrade remain
+  deferred.
+- no L1 runtime, L0 reasoning loop, L2 utility, L4 swarm, L5 capstone, provider
+  automation, GUI/clipboard relay, live Phase 12 run state, claim/export,
+  publication/Graphify writeback, real-data read, biomedical claim, commit, or
+  push is opened by this row.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.1.1-l1-decision-table-verdict-2026-06-18.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat3-t13.1.1-l1-decision-table-verdict-2026-06-18.md`.
+
+Codex authored this HAT 2 implementation and did not self-ACCEPT it. Commit and
+push are authorized only for the scoped T13.1.1 patch after non-author HAT 3
 ACCEPT.

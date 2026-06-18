@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "phase13.l1-stage-skill-table.v1",
+  "phase": 13,
+  "layer": "L1",
+  "artifact": "stage-skill-table",
+  "policyOnly": true,
+  "runtimeOpened": false,
+  "executionEnabled": false,
+  "runtimeConsumer": "gated-on-L0",
+  "availabilityProbeTask": "T13.1.2",
+  "missingSkillDegradeTask": "T13.1.3",
+  "orderedStageIds": [
+    "problem-framing",
+    "novelty-literature-gap",
+    "hypothesis-from-data",
+    "claim-attack-evidence-grading",
+    "plan-output",
+    "closeout"
+  ],
+  "stages": [
+    {
+      "stageId": "problem-framing",
+      "label": "Problem framing",
+      "purpose": "Frame the scientific question before evidence work starts.",
+      "targets": [
+        {
+          "targetId": "scientific-brainstorming",
+          "targetKind": "host-skill",
+          "required": true
+        }
+      ]
+    },
+    {
+      "stageId": "novelty-literature-gap",
+      "label": "Novelty and literature gap",
+      "purpose": "Separate Vibe Science gap work from host-side literature skills.",
+      "targets": [
+        {
+          "targetId": "vibe",
+          "targetKind": "vibe-science-workflow",
+          "required": true
+        },
+        {
+          "targetId": "literature-search",
+          "targetKind": "skill-family",
+          "required": true
+        }
+      ]
+    },
+    {
+      "stageId": "hypothesis-from-data",
+      "label": "Hypothesis from data",
+      "purpose": "Route data-grounded hypothesis drafting to a dedicated skill target.",
+      "targets": [
+        {
+          "targetId": "hypothesis-generation",
+          "targetKind": "host-skill",
+          "required": true
+        }
+      ]
+    },
+    {
+      "stageId": "claim-attack-evidence-grading",
+      "label": "Claim attack and evidence grading",
+      "purpose": "Force adversarial attack and evidence grading before claims progress.",
+      "targets": [
+        {
+          "targetId": "scientific-critical-thinking",
+          "targetKind": "host-skill",
+          "required": true
+        },
+        {
+          "targetId": "adversarial-pairing",
+          "targetKind": "host-skill",
+          "required": true
+        }
+      ]
+    },
+    {
+      "stageId": "plan-output",
+      "label": "Plan and output",
+      "purpose": "Route plans and scientific prose to explicit writing skill targets.",
+      "targets": [
+        {
+          "targetId": "writing-plans",
+          "targetKind": "host-skill",
+          "required": true
+        },
+        {
+          "targetId": "scientific-writing",
+          "targetKind": "host-skill",
+          "required": true
+        }
+      ]
+    },
+    {
+      "stageId": "closeout",
+      "label": "Closeout",
+      "purpose": "Require explicit verification before any later runtime claims closure.",
+      "targets": [
+        {
+          "targetId": "verification-before-completion",
+          "targetKind": "host-skill",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
