@@ -61,6 +61,11 @@ verification:
 - RED: `validate-counts.js` required repair because two non-test CI validators
   and one autonomous test family were added.
 - GREEN verification is recorded in the HAT 3 handoff before non-author review.
+- CI backstop: initial push run `27753878436` failed in
+  `check-phase9-ledger` because this task touched Phase9-covered
+  `package.json` and `environment/tests/ci/validate-counts.js` without a
+  Phase9 bridge row. Corrective bridge trace is recorded in
+  `phase9-vre-feature-ledger.md` row 189.
 - Supplemental N1/N2 hardening: the disabled Phase 13 error envelope now emits
   `runtimeOpened:false`, and edition-isolation has a negative import-boundary
   fixture for `E_PHASE13_BASE_IMPORTS_AUTONOMOUS`.
