@@ -8,6 +8,7 @@ export const expectedCounts = {
   evalMetrics: 5,
   evalBenchmarks: 5,
   auditTests: 1,
+  autonomousTests: 1,
   controlTests: 30,
   compatibilityTests: 5,
   flowTests: 8,
@@ -17,7 +18,7 @@ export const expectedCounts = {
   integrationTests: 15,
   cliTests: 12,
   schemaTests: 78,
-  ciValidators: 66
+  ciValidators: 68
 };
 
 export default async function validateCounts() {
@@ -29,6 +30,7 @@ export default async function validateCounts() {
     evalMetrics: (await collectFiles('environment/evals/metrics', { include: (file) => file.endsWith('.js') && !file.endsWith('.gitkeep') })).length,
     evalBenchmarks: (await collectFiles('environment/evals/benchmarks', { include: (file) => file.endsWith('.json') && !file.endsWith('.gitkeep') })).length,
     auditTests: (await collectFiles('environment/tests/audit', { include: (file) => file.endsWith('.test.js') })).length,
+    autonomousTests: (await collectFiles('environment/tests/autonomous', { include: (file) => file.endsWith('.test.js') })).length,
     controlTests:
       (await collectFiles('environment/tests/control', { include: (file) => file.endsWith('.test.js') })).length
       + (await collectFiles('environment/tests/orchestrator', { include: (file) => file.endsWith('.test.js') })).length,

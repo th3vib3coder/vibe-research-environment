@@ -30,3 +30,6 @@ jobs:
 
       - name: Run named Phase 9 entrypoint
         run: npm run test:phase9
+
+      - name: Run named Phase 13 entrypoint
+        run: npm run test:phase13

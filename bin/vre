@@ -31,6 +31,11 @@ import {
   unlinkObjectiveFromDomain
 } from '../environment/phase10/domain-lifecycle.js';
 import {
+  listAutonomousEntrypoints,
+  Phase13AutonomyError,
+  runAutonomousEntrypoint
+} from '../environment/autonomous/gate.js';
+import {
   buildManualRelayPacket,
   buildManualRelayStatus,
   Phase12ManualAdapterError
@@ -546,6 +551,18 @@ function namedPhase12ErrorPayload(command, code, message, extra = {}) {
     command,
     code,
     phase12: true,
+    message,
+    ...extra
+  };
+}
+
+function namedPhase13ErrorPayload(command, code, message, extra = {}) {
+  return {
+    ok: false,
+    command,
+    code,
+    phase13: true,
+    runtimeOpened: false,
     message,
     ...extra
   };
@@ -1642,6 +1659,68 @@ export async function main(argv = process.argv) {
         return error.exitCode ?? 1;
       }
       process.stderr.write(`vre: adversarial ${action}: ${error.message}\n`);
+      return 1;
+    }
+  }
+
+  if (subcommand === 'autonomous') {
+    const [action, ...autonomousRest] = rest;
+    const entrypoints = await listAutonomousEntrypoints();
+    const allowed = entrypoints.map((entrypoint) => entrypoint.command);
+    const entrypoint = entrypoints.find((candidate) => candidate.action === action);
+    if (!action || !entrypoint) {
+      writeJsonPayload(namedPhase13ErrorPayload(
+        action ? `autonomous ${action}` : 'autonomous',
+        action
+          ? 'E_PHASE13_AUTONOMOUS_UNKNOWN_ACTION'
+          : 'E_PHASE13_AUTONOMOUS_USAGE',
+        action
+          ? `Unknown Phase 13 autonomous action: ${action}`
+          : 'autonomous requires an action.',
+        { allowed }
+      ));
+      return action ? 2 : 3;
+    }
+
+    const repoRoot = resolveRepoRoot(process.cwd());
+    if (!repoRoot) {
+      writeJsonPayload(namedPhase13ErrorPayload(
+        entrypoint.command,
+        'NOT_IN_VRE_REPO',
+        'current directory is not inside a VRE repository root'
+      ));
+      return 3;
+    }
+
+    const parsed = parseLongOptions(autonomousRest);
+    if (parsed.positionals.length > 0 || parsed.options.json !== true) {
+      writeJsonPayload(namedPhase13ErrorPayload(
+        entrypoint.command,
+        'E_PHASE13_AUTONOMOUS_USAGE',
+        `${entrypoint.command} requires --json and no positional arguments.`,
+        { allowed }
+      ));
+      return 3;
+    }
+
+    try {
+      const payload = await runAutonomousEntrypoint({
+        action,
+        env: process.env
+      });
+      writeJsonPayload(payload);
+      return payload.ok === true ? 0 : 2;
+    } catch (error) {
+      if (error instanceof Phase13AutonomyError) {
+        writeJsonPayload(namedPhase13ErrorPayload(
+          error.command ?? entrypoint.command,
+          error.code,
+          error.message,
+          error.extra
+        ));
+        return error.exitCode ?? 2;
+      }
+      process.stderr.write(`vre: ${entrypoint.command}: ${error.message}\n`);
       return 1;
     }
   }

@@ -1550,3 +1550,41 @@ Claude Code HAT 3 ACCEPT for the closeout explicitly required refreshing the
 current-status projection after CI-green. Claude Code supplemental non-author
 HAT 3 ACCEPT for this post-CI projection is recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase11/turns/claude-supplemental-t11.3.4-phase11-closed-status-projection-verdict-2026-06-17.md`.
+
+## Phase 13 Wave 0 CI Bridge Trace
+
+who: Codex authored the Phase 13 Wave 0 CI bridge trace while implementing
+T13.0.1 after Claude Code non-author HAT 1 ACCEPT.
+
+when: 2026-06-18.
+
+why: T13.0.1 updates the Phase 11-era aggregate CI surfaces
+`environment/tests/ci/validate-counts.js` and `environment/tests/ci/run-all.js`.
+Those files remain covered by the Phase 11 ledger validator even though the
+runtime scope belongs to Phase 13.
+
+what:
+
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/ci/run-all.js`
+- `environment/phase11/current-status.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `README.md`
+- `phase11-vre-feature-ledger.md`
+- `phase13-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+
+verification:
+
+- RED: Phase 13 tests and validators failed while the Wave 0 gate and CI
+  validator files were absent.
+- GREEN verification is recorded in the T13.0.1 HAT 3 handoff before
+  non-author review.
+
+reviewer:
+
+Claude Code non-author HAT 1 ACCEPT for T13.0.1 is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase13/turns/claude-hat1-t13.0.1-wave0-tracking-isolation-verdict-2026-06-18.md`.
+
+Codex authored this bridge trace and must not self-ACCEPT the HAT 2
+implementation.

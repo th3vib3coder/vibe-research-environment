@@ -27,6 +27,7 @@ const COUNT_ROWS = Object.freeze([
   ['evalMetrics', 'Eval metrics', 'Metriche eval'],
   ['evalBenchmarks', 'Eval benchmarks', 'Benchmark eval'],
   ['auditTests', 'Audit tests', 'Test audit'],
+  ['autonomousTests', 'Autonomous tests', 'Test autonomia'],
   ['controlTests', 'Control/orchestrator tests', 'Test control/orchestrator'],
   ['compatibilityTests', 'Compatibility tests', 'Test compatibilita'],
   ['flowTests', 'Flow tests', 'Test flow'],

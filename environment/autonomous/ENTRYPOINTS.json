@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "phase13.autonomous-entrypoints.v1",
+  "entrypoints": [
+    {
+      "command": "autonomous status",
+      "action": "status",
+      "layer": "wave0-gate",
+      "runtimeOpened": false
+    },
+    {
+      "command": "autonomous run",
+      "action": "run",
+      "layer": "future-gated",
+      "runtimeOpened": false
+    }
+  ]
+}
