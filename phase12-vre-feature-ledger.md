@@ -328,6 +328,38 @@ accepted and before any commit/push.
 Claude Code HAT 3 ACCEPT is recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.2.0-manual-relay-dry-run-verdict-2026-06-18.md`.
 
+## 2026-06-18 - T12.7.0 Phase 12 Full Closeout Correction
+
+status: `closed-pushed-ci-green`
+
+correction:
+
+- The earlier T12.7.0 section was authored before HAT 3, commit, push, and CI
+  completed, and later retained stale "HAT 3 pending" wording plus a copied
+  T12.2.0 relay path.
+- Correct T12.7.0 HAT 3 relay:
+  `C:/Users/Test-User/.codex/relay/nuove_skill_phase12/turns/claude-hat3-t12.7.0-phase-12-full-closeout-verdict-2026-06-18.md`.
+- Correct closeout commit:
+  `7fbe96965f550fd784018d86596c7440796b080b`.
+- Correct GitHub Actions run: `27745537624`, conclusion `success`.
+
+verification:
+
+- `node --test environment/tests/ci/phase12-full-closeout.test.js` PASS 10/10.
+- `node environment/tests/ci/phase12-full-closeout.js` PASS.
+- `node environment/tests/ci/phase11-current-status.js` PASS.
+- `node environment/tests/ci/validate-counts.js` PASS with `ciValidators:66`.
+- `node environment/tests/ci/run-all.js` PASS.
+- `npm run check` PASS with 1660 tests, 1651 pass, 0 fail, 9 skipped.
+
+scope:
+
+- This correction changes ledger truth only.
+- It opens no live adversarial loop, provider automation, GUI/clipboard relay,
+  `.vibe-science-environment/adversarial-*` run state, Phase 10 publication or
+  writeback, Graphify execution or writeback, claim/export, real-data read, or
+  biomedical claim authority.
+
 ## T12.3.0 CLI And Adapter Surface
 
 who: Codex authored the minimal manual CLI surface after Claude Code
