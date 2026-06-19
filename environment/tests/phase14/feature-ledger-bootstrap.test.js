@@ -53,7 +53,8 @@ test('Phase 14 bootstrap row is present in the active VRE feature ledger', () =>
 
   const row = bootstrapRows[0];
   const maxSeq = Math.max(...rows.map((candidate) => candidate.seq));
-  assert.equal(row.seq, maxSeq, 'bootstrap row must be appended at the ledger tail');
+  assert.equal(row.seq, 195, 'bootstrap row keeps its original monotonic seq');
+  assert.ok(maxSeq >= row.seq, 'later Phase 14 rows may append after bootstrap');
   assert.equal(row.wave, 'W14-TRACKING-BOOTSTRAP');
   assert.equal(row.surface, 'ledger');
   assert.equal(row.status, 'implemented');
@@ -74,7 +75,7 @@ test('Phase 14 bootstrap row is present in the active VRE feature ledger', () =>
   assert.match(row.notes, /anti-dup verified/i);
   assert.match(row.notes, /tier-C: noop/i);
   assert.match(row.notes, /CI-executed/i);
-  assert.match(row.notes, /not count-enforced/i);
+  assert.match(row.notes, /count enforcement is deferred to W14-GATE-REGISTRY/i);
 });
 
 test('Feature ledger index keeps exactly one active file and names Phase 14 lane', () => {

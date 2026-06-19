@@ -609,8 +609,9 @@ not copied from a private WIKI checkout.
 | Install tests | 5 |
 | Integration tests | 15 |
 | CLI tests | 12 |
+| Phase14 tests | 3 |
 | Schema tests | 78 |
-| CI validators | 68 |
+| CI validators | 69 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -1262,8 +1263,9 @@ copiati da una WIKI privata affiancata.
 | Test installazione | 5 |
 | Test integrazione | 15 |
 | Test CLI | 12 |
+| Test Phase14 | 3 |
 | Test schema | 78 |
-| Validator CI | 68 |
+| Validator CI | 69 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->

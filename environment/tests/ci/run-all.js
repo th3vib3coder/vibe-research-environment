@@ -63,6 +63,7 @@ import validatePhase12AcceptanceHarness from './phase12-acceptance-harness.js';
 import validatePhase12FullCloseout from './phase12-full-closeout.js';
 import validateEditionIsolation from './validate-edition-isolation.js';
 import checkPhase13Ledger from './check-phase13-ledger.js';
+import validatePhase14TrackingDrift from './phase14-tracking-drift.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -128,7 +129,8 @@ const validators = [
   ['phase12-acceptance-harness', validatePhase12AcceptanceHarness],
   ['phase12-full-closeout', validatePhase12FullCloseout],
   ['validate-edition-isolation', validateEditionIsolation],
-  ['check-phase13-ledger', checkPhase13Ledger]
+  ['check-phase13-ledger', checkPhase13Ledger],
+  ['phase14-tracking-drift', validatePhase14TrackingDrift]
 ];
 
 for (const [name, validator] of validators) {

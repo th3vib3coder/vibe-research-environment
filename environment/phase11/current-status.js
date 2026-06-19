@@ -36,6 +36,7 @@ const COUNT_ROWS = Object.freeze([
   ['installTests', 'Install tests', 'Test installazione'],
   ['integrationTests', 'Integration tests', 'Test integrazione'],
   ['cliTests', 'CLI tests', 'Test CLI'],
+  ['phase14Tests', 'Phase14 tests', 'Test Phase14'],
   ['schemaTests', 'Schema tests', 'Test schema'],
   ['ciValidators', 'CI validators', 'Validator CI']
 ]);
