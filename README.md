@@ -594,14 +594,14 @@ not copied from a private WIKI checkout.
 | Surface | Count |
 |---|---:|
 | Install bundle manifests | 11 |
-| Schemas | 78 |
+| Schemas | 79 |
 | Templates | 8 |
 | Eval tasks | 25 |
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
 | Audit tests | 1 |
 | Autonomous tests | 7 |
-| Control/orchestrator tests | 30 |
+| Control/orchestrator tests | 31 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
 | Library tests | 23 |
@@ -1248,14 +1248,14 @@ copiati da una WIKI privata affiancata.
 | Superficie | Conteggio |
 |---|---:|
 | Manifest bundle installazione | 11 |
-| Schemi | 78 |
+| Schemi | 79 |
 | Template | 8 |
 | Task eval | 25 |
 | Metriche eval | 5 |
 | Benchmark eval | 5 |
 | Test audit | 1 |
 | Test autonomia | 7 |
-| Test control/orchestrator | 30 |
+| Test control/orchestrator | 31 |
 | Test compatibilita | 5 |
 | Test flow | 8 |
 | Test libreria | 23 |

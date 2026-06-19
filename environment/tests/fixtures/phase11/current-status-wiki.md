@@ -20,14 +20,14 @@ Source Strategy: tracked-vre-snapshot
 | Surface | Count |
 |---|---:|
 | Install bundle manifests | 11 |
-| Schemas | 78 |
+| Schemas | 79 |
 | Templates | 8 |
 | Eval tasks | 25 |
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
 | Audit tests | 1 |
 | Autonomous tests | 7 |
-| Control/orchestrator tests | 30 |
+| Control/orchestrator tests | 31 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
 | Library tests | 23 |

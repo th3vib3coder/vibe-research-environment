@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase14.command-classification.v1",
+  "title": "Phase 14 command classification manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runtimeOpened",
+    "source",
+    "records"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "phase14.command-classification.v1" },
+    "runtimeOpened": { "const": false },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executableCommandSource",
+        "markdownContractSource",
+        "executableCommandCount",
+        "markdownContractCount",
+        "reviewedExecutableContractCount",
+        "markdownOnlyContractCount"
+      ],
+      "properties": {
+        "executableCommandSource": { "const": "bin/vre metadata" },
+        "markdownContractSource": { "const": "commands/*.md" },
+        "executableCommandCount": { "type": "integer", "minimum": 0 },
+        "markdownContractCount": { "type": "integer", "minimum": 0 },
+        "reviewedExecutableContractCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "markdownOnlyContractCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/record" }
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "classification",
+        "contractPath",
+        "reason",
+        "runtimeOpened"
+      ],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "classification": {
+          "enum": ["reviewed", "internal", "deprecated"]
+        },
+        "contractPath": {
+          "type": ["string", "null"],
+          "pattern": "^commands/.+\\.md$"
+        },
+        "reason": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "runtimeOpened": { "const": false }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "classification": { "const": "reviewed" }
+            },
+            "required": ["classification"]
+          },
+          "then": {
+            "properties": {
+              "contractPath": { "type": "string" },
+              "reason": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": { "enum": ["internal", "deprecated"] }
+            },
+            "required": ["classification"]
+          },
+          "then": {
+            "properties": {
+              "contractPath": { "type": "null" },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
