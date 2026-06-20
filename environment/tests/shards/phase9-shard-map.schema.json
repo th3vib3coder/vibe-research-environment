@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase14.phase9-shard-map.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "source",
+    "shards"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "phase14.phase9-shard-map.v1"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerPackage",
+        "script"
+      ],
+      "properties": {
+        "providerPackage": {
+          "const": "../vibe-science/package.json"
+        },
+        "script": {
+          "const": "test:phase9"
+        }
+      }
+    },
+    "shards": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "scriptName",
+              "root",
+              "budgetSeconds",
+              "files"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^phase9:[a-z0-9-]+$"
+              },
+              "scriptName": {
+                "type": "string",
+                "pattern": "^test:phase9:[a-z0-9-]+$"
+              },
+              "root": {
+                "const": "provider"
+              },
+              "budgetSeconds": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "files": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^tests/.+\\.test\\.mjs$"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "scriptName",
+              "root",
+              "budgetSeconds",
+              "files",
+              "testNamePatterns"
+            ],
+            "properties": {
+              "id": {
+                "const": "loop:clusters"
+              },
+              "scriptName": {
+                "const": "test:loop:clusters"
+              },
+              "root": {
+                "const": "vre"
+              },
+              "budgetSeconds": {
+                "type": "integer",
+                "minimum": 90
+              },
+              "files": {
+                "const": [
+                  "environment/tests/cli/research-loop.test.js"
+                ]
+              },
+              "testNamePatterns": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

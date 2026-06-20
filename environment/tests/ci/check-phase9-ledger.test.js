@@ -4,13 +4,18 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import checkPhase9Ledger, { PATHS } from './check-phase9-ledger.js';
+import checkPhase9Ledger, { isCoveredVrePath, PATHS } from './check-phase9-ledger.js';
 import { SURFACE_INDEX_SCHEMA, validateSurfaceIndexShape } from './phase9-surface-index.js';
 
 const ROUND_15_TEXT = `## Round 15 - Explicit Operator GO For Cross-Repo Work And T0.1a Execution
 
 Date: \`2026-04-21\`
 `;
+
+test('phase9-ledger covers the Phase 14 shard test lane', () => {
+  assert.equal(isCoveredVrePath('environment/tests/shards/shard-map.test.js'), true);
+  assert.equal(isCoveredVrePath('environment/tests/shards/phase9-shard-map.json'), true);
+});
 
 function buildLedgerMarkdown(rows = []) {
   return [
@@ -217,6 +222,23 @@ test('phase9-ledger check rejects covered vibe-science changes without spec-side
           ]
         }),
       /E_SPEC_LEDGER_UPDATE_REQUIRED/u
+    );
+  });
+});
+
+test('phase9-ledger check rejects provider package changes without VRE ledger update', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () =>
+        checkPhase9Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [
+            '../vibe-science/package.json',
+            PATHS.specLedger
+          ]
+        }),
+      /E_VRE_LEDGER_UPDATE_REQUIRED/u
     );
   });
 });

@@ -33,6 +33,7 @@ const COVERED_VRE_PREFIXES = [
   'environment/schemas/',
   'environment/tests/ci/',
   'environment/tests/cli/',
+  'environment/tests/shards/',
   'environment/tests/schemas/',
   'environment/tests/fixtures/phase9/'
 ];
@@ -543,9 +544,10 @@ export default async function checkPhase9Ledger(options = {}) {
   const coveredVreChanges = changedFiles.filter(isCoveredVrePath);
   const coveredVibeChanges = changedFiles.filter(isCoveredVibeSciencePath);
 
-  if (coveredVreChanges.length > 0 && !changedSet.has(PATHS.vreLedger)) {
+  if ((coveredVreChanges.length > 0 || coveredVibeChanges.length > 0) && !changedSet.has(PATHS.vreLedger)) {
+    const triggering = [...coveredVreChanges, ...coveredVibeChanges];
     violations.push(
-      `E_VRE_LEDGER_UPDATE_REQUIRED covered VRE files changed without updating ${PATHS.vreLedger}: ${coveredVreChanges.join(', ')}`
+      `E_VRE_LEDGER_UPDATE_REQUIRED covered Phase 9 files changed without updating ${PATHS.vreLedger}: ${triggering.join(', ')}`
     );
   }
 

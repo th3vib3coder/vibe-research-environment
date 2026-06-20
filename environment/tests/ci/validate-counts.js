@@ -18,6 +18,7 @@ export const expectedCounts = {
   integrationTests: 15,
   cliTests: 12,
   phase14Tests: 3,
+  shardTests: 5,
   schemaTests: 79,
   ciValidators: 69
 };
@@ -43,6 +44,7 @@ export default async function validateCounts() {
     integrationTests: (await collectFiles('environment/tests/integration', { include: (file) => file.endsWith('.test.js') && !file.endsWith('_fixture.js') })).length,
     cliTests: (await collectFiles('environment/tests/cli', { include: (file) => file.endsWith('.test.js') })).length,
     phase14Tests: (await collectFiles('environment/tests/phase14', { include: (file) => file.endsWith('.test.js') })).length,
+    shardTests: (await collectFiles('environment/tests/shards', { include: (file) => file.endsWith('.test.js') })).length,
     schemaTests: (await collectFiles('environment/tests/schemas', { include: (file) => file.endsWith('.test.js') })).length,
     ciValidators: (await collectFiles('environment/tests/ci', {
       include: (file) =>

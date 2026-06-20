@@ -1,0 +1,67 @@
+{
+  "$schema": "./phase9-shard-map.schema.json",
+  "schemaVersion": "phase14.phase9-shard-map.v1",
+  "source": {
+    "providerPackage": "../vibe-science/package.json",
+    "script": "test:phase9"
+  },
+  "shards": [
+    {
+      "id": "phase9:bridge",
+      "scriptName": "test:phase9:bridge",
+      "root": "provider",
+      "budgetSeconds": 60,
+      "files": [
+        "tests/kernel-bridge-projection-count.test.mjs",
+        "tests/core-reader-projections.test.mjs",
+        "tests/phase9-handshake-injection.test.mjs"
+      ]
+    },
+    {
+      "id": "phase9:gate",
+      "scriptName": "test:phase9:gate",
+      "root": "provider",
+      "budgetSeconds": 60,
+      "files": [
+        "tests/phase9-vre-command-gate.test.mjs",
+        "tests/phase9-pre-tool-use-nuclear-bash-events.test.mjs"
+      ]
+    },
+    {
+      "id": "phase9:loop",
+      "scriptName": "test:phase9:loop",
+      "root": "provider",
+      "budgetSeconds": 90,
+      "files": [
+        "tests/phase9-loop-wake.test.mjs",
+        "tests/phase9-r2-bridge-writer.test.mjs"
+      ]
+    },
+    {
+      "id": "phase9:cli",
+      "scriptName": "test:phase9:cli",
+      "root": "provider",
+      "budgetSeconds": 60,
+      "files": [
+        "tests/phase9-governance-log-cli.test.mjs",
+        "tests/claim-resolver-cli.test.mjs",
+        "tests/audit-query-cli.test.mjs"
+      ]
+    },
+    {
+      "id": "loop:clusters",
+      "scriptName": "test:loop:clusters",
+      "root": "vre",
+      "budgetSeconds": 420,
+      "files": [
+        "environment/tests/cli/research-loop.test.js"
+      ],
+      "testNamePatterns": [
+        "^research-loop (returns|executes a bounded|blocks with E_LLM|logs objective_blocked governance event for rule-only blocker|objective_blocked telemetry|blocks with E_TASK_KIND|fails closed when --mode|--resume|executes one bounded|persists a failed terminal)",
+        "^research-loop (replaces|records an explicit external|respects stopConditions|treats duplicate|reclaims|can repair|logs state_repair|blocks with E_QUEUE|logs objective_blocked governance event for terminal|reports incomplete|objective_blocked governance details)",
+        "^research-loop (pauses with SEMANTIC|logs semantic|blocks tangential|pauses for review|falls back|blocks the objective|logs objective_blocked governance event for budget|logs loop_iteration|logs heartbeat)",
+        "^research-loop (rate-limits|governance bridge failure|loop_iteration and heartbeat|honors VRE_HEARTBEAT|stops the objective|refuses to acquire|fails closed with E_OBJECTIVE|pauses when the final-quarter|records the memory-sync)"
+      ]
+    }
+  ]
+}
