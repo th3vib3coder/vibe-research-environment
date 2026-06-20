@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile, mkdir, unlink } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -10,6 +10,7 @@ import {
   HANDSHAKE_SCHEMA_FILE,
   INTERNALS as HANDSHAKE_INTERNALS
 } from '../../control/capability-handshake.js';
+import { buildLiveCommandClassificationManifest } from '../../control/command-classification.js';
 import { loadValidator } from '../../control/_io.js';
 import { KernelBridgeContractMismatchError } from '../../lib/kernel-bridge.js';
 
@@ -37,6 +38,41 @@ const EXPECTED_OPERATOR_DOCTOR_COMMANDS = PHASE9_STUB_DEFINITIONS
   .filter((definition) => definition.kind === 'doctor-surface')
   .map((definition) => definition.canonicalCommand)
   .sort();
+const STUB_DEFINITION_BY_COMMAND = new Map(
+  PHASE9_STUB_DEFINITIONS.map((definition) => [
+    definition.canonicalCommand,
+    definition
+  ])
+);
+const DISPATCH_COMMAND_METADATA = Object.freeze({
+  'flow-status': { kind: 'dispatch-command', mutating: false },
+  'orchestrator-status': { kind: 'dispatch-command', mutating: false },
+  'sync-memory': { kind: 'dispatch-command', mutating: true }
+});
+
+function hasMissingContractWarning(degradedReasons) {
+  return degradedReasons.some((reason) =>
+    reason.includes('missing a reviewed markdown contract')
+  );
+}
+
+function expectedCommandClassificationRecords(manifest) {
+  return manifest.records.map((record) => {
+    const metadata =
+      STUB_DEFINITION_BY_COMMAND.get(record.command) ??
+      DISPATCH_COMMAND_METADATA[record.command];
+    assert.notEqual(metadata, undefined, `missing command metadata for ${record.command}`);
+    return {
+      command: record.command,
+      kind: metadata.kind,
+      mutating: metadata.mutating,
+      classification: record.classification,
+      contractPath: record.contractPath,
+      reason: record.reason,
+      runtimeOpened: record.runtimeOpened
+    };
+  });
+}
 
 async function readGovernanceEvents(capturePath) {
   try {
@@ -161,6 +197,65 @@ process.stdout.write(JSON.stringify({
   return kernelRoot;
 }
 
+async function createKernelFixtureWithProjectionData({
+  listUnresolvedClaims = [],
+  listR2Reviews = {
+    schemaVersion: 'phase9.r2-projection.v1',
+    records: []
+  }
+} = {}) {
+  const kernelRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-kernel-projection-data-'));
+  const scriptPath = path.join(kernelRoot, 'plugin', 'scripts', 'core-reader-cli.js');
+  await mkdir(path.dirname(scriptPath), { recursive: true });
+  await writeFile(
+    scriptPath,
+    `#!/usr/bin/env node
+const projection = process.argv[2] || '<missing>';
+let stdin = '';
+process.stdin.setEncoding('utf8');
+for await (const chunk of process.stdin) {
+  stdin += chunk;
+}
+let input = {};
+try {
+  input = JSON.parse(stdin || '{}');
+} catch {}
+const listUnresolvedClaims = ${JSON.stringify(listUnresolvedClaims)};
+const listR2Reviews = ${JSON.stringify(listR2Reviews)};
+function dataFor(name) {
+  if (name === 'getProjectOverview') {
+    return { profile: 'default', projectId: 'fake-project' };
+  }
+  if (name === 'getStateSnapshot') {
+    return { sequences: [] };
+  }
+  if (name === 'listUnresolvedClaims') {
+    return listUnresolvedClaims;
+  }
+  if (name === 'listR2Reviews') {
+    return listR2Reviews;
+  }
+  if (name.startsWith('list')) {
+    return [];
+  }
+  return {};
+}
+process.stdout.write(JSON.stringify({
+  ok: true,
+  projection,
+  projectPath: input.projectPath || '',
+  data: dataFor(projection),
+  meta: {
+    sourceMode: 'kernel-backed',
+    dbAvailable: true
+  }
+}));
+`,
+    'utf8'
+  );
+  return kernelRoot;
+}
+
 function assertKernelTruthMismatchEvent(event, { projectionName = 'listClaimHeads' } = {}) {
   assert.equal(event.event_type, 'kernel_vre_truth_mismatch');
   assert.equal(event.source_component, 'vre/control/capability-handshake');
@@ -190,7 +285,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.schemaVersion, 'phase9.capability-handshake.v1');
   assert.equal(handshake.vrePresent, true);
   assert.equal(handshake.kernel.mode, 'full');
-  assert.equal(handshake.kernel.projections.probes.length, 8);
+  assert.equal(handshake.kernel.projections.probes.length, 9);
   assert.deepEqual(
     handshake.kernel.projections.availableNames,
     [
@@ -201,6 +296,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
       'listGateChecks',
       'listLiteratureSearches',
       'listObserverAlerts',
+      'listR2Reviews',
       'listUnresolvedClaims'
     ]
   );
@@ -248,6 +344,24 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.deepEqual(handshake.vre.operatorSurface.commands, EXPECTED_OPERATOR_COMMANDS);
   assert.deepEqual(handshake.vre.operatorSurface.doctorCommands, EXPECTED_OPERATOR_DOCTOR_COMMANDS);
   assert.equal(handshake.vre.operatorSurface.artifactPaths.length, 5);
+  const classificationManifest = await buildLiveCommandClassificationManifest({
+    rootDir: PROJECT_ROOT
+  });
+  assert.deepEqual(
+    handshake.vre.commandClassification,
+    expectedCommandClassificationRecords(classificationManifest)
+  );
+  assert.equal(handshake.vre.commandClassification.length, 16);
+  assert.equal(
+    new Set(handshake.vre.commandClassification.map((record) => record.command)).size,
+    16
+  );
+  assert.equal(
+    handshake.vre.commandClassification.some(
+      (record) => record.command === 'capabilities doctor'
+    ),
+    false
+  );
   assert.equal(handshake.objective.activePointer, null);
   assert.equal(handshake.objective.activeObjectiveId, null);
   assert.equal(handshake.objective.status, null);
@@ -260,84 +374,7 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
     handshake.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
     true
   );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command objective start is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command objective resume is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command objective status is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command objective pause is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command objective stop is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command objective doctor is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command research-loop is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command scheduler install is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command scheduler status is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command scheduler doctor is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
-  assert.equal(
-    handshake.degradedReasons.includes(
-      'executable command scheduler remove is wired in bin/vre but missing a reviewed markdown contract'
-    ),
-    true
-  );
+  assert.equal(hasMissingContractWarning(handshake.degradedReasons), false);
   // Round 65 invariant: operatorSurface is the canonical agent-facing list from
   // file 13, so it MUST keep listing the reviewed operator/doctor commands even
   // after they become executable.
@@ -345,6 +382,125 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
   assert.equal(handshake.vre.operatorSurface.commands.includes('research-loop'), true);
   assert.equal(handshake.vre.operatorSurface.doctorCommands.includes('objective doctor'), true);
   assert.equal(handshake.vre.operatorSurface.doctorCommands.includes('scheduler doctor'), true);
+});
+
+test('capability-handshake derives unresolvedR2Count from listR2Reviews, not unresolved claims', async () => {
+  const handshake = await generateCapabilityHandshake(PROJECT_ROOT, {
+    generatedAt: FIXED_GENERATED_AT,
+    kernelRoot: FAKE_KERNEL_ROOT
+  });
+
+  assert.equal(handshake.kernel.unresolvedR2Count, 1);
+  assert.equal(
+    handshake.degradedReasons.some((reason) =>
+      reason.includes('currently derived from listUnresolvedClaims')
+    ),
+    false
+  );
+});
+
+test('capability-handshake treats an empty listR2Reviews projection as a true zero', async () => {
+  const kernelRoot = await createKernelFixtureWithProjectionData({
+    listUnresolvedClaims: [
+      { claimId: 'claim-001', updatedAt: '2026-06-20T00:00:00.000Z' },
+      { claimId: 'claim-002', updatedAt: '2026-06-20T00:01:00.000Z' }
+    ],
+    listR2Reviews: {
+      schemaVersion: 'phase9.r2-projection.v1',
+      records: []
+    }
+  });
+  try {
+    const handshake = await generateCapabilityHandshake(PROJECT_ROOT, {
+      generatedAt: FIXED_GENERATED_AT,
+      kernelRoot
+    });
+
+    assert.equal(handshake.kernel.unresolvedR2Count, 0);
+    assert.equal(
+      handshake.degradedReasons.some((reason) =>
+        reason.includes('unresolvedR2Count is unavailable')
+      ),
+      false
+    );
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake degrades unresolvedR2Count when listR2Reviews is unavailable', async () => {
+  const kernelRoot = await createKernelFixtureWithProjectionFailure({
+    failProjection: 'listR2Reviews',
+    mode: 'projection-error',
+    sentinel: 'r2 projection offline'
+  });
+  try {
+    const handshake = await generateCapabilityHandshake(PROJECT_ROOT, {
+      generatedAt: FIXED_GENERATED_AT,
+      kernelRoot
+    });
+
+    assert.equal(handshake.kernel.unresolvedR2Count, 0);
+    assert.equal(
+      handshake.degradedReasons.includes(
+        'kernel unresolvedR2Count is unavailable because listR2Reviews is not currently available'
+      ),
+      true
+    );
+    assert.equal(
+      handshake.degradedReasons.some((reason) =>
+        reason.includes('listUnresolvedClaims is not currently available')
+      ),
+      false
+    );
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake ignores listUnresolvedClaims when listR2Reviews is available', async () => {
+  const kernelRoot = await createKernelFixtureWithProjectionData({
+    listUnresolvedClaims: [
+      { claimId: 'claim-001', updatedAt: '2026-06-20T00:00:00.000Z' },
+      { claimId: 'claim-002', updatedAt: '2026-06-20T00:01:00.000Z' },
+      { claimId: 'claim-003', updatedAt: '2026-06-20T00:02:00.000Z' }
+    ],
+    listR2Reviews: {
+      schemaVersion: 'phase9.r2-projection.v1',
+      records: [{
+        claimId: 'CLAIM-0001',
+        r2VerdictEventId: 'EV-0001',
+        status: 'open',
+        resolved: false,
+        severity: 'medium',
+        reviewedAt: '2026-06-20T00:00:00.000Z'
+      }, {
+        claimId: 'CLAIM-0002',
+        r2VerdictEventId: 'EV-0002',
+        status: 'disputed',
+        resolved: false,
+        severity: 'high',
+        reviewedAt: '2026-06-20T00:01:00.000Z'
+      }, {
+        claimId: 'CLAIM-0003',
+        r2VerdictEventId: 'EV-0003',
+        status: 'resolved',
+        resolved: true,
+        severity: 'low',
+        reviewedAt: '2026-06-20T00:02:00.000Z'
+      }]
+    }
+  });
+  try {
+    const handshake = await generateCapabilityHandshake(PROJECT_ROOT, {
+      generatedAt: FIXED_GENERATED_AT,
+      kernelRoot
+    });
+
+    assert.equal(handshake.kernel.unresolvedR2Count, 2);
+  } finally {
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
 });
 
 test('capability-handshake generator reports an honest degraded kernel when no kernel root is available', async () => {
@@ -356,11 +512,56 @@ test('capability-handshake generator reports an honest degraded kernel when no k
   assert.equal(handshake.kernel.mode, 'missing');
   assert.equal(handshake.kernel.dbAvailable, false);
   assert.equal(handshake.kernel.projections.availableNames.length, 0);
-  assert.equal(handshake.kernel.projections.unavailable.length, 8);
+  assert.equal(handshake.kernel.projections.unavailable.length, 9);
   assert.equal(
     handshake.degradedReasons.some((reason) => reason.includes('kernel missing')),
     true
   );
+});
+
+test('capability-handshake preserves missing-contract warnings as degraded reasons', async () => {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-capability-missing-contract-'));
+  try {
+    await mkdir(path.join(fixtureRoot, 'bin'), { recursive: true });
+    await mkdir(path.join(fixtureRoot, 'environment', 'control'), { recursive: true });
+    await mkdir(path.join(fixtureRoot, 'environment', 'schemas'), { recursive: true });
+    await cp(path.join(PROJECT_ROOT, 'commands'), path.join(fixtureRoot, 'commands'), {
+      recursive: true
+    });
+    await cp(
+      path.join(PROJECT_ROOT, 'environment', 'control', 'approved-memory-apis.json'),
+      path.join(fixtureRoot, 'environment', 'control', 'approved-memory-apis.json')
+    );
+    await writeFile(
+      path.join(fixtureRoot, 'package.json'),
+      JSON.stringify({ name: 'vibe-research-environment' }),
+      'utf8'
+    );
+    await writeFile(path.join(fixtureRoot, 'bin', 'vre'), 'fixture only\n', 'utf8');
+    await unlink(path.join(fixtureRoot, 'commands', 'capabilities --json.md'));
+
+    const handshake = await generateCapabilityHandshake(fixtureRoot, {
+      generatedAt: FIXED_GENERATED_AT,
+      kernelRoot: null,
+      cliMetadata: {
+        DISPATCH_TABLE,
+        IMPLEMENTED_PHASE9_COMMANDS,
+        PHASE9_STUB_DEFINITIONS
+      }
+    });
+
+    assert.equal(hasMissingContractWarning(handshake.degradedReasons), true);
+    assert.equal(
+      handshake.degradedReasons.some((reason) =>
+        reason.includes('capabilities --json')
+      ),
+      true
+    );
+    assert.equal(Object.hasOwn(handshake.vre, 'undocumentedExecutableWarnings'), false);
+    assert.equal(Object.hasOwn(handshake.vre, 'commandClassification'), false);
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
 });
 
 test('canonical capability fixtures stay truthful once capabilities --json is a real executable command', async () => {
@@ -392,6 +593,11 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
       'utf8'
     )
   );
+  const classificationManifest = await buildLiveCommandClassificationManifest({
+    rootDir: PROJECT_ROOT
+  });
+  const expectedClassification =
+    expectedCommandClassificationRecords(classificationManifest);
 
   for (const fixture of [fullFixture, degradedFixture]) {
     assert.equal(fixture.vre.executableCommands.includes('capabilities --json'), true);
@@ -414,88 +620,12 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
     assert.equal(fixture.vre.missingSurfaces.includes('run-analysis'), false);
     assert.deepEqual(fixture.vre.operatorSurface.commands, EXPECTED_OPERATOR_COMMANDS);
     assert.deepEqual(fixture.vre.operatorSurface.doctorCommands, EXPECTED_OPERATOR_DOCTOR_COMMANDS);
+    assert.deepEqual(fixture.vre.commandClassification, expectedClassification);
     assert.equal(
       fixture.vre.schemas.some((entry) => entry.name === 'phase9.analysis-manifest.v1'),
       true
     );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command objective start is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command objective resume is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command objective status is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command objective pause is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command objective stop is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command objective doctor is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command research-loop is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command scheduler install is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command scheduler status is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command scheduler doctor is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
-    assert.equal(
-      fixture.degradedReasons.includes(
-        'executable command scheduler remove is wired in bin/vre but missing a reviewed markdown contract'
-      ),
-      true
-    );
+    assert.equal(hasMissingContractWarning(fixture.degradedReasons), false);
   }
 
   assert.equal(
@@ -516,8 +646,8 @@ test('capability-handshake generator stays schema-valid when the target path is 
     assert.equal(handshake.vrePresent, false);
     assert.equal(handshake.vrePath, null);
     assert.equal(handshake.kernel.mode, 'missing');
-    assert.equal(handshake.kernel.projections.probes.length, 8);
-    assert.equal(handshake.kernel.projections.unavailable.length, 8);
+    assert.equal(handshake.kernel.projections.probes.length, 9);
+    assert.equal(handshake.kernel.projections.unavailable.length, 9);
     assert.deepEqual(handshake.vre.missingSurfaces, []);
     assert.equal(
       handshake.degradedReasons.some((reason) => reason.startsWith('VRE_MISSING:')),

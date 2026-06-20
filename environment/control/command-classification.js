@@ -20,29 +20,7 @@ export class CommandClassificationError extends Error {
   }
 }
 
-export const DEFAULT_EXPLICIT_COMMAND_CLASSIFICATIONS = Object.freeze({
-  'capabilities --json': internalReason(),
-  'objective doctor': internalReason(),
-  'objective pause': internalReason(),
-  'objective resume': internalReason(),
-  'objective start': internalReason(),
-  'objective status': internalReason(),
-  'objective stop': internalReason(),
-  'research-loop': internalReason(),
-  'run-analysis': internalReason(),
-  'scheduler doctor': internalReason(),
-  'scheduler install': internalReason(),
-  'scheduler remove': internalReason(),
-  'scheduler status': internalReason()
-});
-
-function internalReason() {
-  return Object.freeze({
-    classification: 'internal',
-    reason:
-      'Executable command has no reviewed markdown contract yet; TW14oc.2 must author the contract before it can be reviewed.'
-  });
-}
+export const DEFAULT_EXPLICIT_COMMAND_CLASSIFICATIONS = Object.freeze({});
 
 function uniqueSorted(values) {
   return [...new Set(values)].sort();

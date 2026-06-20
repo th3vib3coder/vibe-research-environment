@@ -40,8 +40,8 @@ test('live command classification emits exactly one record for every executable 
   assert.equal(manifest.schemaVersion, 'phase14.command-classification.v1');
   assert.equal(manifest.runtimeOpened, false);
   assert.equal(manifest.source.executableCommandCount, 16);
-  assert.equal(manifest.source.markdownContractCount, 12);
-  assert.equal(manifest.source.reviewedExecutableContractCount, 3);
+  assert.equal(manifest.source.markdownContractCount, 25);
+  assert.equal(manifest.source.reviewedExecutableContractCount, 16);
   assert.equal(manifest.source.markdownOnlyContractCount, 9);
   assert.equal(manifest.records.length, expectedExecutableCommands.length);
   assert.deepEqual(commandSet(manifest), expectedExecutableCommands);
@@ -55,12 +55,13 @@ test('live command classification emits exactly one record for every executable 
   );
   assert.deepEqual(
     reviewed.map((record) => record.command).sort(),
-    ['flow-status', 'orchestrator-status', 'sync-memory']
+    expectedExecutableCommands
   );
-  assert.equal(internal.length, 13);
+  assert.equal(internal.length, 0);
   assert.equal(manifest.records.some((record) => record.command === 'weekly-digest'), false);
   for (const record of manifest.records) {
     assert.equal(record.runtimeOpened, false);
+    assert.equal(record.reason, null);
   }
 });
 
@@ -202,7 +203,7 @@ test('importing command-classification has no CLI execution side effect', async 
   assert.equal(stderr, '');
 });
 
-test('default explicit classifications cover the 13 live undocumented executable commands', async () => {
+test('default explicit classifications are empty after all live executable commands are reviewed', async () => {
   const manifest = await buildLiveCommandClassificationManifest({
     rootDir: PROJECT_ROOT,
     explicitClassifications: DEFAULT_EXPLICIT_COMMAND_CLASSIFICATIONS
@@ -211,14 +212,12 @@ test('default explicit classifications cover the 13 live undocumented executable
     (record) => record.classification === 'internal'
   );
 
-  assert.equal(undocumented.length, 13);
-  assert.deepEqual(
-    undocumented.map((record) => record.command).sort(),
-    Object.keys(DEFAULT_EXPLICIT_COMMAND_CLASSIFICATIONS).sort()
+  assert.equal(Object.keys(DEFAULT_EXPLICIT_COMMAND_CLASSIFICATIONS).length, 0);
+  assert.equal(undocumented.length, 0);
+  assert.equal(
+    manifest.records.every((record) => record.classification === 'reviewed'),
+    true
   );
-  for (const record of undocumented) {
-    assert.match(record.reason, /TW14oc\.2/);
-  }
 });
 
 test('getLiveExecutableCommands is derived from bin/vre metadata without hardcoded count', () => {

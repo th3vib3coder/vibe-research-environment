@@ -183,6 +183,7 @@ describe('WP-156 kernel-bridge integration — contract constants', () => {
     const expected = [
       'listClaimHeads',
       'listUnresolvedClaims',
+      'listR2Reviews',
       'listCitationChecks',
       'getProjectOverview',
       'listLiteratureSearches',

@@ -30,6 +30,7 @@ import {
 import { logGovernanceEventViaPlugin } from '../orchestrator/governance-logger.js';
 import { getTaskRegistry } from '../orchestrator/task-registry.js';
 import { getMemoryFreshness } from '../memory/status.js';
+import { buildLiveCommandClassificationManifest } from './command-classification.js';
 
 export const HANDSHAKE_SCHEMA_VERSION = 'phase9.capability-handshake.v1';
 export const HANDSHAKE_SCHEMA_FILE = 'phase9-capability-handshake.schema.json';
@@ -49,6 +50,12 @@ export const OPERATOR_ARTIFACT_PATHS = Object.freeze([
   '.vibe-science-environment/objectives/<OBJ-ID>/handoffs.jsonl',
   '.vibe-science-environment/objectives/<OBJ-ID>/BLOCKER.flag'
 ]);
+
+const DISPATCH_COMMAND_METADATA = Object.freeze({
+  'flow-status': { kind: 'dispatch-command', mutating: false },
+  'orchestrator-status': { kind: 'dispatch-command', mutating: false },
+  'sync-memory': { kind: 'dispatch-command', mutating: true }
+});
 
 const REVIEWED_MISSING_SURFACE_RULES = Object.freeze([
   {
@@ -286,6 +293,47 @@ function classifyCommandSurface(executableCommands, markdownContracts, stubDefin
       )
     }
   };
+}
+
+function commandMetadataForHandshake(commandName, cliMetadata) {
+  const stubDefinition = cliMetadata.PHASE9_STUB_DEFINITIONS.find(
+    (definition) => definition.canonicalCommand === commandName
+  );
+  if (stubDefinition != null) {
+    return {
+      kind: stubDefinition.kind,
+      mutating: stubDefinition.mutating
+    };
+  }
+
+  if (cliMetadata.DISPATCH_TABLE[commandName] != null) {
+    const metadata = DISPATCH_COMMAND_METADATA[commandName];
+    if (metadata != null) {
+      return metadata;
+    }
+  }
+
+  throw new Error(
+    `E_COMMAND_CLASSIFICATION_METADATA_MISSING: missing command metadata for ${commandName}`
+  );
+}
+
+async function buildHandshakeCommandClassification(projectRoot, cliMetadata) {
+  const manifest = await buildLiveCommandClassificationManifest({
+    rootDir: projectRoot
+  });
+  return manifest.records.map((record) => {
+    const metadata = commandMetadataForHandshake(record.command, cliMetadata);
+    return {
+      command: record.command,
+      kind: metadata.kind,
+      mutating: metadata.mutating,
+      classification: record.classification,
+      contractPath: record.contractPath,
+      reason: record.reason,
+      runtimeOpened: record.runtimeOpened
+    };
+  });
 }
 
 async function guessFixturePath(projectRoot, schemaFile) {
@@ -800,15 +848,14 @@ async function buildKernelSection(projectRoot, options = {}) {
   const alerts = valuesByProjection.get('listObserverAlerts');
   const alertsCount = Array.isArray(alerts) ? alerts.length : 0;
 
-  const unresolvedClaims = valuesByProjection.get('listUnresolvedClaims');
-  const unresolvedR2Count = Array.isArray(unresolvedClaims) ? unresolvedClaims.length : 0;
-  if (Array.isArray(unresolvedClaims)) {
+  const r2Projection = valuesByProjection.get('listR2Reviews');
+  const r2Records = r2Projection?.records;
+  const unresolvedR2Count = Array.isArray(r2Records)
+    ? r2Records.filter((record) => record?.resolved === false).length
+    : 0;
+  if (!Array.isArray(r2Records)) {
     degradedReasons.push(
-      'kernel unresolvedR2Count is currently derived from listUnresolvedClaims until a dedicated R2 projection lands'
-    );
-  } else {
-    degradedReasons.push(
-      'kernel unresolvedR2Count is unavailable because listUnresolvedClaims is not currently available'
+      'kernel unresolvedR2Count is unavailable because listR2Reviews is not currently available'
     );
   }
 
@@ -907,6 +954,12 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
 
     handshake.vre.executableCommands = executableCommands;
     handshake.vre.markdownOnlyContracts = commandSurface.markdownOnlyContracts;
+    if (commandSurface.undocumentedExecutableWarnings.length === 0) {
+      handshake.vre.commandClassification = await buildHandshakeCommandClassification(
+        projectRoot,
+        cliMetadata
+      );
+    }
     handshake.vre.operatorSurface = {
       commands: commandSurface.operatorSurface.commands,
       doctorCommands: commandSurface.operatorSurface.doctorCommands,

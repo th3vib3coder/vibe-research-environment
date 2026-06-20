@@ -26,6 +26,14 @@
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
         {
+          "name": "listR2Reviews",
+          "status": "available",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": "2026-06-20T00:01:00.000Z",
+          "degradedReason": null,
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
           "name": "listCitationChecks",
           "status": "available",
           "schemaVersion": "wp150.typed-duck.v1",
@@ -82,12 +90,13 @@
         "listGateChecks",
         "listLiteratureSearches",
         "listObserverAlerts",
+        "listR2Reviews",
         "listUnresolvedClaims"
       ],
       "unavailable": []
     },
     "alertsCount": 0,
-    "unresolvedR2Count": 0,
+    "unresolvedR2Count": 1,
     "lastKernelActivity": "2026-04-17T00:00:00.000Z"
   },
   "vre": {
@@ -124,6 +133,8 @@
       "experiment-flow-register",
       "literature-flow-register",
       "memory-sync-refresh",
+      "phase10-wiki-compile",
+      "phase10-wiki-lint",
       "results-bundle-discover",
       "session-digest-export",
       "session-digest-review",
@@ -162,6 +173,13 @@
         "name": "vibe-env/capabilities-snapshot.schema.json",
         "schemaVersion": "vibe-env/capabilities-snapshot.schema.json",
         "path": "environment/schemas/capabilities-snapshot.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase14.command-classification.v1",
+        "schemaVersion": "phase14.command-classification.v1",
+        "path": "environment/schemas/command-classification.schema.json",
         "fixturePath": null,
         "owner": "vre"
       },
@@ -362,6 +380,174 @@
         "owner": "vre"
       },
       {
+        "name": "phase10.compile-policy.v1",
+        "schemaVersion": "phase10.compile-policy.v1",
+        "path": "environment/schemas/phase10-compile-policy.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.computed-artifact.v1",
+        "schemaVersion": "phase10.computed-artifact.v1",
+        "path": "environment/schemas/phase10-computed-artifact.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.export-recipe.v1",
+        "schemaVersion": "phase10.export-recipe.v1",
+        "path": "environment/schemas/phase10-export-recipe.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.inbox-entry.v1",
+        "schemaVersion": "phase10.inbox-entry.v1",
+        "path": "environment/schemas/phase10-inbox-entry.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.knowledge-domain.v1",
+        "schemaVersion": "phase10.knowledge-domain.v1",
+        "path": "environment/schemas/phase10-knowledge-domain.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.marp-template.v1",
+        "schemaVersion": "phase10.marp-template.v1",
+        "path": "environment/schemas/phase10-marp-template.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.presentation.v1",
+        "schemaVersion": "phase10.presentation.v1",
+        "path": "environment/schemas/phase10-presentation.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.provenance-link.v1",
+        "schemaVersion": "phase10.provenance-link.v1",
+        "path": "environment/schemas/phase10-provenance-link.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.query-record.v1",
+        "schemaVersion": "phase10.query-record.v1",
+        "path": "environment/schemas/phase10-query-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.raw-document.v1",
+        "schemaVersion": "phase10.raw-document.v1",
+        "path": "environment/schemas/phase10-raw-document.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.role-envelope.v1",
+        "schemaVersion": "phase10.role-envelope.v1",
+        "path": "environment/schemas/phase10-role-envelope.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.source-bundle.v1",
+        "schemaVersion": "phase10.source-bundle.v1",
+        "path": "environment/schemas/phase10-source-bundle.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase10.wiki-page.v1",
+        "schemaVersion": "phase10.wiki-page.v1",
+        "path": "environment/schemas/phase10-wiki-page.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase11.hgsoc-cd8-script-contract.v1",
+        "schemaVersion": "phase11.hgsoc-cd8-script-contract.v1",
+        "path": "environment/schemas/phase11-hgsoc-cd8-script-contract.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase11.research-packet.v1",
+        "schemaVersion": "phase11.research-packet.v1",
+        "path": "environment/schemas/phase11-research-packet.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase11.scientific-derivation-harness.v1",
+        "schemaVersion": "phase11.scientific-derivation-harness.v1",
+        "path": "environment/schemas/phase11-scientific-derivation-harness.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.phase10-law13-review-extension.v1",
+        "schemaVersion": "phase12.phase10-law13-review-extension.v1",
+        "path": "environment/schemas/phase12-phase10-law13-review-extension.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.phase11-graph-review-extension.v1",
+        "schemaVersion": "phase12.phase11-graph-review-extension.v1",
+        "path": "environment/schemas/phase12-phase11-graph-review-extension.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.relay-candidate.v1",
+        "schemaVersion": "phase12.relay-candidate.v1",
+        "path": "environment/schemas/phase12-relay-candidate.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.relay-evidence-bundle.v1",
+        "schemaVersion": "phase12.relay-evidence-bundle.v1",
+        "path": "environment/schemas/phase12-relay-evidence-bundle.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.relay-final-verdict.v1",
+        "schemaVersion": "phase12.relay-final-verdict.v1",
+        "path": "environment/schemas/phase12-relay-final-verdict.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.relay-rebuttal.v1",
+        "schemaVersion": "phase12.relay-rebuttal.v1",
+        "path": "environment/schemas/phase12-relay-rebuttal.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.relay-review.v1",
+        "schemaVersion": "phase12.relay-review.v1",
+        "path": "environment/schemas/phase12-relay-review.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "phase12.relay-run.v1",
+        "schemaVersion": "phase12.relay-run.v1",
+        "path": "environment/schemas/phase12-relay-run.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
         "name": "phase9.active-objective-pointer.v1",
         "schemaVersion": "phase9.active-objective-pointer.v1",
         "path": "environment/schemas/phase9-active-objective-pointer.schema.json",
@@ -380,6 +566,13 @@
         "schemaVersion": "phase9.capability-handshake.v1",
         "path": "environment/schemas/phase9-capability-handshake.schema.json",
         "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-full.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.claim-edge.v1",
+        "schemaVersion": "phase9.claim-edge.v1",
+        "path": "environment/schemas/phase9-claim-edge.schema.json",
+        "fixturePath": null,
         "owner": "vre"
       },
       {
@@ -688,8 +881,152 @@
         ".vibe-science-environment/objectives/<OBJ-ID>/BLOCKER.flag"
       ]
     },
-    "missingSurfaces": [
-      "reviewer-2 bridge"
+    "missingSurfaces": [],
+    "commandClassification": [
+      {
+        "command": "capabilities --json",
+        "kind": "cli-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/capabilities --json.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "flow-status",
+        "kind": "dispatch-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/flow-status.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "objective doctor",
+        "kind": "doctor-surface",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/objective doctor.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "objective pause",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/objective pause.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "objective resume",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/objective resume.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "objective start",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/objective start.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "objective status",
+        "kind": "cli-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/objective status.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "objective stop",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/objective stop.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "orchestrator-status",
+        "kind": "dispatch-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/orchestrator-status.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "research-loop",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/research-loop.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "run-analysis",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/run-analysis.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "scheduler doctor",
+        "kind": "doctor-surface",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/scheduler doctor.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "scheduler install",
+        "kind": "scheduler-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/scheduler install.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "scheduler remove",
+        "kind": "scheduler-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/scheduler remove.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "scheduler status",
+        "kind": "scheduler-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/scheduler status.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "sync-memory",
+        "kind": "dispatch-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/sync-memory.md",
+        "reason": null,
+        "runtimeOpened": false
+      }
     ]
   },
   "objective": {
@@ -708,20 +1045,6 @@
     "automation weekly-research-digest is degraded: automation-core bundle is not installed",
     "connector filesystem-export is degraded: connectors-core bundle is not installed",
     "connector obsidian-export is degraded: connectors-core bundle is not installed",
-    "domain pack omics is degraded: domain-packs-core bundle is not installed",
-    "executable command capabilities --json is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command objective doctor is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command objective pause is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command objective resume is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command objective start is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command objective status is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command objective stop is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command research-loop is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command run-analysis is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command scheduler doctor is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command scheduler install is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command scheduler remove is wired in bin/vre but missing a reviewed markdown contract",
-    "executable command scheduler status is wired in bin/vre but missing a reviewed markdown contract",
-    "kernel unresolvedR2Count is currently derived from listUnresolvedClaims until a dedicated R2 projection lands"
+    "domain pack omics is degraded: domain-packs-core bundle is not installed"
   ]
 }

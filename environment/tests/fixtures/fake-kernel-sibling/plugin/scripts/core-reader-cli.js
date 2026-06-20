@@ -124,6 +124,25 @@ function buildCannedData(name) {
       }];
     case 'listUnresolvedClaims':
       return [];
+    case 'listR2Reviews':
+      return {
+        schemaVersion: 'phase9.r2-projection.v1',
+        records: [{
+          claimId: 'CLAIM-0001',
+          r2VerdictEventId: 'EV-0001',
+          status: 'open',
+          resolved: false,
+          severity: 'medium',
+          reviewedAt: '2026-06-20T00:00:00.000Z',
+        }, {
+          claimId: 'CLAIM-0002',
+          r2VerdictEventId: 'EV-0002',
+          status: 'resolved',
+          resolved: true,
+          severity: 'low',
+          reviewedAt: '2026-06-20T00:01:00.000Z',
+        }],
+      };
     case 'listCitationChecks':
       return [];
     case 'getProjectOverview':

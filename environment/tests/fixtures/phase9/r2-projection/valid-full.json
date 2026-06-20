@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "phase9.r2-projection.v1",
+  "records": [
+    {
+      "claimId": "CLAIM-0001",
+      "r2VerdictEventId": "EV-0001",
+      "status": "open",
+      "resolved": false,
+      "severity": "high",
+      "reviewedAt": "2026-06-20T00:00:00.000Z"
+    },
+    {
+      "claimId": "CLAIM-0002",
+      "r2VerdictEventId": "EV-0002",
+      "status": "resolved",
+      "resolved": true,
+      "severity": "medium",
+      "reviewedAt": "2026-06-20T00:05:00.000Z"
+    },
+    {
+      "claimId": "CLAIM-0003",
+      "r2VerdictEventId": "EV-0003",
+      "status": "disputed",
+      "resolved": false,
+      "severity": "critical",
+      "reviewedAt": "2026-06-20T00:10:00.000Z"
+    }
+  ]
+}

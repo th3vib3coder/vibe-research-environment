@@ -201,6 +201,59 @@
             "minLength": 1
           }
         },
+        "commandClassification": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command",
+              "kind",
+              "mutating",
+              "classification",
+              "contractPath",
+              "reason",
+              "runtimeOpened"
+            ],
+            "properties": {
+              "command": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mutating": {
+                "type": "boolean"
+              },
+              "classification": {
+                "enum": [
+                  "reviewed",
+                  "internal",
+                  "deprecated"
+                ]
+              },
+              "contractPath": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^commands/.+\\.md$"
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "runtimeOpened": {
+                "const": false
+              }
+            }
+          }
+        },
         "queueableTaskKinds": {
           "type": "array",
           "items": {

@@ -28,9 +28,17 @@ import {
   __testables,
   WP150_TYPED_DUCK_PROJECTION_COUNT,
 } from '../../lib/kernel-bridge.js';
+import { loadValidator } from '../schemas/phase9-schema-fixture-helper.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fakeKernelRoot = path.resolve(here, '..', 'fixtures', 'fake-kernel-sibling');
+const R2_PROJECTION_SCHEMA = 'phase9-r2-projection.schema.json';
+
+function validationDetails(validator) {
+  return (validator.errors ?? [])
+    .map((error) => `${error.instancePath || '(root)'} ${error.message ?? 'is invalid'}`)
+    .join('; ');
+}
 
 async function createDegradedKernelFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'vre-kernel-degraded-'));
@@ -93,7 +101,7 @@ describe('WP-155 kernel-bridge: degraded sentinel', () => {
 });
 
 describe('WP-155 kernel-bridge: happy path against fake sibling', () => {
-  it('returns typed-duck reader exposing all eight projection methods and close()', async () => {
+  it('returns typed-duck reader exposing all nine projection methods and close()', async () => {
     const reader = await resolveKernelReader({ kernelRoot: fakeKernelRoot });
     assert.equal(reader.dbAvailable, true);
     for (const projection of __testables.PROJECTION_NAMES) {
@@ -104,6 +112,7 @@ describe('WP-155 kernel-bridge: happy path against fake sibling', () => {
 
   it('declared WP-150 projection count matches the typed-duck list length', () => {
     assert.equal(__testables.PROJECTION_NAMES.length, WP150_TYPED_DUCK_PROJECTION_COUNT);
+    assert.equal(WP150_TYPED_DUCK_PROJECTION_COUNT, 9);
   });
 
   it('close() is a no-op and does not throw', async () => {
@@ -124,6 +133,37 @@ describe('WP-155 kernel-bridge: happy path against fake sibling', () => {
     const claims = await reader.listUnresolvedClaims();
     assert.ok(Array.isArray(claims));
     assert.equal(claims.length, 0);
+  });
+
+  it('listR2Reviews returns a schema-valid Phase 9 R2 projection payload', async () => {
+    const reader = await resolveKernelReader({ kernelRoot: fakeKernelRoot });
+    const projection = await reader.listR2Reviews();
+    const validator = await loadValidator(R2_PROJECTION_SCHEMA);
+
+    assert.equal(
+      validator(projection),
+      true,
+      `listR2Reviews payload failed schema validation: ${validationDetails(validator)}`
+    );
+    assert.equal(projection.schemaVersion, 'phase9.r2-projection.v1');
+    assert.equal(projection.records.filter((record) => record.resolved === false).length, 1);
+  });
+
+  it('R2 projection validation rejects a malformed fake-sibling row', async () => {
+    const validator = await loadValidator(R2_PROJECTION_SCHEMA);
+    const malformedProjection = {
+      schemaVersion: 'phase9.r2-projection.v1',
+      records: [{
+        claimId: 'CLAIM-0001',
+        status: 'open',
+        resolved: false,
+        severity: 'medium',
+        reviewedAt: '2026-06-20T00:00:00.000Z',
+      }],
+    };
+
+    assert.equal(validator(malformedProjection), false);
+    assert.match(validationDetails(validator), /r2VerdictEventId|required/u);
   });
 
   it('listGateChecks exposes schema_file_protection hook', async () => {

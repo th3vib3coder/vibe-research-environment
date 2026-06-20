@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "phase9.r2-projection.v1",
+  "records": [
+    {
+      "claimId": "CLAIM-0001",
+      "status": "open",
+      "resolved": false,
+      "severity": "high",
+      "reviewedAt": "2026-06-20T00:00:00.000Z"
+    }
+  ]
+}

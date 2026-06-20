@@ -11,6 +11,7 @@ import {
 } from './_helpers.js';
 import {
   DISPATCH_TABLE,
+  PHASE9_STUB_DEFINITIONS,
   parseCommandFrontmatter
 } from '../../../bin/vre';
 
@@ -39,6 +40,18 @@ async function assertModuleExport(modulePath, exportName, label) {
   );
 }
 
+function commandNameForContractPath(contractPath) {
+  const normalized = normalizeModulePath(contractPath);
+  if (!normalized.startsWith('commands/') || !normalized.endsWith('.md')) {
+    return null;
+  }
+  return normalized.slice('commands/'.length, -'.md'.length);
+}
+
+const PHASE9_STUB_COMMANDS = new Set(
+  PHASE9_STUB_DEFINITIONS.map((definition) => definition.canonicalCommand)
+);
+
 export async function validateCommandContract(contractPath, markdown) {
   const frontmatter = parseCommandFrontmatter(markdown);
   const dispatch = frontmatter.dispatch ?? null;
@@ -50,17 +63,21 @@ export async function validateCommandContract(contractPath, markdown) {
       assert(Object.hasOwn(dispatch, key), `${contractPath} dispatch block missing ${key}`);
     }
 
-    assert(
-      tableEntry != null,
-      `${contractPath} has dispatch frontmatter but is absent from DISPATCH_TABLE`
-    );
-    assert(dispatch.module === tableEntry.module, `${contractPath} dispatch module drifted from DISPATCH_TABLE`);
-    assert(dispatch.export === tableEntry.export, `${contractPath} dispatch export drifted from DISPATCH_TABLE`);
-    assert(dispatch.scope === tableEntry.scope, `${contractPath} dispatch scope drifted from DISPATCH_TABLE`);
-    assert(
-      dispatch.wrappedByMiddleware === tableEntry.wrappedByMiddleware,
-      `${contractPath} dispatch wrappedByMiddleware drifted from DISPATCH_TABLE`
-    );
+    if (tableEntry != null) {
+      assert(dispatch.module === tableEntry.module, `${contractPath} dispatch module drifted from DISPATCH_TABLE`);
+      assert(dispatch.export === tableEntry.export, `${contractPath} dispatch export drifted from DISPATCH_TABLE`);
+      assert(dispatch.scope === tableEntry.scope, `${contractPath} dispatch scope drifted from DISPATCH_TABLE`);
+      assert(
+        dispatch.wrappedByMiddleware === tableEntry.wrappedByMiddleware,
+        `${contractPath} dispatch wrappedByMiddleware drifted from DISPATCH_TABLE`
+      );
+    } else {
+      const commandName = commandNameForContractPath(contractPath);
+      assert(
+        commandName != null && PHASE9_STUB_COMMANDS.has(commandName),
+        `${contractPath} has dispatch frontmatter but is absent from DISPATCH_TABLE and Phase 9 stub definitions`
+      );
+    }
     await assertModuleExport(dispatch.module, dispatch.export, contractPath);
   }
 

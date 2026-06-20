@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase9.r2-projection.v1",
+  "title": "Phase 9 R2 Projection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "records"],
+  "properties": {
+    "schemaVersion": { "const": "phase9.r2-projection.v1" },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claimId",
+          "r2VerdictEventId",
+          "status",
+          "resolved",
+          "severity",
+          "reviewedAt"
+        ],
+        "properties": {
+          "claimId": { "type": "string", "pattern": "^CLAIM-.+$" },
+          "r2VerdictEventId": { "type": "string", "pattern": "^EV-[0-9]{4}$" },
+          "status": {
+            "type": "string",
+            "enum": ["open", "redirect", "veto", "resolved", "disputed"]
+          },
+          "resolved": { "type": "boolean" },
+          "severity": { "type": "string", "minLength": 1 },
+          "reviewedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
