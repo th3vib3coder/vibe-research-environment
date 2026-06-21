@@ -551,3 +551,62 @@ Claude Code HAT 3 ACCEPT is recorded via
 Codex authored this implementation and did not self-ACCEPT it. Scoped commit
 and push may proceed only by explicit path staging, excluding pre-existing
 Phase 10 diffs and scratch/noise.
+
+## T15.2 Edition-Isolation Validators
+
+who: Codex authored the validator/test-only hardening after Claude Code
+non-author HAT 1 ACCEPT and standing operator GO.
+
+when: 2026-06-21.
+
+why: T15.1 proved the default-off autonomy tier, but the six-check
+edition-isolation contract still lacked a state-namespace split and an
+end-to-end smoke proof that base readers ignore autonomous-state residue.
+Without this guard, a future base reader could accidentally surface records
+from .vibe-science-environment/autonomous/** while the tier remains off.
+
+what:
+
+- environment/tests/ci/validate-edition-isolation.js
+- environment/tests/autonomous/isolation/state-namespace-split.test.js
+- environment/tests/autonomous/isolation/isolation-smoke.test.js
+- environment/tests/ci/validate-counts.js
+- package.json
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase13-vre-feature-ledger-index.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/81-hat1-stop-t15-2-edition-isolation-validators-2026-06-21.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: node --test environment/tests/autonomous/isolation/state-namespace-split.test.js failed because the test file did not exist.
+- RED: node --test environment/tests/autonomous/isolation/isolation-smoke.test.js failed because the test file did not exist.
+- RED: explicit check-phase13-ledger failed with E_PHASE13_TRACE_MISSING for state-namespace-split before this row.
+- RED: explicit check-phase9-ledger failed with E_VRE_LEDGER_UPDATE_REQUIRED and E_SPEC_LEDGER_UPDATE_REQUIRED for package.json, validate-counts.js, and validate-edition-isolation.js before the bridge rows.
+- GREEN: state-namespace-split.test.js PASS 5/5.
+- GREEN: isolation-smoke.test.js PASS 1/1.
+- GREEN: validate-edition-isolation.test.js PASS 2/2 and validate-edition-isolation.js PASS.
+- GREEN: validate-counts.js PASS with autonomousTests=9.
+- GREEN: npm run test:phase13 PASS 57/57.
+- GREEN: run-all.js initially exposed the expected generated current-status count drift; README.md and the tracked Phase 11 current-status WIKI fixture were regenerated from the live count model, then phase11-current-status.js and run-all.js both passed.
+
+scope:
+
+- This row opens only validator/test hardening for edition isolation.
+- The static guard scans reviewed base reader files and rejects direct literal, path.join, and resolveInside references to .vibe-science-environment/autonomous/**.
+- The smoke test creates a real autonomous residue file and calls production getOperatorStatus() and getOrchestratorStatus(), asserting that no autonomous state reference is surfaced.
+- No autonomy tier value, entrypoint, T15.5 mid-loop runtime, provider automation, OBDK execution, real-data read, biomedical claim authority, claim/export, Graphify, commit, or push is opened.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-t15.2-edition-isolation-validators-verdict-2026-06-21.md.
+
+Codex authored this HAT2 patch and must not self-ACCEPT it. HAT3 review is required before closure.

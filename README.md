@@ -600,7 +600,7 @@ not copied from a private WIKI checkout.
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
 | Audit tests | 1 |
-| Autonomous tests | 7 |
+| Autonomous tests | 9 |
 | Control/orchestrator tests | 32 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
@@ -609,9 +609,9 @@ not copied from a private WIKI checkout.
 | Install tests | 5 |
 | Integration tests | 15 |
 | CLI tests | 12 |
-| Phase14 tests | 3 |
+| Phase14 tests | 4 |
 | Schema tests | 79 |
-| CI validators | 69 |
+| CI validators | 70 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -1254,7 +1254,7 @@ copiati da una WIKI privata affiancata.
 | Metriche eval | 5 |
 | Benchmark eval | 5 |
 | Test audit | 1 |
-| Test autonomia | 7 |
+| Test autonomia | 9 |
 | Test control/orchestrator | 32 |
 | Test compatibilita | 5 |
 | Test flow | 8 |
@@ -1263,9 +1263,9 @@ copiati da una WIKI privata affiancata.
 | Test installazione | 5 |
 | Test integrazione | 15 |
 | Test CLI | 12 |
-| Test Phase14 | 3 |
+| Test Phase14 | 4 |
 | Test schema | 79 |
-| Validator CI | 69 |
+| Validator CI | 70 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->

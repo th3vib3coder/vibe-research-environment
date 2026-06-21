@@ -26,7 +26,7 @@ Source Strategy: tracked-vre-snapshot
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
 | Audit tests | 1 |
-| Autonomous tests | 7 |
+| Autonomous tests | 9 |
 | Control/orchestrator tests | 32 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
@@ -35,9 +35,9 @@ Source Strategy: tracked-vre-snapshot
 | Install tests | 5 |
 | Integration tests | 15 |
 | CLI tests | 12 |
-| Phase14 tests | 3 |
+| Phase14 tests | 4 |
 | Schema tests | 79 |
-| CI validators | 69 |
+| CI validators | 70 |
 
 ## Carry-Forward And Deferred Items
 

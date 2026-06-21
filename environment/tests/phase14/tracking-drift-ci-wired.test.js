@@ -60,8 +60,8 @@ test('phase14 tracking-drift CI validator passes a synced descriptor', async () 
 });
 
 test('validate-counts enforces both the CI validator and phase14 test counts', async () => {
-  assert.equal(expectedCounts.ciValidators, 69);
-  assert.equal(expectedCounts.phase14Tests, 3);
+  assert.equal(expectedCounts.ciValidators, 70);
+  assert.equal(expectedCounts.phase14Tests, 4);
 
   await validateCounts();
 });

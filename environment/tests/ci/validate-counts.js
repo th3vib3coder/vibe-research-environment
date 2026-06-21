@@ -8,7 +8,7 @@ export const expectedCounts = {
   evalMetrics: 5,
   evalBenchmarks: 5,
   auditTests: 1,
-  autonomousTests: 7,
+  autonomousTests: 9,
   controlTests: 32,
   compatibilityTests: 5,
   flowTests: 8,
@@ -17,10 +17,10 @@ export const expectedCounts = {
   installTests: 5,
   integrationTests: 15,
   cliTests: 12,
-  phase14Tests: 3,
+  phase14Tests: 4,
   shardTests: 5,
   schemaTests: 79,
-  ciValidators: 69
+  ciValidators: 70
 };
 
 export default async function validateCounts() {

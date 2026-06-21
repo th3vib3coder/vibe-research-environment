@@ -64,6 +64,7 @@ import validatePhase12FullCloseout from './phase12-full-closeout.js';
 import validateEditionIsolation from './validate-edition-isolation.js';
 import checkPhase13Ledger from './check-phase13-ledger.js';
 import validatePhase14TrackingDrift from './phase14-tracking-drift.js';
+import validatePhase14IsolationEnforcement from './phase14-isolation-enforcement.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -130,7 +131,8 @@ const validators = [
   ['phase12-full-closeout', validatePhase12FullCloseout],
   ['validate-edition-isolation', validateEditionIsolation],
   ['check-phase13-ledger', checkPhase13Ledger],
-  ['phase14-tracking-drift', validatePhase14TrackingDrift]
+  ['phase14-tracking-drift', validatePhase14TrackingDrift],
+  ['phase14-isolation-enforcement', validatePhase14IsolationEnforcement]
 ];
 
 for (const [name, validator] of validators) {
