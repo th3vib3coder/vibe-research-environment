@@ -305,6 +305,9 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
     [...new Set([...Object.keys(DISPATCH_TABLE), ...IMPLEMENTED_PHASE9_COMMANDS])].sort()
   );
   assert.equal(handshake.vre.executableCommands.includes('capabilities --json'), true);
+  assert.equal(handshake.vre.executableCommands.includes('direction check'), true);
+  assert.equal(handshake.vre.executableCommands.includes('direction record'), true);
+  assert.equal(handshake.vre.executableCommands.includes('direction revive'), true);
   assert.equal(handshake.vre.executableCommands.includes('flow-status'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective doctor'), true);
   assert.equal(handshake.vre.executableCommands.includes('objective resume'), true);
@@ -351,10 +354,10 @@ test('capability-handshake generator produces a schema-valid full ontology paylo
     handshake.vre.commandClassification,
     expectedCommandClassificationRecords(classificationManifest)
   );
-  assert.equal(handshake.vre.commandClassification.length, 16);
+  assert.equal(handshake.vre.commandClassification.length, 23);
   assert.equal(
     new Set(handshake.vre.commandClassification.map((record) => record.command)).size,
-    16
+    23
   );
   assert.equal(
     handshake.vre.commandClassification.some(
@@ -601,6 +604,9 @@ test('canonical capability fixtures stay truthful once capabilities --json is a 
 
   for (const fixture of [fullFixture, degradedFixture]) {
     assert.equal(fixture.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(fixture.vre.executableCommands.includes('direction check'), true);
+    assert.equal(fixture.vre.executableCommands.includes('direction record'), true);
+    assert.equal(fixture.vre.executableCommands.includes('direction revive'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective doctor'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective resume'), true);
     assert.equal(fixture.vre.executableCommands.includes('objective start'), true);

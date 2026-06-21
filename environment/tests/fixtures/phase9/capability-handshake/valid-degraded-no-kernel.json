@@ -26,6 +26,14 @@
           "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
         },
         {
+          "name": "listR2Reviews",
+          "status": "unavailable",
+          "schemaVersion": "wp150.typed-duck.v1",
+          "sourceTimestamp": null,
+          "degradedReason": "CLI default: no reader provided",
+          "fixturePath": "environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json"
+        },
+        {
           "name": "listCitationChecks",
           "status": "unavailable",
           "schemaVersion": "wp150.typed-duck.v1",
@@ -85,6 +93,10 @@
           "reason": "CLI default: no reader provided"
         },
         {
+          "name": "listR2Reviews",
+          "reason": "CLI default: no reader provided"
+        },
+        {
           "name": "listCitationChecks",
           "reason": "CLI default: no reader provided"
         },
@@ -117,6 +129,13 @@
   "vre": {
     "executableCommands": [
       "capabilities --json",
+      "direction check",
+      "direction contradict",
+      "direction kill",
+      "direction list",
+      "direction park",
+      "direction record",
+      "direction revive",
       "flow-status",
       "objective doctor",
       "objective pause",
@@ -244,6 +263,13 @@
         "name": "vibe-env/decision-record.schema.json",
         "schemaVersion": "vibe-env/decision-record.schema.json",
         "path": "environment/schemas/decision-record.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
+        "name": "vibe-env/direction-record.schema.json",
+        "schemaVersion": "vibe-env/direction-record.schema.json",
+        "path": "environment/schemas/direction-record.schema.json",
         "fixturePath": null,
         "owner": "vre"
       },
@@ -563,6 +589,13 @@
         "owner": "vre"
       },
       {
+        "name": "phase14-wake-proof.schema.json",
+        "schemaVersion": "phase14-wake-proof.schema.json",
+        "path": "environment/schemas/phase14-wake-proof.schema.json",
+        "fixturePath": null,
+        "owner": "vre"
+      },
+      {
         "name": "phase9.active-objective-pointer.v1",
         "schemaVersion": "phase9.active-objective-pointer.v1",
         "path": "environment/schemas/phase9-active-objective-pointer.schema.json",
@@ -616,6 +649,13 @@
         "schemaVersion": "phase9.objective.v1",
         "path": "environment/schemas/phase9-objective.schema.json",
         "fixturePath": "environment/tests/fixtures/phase9/objective/valid-active.json",
+        "owner": "vre"
+      },
+      {
+        "name": "phase9.r2-projection.v1",
+        "schemaVersion": "phase9.r2-projection.v1",
+        "path": "environment/schemas/phase9-r2-projection.schema.json",
+        "fixturePath": "environment/tests/fixtures/phase9/r2-projection/valid-full.json",
         "owner": "vre"
       },
       {
@@ -872,6 +912,13 @@
     "operatorSurface": {
       "commands": [
         "capabilities --json",
+        "direction check",
+        "direction contradict",
+        "direction kill",
+        "direction list",
+        "direction park",
+        "direction record",
+        "direction revive",
         "objective pause",
         "objective resume",
         "objective start",
@@ -904,6 +951,69 @@
         "mutating": false,
         "classification": "reviewed",
         "contractPath": "commands/capabilities --json.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction check",
+        "kind": "cli-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/direction check.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction contradict",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/direction contradict.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction kill",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/direction kill.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction list",
+        "kind": "cli-command",
+        "mutating": false,
+        "classification": "reviewed",
+        "contractPath": "commands/direction list.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction park",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/direction park.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction record",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/direction record.md",
+        "reason": null,
+        "runtimeOpened": false
+      },
+      {
+        "command": "direction revive",
+        "kind": "cli-command",
+        "mutating": true,
+        "classification": "reviewed",
+        "contractPath": "commands/direction revive.md",
         "reason": null,
         "runtimeOpened": false
       },

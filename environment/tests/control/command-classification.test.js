@@ -39,13 +39,13 @@ test('live command classification emits exactly one record for every executable 
 
   assert.equal(manifest.schemaVersion, 'phase14.command-classification.v1');
   assert.equal(manifest.runtimeOpened, false);
-  assert.equal(manifest.source.executableCommandCount, 16);
-  assert.equal(manifest.source.markdownContractCount, 25);
-  assert.equal(manifest.source.reviewedExecutableContractCount, 16);
+  assert.equal(manifest.source.executableCommandCount, 23);
+  assert.equal(manifest.source.markdownContractCount, 32);
+  assert.equal(manifest.source.reviewedExecutableContractCount, 23);
   assert.equal(manifest.source.markdownOnlyContractCount, 9);
   assert.equal(manifest.records.length, expectedExecutableCommands.length);
   assert.deepEqual(commandSet(manifest), expectedExecutableCommands);
-  assert.equal(new Set(commandSet(manifest)).size, 16);
+  assert.equal(new Set(commandSet(manifest)).size, 23);
 
   const reviewed = manifest.records.filter(
     (record) => record.classification === 'reviewed'

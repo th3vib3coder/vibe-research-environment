@@ -37,6 +37,11 @@
       "reason": "Canonical objective/handoff store owns reviewed lock, realpath, and append primitives."
     },
     {
+      "path": "environment/directions/store.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Direction store owns the reviewed append-only JSONL event surface, confined to .vibe-science-environment/directions through resolveInside."
+    },
+    {
       "path": "environment/orchestrator/_io.js",
       "imports": ["node:fs/promises"],
       "reason": "Shared reviewed orchestrator IO helpers implement atomic writes and locks."

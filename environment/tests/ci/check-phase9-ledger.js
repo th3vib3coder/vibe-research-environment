@@ -27,6 +27,7 @@ const COVERED_VRE_PREFIXES = [
   '.github/workflows/',
   'bin/vre',
   'environment/control/',
+  'environment/directions/',
   'environment/objectives/',
   'environment/orchestrator/',
   'environment/scheduler/',

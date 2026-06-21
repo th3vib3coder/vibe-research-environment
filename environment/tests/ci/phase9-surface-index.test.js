@@ -20,6 +20,7 @@ async function withFixtureRepo(fn) {
     await mkdir(path.join(repoRoot, 'environment', 'audit'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'claims'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'control'), { recursive: true });
+    await mkdir(path.join(repoRoot, 'environment', 'directions'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'objectives'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'orchestrator'), { recursive: true });
     await mkdir(path.join(repoRoot, 'environment', 'schemas'), { recursive: true });
@@ -69,6 +70,8 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'validate-counts.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'validate-runtime-contracts.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'tests', 'ci', 'phase9-surface-index.js'), '// fixture\n', 'utf8');
+    await mkdir(path.join(repoRoot, 'environment', 'tests', 'shards'), { recursive: true });
+    await writeFile(path.join(repoRoot, 'environment', 'tests', 'shards', 'scripts-coverage.test.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'store.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'cli.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'objectives', 'resume-snapshot.js'), '// fixture\n', 'utf8');
@@ -106,6 +109,8 @@ async function withFixtureRepo(fn) {
     await writeFile(path.join(repoRoot, 'environment', 'control', 'capability-handshake.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'control', 'time-provider.js'), '// fixture\n', 'utf8');
     await writeFile(path.join(repoRoot, 'environment', 'control', 'approved-memory-apis.json'), '[]\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'directions', 'store.js'), '// fixture\n', 'utf8');
+    await writeFile(path.join(repoRoot, 'environment', 'directions', 'cli.js'), '// fixture\n', 'utf8');
     for (const schemaFile of [
       'phase9-capability-handshake.schema.json',
       'phase9-analysis-manifest.schema.json',
@@ -130,13 +135,16 @@ async function withFixtureRepo(fn) {
 test('phase9 surface-index generator runs and returns the pinned shape', async () => {
   await withFixtureRepo(async (repoRoot) => {
     const surfaces = await generatePhase9SurfaceIndex({ repoRoot });
-    assert.equal(surfaces.length, 35);
+    assert.equal(surfaces.length, 38);
     assert.doesNotThrow(() => validateSurfaceIndexShape(surfaces));
     assert.equal(surfaces.some((surface) => surface.name === 'capabilities --json'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'test:phase9'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'capability-handshake'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'time-provider'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'approved-memory-apis'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'ci-sibling-absent-shard-guard'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'direction-cli'), true);
+    assert.equal(surfaces.some((surface) => surface.name === 'direction-store'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'objective-cli'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'objective-store'), true);
     assert.equal(surfaces.some((surface) => surface.name === 'resume-snapshot'), true);
@@ -171,6 +179,9 @@ test('phase9 surface-index writer persists schema-valid JSON', async () => {
     assert.equal(persisted.some((surface) => surface.name === 'capability-handshake'), true);
     assert.equal(persisted.some((surface) => surface.name === 'objective-cli'), true);
     assert.equal(persisted.some((surface) => surface.name === 'objective-store'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'ci-sibling-absent-shard-guard'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'direction-cli'), true);
+    assert.equal(persisted.some((surface) => surface.name === 'direction-store'), true);
     assert.equal(persisted.some((surface) => surface.name === 'resume-snapshot'), true);
     assert.equal(persisted.some((surface) => surface.name === 'blocker-flag'), true);
     assert.equal(persisted.some((surface) => surface.name === 'objective-digest'), true);

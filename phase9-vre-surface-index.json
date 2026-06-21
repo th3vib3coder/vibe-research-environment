@@ -19,6 +19,69 @@
   },
   {
     "kind": "cli-command",
+    "name": "direction check",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-CHECK-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
+    "name": "direction contradict",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-CONTRADICT-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
+    "name": "direction kill",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-KILL-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
+    "name": "direction list",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-LIST-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
+    "name": "direction park",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-PARK-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
+    "name": "direction record",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-RECORD-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
+    "name": "direction revive",
+    "paths": [
+      "bin/vre"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-REVIVE-DISPATCH",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "cli-command",
     "name": "objective pause",
     "paths": [
       "bin/vre"
@@ -178,6 +241,33 @@
     ],
     "featureId": "W5-CLAIM-EDGE-STORE",
     "introducedAt": "2026-04-29"
+  },
+  {
+    "kind": "orchestrator-surface",
+    "name": "direction-check",
+    "paths": [
+      "environment/directions/check.js"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-CHECK",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "orchestrator-surface",
+    "name": "direction-cli",
+    "paths": [
+      "environment/directions/cli.js"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-CLI",
+    "introducedAt": "2026-06-21"
+  },
+  {
+    "kind": "orchestrator-surface",
+    "name": "direction-store",
+    "paths": [
+      "environment/directions/store.js"
+    ],
+    "featureId": "PH14-W-RDM-DIRECTION-STORE",
+    "introducedAt": "2026-06-21"
   },
   {
     "kind": "orchestrator-surface",
@@ -418,6 +508,15 @@
     ],
     "featureId": "W0-CI-LEDGER-CHECK",
     "introducedAt": "2026-04-21"
+  },
+  {
+    "kind": "test-entrypoint",
+    "name": "ci-sibling-absent-shard-guard",
+    "paths": [
+      "environment/tests/shards/scripts-coverage.test.js"
+    ],
+    "featureId": "PH14-W6-CI-SIBLING-ABSENT-SHARD-GUARD",
+    "introducedAt": "2026-06-21"
   },
   {
     "kind": "test-entrypoint",

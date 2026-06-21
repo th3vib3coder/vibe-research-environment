@@ -12,6 +12,16 @@ import {
   HANDSHAKE_ARTIFACT_PATH
 } from '../environment/control/capability-handshake.js';
 import { runWithMiddleware } from '../environment/control/middleware.js';
+import {
+  checkDirectionCommand,
+  contradictDirectionCommand,
+  DirectionCliError,
+  killDirectionCommand,
+  listDirectionsCommand,
+  parkDirectionCommand,
+  recordDirectionCommand,
+  reviveDirectionCommand,
+} from '../environment/directions/cli.js';
 import { resolveKernelReader } from '../environment/lib/kernel-bridge.js';
 import {
   ObjectiveCliError,
@@ -113,6 +123,13 @@ export const IMPLEMENTED_PHASE9_COMMANDS = Object.freeze(
   [
     ...new Set([
       ...Object.keys(DISPATCH_TABLE).filter((commandName) => commandName.includes(' ')),
+      'direction check',
+      'direction contradict',
+      'direction kill',
+      'direction list',
+      'direction park',
+      'direction record',
+      'direction revive',
       'objective pause',
       'objective doctor',
       'objective resume',
@@ -150,6 +167,69 @@ export const PHASE9_STUB_DEFINITIONS = Object.freeze([
     kind: 'doctor-surface',
     featureId: 'W0-CLI-CAPABILITIES-DOCTOR',
     introducedAt: PHASE9_STUB_DATE,
+    mutating: false
+  },
+  {
+    root: 'direction',
+    action: 'record',
+    canonicalCommand: 'direction record',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-RECORD-DISPATCH',
+    introducedAt: '2026-06-21',
+    mutating: true
+  },
+  {
+    root: 'direction',
+    action: 'list',
+    canonicalCommand: 'direction list',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-LIST-DISPATCH',
+    introducedAt: '2026-06-21',
+    mutating: false
+  },
+  {
+    root: 'direction',
+    action: 'kill',
+    canonicalCommand: 'direction kill',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-KILL-DISPATCH',
+    introducedAt: '2026-06-21',
+    mutating: true
+  },
+  {
+    root: 'direction',
+    action: 'park',
+    canonicalCommand: 'direction park',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-PARK-DISPATCH',
+    introducedAt: '2026-06-21',
+    mutating: true
+  },
+  {
+    root: 'direction',
+    action: 'revive',
+    canonicalCommand: 'direction revive',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-REVIVE-DISPATCH',
+    introducedAt: '2026-06-21',
+    mutating: true
+  },
+  {
+    root: 'direction',
+    action: 'contradict',
+    canonicalCommand: 'direction contradict',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-CONTRADICT-DISPATCH',
+    introducedAt: '2026-06-21',
+    mutating: true
+  },
+  {
+    root: 'direction',
+    action: 'check',
+    canonicalCommand: 'direction check',
+    kind: 'cli-command',
+    featureId: 'PH14-W-RDM-DIRECTION-CHECK-DISPATCH',
+    introducedAt: '2026-06-21',
     mutating: false
   },
   {
@@ -899,6 +979,93 @@ function domainStateRootOption(parsed) {
     : null;
 }
 
+function directionJsonRequested(parsed) {
+  return parsed.options.json === true || parsed.options.json === 'true';
+}
+
+function directionOption(parsed, ...names) {
+  for (const name of names) {
+    const value = parsed.options[name];
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function directionCondition(parsed, prefix) {
+  const kind = directionOption(parsed, `${prefix}-kind`);
+  const detail = directionOption(parsed, `${prefix}-detail`);
+  if (kind == null && detail == null) {
+    return null;
+  }
+  return { kind: kind ?? '', detail: detail ?? '' };
+}
+
+function directionEvidenceRefs(parsed) {
+  const raw =
+    directionOption(parsed, 'evidence-refs', 'evidenceRefs', 'evidence-ref', 'evidence') ?? '';
+  return raw
+    .split('|')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function directionOptionsFromParsed(parsed) {
+  const doNotRepeatUnless = directionCondition(parsed, 'condition');
+  const satisfies = directionCondition(parsed, 'satisfies');
+  const evidenceRefs = directionEvidenceRefs(parsed);
+  const evidenceRef =
+    directionOption(parsed, 'evidence-ref', 'evidence') ??
+    (evidenceRefs.length === 1 ? evidenceRefs[0] : null);
+
+  return {
+    directionId: directionOption(parsed, 'direction', 'direction-id', 'directionId') ?? undefined,
+    summary: directionOption(parsed, 'summary') ?? undefined,
+    reason: directionOption(parsed, 'reason') ?? undefined,
+    evidenceRefs,
+    evidenceRef: evidenceRef ?? undefined,
+    doNotRepeatUnless: doNotRepeatUnless ?? undefined,
+    satisfies: satisfies ?? undefined,
+  };
+}
+
+async function runDirectionCommand(repoRoot, action, parsed) {
+  const command = `direction ${action}`;
+  if (!directionJsonRequested(parsed)) {
+    throw new DirectionCliError({
+      command,
+      code: 'E_DIRECTION_JSON_REQUIRED',
+      exitCode: 3,
+      message: `${command} requires --json.`,
+    });
+  }
+  if (parsed.positionals.length > 0) {
+    throw new DirectionCliError({
+      command,
+      code: 'E_DIRECTION_USAGE',
+      exitCode: 3,
+      message: `${command} does not accept positional arguments: ${parsed.positionals.join(' ')}`,
+    });
+  }
+
+  const options = directionOptionsFromParsed(parsed);
+  if (action === 'record') return recordDirectionCommand(repoRoot, options);
+  if (action === 'list') return listDirectionsCommand(repoRoot);
+  if (action === 'kill') return killDirectionCommand(repoRoot, options);
+  if (action === 'park') return parkDirectionCommand(repoRoot, options);
+  if (action === 'revive') return reviveDirectionCommand(repoRoot, options);
+  if (action === 'contradict') return contradictDirectionCommand(repoRoot, options);
+  if (action === 'check') return checkDirectionCommand(repoRoot, options);
+
+  throw new DirectionCliError({
+    command,
+    code: 'E_DIRECTION_UNKNOWN_ACTION',
+    exitCode: 2,
+    message: `Unknown direction action: ${action}`,
+  });
+}
+
 async function runDomainCreate(repoRoot, parsed) {
   const command = 'domain create';
   try {
@@ -1378,7 +1545,7 @@ function parsePhase9Invocation(tokens) {
       exitCode: 2,
       payload: {
         ok: false,
-        code: 'PHASE9_UNKNOWN_SUBCOMMAND',
+        code: root === 'direction' ? 'E_DIRECTION_UNKNOWN_ACTION' : 'PHASE9_UNKNOWN_SUBCOMMAND',
         command: `${root} ${maybeAction}`,
         phase9: true,
         allowed
@@ -1757,6 +1924,16 @@ export async function main(argv = process.argv) {
         return 0;
       }
 
+      if (phase9Invocation.definition.root === 'direction') {
+        const payload = await runDirectionCommand(
+          repoRoot,
+          phase9Invocation.definition.action,
+          phase9Invocation.parsed
+        );
+        writeJsonPayload(payload);
+        return 0;
+      }
+
       if (phase9Invocation.definition.canonicalCommand === 'objective pause') {
         const payload = await runObjectivePause(repoRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
@@ -1826,7 +2003,7 @@ export async function main(argv = process.argv) {
       writeJsonPayload(phase9Payload(phase9Invocation.definition, phase9Invocation.parsed));
       return 0;
     } catch (error) {
-      if (error instanceof ObjectiveCliError || error instanceof RunAnalysisCliError || error instanceof ResearchLoopCliError || error instanceof SchedulerCliError) {
+      if (error instanceof ObjectiveCliError || error instanceof DirectionCliError || error instanceof RunAnalysisCliError || error instanceof ResearchLoopCliError || error instanceof SchedulerCliError) {
         writeJsonPayload(
           namedPhase9ErrorPayload(
             error.command,

@@ -175,6 +175,23 @@ test('phase9-ledger check rejects covered VRE changes without VRE ledger update'
   });
 });
 
+test('phase9-ledger check treats direction-store changes as covered VRE paths', async () => {
+  await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
+    await assert.rejects(
+      () =>
+        checkPhase9Ledger({
+          repoRoot: vreRoot,
+          workspaceRoot,
+          changedFiles: [
+            'environment/directions/store.js',
+            PATHS.specLedger
+          ]
+        }),
+      /E_VRE_LEDGER_UPDATE_REQUIRED/u
+    );
+  });
+});
+
 test('phase9-ledger check treats CI workflow changes as covered VRE paths', async () => {
   await withFixtureWorkspace(async ({ workspaceRoot, vreRoot }) => {
     await assert.rejects(

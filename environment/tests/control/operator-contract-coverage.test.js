@@ -14,6 +14,13 @@ const PROJECT_ROOT = process.cwd();
 
 const EXPECTED_OPERATOR_CONTRACT_COMMANDS = Object.freeze([
   'capabilities --json',
+  'direction check',
+  'direction contradict',
+  'direction kill',
+  'direction list',
+  'direction park',
+  'direction record',
+  'direction revive',
   'objective doctor',
   'objective pause',
   'objective resume',
@@ -59,11 +66,11 @@ test('all live executable commands are reviewed after TW14oc.2 contracts land', 
   });
 
   assert.equal(manifest.runtimeOpened, false);
-  assert.equal(manifest.source.executableCommandCount, 16);
-  assert.equal(manifest.source.markdownContractCount, 25);
-  assert.equal(manifest.source.reviewedExecutableContractCount, 16);
+  assert.equal(manifest.source.executableCommandCount, 23);
+  assert.equal(manifest.source.markdownContractCount, 32);
+  assert.equal(manifest.source.reviewedExecutableContractCount, 23);
   assert.equal(manifest.source.markdownOnlyContractCount, 9);
-  assert.equal(manifest.records.length, 16);
+  assert.equal(manifest.records.length, 23);
   assert.equal(
     manifest.records.every((record) => record.classification === 'reviewed'),
     true

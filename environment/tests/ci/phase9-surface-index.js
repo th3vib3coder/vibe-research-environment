@@ -218,6 +218,34 @@ const EXTRA_PHASE9_SURFACES = Object.freeze([
     introducedAt: '2026-04-22'
   },
   {
+    file: 'environment/tests/shards/scripts-coverage.test.js',
+    kind: 'test-entrypoint',
+    name: 'ci-sibling-absent-shard-guard',
+    featureId: 'PH14-W6-CI-SIBLING-ABSENT-SHARD-GUARD',
+    introducedAt: '2026-06-21'
+  },
+  {
+    file: 'environment/directions/store.js',
+    kind: 'orchestrator-surface',
+    name: 'direction-store',
+    featureId: 'PH14-W-RDM-DIRECTION-STORE',
+    introducedAt: '2026-06-21'
+  },
+  {
+    file: 'environment/directions/cli.js',
+    kind: 'orchestrator-surface',
+    name: 'direction-cli',
+    featureId: 'PH14-W-RDM-DIRECTION-CLI',
+    introducedAt: '2026-06-21'
+  },
+  {
+    file: 'environment/directions/check.js',
+    kind: 'orchestrator-surface',
+    name: 'direction-check',
+    featureId: 'PH14-W-RDM-DIRECTION-CHECK',
+    introducedAt: '2026-06-21'
+  },
+  {
     file: 'environment/schemas/phase9-capability-handshake.schema.json',
     kind: 'schema',
     name: 'phase9.capability-handshake.v1',

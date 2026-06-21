@@ -27,6 +27,25 @@ test('phase9 write-sandbox rejects a reviewed raw-fs import when the file is mis
   );
 });
 
+test('phase9 write-sandbox covers direction-store raw-fs imports', async () => {
+  const contents = new Map([
+    ['environment/directions/store.js', "import { appendFile } from 'node:fs/promises';\nexport { appendFile };\n"]
+  ]);
+
+  await assert.rejects(
+    validatePhase9WriteSandbox({
+      files: [...contents.keys()],
+      allowMissingFiles: true,
+      allowlist: {
+        version: 1,
+        entries: []
+      },
+      readTextImpl: async (file) => contents.get(file)
+    }),
+    /Reviewed write-sandbox allowlist is missing environment\/directions\/store\.js/u
+  );
+});
+
 test('phase9 write-sandbox rejects stale allowlist imports that no longer match the reviewed file', async () => {
   const contents = new Map([
     ['environment/objectives/store.js', "export const noop = true;\n"]

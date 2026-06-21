@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vibe-env/direction-record.schema.json",
+  "title": "VRE Research Direction Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "directionId",
+    "summary",
+    "state",
+    "reason",
+    "evidenceRefs",
+    "createdAt",
+    "updatedAt",
+    "history"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "vibe-env.direction-record.v1"
+    },
+    "directionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "$ref": "#/definitions/directionState"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "doNotRepeatUnless": {
+      "$ref": "#/definitions/doNotRepeatUnless"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/historyEntry"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "killed",
+              "contradicted"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "required": [
+          "doNotRepeatUnless"
+        ]
+      }
+    }
+  ],
+  "definitions": {
+    "directionState": {
+      "type": "string",
+      "enum": [
+        "tried",
+        "killed",
+        "contradicted",
+        "revived",
+        "parked"
+      ]
+    },
+    "doNotRepeatUnless": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "detail"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "new-dataset",
+            "new-method",
+            "contradicting-evidence",
+            "operator-go"
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "historyEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "reason",
+        "at"
+      ],
+      "properties": {
+        "state": {
+          "$ref": "#/definitions/directionState"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}
