@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase14-wake-proof.schema.json",
+  "title": "Phase 14 Wake Proof",
+  "description": "Signed wake-proof artifact emitted by the reviewed Wave 6 heartbeat path.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "objectiveId",
+    "wakeId",
+    "scheduled",
+    "actual",
+    "wakeReason",
+    "leaseState",
+    "signatureAlgorithm",
+    "signature"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase14.wake-proof.v1"
+    },
+    "objectiveId": {
+      "type": "string",
+      "pattern": "^(?!.*\\.\\.)OBJ-[A-Za-z0-9._-]+$"
+    },
+    "wakeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!.*\\.\\.)[A-Za-z0-9._-]+$"
+    },
+    "scheduled": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actual": {
+      "type": "string",
+      "format": "date-time",
+      "formatMinimum": {
+        "$data": "1/scheduled"
+      }
+    },
+    "wakeReason": {
+      "type": "string",
+      "enum": [
+        "heartbeat",
+        "scheduled-heartbeat",
+        "manual"
+      ]
+    },
+    "leaseState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "acquired",
+            "duplicate-no-op",
+            "stale-reclaimed",
+            "blocked"
+          ]
+        },
+        "ownerWakeId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?!.*\\.\\.)[A-Za-z0-9._-]+$"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "signatureAlgorithm": {
+      "const": "HMAC-SHA256"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

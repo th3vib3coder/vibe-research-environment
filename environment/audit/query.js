@@ -8,6 +8,9 @@ import {
 import {
   resolveProjectRoot
 } from '../control/_io.js';
+import {
+  reconcileEvidenceExcerpt as reconcileEvidenceExcerptWithRelations
+} from './reconcile-evidence.js';
 
 export const AUDIT_QUERY_TIMEOUT_MS = 5_000;
 export const EVIDENCE_EDGE_RELATIONS = Object.freeze([
@@ -233,6 +236,12 @@ export async function listEdgesByRelation(projectRoot, relation, options = {}) {
     objectiveId: options.objectiveId == null
       ? null
       : normalizeObjectiveId(options.objectiveId)
+  });
+}
+
+export function reconcileEvidenceExcerpt(excerpt, expectedCounts) {
+  return reconcileEvidenceExcerptWithRelations(excerpt, expectedCounts, {
+    edgeRelations: EVIDENCE_EDGE_RELATIONS
   });
 }
 

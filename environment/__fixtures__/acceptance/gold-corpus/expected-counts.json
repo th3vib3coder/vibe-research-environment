@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "phase14.w6.gold-corpus.expected-counts.v1",
+  "objectiveId": "OBJ-W6-GOLD-CORPUS-SYNTHETIC",
+  "governanceEventsByType": {
+    "objective.created": 1,
+    "claim.seeded": 2,
+    "r2.review.requested": 1
+  },
+  "claimEdgesByRelation": {
+    "supports": 1,
+    "contradicts": 1,
+    "supersedes": 0,
+    "depends_on": 1,
+    "evolved_into": 0,
+    "related_to": 1
+  },
+  "claimEdgesTotal": 4,
+  "r2Verdicts": {
+    "total": 2,
+    "byStatus": {
+      "accepted": 1,
+      "redirected": 1
+    }
+  }
+}

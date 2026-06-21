@@ -12,6 +12,16 @@
       "reason": "Audit query helper invokes the plugin-owned audit-query CLI and validates its read-only evidence rows."
     },
     {
+      "path": "environment/audit/acceptance-gold-corpus.test.js",
+      "imports": ["node:child_process", "node:fs/promises", "node:fs"],
+      "reason": "Gold-corpus acceptance capstone materializes a temp corpus, writes a local audit-query stub, and invokes the reviewed offline wake-proof validator CLI."
+    },
+    {
+      "path": "environment/audit/wake-proof.js",
+      "imports": ["node:fs/promises"],
+      "reason": "Wake-proof emitter writes one reviewed signed proof with wx immutability inside a confined bundle directory."
+    },
+    {
       "path": "environment/objectives/cli.js",
       "imports": ["node:fs/promises"],
       "reason": "Objective lifecycle CLI reads and deletes reviewed artifacts."
