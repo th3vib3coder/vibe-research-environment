@@ -35,7 +35,15 @@ async function readShardMap() {
 }
 
 async function readProviderPhase9Files() {
-  const packageJson = JSON.parse(await readFile(PROVIDER_PACKAGE_PATH, 'utf8'));
+  let packageJson;
+  try {
+    packageJson = JSON.parse(await readFile(PROVIDER_PACKAGE_PATH, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
   const command = packageJson.scripts?.['test:phase9'];
   assert.equal(typeof command, 'string', 'provider package.json must expose test:phase9');
   const files = extractNodeTestFiles(command);
@@ -73,9 +81,13 @@ test('phase9 shard map defines the reviewed provider shard ids and budgets', asy
   assert.deepEqual(loopShard.files, ['environment/tests/cli/research-loop.test.js']);
 });
 
-test('phase9 shard map covers the live provider test:phase9 files exactly once', async () => {
+test('phase9 shard map covers the live provider test:phase9 files exactly once', async (t) => {
   const map = await readShardMap();
   const providerFiles = await readProviderPhase9Files();
+  if (!providerFiles) {
+    t.skip('sibling vibe-science package.json is absent in VRE-only CI');
+    return;
+  }
   const shardFiles = map.shards
     .filter((shard) => PROVIDER_SHARD_IDS.includes(shard.id))
     .flatMap((shard) => shard.files);

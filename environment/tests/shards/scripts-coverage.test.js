@@ -33,7 +33,14 @@ function extractNodeTestFiles(command) {
 }
 
 async function readProviderPackage() {
-  return JSON.parse(await readFile(PROVIDER_PACKAGE_PATH, 'utf8'));
+  try {
+    return JSON.parse(await readFile(PROVIDER_PACKAGE_PATH, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function readShardMapByScript() {
@@ -41,8 +48,12 @@ async function readShardMapByScript() {
   return new Map(map.shards.map((shard) => [shard.scriptName, shard.files]));
 }
 
-test('provider named phase9 shard scripts exist and match the shard map', async () => {
+test('provider named phase9 shard scripts exist and match the shard map', async (t) => {
   const packageJson = await readProviderPackage();
+  if (!packageJson) {
+    t.skip('sibling vibe-science package.json is absent in VRE-only CI');
+    return;
+  }
   const scriptToFiles = await readShardMapByScript();
 
   assert.equal(packageJson.scripts?.['test:phase9'], LEGACY_PHASE9_COMMAND);
@@ -59,8 +70,12 @@ test('provider named phase9 shard scripts exist and match the shard map', async 
   }
 });
 
-test('provider phase9 shard scripts partition the legacy provider phase9 command', async () => {
+test('provider phase9 shard scripts partition the legacy provider phase9 command', async (t) => {
   const packageJson = await readProviderPackage();
+  if (!packageJson) {
+    t.skip('sibling vibe-science package.json is absent in VRE-only CI');
+    return;
+  }
   const legacyFiles = extractNodeTestFiles(packageJson.scripts?.['test:phase9']);
   const shardFiles = EXPECTED_SCRIPT_NAMES.flatMap((scriptName) => (
     extractNodeTestFiles(packageJson.scripts?.[scriptName])
@@ -74,8 +89,12 @@ test('provider phase9 shard scripts partition the legacy provider phase9 command
   );
 });
 
-test('provider phase9 aggregate invokes only the four named phase9 shards', async () => {
+test('provider phase9 aggregate invokes only the four named phase9 shards', async (t) => {
   const packageJson = await readProviderPackage();
+  if (!packageJson) {
+    t.skip('sibling vibe-science package.json is absent in VRE-only CI');
+    return;
+  }
   const aggregate = packageJson.scripts?.['test:phase9:all'];
   assert.equal(typeof aggregate, 'string', 'test:phase9:all must exist in the provider package');
   assert.doesNotMatch(aggregate, /test:loop:clusters/u);
