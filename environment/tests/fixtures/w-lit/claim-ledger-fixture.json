@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "w-lit.synthetic-claim-ledger-fixture.v1",
+  "syntheticFixture": true,
+  "notBiomedicalEvidence": true,
+  "claims": [
+    {
+      "id": "CLAIM-W-LIT-SYNTH-001",
+      "status": "active",
+      "syntheticFixture": true,
+      "notBiomedicalEvidence": true,
+      "text": "Synthetic fixture CLAIM: repeated endometriosis-like inflammatory signal supports ovarian-cancer transition in the toy model.",
+      "cites": [
+        "raw/w-lit/synthetic/claim-ledger-fixture.md"
+      ]
+    }
+  ]
+}
