@@ -23,6 +23,20 @@
     "kernelFingerprint",
     "notes"
   ],
+  "dependencies": {
+    "iteration": [
+      "budget_left",
+      "halt_checked"
+    ],
+    "budget_left": [
+      "iteration",
+      "halt_checked"
+    ],
+    "halt_checked": [
+      "iteration",
+      "budget_left"
+    ]
+  },
   "properties": {
     "schemaVersion": {
       "const": "phase9.resume-snapshot.v1"
@@ -136,6 +150,41 @@
           ]
         }
       }
+    },
+    "iteration": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "budget_left": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxWallSecondsLeft",
+        "maxIterationsLeft",
+        "costCeilingLeft"
+      ],
+      "properties": {
+        "maxWallSecondsLeft": {
+          "type": "integer"
+        },
+        "maxIterationsLeft": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "costCeilingLeft": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "halt_checked": {
+      "const": true
     },
     "queueVisibility": {
       "type": "object",

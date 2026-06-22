@@ -6,7 +6,8 @@ for (const fixturePath of [
   'environment/tests/fixtures/phase9/resume-snapshot/valid-mid-loop.json',
   'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-stop.json',
   'environment/tests/fixtures/phase9/resume-snapshot/valid-heartbeat.json',
-  'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-handoff.json'
+  'environment/tests/fixtures/phase9/resume-snapshot/valid-pre-handoff.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/valid-l0-write-ahead.json'
 ]) {
   test(`phase9-resume-snapshot.schema accepts ${fixturePath}`, async () => {
     await expectFixtureValidity({
@@ -24,7 +25,8 @@ for (const fixturePath of [
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-open-handoffs.json',
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-missing-reasoning-mode.json',
   'environment/tests/fixtures/phase9/resume-snapshot/invalid-reasoning-mode-diverged.json',
-  'environment/tests/fixtures/phase9/resume-snapshot/invalid-stale-fingerprint.json'
+  'environment/tests/fixtures/phase9/resume-snapshot/invalid-stale-fingerprint.json',
+  'environment/tests/fixtures/phase9/resume-snapshot/invalid-l0-missing-halt-checked.json'
 ]) {
   test(`phase9-resume-snapshot.schema rejects ${fixturePath}`, async () => {
     await expectFixtureValidity({

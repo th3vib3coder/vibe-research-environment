@@ -610,3 +610,78 @@ Claude Code HAT 1 ACCEPT is recorded via
 C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-t15.2-edition-isolation-validators-verdict-2026-06-21.md.
 
 Codex authored this HAT2 patch and must not self-ACCEPT it. HAT3 review is required before closure.
+
+## TL0.1 L0 Halt-Snapshot Write-Ahead Contract
+
+who: Codex authored the TL0.1 safety write-ahead helper after Claude Code
+non-author HAT 1 ACCEPT and runtime-GO adjudication for TL0.1 only.
+
+when: 2026-06-22.
+
+why: TL0.1 is the first L0 safety infrastructure slice. Before any future
+bounded L0 reasoning loop can run, the system needs a write-ahead recovery
+contract that records the iteration, budget left, and operator-halt check in
+the existing Phase 9 resume snapshot before a candidate action executes.
+
+what:
+
+- environment/autonomous/l0/halt-snapshot.js
+- environment/tests/autonomous/l0/halt-snapshot.test.js
+- environment/schemas/phase9-resume-snapshot.schema.json
+- environment/tests/schemas/phase9-resume-snapshot.schema.test.js
+- environment/tests/fixtures/phase9/resume-snapshot/valid-l0-write-ahead.json
+- environment/tests/fixtures/phase9/resume-snapshot/invalid-l0-missing-halt-checked.json
+- environment/tests/ci/validate-counts.js
+- package.json
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/176-hat1-stop-tl0-1-l0-halt-snapshot-contract-2026-06-22.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/halt-snapshot.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before `halt-snapshot.js` existed.
+- RED: `node --test environment/tests/schemas/phase9-resume-snapshot.schema.test.js`
+  failed because the valid L0 write-ahead fixture was rejected by
+  `additionalProperties:false` before the schema extension.
+- RED: `node environment/tests/ci/validate-counts.js` failed
+  `autonomousTests` expected 9, got 10 before the count repair.
+- RED: `node environment/tests/ci/check-phase13-ledger.js` failed
+  `E_PHASE13_TRACE_MISSING environment/autonomous/l0/halt-snapshot.js`
+  before this row.
+- GREEN: target halt-snapshot test PASS 5/5.
+- GREEN: phase9 resume-snapshot schema test PASS 13/13.
+- GREEN: `node environment/tests/ci/validate-counts.js` PASS with
+  `autonomousTests=10`.
+- GREEN: `npm run test:phase13` PASS 62/62.
+- GREEN: explicit Phase9 changed-file ledger probe PASS.
+- GREEN: `node environment/tests/ci/phase11-current-status.js` PASS.
+- GREEN: `node environment/tests/ci/run-all.js` PASS.
+- GREEN: `npm run check` PASS 1935 tests, 1926 pass, 0 fail, 9 skipped.
+
+scope:
+
+- TL0.1 adds only the write-ahead safety helper and tests. It writes L0
+  recovery metadata into the existing `resume-snapshot.json` path and does not
+  create a sidecar truth source.
+- The helper runs no autonomous reasoning. It creates no bounded loop, selector,
+  high-stakes gate, guardrail controller, CLI command, provider call, OBDK
+  call, real-data read, claim/export path, Graphify write, commit, or push.
+- Claude HAT 1 explicitly moved the specific runtime-GO requirement to TL0.2,
+  the first task that would actually run the bounded L0 reasoning loop.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.1-l0-halt-snapshot-contract-verdict-2026-06-22.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl0.1-l0-halt-snapshot-contract-verdict-2026-06-22.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed TL0.1 VRE payload only.

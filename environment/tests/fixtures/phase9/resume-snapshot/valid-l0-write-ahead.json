@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "phase9.resume-snapshot.v1",
+  "writtenAt": "2026-06-22T20:00:00Z",
+  "writtenReason": "loop-iteration",
+  "objectiveId": "OBJ-L0-HALT-SNAPSHOT",
+  "objectiveStatusAtSnapshot": "active",
+  "runtimeMode": "attended-batch",
+  "reasoningMode": "rule-only",
+  "wakePolicySnapshot": {
+    "wakeOwner": "manual",
+    "wakeSourceId": "operator-session",
+    "heartbeatIntervalSeconds": 1800,
+    "leaseTtlSeconds": 900,
+    "duplicateWakePolicy": "no-op"
+  },
+  "budgetRemaining": {
+    "maxWallSecondsLeft": 300,
+    "maxIterationsLeft": 4,
+    "costCeilingLeft": null
+  },
+  "queueVisibility": {
+    "queuePath": ".vibe-science-environment/objectives/OBJ-L0-HALT-SNAPSHOT/queue.json",
+    "queueCursor": "2",
+    "pendingCount": 1,
+    "runningCount": 0,
+    "lastTaskId": null
+  },
+  "stageCursor": {
+    "current": "analysis",
+    "stageStatus": "active",
+    "lastCompleteStage": "orientation"
+  },
+  "nextAction": {
+    "kind": "run-analysis",
+    "params": {
+      "analysisId": "AN-L0-001"
+    }
+  },
+  "openBlockers": [],
+  "openHandoffs": [],
+  "wakeLease": {
+    "wakeId": "WAKE-L0-001",
+    "leaseAcquiredAt": "2026-06-22T19:59:00Z",
+    "leaseExpiresAt": "2026-06-22T20:14:00Z",
+    "acquiredBy": "operator",
+    "previousWakeId": null
+  },
+  "kernelFingerprint": {
+    "lastClaimId": null,
+    "lastCitationCheckId": null,
+    "lastR2VerdictId": null,
+    "lastObserverAlertId": null,
+    "lastGateCheckId": null,
+    "lastPatternId": null,
+    "takenAt": "2026-06-22T19:59:30Z"
+  },
+  "notes": "L0 write-ahead snapshot.",
+  "iteration": 2,
+  "budget_left": {
+    "maxWallSecondsLeft": 300,
+    "maxIterationsLeft": 4,
+    "costCeilingLeft": null
+  },
+  "halt_checked": true
+}
