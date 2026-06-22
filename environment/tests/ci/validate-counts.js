@@ -12,7 +12,7 @@ export const expectedCounts = {
   controlTests: 37,
   compatibilityTests: 5,
   flowTests: 8,
-  libTests: 27,
+  libTests: 28,
   evalTests: 2,
   installTests: 5,
   integrationTests: 15,
