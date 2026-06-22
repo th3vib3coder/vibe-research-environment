@@ -30,7 +30,7 @@ Source Strategy: tracked-vre-snapshot
 | Control/orchestrator tests | 37 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
-| Library tests | 25 |
+| Library tests | 27 |
 | Eval tests | 2 |
 | Install tests | 5 |
 | Integration tests | 15 |
