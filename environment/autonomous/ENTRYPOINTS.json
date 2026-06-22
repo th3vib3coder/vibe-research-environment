@@ -18,6 +18,12 @@
       "action": "halt",
       "layer": "l0-halt-request-contract",
       "runtimeOpened": false
+    },
+    {
+      "command": "autonomous reason-loop",
+      "action": "reason-loop",
+      "layer": "l0-bounded-reasoning-loop",
+      "runtimeOpened": false
     }
   ]
 }

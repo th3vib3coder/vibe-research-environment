@@ -685,3 +685,77 @@ Claude Code HAT 3 ACCEPT is recorded via
 
 Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
 scoped to the reviewed TL0.1 VRE payload only.
+
+## TL0.2 L0 Bounded Reasoning Loop Policy
+
+who: Codex authored the TL0.2 bounded L0 reasoning-loop policy after Claude
+Code non-author HAT 1 ACCEPT and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: TL0.2 is the first L0 slice that may execute a bounded attended-batch
+reasoning loop. It must prove hard stop-hooks, tier hierarchy, and TL0.1
+write-ahead-before-action before any later selector, high-stakes gate,
+guardrail, CLI, provider, or real-data integration can be opened.
+
+what:
+
+- environment/autonomous/l0/reasoning-loop.js
+- environment/tests/autonomous/l0/reasoning-loop.test.js
+- environment/autonomous/ENTRYPOINTS.json
+- environment/tests/ci/validate-counts.js
+- package.json
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/178-hat1-stop-tl0-2-l0-bounded-reasoning-loop-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/reasoning-loop.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before `reasoning-loop.js` existed.
+- RED: `node environment/tests/ci/validate-counts.js` failed
+  `autonomousTests` expected 10, got 11 before the count repair.
+- RED: explicit Phase13 ledger probe failed
+  `E_PHASE13_TRACE_MISSING environment/tests/autonomous/l0/reasoning-loop.test.js`
+  before this row.
+- RED: explicit Phase9 ledger probe failed for `package.json` and
+  `environment/tests/ci/validate-counts.js` before the Phase9 bridge rows.
+- GREEN: target reasoning-loop test PASS 10/10.
+- GREEN: `node environment/tests/ci/validate-counts.js` PASS with
+  `autonomousTests=11`.
+- GREEN: explicit Phase13 and Phase9 changed-file ledger probes PASS.
+- GREEN: `npm run test:phase13` PASS 72/72.
+- GREEN: `node environment/tests/ci/run-all.js` PASS.
+- GREEN: `npm run check` PASS 1945 tests, 1936 pass, 0 fail, 9 skipped.
+- GREEN: WIKI decision-gate tests PASS 21/21; WIKI lint issueCount 0;
+  registry check and mirror check PASS.
+- GREEN: Claude Code HAT3 ACCEPT recorded via the canonical relay.
+
+scope:
+
+- TL0.2 adds only a pure, injected, attended-batch bounded L0 loop policy and
+  metadata allowlist extension. It enforces runtime mode, max-iteration and
+  budget stop-hooks, tier hierarchy, worker non-authority, and TL0.1
+  write-ahead-before-action.
+- The loop creates no CLI dispatch, provider call, OBDK execution, real-data
+  read, biomedical claim authority, accepted claim-edge write, claim promotion,
+  export/publication path, Graphify write, high-stakes operator gate,
+  guardrail controller, Hermes symbol import, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.2-l0-bounded-reasoning-loop-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl0.2-l0-bounded-reasoning-loop-verdict-2026-06-23.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed TL0.2 VRE payload only.

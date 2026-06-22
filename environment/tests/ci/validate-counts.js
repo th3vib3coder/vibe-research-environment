@@ -8,7 +8,7 @@ export const expectedCounts = {
   evalMetrics: 5,
   evalBenchmarks: 5,
   auditTests: 5,
-  autonomousTests: 10,
+  autonomousTests: 11,
   controlTests: 37,
   compatibilityTests: 5,
   flowTests: 8,
