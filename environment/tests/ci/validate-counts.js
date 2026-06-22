@@ -17,7 +17,7 @@ export const expectedCounts = {
   installTests: 5,
   integrationTests: 15,
   cliTests: 12,
-  phase14Tests: 4,
+  phase14Tests: 5,
   shardTests: 5,
   schemaTests: 81,
   ciValidators: 70
