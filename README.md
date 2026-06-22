@@ -609,7 +609,7 @@ not copied from a private WIKI checkout.
 | Install tests | 5 |
 | Integration tests | 15 |
 | CLI tests | 12 |
-| Phase14 tests | 4 |
+| Phase14 tests | 5 |
 | Schema tests | 81 |
 | CI validators | 70 |
 
@@ -1263,7 +1263,7 @@ copiati da una WIKI privata affiancata.
 | Test installazione | 5 |
 | Test integrazione | 15 |
 | Test CLI | 12 |
-| Test Phase14 | 4 |
+| Test Phase14 | 5 |
 | Test schema | 81 |
 | Validator CI | 70 |
 

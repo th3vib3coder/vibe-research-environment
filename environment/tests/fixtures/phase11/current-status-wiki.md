@@ -35,7 +35,7 @@ Source Strategy: tracked-vre-snapshot
 | Install tests | 5 |
 | Integration tests | 15 |
 | CLI tests | 12 |
-| Phase14 tests | 4 |
+| Phase14 tests | 5 |
 | Schema tests | 81 |
 | CI validators | 70 |
 
