@@ -982,6 +982,80 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TL1.4 L1 Runtime Consumer
+
+who: Codex authored the TL1.4 L1 runtime consumer after Claude Code
+non-author HAT 1 ACCEPT and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: Phase 13 delivered the L1 table, availability probe, and missing-skill
+degrade path as policy-only surfaces. TL1.4 is the narrow runtime consumer:
+given a reviewed stage, injected availability inputs, an injected executor,
+and an injected writer, it produces a durable invocation or unavailable
+record without installing skills, discovering host skills ambiently, or
+opening L4/L5/provider/OBDK/real-data work.
+
+what:
+
+- environment/autonomous/l1/skill-runtime.js
+- environment/tests/autonomous/l1/skill-runtime.test.js
+- environment/autonomous/ENTRYPOINTS.json
+- package.json
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/190-hat1-stop-tl1-4-l1-runtime-consumer-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l1/skill-runtime.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` while `skill-runtime.js` was absent.
+- RED: `node environment/tests/ci/validate-counts.js` would fail until
+  `autonomousTests` moved from 15 to 16; `phase11-current-status.js` then
+  caught stale README/current-status projections until they were repaired.
+- GREEN: target skill-runtime test PASS 6/6; `validate-counts.js` PASS with
+  `autonomousTests=16`; `phase11-current-status.js` PASS; explicit Phase13
+  and Phase9 changed-file ledger probes PASS; `npm run test:phase13` PASS
+  112/112; `node environment/tests/ci/run-all.js` PASS; WIKI decision-gates,
+  registry, entity export, schema field, lint, mirror, and WIKI tool tests
+  PASS; `git diff --check` PASS with CRLF warnings only; `npm run check`
+  PASS 1985 tests, 1976 pass, 0 fail, 9 skipped.
+- HAT3 remains required before closure.
+
+scope:
+
+- TL1.4 adds only a deterministic L1 runtime consumer, one counted
+  autonomous test, entrypoint metadata with `runtimeOpened:false`,
+  `test:phase13` wiring, count/current-status repair, and trace.
+- It uses only injected executor and writer callbacks; missing required
+  skills route through reviewed `SKILL_UNAVAILABLE` degrade and optional
+  missing skills stay visible but non-blocking.
+- It records reconstructable invocation/degrade artifacts with
+  `runtimeOpened:false`, `unattendedRuntimeOpened:false`,
+  `providerAutomationInvoked:false`, `skillInstallAttempted:false`, and
+  `hostSkillDiscoveryAttempted:false`.
+- It does not call providers, OBDK, reviewed-api automation, browser/GUI,
+  skill installation, host skill discovery, real data, direction lifecycle
+  writers, claim/export paths, Graphify, L4/L5 orchestration, CLI dispatch,
+  unattended runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl1.4-l1-runtime-consumer-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
+not self-ACCEPT it.
+
 ## TL0.6 Attended Dry Run
 
 who: Codex authored the TL0.6 attended dry-run after Claude Code non-author

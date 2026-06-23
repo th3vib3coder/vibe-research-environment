@@ -30,6 +30,12 @@
       "action": "select-action",
       "layer": "l0-next-scientific-action-selector",
       "runtimeOpened": false
+    },
+    {
+      "command": "autonomous skill-runtime",
+      "action": "skill-runtime",
+      "layer": "l1-runtime-consumer",
+      "runtimeOpened": false
     }
   ]
 }
