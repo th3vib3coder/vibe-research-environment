@@ -759,3 +759,76 @@ Claude Code HAT 3 ACCEPT is recorded via
 
 Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
 scoped to the reviewed TL0.2 VRE payload only.
+
+## TL0.3 Next-Scientific-Action Selector Policy
+
+who: Codex authored the TL0.3 next-scientific-action selector after Claude
+Code non-author HAT 1 ACCEPT and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: TL0.3 is the L0 decision component that selects one next scientific action
+inside the attended lane. It must prove read-only direction-memory discipline,
+deterministic ranking, LAW 12 INSTINCT non-override, and proposal-only
+high-stakes handling before TL0.4 high-stakes operator-gate work can start.
+
+what:
+
+- environment/autonomous/l0/action-selector.js
+- environment/tests/autonomous/l0/action-selector.test.js
+- environment/autonomous/ENTRYPOINTS.json
+- package.json
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/180-hat1-stop-tl0-3-next-scientific-action-selector-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/action-selector.test.js`
+  first failed because the test file was absent, then failed with
+  `ERR_MODULE_NOT_FOUND` while `action-selector.js` was absent.
+- RED: `node environment/tests/ci/validate-counts.js` failed
+  `autonomousTests` expected 11, got 12 before the count repair.
+- RED: package-script probe failed
+  `E_PHASE13_TEST_SCRIPT_MISSING_ACTION_SELECTOR` before `test:phase13` wiring.
+- RED: explicit Phase13 ledger probe failed
+  `E_PHASE13_TRACE_MISSING environment/autonomous/l0/action-selector.js`
+  before this row.
+- GREEN: target action-selector test PASS 11/11; `validate-counts.js` PASS
+  with `autonomousTests=12`; package-script probe PASS;
+  `phase11-current-status.js` PASS; explicit Phase13 and Phase9 ledger probes
+  PASS; `npm run test:phase13` PASS 83/83; `run-all.js` PASS; WIKI checks
+  PASS; `npm run check` PASS 1956 tests, 1947 pass, 0 fail, 9 skipped; Claude
+  Code HAT3 ACCEPT recorded.
+
+scope:
+
+- TL0.3 adds only a pure next-scientific-action selector and counted autonomous
+  test. The selector reads durable objective, gate, and direction-memory inputs;
+  returns exactly one proposal and JSON-serializable rationale; uses only an
+  injected artifact writer; blocks killed/contradicted directions unless the
+  exact `doNotRepeatUnless` condition is satisfied; and marks high-stakes work
+  as `requiresOperatorGate:true` for TL0.4.
+- It writes no direction lifecycle event, promotes no claim, creates no
+  accepted claim edge, widens no dataset, dispatches no CLI command, executes
+  no provider or OBDK call, reads no real biomedical data, exports nothing, and
+  performs no Graphify write.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.3-next-scientific-action-selector-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl0.3-next-scientific-action-selector-verdict-2026-06-23.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed TL0.3 VRE payload only.

@@ -24,6 +24,12 @@
       "action": "reason-loop",
       "layer": "l0-bounded-reasoning-loop",
       "runtimeOpened": false
+    },
+    {
+      "command": "autonomous select-action",
+      "action": "select-action",
+      "layer": "l0-next-scientific-action-selector",
+      "runtimeOpened": false
     }
   ]
 }
