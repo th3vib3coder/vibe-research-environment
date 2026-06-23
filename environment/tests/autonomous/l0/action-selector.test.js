@@ -316,6 +316,37 @@ test('high-stakes actions are proposal-only and require the future TL0.4 gate', 
   assert.equal(result.actionExecuted, false);
 });
 
+test('TL0.3 high-stakes classification mirrors TL0.4 named gate actions', async () => {
+  const actionTypes = [
+    'promote-claim',
+    'write-accepted-claim-edge',
+    'new-direction',
+    'direction-revival'
+  ];
+
+  for (const actionType of actionTypes) {
+    const result = await selectNextScientificAction(validInput({
+      candidates: [
+        candidate({
+          id: actionType,
+          actionType,
+          summary: `Select ${actionType} for operator review`,
+          direction: {
+            directionId: `DIR-${actionType}`,
+            summary: `Select ${actionType} for operator review`
+          }
+        })
+      ]
+    }), {
+      checkDirection: allowedChecker()
+    });
+
+    assert.equal(result.proposal.proposalOnly, true);
+    assert.equal(result.proposal.requiresOperatorGate, true);
+    assert.equal(result.proposal.requiredGate, 'TL0.4');
+  }
+});
+
 test('direction projection can be used without reading a live direction store', async () => {
   const result = await selectNextScientificAction(validInput({
     projectRoot: null,

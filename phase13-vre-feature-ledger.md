@@ -981,3 +981,60 @@ Claude Code HAT 1 ACCEPT is recorded via
 
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
+
+## FU TL0 Action Selector High-Stakes Aliases
+
+who: Codex authored the follow-up after Claude Code non-author HAT 1 ACCEPT
+and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: Claude's TL0.5 HAT3 review found that `action-selector.js` and its test
+contained a coupled, un-gated dirty change. This follow-up adopts that pair
+under its own gate because the four names are genuine TL0.4 high-stakes action
+types that the TL0.3 selector should mark proposal-only.
+
+what:
+
+- environment/autonomous/l0/action-selector.js
+- environment/tests/autonomous/l0/action-selector.test.js
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/186-hat1-stop-fu-tl0-action-selector-high-stakes-aliases-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: a temporary clean worktree at committed HEAD `a215592` copied in the
+  candidate test while preserving HEAD `action-selector.js`; the HEAD source
+  lacked all four aliases and the candidate test failed
+  `TL0.3 high-stakes classification mirrors TL0.4 named gate actions` with
+  `false !== true` and `RED_EXIT=1`.
+- GREEN so far: current target action-selector test PASS 12/12; explicit
+  Phase13 and Phase9 changed-file ledger probes PASS.
+- Full aggregate, WIKI checks, `npm run check`, and HAT3 remain required before
+  closure.
+
+scope:
+
+- This follow-up only extends the TL0.3 selector high-stakes action set with
+  `promote-claim`, `write-accepted-claim-edge`, `new-direction`, and
+  `direction-revival`, plus one regression in the existing test file.
+- No new test file is added, so `autonomousTests` stays 14 and
+  `validate-counts.js` must not change.
+- It does not touch `reasoning-loop.js`, `guardrail-controller.js`,
+  `high-stakes-gate.js`, provider/OBDK, real-data reads, direction lifecycle
+  writes, claim/export paths, Graphify, TL0.6 attended dry run, unattended
+  runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-fu-tl0-action-selector-high-stakes-aliases-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
+not self-ACCEPT it.

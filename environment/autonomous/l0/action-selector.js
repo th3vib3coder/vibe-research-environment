@@ -5,7 +5,11 @@ const HIGH_STAKES_ACTION_TYPES = new Set([
   'clinical-interpretation',
   'dataset-widening',
   'claim-promotion',
+  'promote-claim',
   'accepted-claim-edge',
+  'write-accepted-claim-edge',
+  'new-direction',
+  'direction-revival',
   'export',
   'graphify'
 ]);
