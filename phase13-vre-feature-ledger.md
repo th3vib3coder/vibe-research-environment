@@ -982,6 +982,85 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TL0.6 Attended Dry Run
+
+who: Codex authored the TL0.6 attended dry-run after Claude Code non-author
+HAT 1 ACCEPT and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: TL0.6 is the final TL0 composition seam. It must prove that the reviewed
+TL0.1 through TL0.5 surfaces can run together as an attended dry run: selector
+rationale is persisted, high-stakes proposals stop before execution, the
+operator-gate artifact is reconstructable after a cold restart, and resume is
+allowed only after an explicit operator GO while TL0.2/TL0.5 blockers stay
+active.
+
+what:
+
+- environment/autonomous/l0/attended-dry-run.js
+- environment/tests/autonomous/l0/attended-dry-run.test.js
+- package.json
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/188-hat1-stop-tl0-6-attended-dry-run-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/attended-dry-run.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` while `attended-dry-run.js` was absent.
+- RED: after implementation, the target test initially exposed a real semantic
+  mismatch: resume stopped with TL0.2 `budget-exhausted`, not `max-iterations`,
+  because the final allowed dry-run resume iteration consumes the last budget.
+- RED: `node environment/tests/ci/validate-counts.js` would fail until
+  `autonomousTests` moved from 14 to 15; explicit Phase13 and Phase9 ledger
+  probes failed before this section and the Phase9 bridge row existed.
+- GREEN: target attended-dry-run test PASS 3/3; `validate-counts.js` PASS with
+  `autonomousTests=15`; `phase11-current-status.js` PASS; explicit Phase13
+  and Phase9 changed-file ledger probes PASS; `npm run test:phase13` PASS
+  106/106; `node environment/tests/ci/run-all.js` PASS; WIKI decision-gates,
+  registry, entity export, schema field, lint, and mirror checks PASS;
+  `git diff --check` PASS with CRLF warnings only; `npm run check` PASS 1979
+  tests, 1970 pass, 0 fail, 9 skipped.
+- Claude Code HAT3 ACCEPT is recorded in
+  `C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl0.6-attended-dry-run-verdict-2026-06-23.md`.
+
+scope:
+
+- TL0.6 adds only a pure attended dry-run orchestrator, one counted autonomous
+  test, package-script inclusion, count/current-status repair, and trace. It
+  composes the reviewed selector, bounded loop, high-stakes gate, guardrail
+  controller, and halt-snapshot write-ahead through injected/default local
+  APIs.
+- It writes dry-run artifacts under the L0 dry-run namespace and marks
+  `runtimeOpened:false`, `autonomousRuntimeAllowed:false`,
+  `actionExecuted:false`, and `resumeRequiresOperatorGo:true`. Missing tier,
+  non-attended mode, and unattended-batch attempts fail before any artifact is
+  written.
+- It does not open provider/OBDK execution, reviewed-api automation, real-data
+  reads, direction lifecycle writers, claim promotion, accepted claim-edge
+  writers, export/publication paths, Graphify writes, CLI dispatch, unattended
+  runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.6-attended-dry-run-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl0.6-attended-dry-run-verdict-2026-06-23.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed TL0.6 VRE payload only.
+
 ## FU TL0 Action Selector High-Stakes Aliases
 
 who: Codex authored the follow-up after Claude Code non-author HAT 1 ACCEPT
