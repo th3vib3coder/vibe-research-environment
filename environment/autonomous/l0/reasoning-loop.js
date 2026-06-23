@@ -1,6 +1,9 @@
 import {
   writeL0HaltSnapshotBeforeAction
 } from './halt-snapshot.js';
+import {
+  evaluateHighStakesGate
+} from './high-stakes-gate.js';
 
 const ALLOWED_RUNTIME_MODE = 'attended-batch';
 const TIER_RANK = Object.freeze({
@@ -158,6 +161,8 @@ export async function runL0BoundedReasoningLoop(input = {}, deps = {}) {
   const results = [];
   const writeAhead = deps.writeL0HaltSnapshotBeforeAction
     ?? writeL0HaltSnapshotBeforeAction;
+  const evaluateGate = deps.evaluateHighStakesGate
+    ?? evaluateHighStakesGate;
 
   if (maxIterations === 0) {
     return stopResult({
@@ -206,6 +211,29 @@ export async function runL0BoundedReasoningLoop(input = {}, deps = {}) {
     }
 
     assertActionAllowed(action, tier);
+
+    const gateResult = await evaluateGate({
+      action,
+      iteration,
+      objectiveRecord: input.objectiveRecord,
+      priorOperatorGoText: input.priorOperatorGoText,
+      projectRoot: input.projectRoot
+    }, deps);
+    if (gateResult.ok === false) {
+      return {
+        ...stopResult({
+          runtimeMode,
+          tier,
+          iterationsRun: results.length,
+          budgetRemaining,
+          results,
+          stopReason: gateResult.stopReason ?? 'high-stakes-operator-gate'
+        }),
+        highStakesGate: gateResult,
+        runtimeOpened: false,
+        autonomousRuntimeAllowed: false
+      };
+    }
 
     const writeAheadResult = await writeAhead({
       projectRoot: input.projectRoot,

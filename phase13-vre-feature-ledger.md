@@ -583,6 +583,7 @@ what:
 - ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
 - ../vibe-science/blueprints/private/WIKI_VRE/log.md
 - ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- ../vibe-science/blueprints/private/WIKI_VRE/tools/check-decision-gates.states.test.mjs
 
 verification:
 
@@ -832,3 +833,78 @@ Claude Code HAT 3 ACCEPT is recorded via
 
 Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
 scoped to the reviewed TL0.3 VRE payload only.
+
+## TL0.4 High-Stakes Operator Gate
+
+who: Codex authored the TL0.4 high-stakes operator gate after Claude Code
+non-author HAT 1 ACCEPT and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: TL0.4 is the L0 brake that turns TL0.3 high-stakes proposals into durable
+operator STOP records before any high-stakes action can run. It must prove
+pre-action halt ordering, artifact-based resume metadata, writer-failure
+fail-closed behavior, and preservation of TL0.1/TL0.2 halt semantics.
+
+what:
+
+- environment/autonomous/l0/high-stakes-gate.js
+- environment/autonomous/l0/reasoning-loop.js
+- environment/tests/autonomous/l0/high-stakes-gate.test.js
+- package.json
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/182-hat1-stop-tl0-4-high-stakes-operator-gate-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/high-stakes-gate.test.js`
+  first failed because the test file was absent, then failed with
+  `ERR_MODULE_NOT_FOUND` while `high-stakes-gate.js` was absent.
+- RED: `node environment/tests/ci/validate-counts.js` failed
+  `autonomousTests` expected 12, got 13 before the count repair.
+- RED: package-script probe failed
+  `E_PHASE13_TEST_SCRIPT_MISSING_HIGH_STAKES_GATE` before `test:phase13`
+  wiring.
+- GREEN: target high-stakes gate test PASS 10/10.
+- GREEN: `node environment/tests/ci/validate-counts.js` PASS with
+  `autonomousTests=13`.
+- GREEN: `node environment/tests/ci/phase11-current-status.js` PASS.
+- GREEN: explicit Phase13 and Phase9 changed-file ledger probes PASS.
+- GREEN: `npm run test:phase13` PASS 93/93.
+- GREEN: `node environment/tests/ci/run-all.js` PASS.
+- GREEN: WIKI mirror/gate/registry/lint suite PASS 30/30.
+- GREEN: `npm run check` PASS 1966 tests, 1957 pass, 0 fail, 9 skipped.
+
+scope:
+
+- TL0.4 adds only a high-stakes STOP/brake helper, one counted autonomous
+  test, and minimal reasoning-loop pre-action integration. It classifies
+  TL0.3 `requiresOperatorGate:true` proposals plus named high-stakes actions,
+  writes durable operator-gate records with `actionExecuted:false`,
+  `resumeRequiresOperatorGo:true`, and `runtimeOpened:false`, and returns a
+  stop result before the action callback can mutate state.
+- It preserves TL0.2 forbidden errors for claim promotion, accepted claim-edge,
+  export, and Graphify. It does not execute high-stakes work, write direction
+  lifecycle events, promote claims, create accepted claim edges, widen datasets,
+  dispatch CLI commands, execute provider/OBDK calls, read real biomedical
+  data, export, perform Graphify writes, implement TL0.5+, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.4-high-stakes-operator-gate-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl0.4-high-stakes-operator-gate-verdict-2026-06-23.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed TL0.4 VRE payload only.
