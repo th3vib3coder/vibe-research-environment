@@ -908,3 +908,76 @@ Claude Code HAT 3 ACCEPT is recorded via
 
 Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
 scoped to the reviewed TL0.4 VRE payload only.
+
+## TL0.5 Guardrail Controller Hermes Symbols
+
+who: Codex authored the TL0.5 guardrail controller after Claude Code
+non-author HAT 1 ACCEPT and the operator's specific runtime GO.
+
+when: 2026-06-23.
+
+why: TL0.5 is the L0 tool-intent brake that rejects destructive shell commands,
+untrusted tool calls, and never-parallel actions before a worker-tier action can
+run. It consumes only reviewed MIT Hermes symbols through a VRE-local Node
+adaptation and must preserve TL0.2 hard blockers plus TL0.4 high-stakes STOP
+semantics.
+
+what:
+
+- environment/autonomous/l0/guardrail-controller.js
+- environment/autonomous/l0/reasoning-loop.js
+- environment/tests/autonomous/l0/guardrail-controller.test.js
+- package.json
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase13-implementation-plan/tl0-5-hermes-l0-guardrail-provenance-verdict-2026-06-23.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/184-hat1-stop-tl0-5-guardrail-controller-hermes-symbols-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+
+verification:
+
+- RED: per-symbol Hermes L0 provenance verdict was absent before runtime code.
+- RED: `node --test environment/tests/autonomous/l0/guardrail-controller.test.js`
+  first failed with `ERR_MODULE_NOT_FOUND` while `guardrail-controller.js` was
+  absent.
+- RED: `node environment/tests/ci/validate-counts.js` failed
+  `autonomousTests` expected 13, got 14 before the count repair.
+- RED: package-script probe failed
+  `E_PHASE13_TEST_SCRIPT_MISSING_GUARDRAIL_CONTROLLER` before `test:phase13`
+  wiring.
+- GREEN: target guardrail-controller test PASS 9/9; `validate-counts.js` PASS
+  with `autonomousTests=14`; package-script probe PASS;
+  `phase11-current-status.js` PASS; explicit Phase13 and Phase9 ledger probes
+  PASS; `npm run test:phase13` PASS 103/103; `run-all.js` PASS; WIKI
+  mirror/gate/registry/lint suite PASS 32/32; `npm run check` PASS 1976
+  tests, 1967 pass, 0 fail, 9 skipped.
+
+scope:
+
+- TL0.5 adds only a pure L0 guardrail-controller helper, one counted
+  autonomous test, and minimal reasoning-loop worker-tier pre-action
+  integration. It rejects destructive terminal commands, overwrite redirects,
+  unreviewed untrusted tool calls, untrusted tool prefixes, and never-parallel
+  actions with `runtimeOpened:false` and `autonomousRuntimeAllowed:false`.
+- The implementation is VRE-local Node code adapted only from reviewed MIT
+  Hermes symbols recorded in the durable per-symbol provenance verdict. It does
+  not copy Python bodies, consume OpenHuman/AGPL/CC symbols, dispatch tools,
+  call providers or OBDK, read real biomedical data, write direction lifecycle
+  events, promote claims, create accepted claim edges, export, perform Graphify
+  writes, implement TL0.6+, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.5-guardrail-controller-hermes-symbols-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
+not self-ACCEPT it.

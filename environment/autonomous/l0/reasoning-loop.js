@@ -4,6 +4,9 @@ import {
 import {
   evaluateHighStakesGate
 } from './high-stakes-gate.js';
+import {
+  evaluateL0GuardrailForAction
+} from './guardrail-controller.js';
 
 const ALLOWED_RUNTIME_MODE = 'attended-batch';
 const TIER_RANK = Object.freeze({
@@ -163,6 +166,8 @@ export async function runL0BoundedReasoningLoop(input = {}, deps = {}) {
     ?? writeL0HaltSnapshotBeforeAction;
   const evaluateGate = deps.evaluateHighStakesGate
     ?? evaluateHighStakesGate;
+  const evaluateGuardrail = deps.evaluateL0GuardrailForAction
+    ?? evaluateL0GuardrailForAction;
 
   if (maxIterations === 0) {
     return stopResult({
@@ -230,6 +235,27 @@ export async function runL0BoundedReasoningLoop(input = {}, deps = {}) {
           stopReason: gateResult.stopReason ?? 'high-stakes-operator-gate'
         }),
         highStakesGate: gateResult,
+        runtimeOpened: false,
+        autonomousRuntimeAllowed: false
+      };
+    }
+
+    const guardrailDecision = evaluateGuardrail(action, {
+      tier,
+      iteration,
+      runtimeMode
+    });
+    if (guardrailDecision.allowsExecution === false) {
+      return {
+        ...stopResult({
+          runtimeMode,
+          tier,
+          iterationsRun: results.length,
+          budgetRemaining,
+          results,
+          stopReason: 'guardrail-controller'
+        }),
+        guardrailDecision,
         runtimeOpened: false,
         autonomousRuntimeAllowed: false
       };
