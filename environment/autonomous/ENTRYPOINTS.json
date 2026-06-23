@@ -36,6 +36,12 @@
       "action": "skill-runtime",
       "layer": "l1-runtime-consumer",
       "runtimeOpened": false
+    },
+    {
+      "command": "autonomous swarm-compose",
+      "action": "swarm-compose",
+      "layer": "l4-swarm-relay-composition",
+      "runtimeOpened": false
     }
   ]
 }

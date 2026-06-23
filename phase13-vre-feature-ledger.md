@@ -982,6 +982,87 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TL4.1 Swarm-Relay Composition
+
+who: Codex authored TL4.1 HAT2 after Claude Code non-author HAT1 ACCEPT and
+the closed-active TL4 standing operator autonomy policy.
+
+when: 2026-06-23.
+
+why: TL4.1 is the first bounded L4 runtime slice. It composes the reviewed
+Phase 12 relay and Phase 9 cold-child/role-dispatch surfaces through injected
+dispatch and writer functions so swarm review can create a durable turn record
+without opening provider automation, OBDK, real-data reads, claim/export,
+Graphify, L5, CLI dispatch, or unattended runtime.
+
+what:
+
+- README.md
+- package.json
+- environment/autonomous/ENTRYPOINTS.json
+- environment/autonomous/l4/swarm-composition.js
+- environment/tests/autonomous/l4/swarm-composition.test.js
+- environment/tests/ci/validate-counts.js
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/194-hat1-stop-tl4-1-swarm-relay-composition-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/195-hat1-stop-tl4-standing-operator-autonomy-policy-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/196-hat3-tl4-standing-operator-autonomy-policy-closure-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.1-swarm-relay-composition-verdict-2026-06-23.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4-standing-operator-autonomy-policy-verdict-2026-06-23.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4.1-swarm-relay-composition-verdict-2026-06-23.md
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l4/swarm-composition.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before `swarm-composition.js` existed.
+- RED: after implementation, `node environment/tests/ci/validate-counts.js`
+  required `autonomousTests=16->17`; `phase11-current-status.js` then caught
+  stale README/current-status projections.
+- RED: explicit Phase13 and Phase9 changed-file ledger probes failed before
+  this section, the Phase9 bridge row, and the private bridge note existed.
+- GREEN: target swarm-composition test PASS 5/5, `validate-counts.js` PASS
+  with `autonomousTests=17`, `phase11-current-status.js` PASS, explicit
+  Phase13 and Phase9 changed-file ledger probes PASS,
+  `npm run test:phase13` PASS 117/117, `run-all.js` PASS, WIKI
+  decision-gates/lint/registry/entity/schema/mirror checks PASS,
+  `git diff --check` PASS with CRLF warnings only, and `npm run check` PASS
+  1990 tests, 1981 pass, 0 fail, 9 skipped.
+
+scope:
+
+- TL4.1 adds only a pure injected L4 swarm-relay composition helper, one
+  counted autonomous test, metadata allowlist entry, count/current-status
+  repair, and trace.
+- It requires `autonomyTier:L4`, `runtimeMode:attended-batch`, injected relay
+  dispatch, injected cold-child dispatch, and injected artifact writer before
+  any artifact can be written. It rejects unattended mode and persists
+  reconstructable swarm-turn plus handoff-pointer records with runtime/provider/
+  OBDK/real-data/reviewed-api/claim/export/Graphify/subprocess/new-relay flags
+  closed.
+- It does not create a new relay primitive, spawn subprocesses, import provider
+  automation, call OBDK, read real biomedical data, use reviewed APIs, promote
+  claims, create accepted claim edges, export, perform Graphify writes, open
+  L5, dispatch CLI commands, open unattended runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.1-swarm-relay-composition-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4.1-swarm-relay-composition-verdict-2026-06-23.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed TL4.1 VRE payload only.
+
 ## TL1.4 L1 Runtime Consumer
 
 who: Codex authored the TL1.4 L1 runtime consumer after Claude Code
