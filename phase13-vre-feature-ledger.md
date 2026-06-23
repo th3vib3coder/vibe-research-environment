@@ -982,6 +982,87 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TL4.2 U1 Forced Destroyer Fields
+
+who: Codex authored the TL4.2 forced-destruction verdict validation slice
+after Claude Code non-author HAT1 ACCEPT under the closed-active TL4 standing
+operator autonomy policy.
+
+when: 2026-06-23.
+
+why: L4 adversarial review must be destructive and fail-closed, not decorative.
+TL4.2 makes a verdict ineligible for ACCEPT unless counter-evidence search and
+SFI injection are explicitly recorded, makes quantitative ACCEPT depend on the
+confounder harness, and makes salvageable KILL reasons produce a real
+serendipity seed reference.
+
+what:
+
+- `README.md`
+- `package.json`
+- `environment/schemas/phase14-adversarial-verdict.schema.json`
+- `environment/tests/schemas/phase14-adversarial-verdict.schema.test.js`
+- `environment/autonomous/l4/forced-destruction.js`
+- `environment/tests/autonomous/l4/forced-destruction.test.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `phase13-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/198-hat1-stop-tl4-2-u1-forced-destroyer-fields-2026-06-23.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/199-hat3-tl4-2-u1-forced-destroyer-fields-closure-2026-06-23.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+- `C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.2-u1-forced-destroyer-fields-verdict-2026-06-23.md`
+- `C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4.2-u1-forced-destroyer-fields-verdict-2026-06-23.md`
+
+verification:
+
+- RED: `node --test environment/tests/schemas/phase14-adversarial-verdict.schema.test.js`
+  failed with `ENOENT` before
+  `environment/schemas/phase14-adversarial-verdict.schema.json` existed.
+- RED: `node --test environment/tests/autonomous/l4/forced-destruction.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/autonomous/l4/forced-destruction.js` existed.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `schemas` expected 82, got 83 before count repair.
+- GREEN: target schema test PASS 5/5; target forced-destruction test PASS
+  8/8; `validate-counts.js` PASS with `schemas=83`, `schemaTests=82`, and
+  `autonomousTests=18`; `phase11-current-status.js` PASS; explicit Phase13
+  and Phase9 changed-file ledger probes PASS; `npm run test:phase13` PASS
+  125/125; aggregate `run-all.js` PASS; WIKI gate/registry/entity/schema/
+  lint/mirror checks PASS with the existing 28 entity-owner warnings
+  unchanged; `git diff --check` PASS with CRLF warnings only; `npm run
+  check` PASS 2003 tests, 1994 pass, 0 fail, 9 skipped; Claude Code HAT3
+  ACCEPT recorded in
+  `claude-hat3-tl4.2-u1-forced-destroyer-fields-verdict-2026-06-23.md`.
+
+scope:
+
+- TL4.2 adds only the Phase14 adversarial-verdict schema, one counted schema
+  test, a pure VRE-local L4 forced-destruction validator, one counted
+  autonomous test, `test:phase13` wiring, count/projection repair, and trace.
+- The helper validates real `event-record.details.*` verdict records and
+  throws named fail-closed errors for missing/misplaced U1 fields, ACCEPT
+  without counter-evidence or SFI injection, quantitative ACCEPT without the
+  confounder harness, salvageable KILL without a seed, and runtime/provider/
+  OBDK/real-data/reviewed-api/claim-export/Graphify/unattended leakage.
+- TL4.3 adversarial-verdict provenance class, TL4.4 prompt-injection guard,
+  provider automation, OBDK, real-data reads, reviewed-api automation,
+  claim/export writers, Graphify, L5, CLI dispatch, unattended runtime,
+  commit, and push remain closed.
+
+reviewer:
+
+Claude Code HAT1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.2-u1-forced-destroyer-fields-verdict-2026-06-23.md`.
+
+Codex authored this HAT2 patch and did not self-ACCEPT it. HAT3 review is
+pending.
+
 ## TL4.1 Swarm-Relay Composition
 
 who: Codex authored TL4.1 HAT2 after Claude Code non-author HAT1 ACCEPT and

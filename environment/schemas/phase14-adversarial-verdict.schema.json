@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "phase14-adversarial-verdict.schema.json",
+  "title": "Phase 14 Adversarial Verdict",
+  "description": "TL4.2 U1 forced-destruction verdict record for adversarial review survival metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "event-record"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "phase14.adversarial-verdict.v1"
+    },
+    "event-record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventId",
+        "kind",
+        "verdict",
+        "claimProfile",
+        "details",
+        "runtimeOpened",
+        "providerAutomationInvoked",
+        "obdkUsed",
+        "realDataRead",
+        "reviewedApiUsed",
+        "claimExportOpened",
+        "graphifyOpened",
+        "unattendedRuntimeOpened"
+      ],
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "pattern": "^EV-[A-Za-z0-9._-]+$"
+        },
+        "kind": {
+          "const": "phase14-adversarial-verdict"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "ACCEPT",
+            "REDIRECT",
+            "KILL"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "claimProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "claimId",
+            "quantitative"
+          ],
+          "properties": {
+            "claimId": {
+              "type": "string",
+              "pattern": "^CLAIM-.+$"
+            },
+            "quantitative": {
+              "type": "boolean"
+            }
+          }
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "counterEvidenceSearched",
+            "sfiInjected",
+            "confounderHarnessChecked",
+            "salvagenteSeedProduced"
+          ],
+          "properties": {
+            "counterEvidenceSearched": {
+              "type": "boolean"
+            },
+            "sfiInjected": {
+              "type": "boolean"
+            },
+            "confounderHarnessChecked": {
+              "type": "boolean"
+            },
+            "salvagenteSeedProduced": {
+              "type": "boolean"
+            },
+            "serendipitySeedRef": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "runtimeOpened": {
+          "const": false
+        },
+        "providerAutomationInvoked": {
+          "const": false
+        },
+        "obdkUsed": {
+          "const": false
+        },
+        "realDataRead": {
+          "const": false
+        },
+        "reviewedApiUsed": {
+          "const": false
+        },
+        "claimExportOpened": {
+          "const": false
+        },
+        "graphifyOpened": {
+          "const": false
+        },
+        "unattendedRuntimeOpened": {
+          "const": false
+        }
+      }
+    }
+  }
+}

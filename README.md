@@ -594,13 +594,13 @@ not copied from a private WIKI checkout.
 | Surface | Count |
 |---|---:|
 | Install bundle manifests | 11 |
-| Schemas | 82 |
+| Schemas | 83 |
 | Templates | 8 |
 | Eval tasks | 25 |
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
 | Audit tests | 5 |
-| Autonomous tests | 17 |
+| Autonomous tests | 18 |
 | Control/orchestrator tests | 37 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
@@ -610,7 +610,7 @@ not copied from a private WIKI checkout.
 | Integration tests | 15 |
 | CLI tests | 12 |
 | Phase14 tests | 5 |
-| Schema tests | 81 |
+| Schema tests | 82 |
 | CI validators | 70 |
 
 Update these counts only in the same patch that changes the counted surface.
@@ -1248,13 +1248,13 @@ copiati da una WIKI privata affiancata.
 | Superficie | Conteggio |
 |---|---:|
 | Manifest bundle installazione | 11 |
-| Schemi | 82 |
+| Schemi | 83 |
 | Template | 8 |
 | Task eval | 25 |
 | Metriche eval | 5 |
 | Benchmark eval | 5 |
 | Test audit | 5 |
-| Test autonomia | 17 |
+| Test autonomia | 18 |
 | Test control/orchestrator | 37 |
 | Test compatibilita | 5 |
 | Test flow | 8 |
@@ -1264,7 +1264,7 @@ copiati da una WIKI privata affiancata.
 | Test integrazione | 15 |
 | Test CLI | 12 |
 | Test Phase14 | 5 |
-| Test schema | 81 |
+| Test schema | 82 |
 | Validator CI | 70 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
