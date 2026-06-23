@@ -600,7 +600,7 @@ not copied from a private WIKI checkout.
 | Eval metrics | 5 |
 | Eval benchmarks | 5 |
 | Audit tests | 5 |
-| Autonomous tests | 18 |
+| Autonomous tests | 19 |
 | Control/orchestrator tests | 37 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
@@ -1254,7 +1254,7 @@ copiati da una WIKI privata affiancata.
 | Metriche eval | 5 |
 | Benchmark eval | 5 |
 | Test audit | 5 |
-| Test autonomia | 18 |
+| Test autonomia | 19 |
 | Test control/orchestrator | 37 |
 | Test compatibilita | 5 |
 | Test flow | 8 |

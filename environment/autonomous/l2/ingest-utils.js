@@ -14,7 +14,8 @@ const FORBIDDEN_PROVENANCE_CLASSES = new Set([
   'query-output',
   'chat-output',
   'review-output',
-  'relay-verdict'
+  'relay-verdict',
+  'adversarial-verdict'
 ]);
 
 // Curated VRE-local subset of the dependency-free alias-map shape. Do not

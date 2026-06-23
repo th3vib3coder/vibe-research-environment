@@ -62,8 +62,15 @@ describe('Phase 13 L2 ingest utilities', () => {
     assert.equal(unknown.authoritative, false);
   });
 
-  it('rejects wiki query chat and review output as LAW 13 provenance', () => {
-    for (const provenanceClass of ['wiki-output', 'query-output', 'chat-output', 'review-output']) {
+  it('rejects generated and review-survival metadata as LAW 13 provenance', () => {
+    for (const provenanceClass of [
+      'wiki-output',
+      'query-output',
+      'chat-output',
+      'review-output',
+      'relay-verdict',
+      'adversarial-verdict'
+    ]) {
       assert.throws(
         () => normalizeNodeTypeAlias('fn', {
           sourcePath: 'generated/wiki.md',

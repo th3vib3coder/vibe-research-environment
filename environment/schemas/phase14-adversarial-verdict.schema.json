@@ -22,6 +22,7 @@
         "verdict",
         "claimProfile",
         "details",
+        "metadata",
         "runtimeOpened",
         "providerAutomationInvoked",
         "obdkUsed",
@@ -93,6 +94,38 @@
             "serendipitySeedRef": {
               "type": "string",
               "minLength": 1
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provenanceClass",
+            "provenanceUse",
+            "law13Provenance",
+            "scientificEvidence",
+            "confidenceDelta",
+            "runtimeOpened"
+          ],
+          "properties": {
+            "provenanceClass": {
+              "const": "adversarial-verdict"
+            },
+            "provenanceUse": {
+              "const": "review-survival-metadata"
+            },
+            "law13Provenance": {
+              "const": false
+            },
+            "scientificEvidence": {
+              "const": false
+            },
+            "confidenceDelta": {
+              "const": 0
+            },
+            "runtimeOpened": {
+              "const": false
             }
           }
         },

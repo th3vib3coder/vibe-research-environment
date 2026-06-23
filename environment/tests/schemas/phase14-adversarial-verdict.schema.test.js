@@ -43,6 +43,14 @@ function validVerdict(overrides = {}) {
         confounderHarnessChecked: true,
         salvagenteSeedProduced: false
       },
+      metadata: {
+        provenanceClass: 'adversarial-verdict',
+        provenanceUse: 'review-survival-metadata',
+        law13Provenance: false,
+        scientificEvidence: false,
+        confidenceDelta: 0,
+        runtimeOpened: false
+      },
       runtimeOpened: false,
       providerAutomationInvoked: false,
       obdkUsed: false,
@@ -92,6 +100,39 @@ test('phase14-adversarial-verdict.schema pins closed runtime and automation flag
   const validator = await loadValidator();
   const verdict = validVerdict();
   verdict['event-record'].providerAutomationInvoked = true;
+
+  assert.equal(validator(verdict), false);
+  assert.match(validationDetails(validator), /constant|const/u);
+});
+
+test('phase14-adversarial-verdict.schema keeps adversarial verdict metadata out of LAW13 provenance', async () => {
+  const validator = await loadValidator();
+  const verdict = validVerdict();
+  verdict['event-record'].metadata.law13Provenance = true;
+
+  assert.equal(validator(verdict), false);
+  assert.match(validationDetails(validator), /constant|const/u);
+});
+
+test('phase14-adversarial-verdict.schema rejects scientific-evidence or confidence authority', async () => {
+  const validator = await loadValidator();
+  const scientific = validVerdict();
+  scientific['event-record'].metadata.scientificEvidence = true;
+
+  assert.equal(validator(scientific), false);
+  assert.match(validationDetails(validator), /constant|const/u);
+
+  const confidence = validVerdict();
+  confidence['event-record'].metadata.confidenceDelta = 0.1;
+
+  assert.equal(validator(confidence), false);
+  assert.match(validationDetails(validator), /constant|const/u);
+});
+
+test('phase14-adversarial-verdict.schema rejects metadata runtime opening', async () => {
+  const validator = await loadValidator();
+  const verdict = validVerdict();
+  verdict['event-record'].metadata.runtimeOpened = true;
 
   assert.equal(validator(verdict), false);
   assert.match(validationDetails(validator), /constant|const/u);

@@ -982,6 +982,89 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TL4.3 Adversarial Verdict Provenance Boundary
+
+who: Codex authored the TL4.3 HAT2 patch after Claude Code non-author HAT1
+ACCEPT under the closed-active TL4 standing operator policy.
+
+when: 2026-06-23.
+
+why: TL4.2 made adversarial verdict records useful for destructive review, but
+the record still needed an explicit boundary proving that an
+`adversarial-verdict` is review-survival metadata only. Without the boundary,
+later consumers could launder review metadata into LAW 13 provenance,
+scientific evidence edges, or claim-confidence changes.
+
+what:
+
+- README.md
+- package.json
+- environment/autonomous/l4/adversarial-verdict.js
+- environment/tests/autonomous/l4/verdict-provenance-boundary.test.js
+- environment/schemas/phase14-adversarial-verdict.schema.json
+- environment/tests/schemas/phase14-adversarial-verdict.schema.test.js
+- environment/autonomous/l2/ingest-utils.js
+- environment/tests/autonomous/l2/ingest-utils.test.js
+- environment/tests/ci/validate-counts.js
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/200-hat1-stop-tl4-3-adversarial-verdict-provenance-boundary-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/201-hat3-tl4-3-adversarial-verdict-provenance-boundary-closure-2026-06-23.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.3-adversarial-verdict-provenance-boundary-verdict-2026-06-23.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4.3-adversarial-verdict-provenance-boundary-verdict-2026-06-23.md
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l4/verdict-provenance-boundary.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` while `adversarial-verdict.js` was absent.
+- RED: `node --test environment/tests/schemas/phase14-adversarial-verdict.schema.test.js`
+  failed because `event-record.metadata` was not yet schema-bound.
+- RED: `node --test environment/tests/autonomous/l2/ingest-utils.test.js`
+  failed because `adversarial-verdict` was not yet rejected by the existing L2
+  forbidden-provenance path.
+- GREEN: target L4 provenance-boundary test PASS 5/5, target schema test PASS
+  8/8, target L2 ingest-utils test PASS 9/9, `validate-counts.js` PASS with
+  `autonomousTests=19`, `phase11-current-status.js` PASS, explicit Phase13
+  and Phase9 changed-file ledger probes PASS, `npm run test:phase13` PASS
+  130/130, aggregate `run-all.js` PASS, `git diff --check` PASS with CRLF
+  warnings only, and `npm run check` PASS 2011 tests, 2002 pass, 0 fail,
+  9 skipped.
+- GREEN: WIKI mirror/gate/registry/entity/schema/lint checks PASS with the
+  pre-existing 28 entity-owner warnings unchanged.
+- GREEN: Claude Code HAT3 ACCEPT recorded in
+  `claude-hat3-tl4.3-adversarial-verdict-provenance-boundary-verdict-2026-06-23.md`.
+
+scope:
+
+- TL4.3 adds a pure zero-import L4 helper, one counted autonomous test, a
+  closed metadata object on the existing adversarial-verdict schema, and a
+  narrow L2 guard that treats `adversarial-verdict` as metadata rather than
+  LAW 13 provenance.
+- Count truth changes only `autonomousTests=18->19`; `schemas=83` and
+  `schemaTests=82` stay unchanged.
+- It does not write claim edges or ledgers, change claim confidence, call
+  provider/OBDK/reviewed APIs, read real biomedical data, export, perform
+  Graphify writes, implement TL4.4, dispatch CLI commands, open L5, open
+  unattended runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.3-adversarial-verdict-provenance-boundary-verdict-2026-06-23.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4.3-adversarial-verdict-provenance-boundary-verdict-2026-06-23.md`.
+Codex authored this HAT2 patch and did not self-ACCEPT it. Claude also recorded
+one non-blocking follow-up: Phase10 LAW13 relay-verdict hardcoded lists must
+reject `adversarial-verdict` typed refs before any producer emits them.
+
 ## TL4.2 U1 Forced Destroyer Fields
 
 who: Codex authored the TL4.2 forced-destruction verdict validation slice
