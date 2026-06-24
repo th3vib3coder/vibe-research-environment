@@ -979,6 +979,71 @@ reviewer:
 Claude Code HAT 1 ACCEPT is recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl0.5-guardrail-controller-hermes-symbols-verdict-2026-06-23.md`.
 
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-t19.7-l0-direction-eligibility-selector-verdict-2026-06-24.md`.
+Codex authored this HAT2 patch and did not self-ACCEPT it.
+
+## T19.7 L0 Direction Eligibility Selector
+
+who: Codex authored the T19.7 L0/W-RDM selector eligibility follow-up after
+Claude Code non-author HAT 1 ACCEPT.
+
+when: 2026-06-24.
+
+why: TL0.3 already consumed direction memory, but it checked only the
+top-ranked candidate and returned `ok:false` when that candidate was
+killed/contradicted. T19.7 says a block verdict makes that candidate
+ineligible. This follow-up makes the selector continue to the next eligible
+candidate while preserving fail-closed behavior when every candidate is
+blocked.
+
+what:
+
+- `environment/autonomous/l0/action-selector.js`
+- `environment/tests/autonomous/l0/action-selector.test.js`
+- `phase13-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/207-hat1-stop-t19-7-l0-direction-eligibility-selector-2026-06-24.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md`
+- `../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/log.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md`
+- `../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json`
+- `../vibe-science/blueprints/private/WIKI_VRE/tools/check-decision-gates.states.test.mjs`
+- `C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-t19.7-l0-direction-eligibility-selector-verdict-2026-06-24.md`
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/action-selector.test.js`
+  failed 12 pass / 3 fail before the implementation. The failures proved the
+  current selector returned `ok:false` for a blocked top candidate instead of
+  selecting the lower eligible candidate, allowed an INSTINCT-boosted blocked
+  candidate to halt selection rather than being skipped, and lacked
+  all-blocked `blockedCandidates` evidence.
+- GREEN: target action-selector test PASS 15/15; `validate-counts.js` PASS;
+  explicit Phase13 and Phase9 ledger checks PASS; `npm run test:phase13` PASS
+  139/139; aggregate `run-all.js` PASS; WIKI gate/registry/schema/lint/mirror
+  checks PASS; `git diff --check` PASS with CRLF warnings only on ledger files;
+  `npm run check` PASS with 2022 tests, 2013 pass, 0 fail, 9 skipped.
+- HAT3 review remains required before closure.
+
+scope:
+
+- This follow-up only changes the existing TL0.3 selector and its existing
+  autonomous test file; no counted test file is added and `autonomousTests`
+  remains 20.
+- The selector remains read-only on direction memory. It does not write
+  direction lifecycle events, promote claims, create accepted claim edges,
+  dispatch CLI commands, call provider/OBDK/reviewed-api automation, read real
+  data, export, perform Graphify writes, open L4/L5 orchestration, open
+  unattended runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-t19.7-l0-direction-eligibility-selector-verdict-2026-06-24.md`.
+
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 

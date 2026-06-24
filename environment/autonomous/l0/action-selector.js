@@ -242,12 +242,30 @@ function buildProposal({ candidate, directionCheck, score, instinctWeight }) {
   };
 }
 
+function blockedCandidateSummary({ candidate, directionCheck }) {
+  return {
+    actionId: candidate.id,
+    actionType: candidate.actionType,
+    summary: candidate.summary,
+    directionId:
+      directionCheck.directionId ?? candidate.directionTarget.directionId ?? null,
+    blockingDirectionId: directionCheck.blockingDirectionId ?? null,
+    blockingSummary: directionCheck.blockingSummary ?? null,
+    blockingState: directionCheck.blockingState ?? null,
+    doNotRepeatUnless: directionCheck.doNotRepeatUnless ?? null,
+    evidenceRefs: Array.isArray(directionCheck.evidenceRefs)
+      ? [...directionCheck.evidenceRefs]
+      : []
+  };
+}
+
 function buildRationaleArtifact({
   input,
   ranking,
   selected,
   proposal,
-  directionCheck
+  directionCheck,
+  ineligibleCandidates = []
 }) {
   return {
     schemaVersion: `${SCHEMA_VERSION}.rationale`,
@@ -278,9 +296,12 @@ function buildRationaleArtifact({
         : [],
       doNotRepeatUnless: directionCheck.doNotRepeatUnless ?? null
     },
+    ineligibleCandidates,
     reconstruction: {
       deterministicSort: 'score-desc/actionId-asc',
-      selectedRank: 1,
+      selectedRank: ranking.findIndex(
+        (entry) => entry.candidate.id === selected.candidate.id
+      ) + 1,
       proposalOnly: true
     }
   };
@@ -298,7 +319,8 @@ function assertJsonSerializable(value) {
   }
 }
 
-function blockedResult(directionCheck) {
+function blockedResult(blockedCandidates) {
+  const first = blockedCandidates[0] ?? {};
   return {
     ok: false,
     schemaVersion: SCHEMA_VERSION,
@@ -307,15 +329,16 @@ function blockedResult(directionCheck) {
     proposal: null,
     proposals: [],
     blocked: {
-      verdict: directionCheck.verdict,
-      blockingDirectionId: directionCheck.blockingDirectionId ?? null,
-      blockingSummary: directionCheck.blockingSummary ?? null,
-      blockingState: directionCheck.blockingState ?? null,
-      doNotRepeatUnless: directionCheck.doNotRepeatUnless ?? null,
-      evidenceRefs: Array.isArray(directionCheck.evidenceRefs)
-        ? [...directionCheck.evidenceRefs]
+      verdict: 'block',
+      blockingDirectionId: first.blockingDirectionId ?? null,
+      blockingSummary: first.blockingSummary ?? null,
+      blockingState: first.blockingState ?? null,
+      doNotRepeatUnless: first.doNotRepeatUnless ?? null,
+      evidenceRefs: Array.isArray(first.evidenceRefs)
+        ? [...first.evidenceRefs]
         : []
-    }
+    },
+    blockedCandidates
   };
 }
 
@@ -339,24 +362,43 @@ export async function selectNextScientificAction(input = {}, deps = {}) {
 
   const checkDirection = resolveDirectionChecker(input, deps);
   const ranking = rankedCandidates(input.candidates, input.instinctWeights);
-  const selected = ranking[0];
-  const directionTarget = selected.candidate.directionTarget;
-  const directionCheck = await checkDirection(input.projectRoot, {
-    directionId: directionTarget.directionId || undefined,
-    summary: directionTarget.summary || undefined,
-    satisfies: directionTarget.satisfies
-  });
+  const ineligibleCandidates = [];
+  let selected = null;
+  let directionCheck = null;
 
-  if (directionCheck?.verdict === 'block') {
-    return blockedResult(directionCheck);
+  for (const entry of ranking) {
+    const directionTarget = entry.candidate.directionTarget;
+    const candidateDirectionCheck = await checkDirection(input.projectRoot, {
+      directionId: directionTarget.directionId || undefined,
+      summary: directionTarget.summary || undefined,
+      satisfies: directionTarget.satisfies
+    });
+
+    if (candidateDirectionCheck?.verdict === 'block') {
+      ineligibleCandidates.push(blockedCandidateSummary({
+        candidate: entry.candidate,
+        directionCheck: candidateDirectionCheck
+      }));
+      continue;
+    }
+
+    if (!['allow', 'allow-with-condition'].includes(
+      candidateDirectionCheck?.verdict
+    )) {
+      fail(
+        'E_L0_SELECTOR_DIRECTION_VERDICT_INVALID',
+        'TL0.3 selector received an invalid direction verdict.',
+        { verdict: candidateDirectionCheck?.verdict ?? null }
+      );
+    }
+
+    selected = entry;
+    directionCheck = candidateDirectionCheck;
+    break;
   }
 
-  if (!['allow', 'allow-with-condition'].includes(directionCheck?.verdict)) {
-    fail(
-      'E_L0_SELECTOR_DIRECTION_VERDICT_INVALID',
-      'TL0.3 selector received an invalid direction verdict.',
-      { verdict: directionCheck?.verdict ?? null }
-    );
+  if (!selected) {
+    return blockedResult(ineligibleCandidates);
   }
 
   const proposal = buildProposal({
@@ -370,7 +412,8 @@ export async function selectNextScientificAction(input = {}, deps = {}) {
     ranking,
     selected,
     proposal,
-    directionCheck
+    directionCheck,
+    ineligibleCandidates
   });
   assertJsonSerializable(rationaleArtifact);
 

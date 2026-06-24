@@ -83,6 +83,35 @@ function allowWithConditionChecker(condition) {
   });
 }
 
+function eligibilityChecker(events = []) {
+  return async (_projectRoot, options) => {
+    events.push(options.directionId);
+    if (options.directionId === 'DIR-BLOCKED') {
+      return {
+        ok: true,
+        verdict: 'block',
+        directionId: options.directionId,
+        summary: options.summary,
+        blockingDirectionId: 'DIR-BLOCKED',
+        blockingSummary: options.summary,
+        blockingState: 'killed',
+        doNotRepeatUnless: {
+          kind: 'new-evidence',
+          detail: 'fresh replicated cohort'
+        },
+        evidenceRefs: ['evidence:blocked-direction']
+      };
+    }
+    return {
+      ok: true,
+      verdict: 'allow',
+      directionId: options.directionId,
+      summary: options.summary,
+      written: false
+    };
+  };
+}
+
 function validInput(overrides = {}) {
   return {
     projectRoot: '/tmp/vre-tl0-3',
@@ -268,8 +297,133 @@ test('LAW 12 INSTINCT can rank allowed candidates but never override a block', a
       return allowedChecker()(_projectRoot, options);
     }
   });
-  assert.equal(blocked.ok, false);
-  assert.equal(blocked.blocked.blockingDirectionId, 'DIR-BLOCKED');
+  assert.equal(blocked.ok, true);
+  assert.equal(blocked.proposal.actionId, 'method-check');
+  assert.deepEqual(
+    blocked.rationaleArtifact.ineligibleCandidates.map((entry) => entry.actionId),
+    ['biomarker-leap']
+  );
+});
+
+test('blocked top-ranked candidate is skipped in favor of next eligible action', async () => {
+  const checks = [];
+  const blocked = candidate({
+    id: 'blocked-biomarker',
+    actionType: 'dataset-widening',
+    summary: 'Widen to a killed biomarker cohort',
+    priority: 20,
+    direction: {
+      directionId: 'DIR-BLOCKED',
+      summary: 'Widen to a killed biomarker cohort'
+    }
+  });
+  const allowed = candidate({
+    id: 'allowed-method-check',
+    actionType: 'method-review',
+    summary: 'Check the method appendix first',
+    priority: 5,
+    direction: {
+      directionId: 'DIR-ALLOWED',
+      summary: 'Check the method appendix first'
+    }
+  });
+
+  const result = await selectNextScientificAction(validInput({
+    candidates: [allowed, blocked]
+  }), {
+    checkDirection: eligibilityChecker(checks)
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.proposal.actionId, 'allowed-method-check');
+  assert.deepEqual(checks, ['DIR-BLOCKED', 'DIR-ALLOWED']);
+  assert.deepEqual(
+    result.rationaleArtifact.ineligibleCandidates.map((entry) => entry.actionId),
+    ['blocked-biomarker']
+  );
+});
+
+test('INSTINCT boost cannot make a blocked candidate eligible', async () => {
+  const result = await selectNextScientificAction(validInput({
+    candidates: [
+      candidate({
+        id: 'safe-literature',
+        actionType: 'literature-review',
+        summary: 'Review the safe literature direction',
+        priority: 2,
+        direction: {
+          directionId: 'DIR-ALLOWED',
+          summary: 'Review the safe literature direction'
+        }
+      }),
+      candidate({
+        id: 'boosted-dead-end',
+        actionType: 'dataset-widening',
+        summary: 'Re-enter killed dataset direction',
+        priority: 1,
+        direction: {
+          directionId: 'DIR-BLOCKED',
+          summary: 'Re-enter killed dataset direction'
+        }
+      })
+    ],
+    instinctWeights: {
+      'boosted-dead-end': 100
+    }
+  }), {
+    checkDirection: eligibilityChecker()
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.proposal.actionId, 'safe-literature');
+  assert.equal(result.rationaleArtifact.ineligibleCandidates.length, 1);
+});
+
+test('all blocked candidates fail closed with blocked-candidate evidence', async () => {
+  const writes = [];
+  const result = await selectNextScientificAction(validInput({
+    candidates: [
+      candidate({
+        id: 'blocked-a',
+        summary: 'Blocked A',
+        priority: 5,
+        direction: { directionId: 'DIR-A', summary: 'Blocked A' }
+      }),
+      candidate({
+        id: 'blocked-b',
+        summary: 'Blocked B',
+        priority: 3,
+        direction: { directionId: 'DIR-B', summary: 'Blocked B' }
+      })
+    ]
+  }), {
+    checkDirection: async (_projectRoot, options) => ({
+      ok: true,
+      verdict: 'block',
+      directionId: options.directionId,
+      summary: options.summary,
+      blockingDirectionId: options.directionId,
+      blockingSummary: options.summary,
+      blockingState: 'contradicted',
+      doNotRepeatUnless: {
+        kind: 'new-evidence',
+        detail: `resolve ${options.directionId}`
+      },
+      evidenceRefs: [`evidence:${options.directionId}`]
+    }),
+    writeRationaleArtifact: async (artifact) => {
+      writes.push(artifact);
+      return { artifactPath: '/tmp/should-not-write.json' };
+    }
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.proposal, null);
+  assert.deepEqual(
+    result.blockedCandidates.map((entry) => entry.actionId),
+    ['blocked-a', 'blocked-b']
+  );
+  assert.deepEqual(writes, []);
 });
 
 test('injected artifact writer runs before return and failure fails closed', async () => {
