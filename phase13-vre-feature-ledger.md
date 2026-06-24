@@ -1047,6 +1047,62 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## FU TL4.2 Forced-Destruction Metadata Binding
+
+who: Codex authored the follow-up after Claude Code non-author HAT 1 ACCEPT
+under the closed-active TL4 standing policy.
+
+when: 2026-06-24.
+
+why: TL4.2 made forced-destruction verdicts carry U1 destructive-review fields,
+and TL4.3 later defined inert `adversarial-verdict` metadata. The TL4.2
+consumer still accepted records that omitted that metadata or carried non-inert
+metadata. This follow-up binds the TL4.2 forced-destruction record shape to the
+accepted TL4.3 metadata validator so review-survival metadata cannot silently
+become LAW 13 provenance, scientific evidence, confidence movement, or runtime
+opening.
+
+what:
+
+- environment/autonomous/l4/forced-destruction.js
+- environment/tests/autonomous/l4/forced-destruction.test.js
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/214-hat1-stop-fu-tl4-2-forced-destruction-metadata-binding-2026-06-24.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-fu-tl4.2-forced-destruction-metadata-binding-verdict-2026-06-24.md
+
+verification:
+
+- RED: a temporary archived-HEAD workspace copied in the candidate test while
+  preserving HEAD `forced-destruction.js`; the HEAD source ignored
+  `event-record.metadata` and the candidate test failed exactly the two new
+  metadata cases: missing inert metadata and non-inert metadata.
+- GREEN so far: target forced-destruction test PASS 10/10 and
+  `validate-counts.js` PASS with no count movement. Explicit ledger probes,
+  aggregate, WIKI checks, and HAT3 remain required before closure.
+
+scope:
+
+- This follow-up only imports and delegates to the existing TL4.3
+  `validateAdversarialVerdictMetadata` helper, wrapping any failure in the
+  local TL4.2 `E_PHASE14_U1_METADATA_REQUIRED` error.
+- It does not change the metadata validator, add a schema or test file, move
+  counts, produce adversarial-verdict metadata, call provider/OBDK/reviewed-api
+  automation, read real data, write claims, export, run Graphify, dispatch CLI
+  commands, open L5, open unattended runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-fu-tl4.2-forced-destruction-metadata-binding-verdict-2026-06-24.md`.
+
+Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
+not self-ACCEPT it.
+
 ## TW-LIT.6 Literature-Brain L0 Proposal Bridge
 
 who: Codex authored the TW-LIT.6 bounded bridge after Claude Code non-author

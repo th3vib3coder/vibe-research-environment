@@ -31,6 +31,14 @@ function baseRecord(overrides = {}) {
         confounderHarnessChecked: true,
         salvagenteSeedProduced: false
       },
+      metadata: {
+        provenanceClass: 'adversarial-verdict',
+        provenanceUse: 'review-survival-metadata',
+        law13Provenance: false,
+        scientificEvidence: false,
+        confidenceDelta: 0,
+        runtimeOpened: false
+      },
       runtimeOpened: false,
       providerAutomationInvoked: false,
       obdkUsed: false,
@@ -63,6 +71,10 @@ function withDetails(record, details) {
   });
 }
 
+function withMetadata(record, metadata) {
+  return withEventRecord(record, { metadata });
+}
+
 function errorCode(code) {
   return (error) => error instanceof Phase14ForcedDestructionError
     && error.code === code;
@@ -91,6 +103,37 @@ describe('Phase 14 TL4.2 forced-destruction verdict validation', () => {
       () => validateForcedDestructionVerdict(wrongEnvelope),
       errorCode('E_PHASE14_U1_DESTROYER_FIELD_ENVELOPE')
     );
+  });
+
+  it('fails closed when required inert adversarial metadata is missing', () => {
+    const missing = baseRecord();
+    delete missing['event-record'].metadata;
+
+    assert.throws(
+      () => validateForcedDestructionVerdict(missing),
+      errorCode('E_PHASE14_U1_METADATA_REQUIRED')
+    );
+  });
+
+  it('fails closed when adversarial metadata is not inert', () => {
+    const inertMetadata = baseRecord()['event-record'].metadata;
+    const badMetadataCases = [
+      { law13Provenance: true },
+      { scientificEvidence: true },
+      { confidenceDelta: 0.1 },
+      { provenanceClass: 'scientific-evidence' },
+      { runtimeOpened: true }
+    ];
+
+    for (const metadataPatch of badMetadataCases) {
+      assert.throws(
+        () => validateForcedDestructionVerdict(withMetadata(baseRecord(), {
+          ...inertMetadata,
+          ...metadataPatch
+        })),
+        errorCode('E_PHASE14_U1_METADATA_REQUIRED')
+      );
+    }
   });
 
   it('rejects ACCEPT without counter-evidence search or SFI injection', () => {

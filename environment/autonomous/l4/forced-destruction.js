@@ -1,3 +1,7 @@
+import {
+  validateAdversarialVerdictMetadata
+} from './adversarial-verdict.js';
+
 export const PHASE14_ADVERSARIAL_VERDICT_SCHEMA_VERSION =
   'phase14.adversarial-verdict.v1';
 
@@ -93,6 +97,16 @@ function assertRecordShape(record) {
     fail(
       'E_PHASE14_U1_DETAILS_REQUIRED',
       'TL4.2 forced-destruction verdict requires event-record.details.'
+    );
+  }
+
+  try {
+    validateAdversarialVerdictMetadata(eventRecord.metadata);
+  } catch (error) {
+    fail(
+      'E_PHASE14_U1_METADATA_REQUIRED',
+      'TL4.2 forced-destruction verdict requires inert adversarial verdict metadata.',
+      { cause: error?.code ?? error?.message ?? String(error) }
     );
   }
 
