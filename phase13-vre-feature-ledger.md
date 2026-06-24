@@ -1047,6 +1047,75 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TW-LIT.6 Literature-Brain L0 Proposal Bridge
+
+who: Codex authored the TW-LIT.6 bounded bridge after Claude Code non-author
+HAT1 ACCEPT under the closed standing operator policy for non-hard-excluded
+Phase14 implementation slices.
+
+when: 2026-06-24.
+
+why: W-LIT had already shipped the reviewed literature walker, pass-1.5
+extractor, proposal-only edge emitter, and contradiction lint, but the
+literature-brain runtime frontier was still blocked until L0/TL0.6 and T19.7
+closed. This slice composes those reviewed W-LIT pieces into one offline L0
+proposal-review candidate without opening the larger overnight scheduler,
+persistent Phase12 writer, L4 relay wiring, L5, or hard-excluded real-data,
+provider, OBDK, Graphify, claim, export, or CLI surfaces.
+
+what:
+
+- environment/lib/w-lit/literature-brain-action.js
+- environment/tests/lib/w-lit/literature-brain-action.test.js
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/209-hat1-stop-tw-lit-6-literature-brain-l0-proposal-bridge-2026-06-24.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- ../vibe-science/blueprints/private/WIKI_VRE/tools/check-decision-gates.states.test.mjs
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tw-lit.6-literature-brain-l0-proposal-bridge-verdict-2026-06-24.md
+
+verification:
+
+- RED: `node --test environment/tests/lib/w-lit/literature-brain-action.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` before
+  `environment/lib/w-lit/literature-brain-action.js` existed.
+- GREEN: target literature-brain-action test PASS 5/5; W-LIT lib suite PASS
+  26/26; `node environment/tests/ci/validate-counts.js` PASS with
+  `libTests=29`; `node environment/tests/ci/phase11-current-status.js` PASS;
+  explicit Phase13 and Phase9 changed-file ledger probes PASS; direct Phase13
+  suite PASS 140/140; aggregate `run-all.js` PASS; WIKI gate/state/registry/
+  schema/lint/mirror checks PASS; `git diff --check` PASS with CRLF warnings
+  only on ledger files. `npm run check` is blocked by the local Windows npm
+  install (`npm-cli.js` missing), so direct node equivalents were used.
+
+scope:
+
+- Adds only a pure offline W-LIT bridge helper and one counted lib test. The
+  helper imports reviewed local W-LIT helpers only, accepts injected corpus
+  reads when walking a corpus root, emits in-memory Phase12 proposal candidates
+  only, sets `highStakes:true`, and relies on TL0.4 gating for action review.
+- It writes no persistent Phase12 artifact, no claim ledger row, no accepted
+  claim edge, and no direction lifecycle event. It does not call network,
+  vector DB, embedding store, provider automation, OBDK, reviewed APIs,
+  Graphify, CLI dispatch, L4 relay wiring, L5, or unattended runtime.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tw-lit.6-literature-brain-l0-proposal-bridge-verdict-2026-06-24.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tw-lit.6-literature-brain-l0-proposal-bridge-verdict-2026-06-24.md`.
+Codex authored this HAT2 patch and did not self-ACCEPT it.
+
 ## FU TL0 Guardrail High-Stakes Writer Injection
 
 who: Codex authored the FU TL0 test-harness stabilization after Claude Code
@@ -1103,7 +1172,6 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 ACCEPT is recorded via
 `C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-fu-tl0-guardrail-high-stakes-writer-verdict-2026-06-24.md`.
 Codex authored this HAT2 patch and did not self-ACCEPT it.
-
 
 ## TL4.4 Relay Injection Guard
 

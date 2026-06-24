@@ -604,7 +604,7 @@ not copied from a private WIKI checkout.
 | Control/orchestrator tests | 37 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
-| Library tests | 28 |
+| Library tests | 29 |
 | Eval tests | 2 |
 | Install tests | 5 |
 | Integration tests | 15 |
@@ -1258,7 +1258,7 @@ copiati da una WIKI privata affiancata.
 | Test control/orchestrator | 37 |
 | Test compatibilita | 5 |
 | Test flow | 8 |
-| Test libreria | 28 |
+| Test libreria | 29 |
 | Test eval | 2 |
 | Test installazione | 5 |
 | Test integrazione | 15 |
