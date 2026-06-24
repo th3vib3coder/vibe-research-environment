@@ -118,6 +118,22 @@ test('metadata artifacts are rejected as LAW 13 provenance', () => {
       'E_PHASE10_MULTI_DOMAIN_METADATA_NOT_PROVENANCE'
     );
   }
+
+  for (const ref of [
+    { type: 'adversarial-verdict', id: 'adversarial-verdict-type-001' },
+    {
+      kind: 'computed-artifact',
+      targetRef: {
+        type: 'adversarial-verdict',
+        id: 'adversarial-verdict-target-001'
+      }
+    }
+  ]) {
+    expectIssue(
+      gateRequest({ law13ProvenanceRefs: [ref] }),
+      'E_PHASE10_MULTI_DOMAIN_METADATA_NOT_PROVENANCE'
+    );
+  }
 });
 
 test('writer and mutation requests reject', () => {

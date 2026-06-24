@@ -47,6 +47,18 @@ function normalizeArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function metadataKindForRef(ref) {
+  if (!isObject(ref)) return undefined;
+  return [
+    ref.kind,
+    ref.type,
+    ref.sourceType,
+    ref.targetType,
+    ref.targetRef?.kind,
+    ref.targetRef?.type
+  ].find((candidate) => METADATA_PROVENANCE_KINDS.has(candidate));
+}
+
 function hasTwoDomains(domainIds) {
   return new Set(normalizeArray(domainIds).filter((value) => typeof value === 'string')).size > 1;
 }
@@ -158,12 +170,13 @@ function validateOperation(request, issues) {
 
 function validateForbiddenInputs(request, issues) {
   for (const ref of normalizeArray(request.law13ProvenanceRefs)) {
-    if (METADATA_PROVENANCE_KINDS.has(ref?.kind)) {
+    const kind = metadataKindForRef(ref);
+    if (METADATA_PROVENANCE_KINDS.has(kind)) {
       issue(
         issues,
         'E_PHASE10_MULTI_DOMAIN_METADATA_NOT_PROVENANCE',
         'Metadata artifacts cannot be treated as LAW 13 provenance.',
-        { kind: ref.kind }
+        { kind }
       );
     }
   }

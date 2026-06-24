@@ -67,6 +67,15 @@ function baseResult(issues = [], warnings = []) {
 
 function refKind(ref) {
   if (!isObject(ref)) return undefined;
+  const metadataKind = [
+    ref.kind,
+    ref.type,
+    ref.sourceType,
+    ref.targetType,
+    ref.targetRef?.kind,
+    ref.targetRef?.type
+  ].find((candidate) => METADATA_PROVENANCE_KINDS.has(candidate));
+  if (metadataKind) return metadataKind;
   return ref.kind ?? ref.type ?? ref.targetRef?.type;
 }
 

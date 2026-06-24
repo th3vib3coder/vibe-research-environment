@@ -128,6 +128,24 @@ test('metadata artifacts cannot be LAW 13 provenance', () => {
       ]
     }, 'E_PHASE10_CROSS_DOMAIN_METADATA_NOT_PROVENANCE');
   }
+
+  expectIssue({
+    assertions: [
+      {
+        id: 'ASSERT-a',
+        domainId: 'KDOM-a',
+        sourceRefs: [{
+          id: 'computed-adversarial-verdict-001',
+          kind: 'computed-artifact',
+          targetRef: {
+            type: 'adversarial-verdict',
+            id: 'ADV-001'
+          },
+          reResolvedOriginalSource: true
+        }]
+      }
+    ]
+  }, 'E_PHASE10_CROSS_DOMAIN_METADATA_NOT_PROVENANCE');
 });
 
 test('conflict, stale, and superseded relations require explicit handling', () => {

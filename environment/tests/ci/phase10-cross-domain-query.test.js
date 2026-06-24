@@ -260,6 +260,18 @@ test('metadata artifacts cannot be LAW 13 provenance', () => {
       law13ProvenanceRefs: [{ id: `${kind}-001`, kind, reResolvedOriginalSource: true }]
     }, 'E_PHASE10_CROSS_DOMAIN_QUERY_METADATA_NOT_PROVENANCE');
   }
+
+  expectIssue({
+    law13ProvenanceRefs: [{
+      id: 'computed-adversarial-verdict-001',
+      kind: 'computed-artifact',
+      targetRef: {
+        type: 'adversarial-verdict',
+        id: 'ADV-001'
+      },
+      reResolvedOriginalSource: true
+    }]
+  }, 'E_PHASE10_CROSS_DOMAIN_QUERY_METADATA_NOT_PROVENANCE');
 });
 
 test('export remains blocked', () => {
