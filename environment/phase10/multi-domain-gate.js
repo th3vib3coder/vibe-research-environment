@@ -11,6 +11,7 @@ const REQUIRED_CLOSEOUTS = Object.freeze([
 ]);
 
 const METADATA_PROVENANCE_KINDS = Object.freeze(new Set([
+  'adversarial-verdict',
   'gate-decision',
   'presentation',
   'query-result',

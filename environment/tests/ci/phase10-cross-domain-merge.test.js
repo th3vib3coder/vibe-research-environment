@@ -117,7 +117,7 @@ test('missing original-source re-resolution rejects', () => {
 });
 
 test('metadata artifacts cannot be LAW 13 provenance', () => {
-  for (const kind of ['query-result', 'relay-verdict', 'presentation', 'gate-decision']) {
+  for (const kind of ['query-result', 'relay-verdict', 'adversarial-verdict', 'presentation', 'gate-decision']) {
     expectIssue({
       assertions: [
         {

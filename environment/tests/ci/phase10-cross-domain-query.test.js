@@ -252,6 +252,7 @@ test('metadata artifacts cannot be LAW 13 provenance', () => {
     'query-result',
     'previous-query-result',
     'relay-verdict',
+    'adversarial-verdict',
     'presentation',
     'gate-decision'
   ]) {

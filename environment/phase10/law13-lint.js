@@ -59,7 +59,9 @@ function isEdgeProvenanceLink(link) {
 
 function isRelayVerdictLink(link) {
   const targetType = link?.targetRef?.type;
-  return targetType === 'phase12-relay-verdict' || targetType === 'relay-verdict';
+  return targetType === 'phase12-relay-verdict'
+    || targetType === 'relay-verdict'
+    || targetType === 'adversarial-verdict';
 }
 
 function edgeIdForLink(link) {

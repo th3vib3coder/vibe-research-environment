@@ -9,7 +9,7 @@ export const REQUIRED_LAW13_BRIDGE_FIELDS = Object.freeze([
   'suppositionIsolationChecked'
 ]);
 
-const RELAY_VERDICT_TYPES = new Set(['phase12-relay-verdict', 'relay-verdict']);
+const RELAY_VERDICT_TYPES = new Set(['phase12-relay-verdict', 'relay-verdict', 'adversarial-verdict']);
 const CLAIMED_STATES = new Set(['claimed']);
 const CLAIMED_REQUIRED_TRUE_FIELDS = Object.freeze([
   'law13StatusChecked',

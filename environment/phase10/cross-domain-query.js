@@ -9,6 +9,7 @@ import {
 } from './query-decision-use.js';
 
 const METADATA_PROVENANCE_KINDS = Object.freeze(new Set([
+  'adversarial-verdict',
   'gate-decision',
   'presentation',
   'previous-query-result',

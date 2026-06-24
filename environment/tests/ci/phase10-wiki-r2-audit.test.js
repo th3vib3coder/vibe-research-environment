@@ -298,6 +298,14 @@ test('R2 audited synthesis rejects relay verdicts and query records as provenanc
       }),
       'E_PHASE10_QUERY_METADATA_NOT_PROVENANCE'
     );
+    await expectCode(
+      () => compileR2(projectRoot, {
+        provenanceLinks: [
+          provenanceLink({ targetRef: { type: 'adversarial-verdict', id: 'ADV-001' } })
+        ]
+      }),
+      'E_PHASE10_RELAY_VERDICT_NOT_PROVENANCE'
+    );
   });
 });
 

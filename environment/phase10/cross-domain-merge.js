@@ -3,6 +3,7 @@ import {
 } from './multi-domain-gate.js';
 
 const METADATA_PROVENANCE_KINDS = Object.freeze(new Set([
+  'adversarial-verdict',
   'gate-decision',
   'presentation',
   'query-result',

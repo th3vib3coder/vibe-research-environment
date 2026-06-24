@@ -112,7 +112,7 @@ test('export classification remains blocked by Wave 10.4 packaging deferral', ()
 });
 
 test('metadata artifacts are rejected as LAW 13 provenance', () => {
-  for (const kind of ['query-result', 'relay-verdict', 'presentation', 'gate-decision']) {
+  for (const kind of ['query-result', 'relay-verdict', 'adversarial-verdict', 'presentation', 'gate-decision']) {
     expectIssue(
       gateRequest({ law13ProvenanceRefs: [{ kind, id: `${kind}-001` }] }),
       'E_PHASE10_MULTI_DOMAIN_METADATA_NOT_PROVENANCE'

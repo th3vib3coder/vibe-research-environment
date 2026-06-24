@@ -49,9 +49,12 @@ function isQueryReference(ref) {
 function isRelayVerdictReference(ref) {
   return ref?.targetRef?.type === 'phase12-relay-verdict'
     || ref?.targetRef?.type === 'relay-verdict'
+    || ref?.targetRef?.type === 'adversarial-verdict'
     || ref?.type === 'phase12-relay-verdict'
     || ref?.type === 'relay-verdict'
-    || ref?.kind === 'relay-verdict';
+    || ref?.type === 'adversarial-verdict'
+    || ref?.kind === 'relay-verdict'
+    || ref?.kind === 'adversarial-verdict';
 }
 
 function assertRepairMetadata(r2Audit) {

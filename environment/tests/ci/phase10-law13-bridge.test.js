@@ -85,6 +85,18 @@ test('relay verdict in provenance refs fails closed', () => {
   );
 });
 
+test('adversarial verdict in provenance refs fails closed', () => {
+  for (const provenanceRef of [
+    { type: 'adversarial-verdict', id: 'ADV-001' },
+    { kind: 'computed-artifact', targetRef: { type: 'adversarial-verdict', id: 'ADV-001' } }
+  ]) {
+    expectCode(
+      validArtifact({ provenanceRefs: [provenanceRef] }),
+      'E_PHASE10_RELAY_VERDICT_NOT_PROVENANCE'
+    );
+  }
+});
+
 test('claimed transition fails when required R2 path is absent', () => {
   const artifact = validArtifact({
     law13ReviewExtension: {

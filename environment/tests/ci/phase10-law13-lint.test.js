@@ -243,6 +243,19 @@ test('Phase 12 relay verdict cannot be used as provenance', () => {
   expectCode(corpus, 'E_PHASE10_RELAY_VERDICT_NOT_PROVENANCE');
 });
 
+test('adversarial verdict cannot be used as provenance', () => {
+  const corpus = validCorpus();
+  corpus.provenanceLinks.push({
+    linkId: 'PROV-adversarial-verdict-001',
+    kind: 'computed-artifact',
+    targetRef: { type: 'adversarial-verdict', id: 'ADV-001' }
+  });
+  corpus.wikiPages[0].assertionGraph[0].cites = [
+    { ref: 'PROV-adversarial-verdict-001', role: 'supports' }
+  ];
+  expectCode(corpus, 'E_PHASE10_RELAY_VERDICT_NOT_PROVENANCE');
+});
+
 test('query origin metadata is allowed when not used as evidence', () => {
   const corpus = validCorpus();
   corpus.wikiPages[1].originQueryId = 'QUERY-001';
