@@ -186,6 +186,7 @@ test('TL0.2 hard blockers and TL0.4 high-stakes gate remain authoritative', asyn
     (error) => error.code === 'E_L0_LOOP_GRAPHIFY_FORBIDDEN'
   );
 
+  const gateRecords = [];
   const result = await runL0BoundedReasoningLoop(baseLoopInput({
     id: 'new-direction',
     kind: 'new-direction',
@@ -195,10 +196,19 @@ test('TL0.2 hard blockers and TL0.4 high-stakes gate remain authoritative', asyn
       throw new Error('must not run');
     }
   }), {
-    writeL0HaltSnapshotBeforeAction: makeWriteAhead([])
+    writeL0HaltSnapshotBeforeAction: makeWriteAhead([]),
+    writeOperatorGateRecord: async (record) => {
+      gateRecords.push(record);
+      return {
+        gateRecord: record,
+        gateRecordPath: '/in-memory/operator-gate/new-direction.json',
+        gateRecordRelativePath: '.vibe-science-environment/autonomous/l0/operator-gate/new-direction.json'
+      };
+    }
   });
 
   assert.equal(result.stopReason, 'high-stakes-operator-gate');
   assert.equal(result.runtimeOpened, false);
+  assert.equal(gateRecords.length, 1);
   assert.equal(result.highStakesGate?.gateRecord?.requestedGate, 'TL0.4');
 });

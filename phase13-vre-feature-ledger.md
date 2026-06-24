@@ -1047,6 +1047,64 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## FU TL0 Guardrail High-Stakes Writer Injection
+
+who: Codex authored the FU TL0 test-harness stabilization after Claude Code
+non-author HAT1 ACCEPT under the standing non-hard-excluded operator policy.
+
+when: 2026-06-24.
+
+why: TW-LIT.6 validation reran the direct Phase13 suite and exposed that the
+existing `guardrail-controller.test.js` high-stakes `new-direction` case was
+not hermetic. The production TL0.4 high-stakes gate correctly fails closed on a
+writer failure, but this one test case did not inject an operator-gate writer
+and therefore depended on ambient filesystem permission under the sandbox.
+
+what:
+
+- environment/tests/autonomous/l0/guardrail-controller.test.js
+- phase13-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/210-hat1-stop-fu-tl0-guardrail-high-stakes-writer-2026-06-24.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- ../vibe-science/blueprints/private/WIKI_VRE/tools/check-decision-gates.states.test.mjs
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-fu-tl0-guardrail-high-stakes-writer-verdict-2026-06-24.md
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-fu-tl0-guardrail-high-stakes-writer-verdict-2026-06-24.md
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l0/guardrail-controller.test.js`
+  failed 8/9 in the Codex sandbox with
+  `E_L0_HIGH_STAKES_GATE_RECORD_WRITE_FAILED` because the `new-direction`
+  high-stakes case reached TL0.4 without an injected `writeOperatorGateRecord`.
+- GREEN: target guardrail-controller suite PASS 9/9; direct Phase13 suite PASS
+  140/140; explicit Phase13 ledger probe PASS; aggregate `run-all.js` PASS with
+  workspace safe-directory git config; WIKI gate/registry/lint/mirror checks
+  PASS; `git diff --check` PASS with CRLF warnings only on ledger files; Claude
+  Code HAT3 ACCEPT recorded in
+  `claude-hat3-fu-tl0-guardrail-high-stakes-writer-verdict-2026-06-24.md`.
+
+scope:
+
+- Test-harness-only hermeticity repair. No production runtime code changes, no
+  TL0.2 reasoning-loop behavior change, no TL0.4 high-stakes gate behavior
+  change, and no count movement.
+- It opens no provider, OBDK, reviewed API, real-data read, claim/export,
+  Graphify, CLI dispatch, L4 relay, L5, unattended runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT 1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-fu-tl0-guardrail-high-stakes-writer-verdict-2026-06-24.md`.
+
+Claude Code HAT 3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-fu-tl0-guardrail-high-stakes-writer-verdict-2026-06-24.md`.
+Codex authored this HAT2 patch and did not self-ACCEPT it.
+
+
 ## TL4.4 Relay Injection Guard
 
 who: Codex authored the TL4.4 HAT2 patch after Claude Code non-author HAT1
