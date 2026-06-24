@@ -1047,6 +1047,96 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## T26.0 L5 Capstone Cycle Orchestrator
+
+who: Codex authored the T26.0 L5 capstone cycle orchestrator after explicit
+operator GO named T26.0, L5, and capstone cycle orchestrator, and after
+non-author HAT1 ACCEPT of the explicit-GO amendment.
+
+when: 2026-06-24.
+
+why: Phase 14 full-goal completion was blocked by the hard-excluded L5 capstone
+surface. T26.0 is the narrow first L5 slice: compose a deterministic attended
+cycle shape from reviewed lower-layer surfaces without opening real data,
+provider automation, OBDK, reviewed-api automation, claim authority, export,
+Graphify, CLI dispatch, browser/GUI, child process, persistent Phase12 writer,
+or unattended runtime.
+
+what:
+
+- environment/orchestrator/l5-capstone.js
+- environment/tests/orchestrator/l5-capstone.test.js
+- environment/tests/ci/check-phase13-ledger.js
+- environment/tests/ci/check-phase13-ledger.test.js
+- environment/tests/ci/validate-counts.js
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/206-hat1-stop-t26-0-l5-capstone-cycle-orchestrator-2026-06-24.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/233-hat1-stop-t26-0-l5-capstone-cycle-orchestrator-explicit-go-amendment-2026-06-24.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- ../vibe-science/blueprints/private/WIKI_VRE/tools/check-decision-gates.states.test.mjs
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-t26.0-l5-capstone-cycle-orchestrator-explicit-go-verdict-2026-06-24.md
+
+verification:
+
+- RED: `node --test environment/tests/orchestrator/l5-capstone.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` while `l5-capstone.js` was absent.
+- RED: the first GREEN attempt exposed a real over-broad anti-import assertion:
+  the test rejected the inert `obdkInvoked:false` flag rather than an import or
+  path. The test was narrowed to forbidden imports/paths while preserving
+  explicit no-use flags.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `controlTests` expected 37, got 38 before the count repair.
+- RED: `check-phase13-ledger` originally failed to treat the L5 orchestrator as
+  Phase13-covered. HAT2 added a checker regression so explicit probes fail
+  closed until `environment/orchestrator/l5-capstone.js` is traced.
+- RED: explicit Phase13 and Phase9 changed-file ledger probes failed before
+  this row and the private Phase9 bridge note existed.
+- REDIRECT: non-author HAT3 review proved that `allow-with-condition` direction
+  memory re-entry was accepted even when `directionTarget.satisfies` was absent
+  or mismatched. The fix requires an exact condition match before the capstone
+  cycle may proceed and adds a negative regression for
+  `E_PHASE14_L5_DIRECTION_CONDITION_UNSATISFIED`.
+- GREEN: target L5 capstone test PASS 13/13; `validate-counts.js` PASS with
+  `controlTests=38`; `check-phase13-ledger.test.js` PASS 3/3; explicit
+  Phase13 and Phase9 changed-file ledger probes PASS; `phase11-current-status`
+  PASS; aggregate `run-all.js` PASS; WIKI decision-gates, state/records,
+  frontier/T26/current-status, registry, entity-export, schema-field, lint, and
+  mirror checks PASS; `git diff --check` PASS with CRLF warnings only; and
+  `npm run check` PASS with 2043 tests, 2034 pass, 0 fail, 9 skipped.
+  HAT3 remains required before closure.
+
+scope:
+
+- T26.0 adds only a pure dependency-injected L5 capstone cycle orchestrator and
+  one counted orchestrator test. The module accepts only explicit `L5` +
+  `attended-batch`, rejects unattended mode before dependencies run, returns
+  the exact seven-stage sequence, checks direction-memory before stage work,
+  halts before high-stakes stages without reviewed gate input, keeps
+  planner/LLM output proposal-only, and rejects chat/review/relay/adversarial
+  text as scientific provenance.
+- Count truth changes only `controlTests=37->38`; schemas, schemaTests,
+  autonomousTests, and ciValidators stay unchanged.
+- It does not call provider automation, OBDK, reviewed-api automation, real
+  biomedical data readers, claim writers, accepted claim-edge writers, export
+  writers, Graphify, CLI dispatch, browser/GUI, child processes, persistent
+  Phase12 writers, T26.1/T26.2/T26.3 surfaces, or unattended runtime.
+  tier-C: noop because this is capstone control-plane safety infrastructure,
+  not new scientific cognition.
+
+reviewer:
+
+Non-author HAT1 ACCEPT of the explicit-GO amendment is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-t26.0-l5-capstone-cycle-orchestrator-explicit-go-verdict-2026-06-24.md`.
+
+HAT3 review is pending. Codex authored this HAT2 patch and did not self-ACCEPT
+it.
+
 ## FU TL4.2 Forced-Destruction Metadata Binding
 
 who: Codex authored the follow-up after Claude Code non-author HAT 1 ACCEPT

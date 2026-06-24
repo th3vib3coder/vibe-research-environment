@@ -27,7 +27,7 @@ Source Strategy: tracked-vre-snapshot
 | Eval benchmarks | 5 |
 | Audit tests | 5 |
 | Autonomous tests | 20 |
-| Control/orchestrator tests | 37 |
+| Control/orchestrator tests | 38 |
 | Compatibility tests | 5 |
 | Flow tests | 8 |
 | Library tests | 29 |
