@@ -106,8 +106,12 @@ VRE is designed to make uncertainty visible:
 - VRE objective events, queue records, lane runs, handoffs, claim edges, and
   audit outputs are durable files;
 - R2 verdicts and claim-edge binding use narrow, reviewed pathways;
+- the private `WIKI_VRE` second brain stays outside GitHub, while
+  `environment/governance/private-wiki-governance-snapshot.json` exposes only a
+  public-safe governance digest that CI can validate;
 - `npm run validate`, `npm run test:phase9`, and CI enforce ledger, schema,
-  surface-index, sandbox, personal-path, and closeout-honesty checks.
+  surface-index, sandbox, personal-path, governance-snapshot, and
+  closeout-honesty checks.
 
 ---
 
@@ -611,7 +615,7 @@ not copied from a private WIKI checkout.
 | CLI tests | 12 |
 | Phase14 tests | 5 |
 | Schema tests | 82 |
-| CI validators | 70 |
+| CI validators | 71 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -1265,7 +1269,7 @@ copiati da una WIKI privata affiancata.
 | Test CLI | 12 |
 | Test Phase14 | 5 |
 | Test schema | 82 |
-| Validator CI | 70 |
+| Validator CI | 71 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->

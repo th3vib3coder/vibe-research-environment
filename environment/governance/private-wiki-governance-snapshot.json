@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "vre.private-wiki-governance-snapshot.v1",
+  "snapshotDate": "2026-06-25",
+  "sourceModel": "private-okf-like-llm-wiki",
+  "privacyBoundary": {
+    "privateWikiPublishable": false,
+    "publicSnapshotOnly": true,
+    "privateContentIncluded": false,
+    "reason": "The private WIKI_VRE second brain stays outside GitHub; VRE CI validates only this minimal governance digest."
+  },
+  "okfAlignment": {
+    "level": "L2-private-wiki",
+    "format": "markdown-with-structured-frontmatter-and-indexes",
+    "futureCompatibleWithOpenKnowledgeFormat": true,
+    "ragIndexRequiredForThisSnapshot": false
+  },
+  "privateSourceDigests": [
+    {
+      "sourceId": "decision-gates",
+      "privateRelativePath": "WIKI_VRE/state/decision-gates.json",
+      "sha256": "2da1e2dca4452e6fcb47c019e21bbae914e2958a28f403788686b2e722b62a84",
+      "publishable": false
+    },
+    {
+      "sourceId": "current-status",
+      "privateRelativePath": "WIKI_VRE/state/current-status.md",
+      "sha256": "1a7e2e374b0338457485faa4e2926dbfb741facbfc99ec17028c0e00ff0a8343",
+      "publishable": false
+    },
+    {
+      "sourceId": "phase14-status-ledger",
+      "privateRelativePath": "phase14-world-class-vre/phase14-world-class-status-ledger.md",
+      "sha256": "7f06a6cbbf3b194b1b7a91fde849643bfb7f0ebf7f6257b2aa3fbb23313244cb",
+      "publishable": false
+    }
+  ],
+  "governanceDigest": {
+    "totalGateRecords": 197,
+    "statusHistogram": {
+      "closed-pushed-ci-green": 71,
+      "closed-docs-no-vre-commit": 18,
+      "hat3-accepted-local-uncommitted": 41
+    },
+    "knownResiduals": [
+      {
+        "id": "hat3-accepted-local-uncommitted",
+        "count": 41,
+        "severity": "hardening-required",
+        "nextAction": "Classify and reconcile before treating the private WIKI as fully CI-backed."
+      }
+    ]
+  },
+  "requiredTruth": {
+    "phase": "Phase14",
+    "activeGoalStatus": "complete",
+    "readyForTesting": true,
+    "t26": {
+      "gateId": "phase-14-t26.0-l5-capstone-cycle-orchestrator-hat1-stop",
+      "status": "closed-pushed-ci-green",
+      "commitShortSha": "411c62b",
+      "commitSha": "411c62bde693dc13aff8de0a10c9c5df87817bf3",
+      "ciRunId": "28117027186",
+      "ciConclusion": "success",
+      "runtimeMode": "attended-batch",
+      "unattendedRuntimeAllowed": false
+    },
+    "closedSurfaces": [
+      "providerAutomation",
+      "obdkAutomation",
+      "reviewedApiAutomation",
+      "realDataReads",
+      "biomedicalClaimAuthority",
+      "claimExport",
+      "graphify",
+      "cliDispatch",
+      "browserGui",
+      "childProcess",
+      "persistentPhase12Writer",
+      "t26.1",
+      "t26.2",
+      "t26.3",
+      "unattendedRuntime"
+    ]
+  }
+}

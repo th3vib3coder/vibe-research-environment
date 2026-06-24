@@ -86,9 +86,11 @@ function isPhase13CoveredPath(pathValue) {
     || pathValue === PHASE13_FEATURE_LEDGER
     || pathValue === PHASE13_LEDGER_INDEX
     || pathValue.startsWith('environment/autonomous/')
+    || pathValue.startsWith('environment/governance/')
     || pathValue === 'environment/orchestrator/l5-capstone.js'
     || pathValue.startsWith('environment/tests/autonomous/')
     || pathValue === 'environment/tests/orchestrator/l5-capstone.test.js'
+    || pathValue.startsWith('environment/tests/ci/validate-governance-snapshot')
     || pathValue.startsWith('environment/tests/ci/validate-edition-isolation')
     || pathValue.startsWith('environment/tests/ci/check-phase13-ledger')
     || pathValue === 'environment/tests/ci/validate-counts.js'

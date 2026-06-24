@@ -20,7 +20,7 @@ export const expectedCounts = {
   phase14Tests: 5,
   shardTests: 5,
   schemaTests: 82,
-  ciValidators: 70
+  ciValidators: 71
 };
 
 export default async function validateCounts() {

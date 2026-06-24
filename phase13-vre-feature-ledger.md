@@ -1047,6 +1047,71 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## H0.0 Private Wiki Governance Snapshot
+
+who: Codex authored the H0.0 governance hardening after the operator clarified
+that the private WIKI must remain outside GitHub while still acting as the
+traceable second brain for VRE.
+
+when: 2026-06-25.
+
+why: VRE is ready for Elisa's dataset trials, but the project-private WIKI_VRE
+cannot be pushed. The repository still needs a public-safe, machine-checkable
+bridge proving private governance state, T26 closeout truth, and closed runtime
+surfaces without exposing private research context.
+
+what:
+
+- `environment/governance/private-wiki-governance-snapshot.json`
+- `environment/tests/ci/validate-governance-snapshot.js`
+- `environment/tests/ci/validate-governance-snapshot.test.js`
+- `environment/tests/ci/check-phase13-ledger.js`
+- `environment/tests/ci/check-phase13-ledger.test.js`
+- `environment/tests/ci/run-all.js`
+- `environment/tests/ci/validate-counts.js`
+- `environment/tests/phase14/tracking-drift-ci-wired.test.js`
+- `README.md`
+- `environment/tests/fixtures/phase11/current-status-wiki.md`
+- `phase13-vre-feature-ledger.md`
+- `phase9-vre-feature-ledger.md`
+- `../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md`
+
+verification:
+
+- RED: `validate-governance-snapshot.test.js` exercises publish-boundary,
+  T26-status, hash-format, and private-parity mismatch failures.
+- RED: `check-phase13-ledger.test.js` now proves
+  `environment/governance/private-wiki-governance-snapshot.json` is a covered
+  Phase13 path and fails closed without ledger trace.
+- GREEN: governance snapshot test PASS 9/9; direct validator PASS with local
+  private-WIKI hash parity; `validate-counts.js` PASS with `ciValidators=71`;
+  Phase13 and Phase9 explicit changed-file probes PASS; `phase11-current-status`
+  PASS; aggregate `run-all.js` PASS; `git diff --check` PASS with CRLF warnings
+  only on ledger files; `npm run check` PASS with 2049 tests, 2040 pass, 0 fail,
+  9 skipped; Claude Code HAT3 ACCEPT recorded.
+
+scope:
+
+- H0.0 adds only a public-safe digest of the private WIKI governance state and
+  a CI validator. The validator checks committed snapshot shape everywhere and
+  performs local hash parity when the private sibling WIKI exists.
+- The snapshot records private source hashes, gate-count truth, T26 closed
+  commit/CI truth, and closed runtime surfaces. It contains no private WIKI
+  markdown content, no biomedical data, no claim evidence, no RAG index, and no
+  operator-private narrative.
+- It does not open provider/OBDK/reviewed-api automation, real-data reads,
+  biomedical claim authority, claim/export, Graphify, CLI dispatch, browser/GUI,
+  child process, persistent Phase12 writing, T26.1/T26.2/T26.3, unattended
+  runtime, commit, or push.
+
+reviewer:
+
+Claude Code HAT3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-h0.0-private-wiki-governance-snapshot-verdict-2026-06-25.md`.
+
+Codex authored this hardening patch and did not self-ACCEPT it. Commit/push is
+scoped to the reviewed H0.0 VRE payload only.
+
 ## T26.0 L5 Capstone Cycle Orchestrator
 
 who: Codex authored the T26.0 L5 capstone cycle orchestrator after explicit

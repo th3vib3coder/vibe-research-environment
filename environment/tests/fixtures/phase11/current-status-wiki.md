@@ -37,7 +37,7 @@ Source Strategy: tracked-vre-snapshot
 | CLI tests | 12 |
 | Phase14 tests | 5 |
 | Schema tests | 82 |
-| CI validators | 70 |
+| CI validators | 71 |
 
 ## Carry-Forward And Deferred Items
 

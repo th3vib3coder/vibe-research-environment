@@ -87,3 +87,46 @@ test('Phase 13 ledger check covers the T26.0 L5 capstone orchestrator', async ()
     ].join('\n')
   });
 });
+
+test('Phase 13 ledger check covers the private governance snapshot digest', async () => {
+  const snapshotPath = 'environment/governance/private-wiki-governance-snapshot.json';
+
+  await assert.rejects(
+    () => checkPhase13Ledger({
+      skipRequiredFiles: true,
+      changedFiles: [snapshotPath],
+      featureLedgerText: [
+        '# Phase 13 VRE Feature Ledger',
+        '',
+        'who: test',
+        'when: 2026-06-25',
+        'why: test',
+        'what:',
+        '- `environment/autonomous/l4/relay-injection-guard.js`',
+        'verification:',
+        '- test',
+        'reviewer:',
+        'test'
+      ].join('\n')
+    }),
+    /E_PHASE13_TRACE_MISSING environment\/governance\/private-wiki-governance-snapshot\.json/u
+  );
+
+  await checkPhase13Ledger({
+    skipRequiredFiles: true,
+    changedFiles: [snapshotPath],
+    featureLedgerText: [
+      '# Phase 13 VRE Feature Ledger',
+      '',
+      'who: test',
+      'when: 2026-06-25',
+      'why: test',
+      'what:',
+      '- `environment/governance/private-wiki-governance-snapshot.json`',
+      'verification:',
+      '- test',
+      'reviewer:',
+      'test'
+    ].join('\n')
+  });
+});
