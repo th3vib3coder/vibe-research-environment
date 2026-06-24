@@ -982,6 +982,80 @@ Claude Code HAT 1 ACCEPT is recorded via
 Claude Code HAT 3 review is pending. Codex authored this HAT2 patch and did
 not self-ACCEPT it.
 
+## TL4.4 Relay Injection Guard
+
+who: Codex authored the TL4.4 HAT2 patch after Claude Code non-author HAT1
+ACCEPT under the closed-active TL4 standing operator policy.
+
+when: 2026-06-24.
+
+why: L4 swarm relay composition now has a reviewed relay edge, but reviewer
+text must remain inert control-plane metadata. TL4.4 adds the structural guard
+that prevents relay/MCP-edge prompt-injection text from reaching approval or
+claim-authority surfaces before any injected writer persists an artifact.
+
+what:
+
+- environment/autonomous/l4/relay-injection-guard.js
+- environment/tests/autonomous/l4/relay-injection-guard.test.js
+- package.json
+- environment/tests/ci/validate-counts.js
+- README.md
+- environment/tests/fixtures/phase11/current-status-wiki.md
+- phase13-vre-feature-ledger.md
+- phase9-vre-feature-ledger.md
+- ../vibe-science/blueprints/private/phase9-vre-autonomous-research-loop/16-implementation-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/204-hat1-stop-tl4-4-relay-injection-guard-2026-06-24.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-status-ledger.md
+- ../vibe-science/blueprints/private/phase14-world-class-vre/phase14-world-class-changelog.md
+- ../vibe-science/blueprints/private/WIKI_VRE/log.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/current-status.md
+- ../vibe-science/blueprints/private/WIKI_VRE/state/decision-gates.json
+- C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.4-relay-injection-guard-verdict-2026-06-24.md
+
+verification:
+
+- RED: `node --test environment/tests/autonomous/l4/relay-injection-guard.test.js`
+  failed with `ERR_MODULE_NOT_FOUND` while `relay-injection-guard.js` was
+  absent.
+- RED: `node environment/tests/ci/validate-counts.js` failed with
+  `autonomousTests` expected 19 got 20 before the count repair.
+- GREEN: target relay-injection-guard test PASS 6/6;
+  `validate-counts.js` PASS with `autonomousTests=20`; explicit Phase13 and
+  Phase9 changed-file ledger probes PASS; `phase11-current-status.js` PASS;
+  `npm run test:phase13` PASS 136/136; aggregate `run-all.js` PASS; WIKI
+  mirror/gate/registry/schema/lint checks PASS; `git diff --check` PASS with
+  CRLF warnings only on ledger files; `npm run check` PASS 2019 tests,
+  2010 pass, 0 fail, 9 skipped.
+- HAT3 non-author review remains required before commit/push.
+
+scope:
+
+- TL4.4 adds only a pure structural L4 relay/MCP-edge prompt-injection guard
+  and one counted autonomous test.
+- The guard requires L4 attended-batch mode, no-ops explicitly when no
+  relay/MCP edge exists, writes only through an injected writer, and uses a
+  fixed allowlist projection so reviewer-supplied relay text is inert metadata:
+  approval event kinds, claim promotion, accepted claim-edge writes,
+  confidence mutation, LAW13 provenance, export, and Graphify surfaces are
+  unreachable regardless of text wording.
+- Count truth changes only `autonomousTests=19->20`; schemas, schemaTests, and
+  ciValidators stay unchanged.
+- It opens no provider/OBDK/reviewed-api automation, real-data read,
+  claim/export writer, Graphify, L5 orchestration, CLI dispatch, unattended
+  runtime, commit, or push.
+- tier-C: noop because this is relay/control-plane safety infrastructure, not
+  new scientific cognition.
+
+reviewer:
+
+Claude Code HAT1 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat1-tl4.4-relay-injection-guard-verdict-2026-06-24.md`.
+
+Claude Code HAT3 ACCEPT is recorded via
+`C:/Users/Test-User/.codex/relay/nuove_skill_phase14/turns/claude-hat3-tl4.4-relay-injection-guard-verdict-2026-06-24.md`.
+Codex authored this HAT2 patch and did not self-ACCEPT it.
+
 ## TL4.3 Adversarial Verdict Provenance Boundary
 
 who: Codex authored the TL4.3 HAT2 patch after Claude Code non-author HAT1
