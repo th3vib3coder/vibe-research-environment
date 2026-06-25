@@ -13,6 +13,11 @@ const REQUIRED_PRIVATE_SOURCE_IDS = Object.freeze([
   'current-status',
   'phase14-status-ledger'
 ]);
+const REQUIRED_DIGEST_STATUS_IDS = Object.freeze([
+  'closed-pushed-ci-green',
+  'closed-docs-no-vre-commit',
+  'hat3-accepted-local-uncommitted'
+]);
 
 const REQUIRED_CLOSED_SURFACES = Object.freeze([
   'providerAutomation',
@@ -41,6 +46,10 @@ function sourceById(snapshot) {
 async function sha256File(filePath) {
   const buffer = await readFile(filePath);
   return createHash('sha256').update(buffer).digest('hex');
+}
+
+async function readJsonFile(filePath) {
+  return JSON.parse(await readFile(filePath, 'utf8'));
 }
 
 async function pathExists(filePath) {
@@ -84,6 +93,89 @@ async function validatePrivateParity(snapshot, options) {
   };
 }
 
+function assertNonNegativeInteger(value, code) {
+  assert(Number.isInteger(value) && value >= 0, code);
+}
+
+function deriveGateDigest(decisionGates) {
+  const gates = decisionGates?.gates ?? {};
+  assert(
+    gates !== null && typeof gates === 'object' && !Array.isArray(gates),
+    'E_GOVERNANCE_SNAPSHOT_PRIVATE_GATE_SOURCE'
+  );
+
+  const statusHistogram = {};
+  for (const gate of Object.values(gates)) {
+    const status = gate?.status;
+    assert(typeof status === 'string', 'E_GOVERNANCE_SNAPSHOT_PRIVATE_GATE_STATUS');
+    statusHistogram[status] = (statusHistogram[status] ?? 0) + 1;
+  }
+
+  return {
+    totalGateRecords: Object.keys(gates).length,
+    statusHistogram
+  };
+}
+
+function validateDigestShape(digest) {
+  assertNonNegativeInteger(
+    digest.totalGateRecords,
+    'E_GOVERNANCE_SNAPSHOT_GATE_COUNT_SHAPE'
+  );
+  assert(
+    digest.statusHistogram !== null
+      && typeof digest.statusHistogram === 'object'
+      && !Array.isArray(digest.statusHistogram),
+    'E_GOVERNANCE_SNAPSHOT_STATUS_HISTOGRAM'
+  );
+
+  for (const [statusId, count] of Object.entries(digest.statusHistogram)) {
+    assertNonNegativeInteger(
+      count,
+      `E_GOVERNANCE_SNAPSHOT_STATUS_COUNT ${statusId}`
+    );
+    assert(
+      count <= digest.totalGateRecords,
+      `E_GOVERNANCE_SNAPSHOT_STATUS_COUNT_RANGE ${statusId}`
+    );
+  }
+
+  for (const statusId of REQUIRED_DIGEST_STATUS_IDS) {
+    assert(
+      Object.hasOwn(digest.statusHistogram, statusId),
+      `E_GOVERNANCE_SNAPSHOT_STATUS_COUNT_MISSING ${statusId}`
+    );
+  }
+}
+
+function validateKnownResiduals(digest) {
+  const residuals = Array.isArray(digest.knownResiduals) ? digest.knownResiduals : [];
+  const localUncommitted = digest.statusHistogram['hat3-accepted-local-uncommitted'];
+  const residual = residuals.find((entry) => entry?.id === 'hat3-accepted-local-uncommitted');
+  assert(residual, 'E_GOVERNANCE_SNAPSHOT_LOCAL_UNCOMMITTED_RESIDUAL_MISSING');
+  assert(
+    residual.count === localUncommitted,
+    'E_GOVERNANCE_SNAPSHOT_LOCAL_UNCOMMITTED_RESIDUAL_COUNT'
+  );
+}
+
+async function validatePrivateGateCounts(snapshot, privateRoot) {
+  const digest = snapshot.governanceDigest ?? {};
+  const decisionGatesPath = path.join(privateRoot, 'WIKI_VRE/state/decision-gates.json');
+  const liveDigest = deriveGateDigest(await readJsonFile(decisionGatesPath));
+
+  assert(
+    digest.totalGateRecords === liveDigest.totalGateRecords,
+    'E_GOVERNANCE_SNAPSHOT_GATE_COUNT'
+  );
+  for (const statusId of REQUIRED_DIGEST_STATUS_IDS) {
+    assert(
+      digest.statusHistogram[statusId] === (liveDigest.statusHistogram[statusId] ?? 0),
+      `E_GOVERNANCE_SNAPSHOT_STATUS_COUNT_MISMATCH ${statusId}`
+    );
+  }
+}
+
 export async function validateGovernanceSnapshot(options = {}) {
   const snapshot = options.snapshot
     ?? await readJson(options.snapshotPath ?? GOVERNANCE_SNAPSHOT_PATH);
@@ -122,15 +214,8 @@ export async function validateGovernanceSnapshot(options = {}) {
   }
 
   const digest = snapshot.governanceDigest ?? {};
-  assert(digest.totalGateRecords === 197, 'E_GOVERNANCE_SNAPSHOT_GATE_COUNT');
-  assert(
-    digest.statusHistogram?.['closed-pushed-ci-green'] === 71,
-    'E_GOVERNANCE_SNAPSHOT_CLOSED_PUSHED_COUNT'
-  );
-  assert(
-    digest.statusHistogram?.['hat3-accepted-local-uncommitted'] === 41,
-    'E_GOVERNANCE_SNAPSHOT_LOCAL_UNCOMMITTED_COUNT'
-  );
+  validateDigestShape(digest);
+  validateKnownResiduals(digest);
 
   const t26 = snapshot.requiredTruth?.t26 ?? {};
   assert(t26.status === 'closed-pushed-ci-green', 'E_GOVERNANCE_SNAPSHOT_T26_STATUS');
@@ -148,7 +233,11 @@ export async function validateGovernanceSnapshot(options = {}) {
     assert(closed.has(surface), `E_GOVERNANCE_SNAPSHOT_CLOSED_SURFACE_MISSING ${surface}`);
   }
 
-  return validatePrivateParity(snapshot, options);
+  const privateParity = await validatePrivateParity(snapshot, options);
+  if (privateParity.checked) {
+    await validatePrivateGateCounts(snapshot, privateParity.privateRoot);
+  }
+  return privateParity;
 }
 
 export default async function validateGovernanceSnapshotDefault(options = {}) {
