@@ -66,6 +66,7 @@ import checkPhase13Ledger from './check-phase13-ledger.js';
 import validatePhase14TrackingDrift from './phase14-tracking-drift.js';
 import validatePhase14IsolationEnforcement from './phase14-isolation-enforcement.js';
 import validateGovernanceSnapshot from './validate-governance-snapshot.js';
+import validateG0GoldenPathE2E from './g0-golden-path-e2e.js';
 
 const validators = [
   ['validate-templates', validateTemplates],
@@ -134,7 +135,8 @@ const validators = [
   ['check-phase13-ledger', checkPhase13Ledger],
   ['phase14-tracking-drift', validatePhase14TrackingDrift],
   ['phase14-isolation-enforcement', validatePhase14IsolationEnforcement],
-  ['validate-governance-snapshot', validateGovernanceSnapshot]
+  ['validate-governance-snapshot', validateGovernanceSnapshot],
+  ['g0-golden-path-e2e', validateG0GoldenPathE2E]
 ];
 
 for (const [name, validator] of validators) {

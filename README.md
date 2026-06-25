@@ -615,7 +615,7 @@ not copied from a private WIKI checkout.
 | CLI tests | 12 |
 | Phase14 tests | 5 |
 | Schema tests | 82 |
-| CI validators | 71 |
+| CI validators | 72 |
 
 Update these counts only in the same patch that changes the counted surface.
 <!-- VRE:CURRENT-SURFACE-COUNTS:EN:END -->
@@ -1269,7 +1269,7 @@ copiati da una WIKI privata affiancata.
 | Test CLI | 12 |
 | Test Phase14 | 5 |
 | Test schema | 82 |
-| Validator CI | 71 |
+| Validator CI | 72 |
 
 Aggiorna questi conteggi solo nella stessa patch che cambia la superficie.
 <!-- VRE:CURRENT-SURFACE-COUNTS:IT:END -->
