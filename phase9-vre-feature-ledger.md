@@ -369,3 +369,22 @@ with 2049 tests, 2040 pass, 0 fail, 9 skipped. H0.0 remains a public-safe
 digest/CI guard only and opens no private WIKI publication, runtime, provider,
 real-data, claim/export, Graphify, unattended, commit, or push surface before
 this reviewed closure.
+
+Seq 261 daily bug scan correction: the 2026-06-25 scan found that
+`environment/orchestrator/l5-capstone.js` rejected review metadata only from
+top-level `kind`, `type`, and `provenanceClass` fields. A direct repro against
+commit `c5cb606ad0dd7c9af347d79e3e6d701b6eca1f78` showed the L5 cycle accepted
+`{ kind: 'computed-artifact', targetRef: { type: 'adversarial-verdict' } }`
+as scientific provenance and completed all seven stages. The minimal fix
+normalizes `kind`, `type`, `provenanceClass`, `sourceType`, `targetType`,
+`targetRef.kind`, and `targetRef.type`, then adds the direct and nested
+metadata regressions in `environment/tests/orchestrator/l5-capstone.test.js`.
+Current GREEN evidence is the direct repro now failing with
+`E_PHASE14_L5_REVIEW_METADATA_NOT_PROVENANCE`, target L5 capstone test PASS
+14/14, governance/W-LIT/Phase10/TL4.2 target suites PASS, `validate-counts.js`
+PASS, `npm run test:phase13` PASS 143/143, aggregate `run-all.js` PASS, and
+`git diff --check` clean for the patched L5 files. This is a guard-only
+follow-up and opens no provider/OBDK/reviewed-api automation, real-data read,
+biomedical claim authority, claim/export writer, Graphify, CLI dispatch,
+browser/GUI, child process, persistent Phase12 writer, T26.1/T26.2/T26.3
+behavior, or unattended runtime.

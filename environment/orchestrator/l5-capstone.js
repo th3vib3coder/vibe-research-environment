@@ -155,7 +155,15 @@ function assertNoClosedWriters(input, deps) {
 function assertProvenanceRefs(input) {
   const refs = Array.isArray(input?.provenanceRefs) ? input.provenanceRefs : [];
   for (const ref of refs) {
-    const kind = comparable(ref?.kind ?? ref?.type ?? ref?.provenanceClass);
+    const kind = [
+      ref?.kind,
+      ref?.type,
+      ref?.provenanceClass,
+      ref?.sourceType,
+      ref?.targetType,
+      ref?.targetRef?.kind,
+      ref?.targetRef?.type
+    ].map(comparable).find((candidate) => REVIEW_METADATA_KINDS.has(candidate));
     if (REVIEW_METADATA_KINDS.has(kind)) {
       fail(
         'E_PHASE14_L5_REVIEW_METADATA_NOT_PROVENANCE',

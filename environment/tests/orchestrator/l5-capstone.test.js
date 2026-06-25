@@ -292,14 +292,38 @@ test('planner output remains proposal-only and cannot become claim or export', a
 });
 
 test('review and relay verdict text cannot be scientific provenance', async () => {
-  await assert.rejects(
-    () => runL5CapstoneCycle(baseInput({
-      provenanceRefs: [
-        { kind: 'relay-verdict', ref: 'claude-accept.md' }
-      ]
-    }), depsWithCalls()),
-    errorCode('E_PHASE14_L5_REVIEW_METADATA_NOT_PROVENANCE')
-  );
+  const forbiddenRefs = [
+    { kind: 'relay-verdict', ref: 'claude-accept.md' },
+    { type: 'review-output', ref: 'review-output.md' },
+    { provenanceClass: 'adversarial-verdict', ref: 'verdict.json' }
+  ];
+
+  for (const ref of forbiddenRefs) {
+    await assert.rejects(
+      () => runL5CapstoneCycle(baseInput({
+        provenanceRefs: [ref]
+      }), depsWithCalls()),
+      errorCode('E_PHASE14_L5_REVIEW_METADATA_NOT_PROVENANCE')
+    );
+  }
+});
+
+test('nested review metadata refs cannot be scientific provenance', async () => {
+  const forbiddenRefs = [
+    { kind: 'computed-artifact', targetRef: { type: 'adversarial-verdict' } },
+    { kind: 'computed-artifact', targetRef: { kind: 'relay-verdict' } },
+    { type: 'evidence-bundle', sourceType: 'review-output' },
+    { type: 'evidence-bundle', targetType: 'chat-output' }
+  ];
+
+  for (const ref of forbiddenRefs) {
+    await assert.rejects(
+      () => runL5CapstoneCycle(baseInput({
+        provenanceRefs: [ref]
+      }), depsWithCalls()),
+      errorCode('E_PHASE14_L5_REVIEW_METADATA_NOT_PROVENANCE')
+    );
+  }
 });
 
 test('L2 authoritative knowledge writes stay closed', async () => {
