@@ -26,7 +26,31 @@
     "vrePresent": {
       "type": "boolean"
     },
+    "vreMode": {
+      "type": "string",
+      "enum": [
+        "repo",
+        "external-project",
+        "missing"
+      ]
+    },
     "vrePath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "projectRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtimeRoot": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "kernelPath": {
       "type": [
         "string",
         "null"

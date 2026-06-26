@@ -53,6 +53,7 @@ function formatValidationErrors(errors = []) {
 }
 
 export async function getMemoryFreshness(projectPath, options = {}) {
+  const schemaHostRoot = options.schemaHostRoot ?? projectPath;
   let state;
   try {
     state = await readJson(syncStatePath(projectPath));
@@ -69,7 +70,7 @@ export async function getMemoryFreshness(projectPath, options = {}) {
 
   let validate;
   try {
-    validate = await loadValidator(projectPath, SCHEMA_FILE);
+    validate = await loadValidator(schemaHostRoot, SCHEMA_FILE);
   } catch (error) {
     return buildFreshnessStatus({
       hasSyncState: true,

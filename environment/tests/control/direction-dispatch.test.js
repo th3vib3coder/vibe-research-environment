@@ -18,9 +18,17 @@ async function withTempVreProject(callback) {
   try {
     await writeFile(
       path.join(projectRoot, 'package.json'),
-      JSON.stringify({ name: 'vibe-research-environment' }),
+      JSON.stringify({ name: 'vre-direction-dispatch-fixture' }),
     );
-    await mkdir(path.join(projectRoot, 'environment', 'schemas'), { recursive: true });
+    await writeFile(
+      path.join(projectRoot, '.vre-project.json'),
+      JSON.stringify({
+        schemaVersion: 'vre.external-project.v1',
+        vreHome: repoRoot,
+        kernelPath: path.join(repoRoot, 'environment', 'tests', 'fixtures', 'fake-kernel-sibling'),
+        objectiveId: 'OBJ-DIRECTION-DISPATCH'
+      }),
+    );
     return await callback(projectRoot);
   } finally {
     await rm(projectRoot, { recursive: true, force: true });

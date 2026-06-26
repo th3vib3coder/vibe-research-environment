@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -66,6 +66,11 @@ import {
   schedulerRemoveCommand,
   schedulerStatusCommand
 } from '../environment/orchestrator/windows-task-scheduler.js';
+
+const CLI_RUNTIME_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const EXTERNAL_PROJECT_CONFIG_FILE = '.vre-project.json';
+const EXTERNAL_PROJECT_SCHEMA_VERSION = 'vre.external-project.v1';
+const HANDSHAKE_SCHEMA_FILE = 'phase9-capability-handshake.schema.json';
 
 function resolveHeartbeatProbeWakeId(wakeId) {
   if (typeof wakeId !== 'string' || wakeId.trim() === '') {
@@ -406,15 +411,112 @@ function readPackageName(candidateRoot) {
   }
 }
 
-export function resolveRepoRoot(startCwd = process.cwd()) {
+function isVreRepoRoot(candidateRoot) {
+  return readPackageName(candidateRoot) === 'vibe-research-environment' &&
+    existsSync(path.join(candidateRoot, 'environment', 'schemas', HANDSHAKE_SCHEMA_FILE)) &&
+    existsSync(path.join(candidateRoot, 'bin', 'vre'));
+}
+
+function realpathOrNull(candidateRoot) {
+  try {
+    return realpathSync(candidateRoot);
+  } catch {
+    return null;
+  }
+}
+
+function isExecutingRuntimeRoot(candidateRoot) {
+  const candidateRealPath = realpathOrNull(candidateRoot);
+  const executingRealPath = realpathOrNull(CLI_RUNTIME_ROOT);
+  const normalizeRealPath = (value) => {
+    const normalized = path.normalize(value);
+    return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+  };
+  return candidateRealPath != null &&
+    executingRealPath != null &&
+    normalizeRealPath(candidateRealPath) === normalizeRealPath(executingRealPath);
+}
+
+function readExternalProjectConfig(candidateRoot) {
+  const configPath = path.join(candidateRoot, EXTERNAL_PROJECT_CONFIG_FILE);
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    return { configPath, config };
+  } catch (error) {
+    return {
+      configPath,
+      error
+    };
+  }
+}
+
+function resolveConfigPath(projectRoot, rawValue) {
+  if (typeof rawValue !== 'string' || rawValue.trim() === '') {
+    return null;
+  }
+  return path.resolve(projectRoot, rawValue);
+}
+
+export function resolveVreExecutionContext(startCwd = process.cwd()) {
   let current = path.resolve(startCwd);
 
   while (true) {
-    if (
-      readPackageName(current) === 'vibe-research-environment' &&
-      existsSync(path.join(current, 'environment', 'schemas'))
-    ) {
-      return current;
+    if (isVreRepoRoot(current)) {
+      return {
+        mode: 'repo',
+        projectRoot: current,
+        runtimeRoot: current,
+        kernelRoot: null,
+        invalidReason: null
+      };
+    }
+
+    const externalProject = readExternalProjectConfig(current);
+    if (externalProject != null) {
+      if (externalProject.error) {
+        return {
+          mode: 'external-project-invalid',
+          projectRoot: current,
+          runtimeRoot: CLI_RUNTIME_ROOT,
+          kernelRoot: null,
+          invalidReason: `${EXTERNAL_PROJECT_CONFIG_FILE} is unreadable: ${externalProject.error.message}`
+        };
+      }
+
+      const config = externalProject.config;
+      const runtimeRoot = config?.schemaVersion === EXTERNAL_PROJECT_SCHEMA_VERSION
+        ? resolveConfigPath(current, config.vreHome)
+        : null;
+      if (runtimeRoot == null || !isVreRepoRoot(runtimeRoot)) {
+        return {
+          mode: 'external-project-invalid',
+          projectRoot: current,
+          runtimeRoot: CLI_RUNTIME_ROOT,
+          kernelRoot: null,
+          invalidReason: 'vreHome does not validate as a VRE repo'
+        };
+      }
+      if (!isExecutingRuntimeRoot(runtimeRoot)) {
+        return {
+          mode: 'external-project-invalid',
+          projectRoot: current,
+          runtimeRoot: CLI_RUNTIME_ROOT,
+          kernelRoot: null,
+          invalidReason: 'vreHome does not match the executing VRE runtime root'
+        };
+      }
+
+      return {
+        mode: 'external-project',
+        projectRoot: current,
+        runtimeRoot,
+        kernelRoot: resolveConfigPath(current, config.kernelPath),
+        invalidReason: null
+      };
     }
 
     const parent = path.dirname(current);
@@ -423,6 +525,14 @@ export function resolveRepoRoot(startCwd = process.cwd()) {
     }
     current = parent;
   }
+}
+
+export function resolveRepoRoot(startCwd = process.cwd()) {
+  const context = resolveVreExecutionContext(startCwd);
+  if (context == null || context.mode === 'external-project-invalid') {
+    return null;
+  }
+  return context.projectRoot;
 }
 
 export function parseCommandFrontmatter(markdown) {
@@ -492,7 +602,7 @@ async function callCoreReaderCli(cliPath, command, input = {}) {
   });
 }
 
-export async function resolveDefaultReader(repoRoot, { announce = false } = {}) {
+export async function resolveDefaultReader(repoRoot, { announce = false, kernelRootOverride } = {}) {
   // WP-166 (Phase 6 Wave 3): delegate to the unified kernel-bridge helper.
   // The bridge handles VRE_KERNEL_PATH detection, degraded sentinel shape,
   // envelope validation, typed error taxonomy, and env sanitization — all
@@ -501,7 +611,9 @@ export async function resolveDefaultReader(repoRoot, { announce = false } = {}) 
   // Dogfood pass 2026-04-18: accept a repoRoot-relative sibling auto-discovery
   // so a fresh checkout with `vibe-science/` parallel to `vibe-research-environment/`
   // works without the user having to set VRE_KERNEL_PATH explicitly.
-  const { kernelRoot, source } = resolveKernelRoot(repoRoot);
+  const { kernelRoot, source } = kernelRootOverride !== undefined
+    ? { kernelRoot: kernelRootOverride, source: 'external-project-config' }
+    : resolveKernelRoot(repoRoot);
   const reader = await resolveKernelReader({ kernelRoot });
   if (announce) {
     if (reader.dbAvailable) {
@@ -892,6 +1004,36 @@ async function persistCapabilityHandshakeArtifact(repoRoot) {
   };
 }
 
+function cliMetadataForRuntimeContext(context) {
+  return {
+    DISPATCH_TABLE,
+    IMPLEMENTED_PHASE9_COMMANDS,
+    PHASE9_STUB_DEFINITIONS,
+    resolveKernelRoot: () => {
+      if (context?.kernelRoot) {
+        return {
+          kernelRoot: context.kernelRoot,
+          source: 'external-project-config'
+        };
+      }
+      return resolveKernelRoot(context?.runtimeRoot ?? context?.projectRoot ?? CLI_RUNTIME_ROOT);
+    }
+  };
+}
+
+async function persistCapabilityHandshakeForContext(context) {
+  const projectRoot = context.projectRoot;
+  const handshake = await generateCapabilityHandshake(projectRoot, {
+    cliMetadata: cliMetadataForRuntimeContext(context)
+  });
+  const artifactPath = resolveInside(projectRoot, HANDSHAKE_ARTIFACT_PATH);
+  await atomicWriteJson(artifactPath, handshake);
+  return {
+    artifactPath,
+    handshake
+  };
+}
+
 function objectiveCliDeps() {
   return {
     persistCapabilityHandshake: persistCapabilityHandshakeArtifact,
@@ -907,7 +1049,17 @@ function objectiveCliDeps() {
   };
 }
 
-async function runObjectiveStart(repoRoot, parsed) {
+function objectiveCliDepsForContext(context) {
+  return {
+    persistCapabilityHandshake: () => persistCapabilityHandshakeForContext(context),
+    generateCapabilityHandshake: (projectRoot) =>
+      generateCapabilityHandshake(projectRoot, {
+        cliMetadata: cliMetadataForRuntimeContext(context)
+      })
+  };
+}
+
+async function runObjectiveStart(repoRoot, parsed, deps = objectiveCliDeps()) {
   try {
     const title = requiredStringOption(parsed, 'title', 'objective start');
     const question = requiredStringOption(parsed, 'question', 'objective start');
@@ -936,7 +1088,7 @@ async function runObjectiveStart(repoRoot, parsed) {
         objectiveRecord,
         sessionId
       },
-      objectiveCliDeps()
+      deps
     );
   } catch (error) {
     throw coerceObjectiveCliError('objective start', error);
@@ -1136,7 +1288,7 @@ async function runDomainArchive(repoRoot, parsed) {
   }
 }
 
-async function runObjectivePause(repoRoot, parsed) {
+async function runObjectivePause(repoRoot, parsed, deps = objectiveCliDeps()) {
   try {
     return pauseObjectiveCommand(
       repoRoot,
@@ -1144,14 +1296,14 @@ async function runObjectivePause(repoRoot, parsed) {
         objectiveId: requiredStringOption(parsed, 'objective', 'objective pause'),
         reason: requiredStringOption(parsed, 'reason', 'objective pause')
       },
-      objectiveCliDeps()
+      deps
     );
   } catch (error) {
     throw coerceObjectiveCliError('objective pause', error);
   }
 }
 
-async function runObjectiveStop(repoRoot, parsed) {
+async function runObjectiveStop(repoRoot, parsed, deps = objectiveCliDeps()) {
   try {
     return stopObjectiveCommand(
       repoRoot,
@@ -1159,28 +1311,28 @@ async function runObjectiveStop(repoRoot, parsed) {
         objectiveId: requiredStringOption(parsed, 'objective', 'objective stop'),
         reason: requiredStringOption(parsed, 'reason', 'objective stop')
       },
-      objectiveCliDeps()
+      deps
     );
   } catch (error) {
     throw coerceObjectiveCliError('objective stop', error);
   }
 }
 
-async function runObjectiveStatus(repoRoot, parsed) {
+async function runObjectiveStatus(repoRoot, parsed, deps = objectiveCliDeps()) {
   try {
     return statusObjectiveCommand(
       repoRoot,
       {
         objectiveId: requiredStringOption(parsed, 'objective', 'objective status')
       },
-      objectiveCliDeps()
+      deps
     );
   } catch (error) {
     throw coerceObjectiveCliError('objective status', error);
   }
 }
 
-async function runObjectiveResume(repoRoot, parsed) {
+async function runObjectiveResume(repoRoot, parsed, deps = objectiveCliDeps()) {
   try {
     return resumeObjectiveCommand(
       repoRoot,
@@ -1190,7 +1342,7 @@ async function runObjectiveResume(repoRoot, parsed) {
           parsed.options['repair-snapshot'] === true ||
           parsed.options['repair-snapshot'] === 'true'
       },
-      objectiveCliDeps()
+      deps
     );
   } catch (error) {
     throw coerceObjectiveCliError('objective resume', error);
@@ -1572,19 +1724,19 @@ function parsePhase9Invocation(tokens) {
   };
 }
 
-async function invokeEntry(repoRoot, subcommand, entry, reader) {
-  const mod = await import(pathToFileURL(path.join(repoRoot, entry.module)).href);
+async function invokeEntry(runtimeRoot, projectRoot, subcommand, entry, reader) {
+  const mod = await import(pathToFileURL(path.join(runtimeRoot, entry.module)).href);
   const helper = mod[entry.export];
   if (typeof helper !== 'function') {
     throw new Error(`${entry.module}#${entry.export} is not a function`);
   }
 
   if (entry.wrappedByMiddleware) {
-    return helper({ projectPath: repoRoot, reader });
+    return helper({ projectPath: projectRoot, reader });
   }
 
   return runWithMiddleware({
-    projectPath: repoRoot,
+    projectPath: projectRoot,
     commandName: `/${subcommand}`,
     scope: entry.scope,
     reader,
@@ -1690,18 +1842,18 @@ export async function main(argv = process.argv) {
     printUsage();
     return 3;
   }
+  const executionContext = resolveVreExecutionContext(process.cwd());
 
   if (subcommand === 'init') {
     if (rest.length > 0) {
       process.stderr.write(`vre: init: unexpected arguments: ${rest.join(' ')}\n`);
       return 3;
     }
-    const repoRoot = resolveRepoRoot(process.cwd());
-    if (!repoRoot) {
+    if (!executionContext || executionContext.mode === 'external-project-invalid') {
       process.stderr.write('vre: current directory is not inside a VRE repository root\n');
       return 3;
     }
-    return runInit(repoRoot);
+    return runInit(executionContext.projectRoot);
   }
 
   if (subcommand === 'domain') {
@@ -1728,8 +1880,7 @@ export async function main(argv = process.argv) {
       return 2;
     }
 
-    const repoRoot = resolveRepoRoot(process.cwd());
-    if (!repoRoot) {
+    if (!executionContext || executionContext.mode === 'external-project-invalid') {
       writeJsonPayload({
         ok: false,
         code: 'NOT_IN_VRE_REPO',
@@ -1740,25 +1891,26 @@ export async function main(argv = process.argv) {
     }
 
     const parsed = parseLongOptions(domainRest);
+    const projectRoot = executionContext.projectRoot;
     try {
       if (action === 'create') {
-        writeJsonPayload(await runDomainCreate(repoRoot, parsed));
+        writeJsonPayload(await runDomainCreate(projectRoot, parsed));
         return 0;
       }
       if (action === 'link') {
-        writeJsonPayload(await runDomainLink(repoRoot, parsed));
+        writeJsonPayload(await runDomainLink(projectRoot, parsed));
         return 0;
       }
       if (action === 'unlink') {
-        writeJsonPayload(await runDomainUnlink(repoRoot, parsed));
+        writeJsonPayload(await runDomainUnlink(projectRoot, parsed));
         return 0;
       }
       if (action === 'status') {
-        writeJsonPayload(await runDomainStatus(repoRoot, parsed));
+        writeJsonPayload(await runDomainStatus(projectRoot, parsed));
         return 0;
       }
       if (action === 'archive') {
-        writeJsonPayload(await runDomainArchive(repoRoot, parsed));
+        writeJsonPayload(await runDomainArchive(projectRoot, parsed));
         return 0;
       }
     } catch (error) {
@@ -1798,8 +1950,7 @@ export async function main(argv = process.argv) {
       return action ? 2 : 3;
     }
 
-    const repoRoot = resolveRepoRoot(process.cwd());
-    if (!repoRoot) {
+    if (!executionContext || executionContext.mode === 'external-project-invalid') {
       writeJsonPayload(namedPhase12ErrorPayload(
         `adversarial ${action}`,
         'NOT_IN_VRE_REPO',
@@ -1810,7 +1961,7 @@ export async function main(argv = process.argv) {
 
     try {
       writeJsonPayload(await runAdversarialCommand(
-        repoRoot,
+        executionContext.projectRoot,
         action,
         parseLongOptions(adversarialRest)
       ));
@@ -1849,8 +2000,7 @@ export async function main(argv = process.argv) {
       return action ? 2 : 3;
     }
 
-    const repoRoot = resolveRepoRoot(process.cwd());
-    if (!repoRoot) {
+    if (!executionContext || executionContext.mode === 'external-project-invalid') {
       writeJsonPayload(namedPhase13ErrorPayload(
         entrypoint.command,
         'NOT_IN_VRE_REPO',
@@ -1874,7 +2024,7 @@ export async function main(argv = process.argv) {
       const payload = await runAutonomousEntrypoint({
         action,
         env: process.env,
-        repoRoot,
+        repoRoot: executionContext.projectRoot,
         options: parsed.options
       });
       writeJsonPayload(payload);
@@ -1900,8 +2050,16 @@ export async function main(argv = process.argv) {
     return phase9Invocation.exitCode;
   }
   if (phase9Invocation?.kind === 'phase9') {
-    const repoRoot = resolveRepoRoot(process.cwd());
-    if (!repoRoot) {
+    if (
+      phase9Invocation.definition.canonicalCommand === 'capabilities --json' &&
+      executionContext?.mode === 'external-project-invalid'
+    ) {
+      const { handshake } = await persistCapabilityHandshakeForContext(executionContext);
+      process.stdout.write(serializeJsonPayload(handshake));
+      return 0;
+    }
+
+    if (!executionContext || executionContext.mode === 'external-project-invalid') {
       writeJsonPayload({
         ok: false,
         code: 'NOT_IN_VRE_REPO',
@@ -1911,22 +2069,27 @@ export async function main(argv = process.argv) {
       return 3;
     }
 
+    const projectRoot = executionContext.projectRoot;
     try {
       if (phase9Invocation.definition.canonicalCommand === 'capabilities --json') {
-        const { handshake } = await persistCapabilityHandshakeArtifact(repoRoot);
+        const { handshake } = await persistCapabilityHandshakeForContext(executionContext);
         process.stdout.write(serializeJsonPayload(handshake));
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'objective start') {
-        const payload = await runObjectiveStart(repoRoot, phase9Invocation.parsed);
+        const payload = await runObjectiveStart(
+          projectRoot,
+          phase9Invocation.parsed,
+          objectiveCliDepsForContext(executionContext)
+        );
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.root === 'direction') {
         const payload = await runDirectionCommand(
-          repoRoot,
+          projectRoot,
           phase9Invocation.definition.action,
           phase9Invocation.parsed
         );
@@ -1935,67 +2098,85 @@ export async function main(argv = process.argv) {
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'objective pause') {
-        const payload = await runObjectivePause(repoRoot, phase9Invocation.parsed);
+        const payload = await runObjectivePause(
+          projectRoot,
+          phase9Invocation.parsed,
+          objectiveCliDepsForContext(executionContext)
+        );
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'objective resume') {
-        const payload = await runObjectiveResume(repoRoot, phase9Invocation.parsed);
+        const payload = await runObjectiveResume(
+          projectRoot,
+          phase9Invocation.parsed,
+          objectiveCliDepsForContext(executionContext)
+        );
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'objective status') {
-        const payload = await runObjectiveStatus(repoRoot, phase9Invocation.parsed);
+        const payload = await statusObjectiveCommand(
+          projectRoot,
+          {
+            objectiveId: requiredStringOption(phase9Invocation.parsed, 'objective', 'objective status')
+          },
+          objectiveCliDepsForContext(executionContext)
+        );
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'objective doctor') {
-        const payload = await runObjectiveDoctor(repoRoot, phase9Invocation.parsed);
+        const payload = await runObjectiveDoctor(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'objective stop') {
-        const payload = await runObjectiveStop(repoRoot, phase9Invocation.parsed);
+        const payload = await runObjectiveStop(
+          projectRoot,
+          phase9Invocation.parsed,
+          objectiveCliDepsForContext(executionContext)
+        );
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'run-analysis') {
-        const payload = await runRunAnalysis(repoRoot, phase9Invocation.parsed);
+        const payload = await runRunAnalysis(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'research-loop') {
-        const payload = await runResearchLoop(repoRoot, phase9Invocation.parsed);
+        const payload = await runResearchLoop(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'scheduler install') {
-        const payload = await runSchedulerInstall(repoRoot, phase9Invocation.parsed);
+        const payload = await runSchedulerInstall(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'scheduler status') {
-        const payload = await runSchedulerStatus(repoRoot, phase9Invocation.parsed);
+        const payload = await runSchedulerStatus(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'scheduler doctor') {
-        const payload = await runSchedulerDoctor(repoRoot, phase9Invocation.parsed);
+        const payload = await runSchedulerDoctor(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
 
       if (phase9Invocation.definition.canonicalCommand === 'scheduler remove') {
-        const payload = await runSchedulerRemove(repoRoot, phase9Invocation.parsed);
+        const payload = await runSchedulerRemove(projectRoot, phase9Invocation.parsed);
         writeJsonPayload(payload);
         return 0;
       }
@@ -2030,21 +2211,29 @@ export async function main(argv = process.argv) {
     return 3;
   }
 
-  const repoRoot = resolveRepoRoot(process.cwd());
-  if (!repoRoot) {
+  if (!executionContext || executionContext.mode === 'external-project-invalid') {
     process.stderr.write('vre: current directory is not inside a VRE repository root\n');
     return 3;
   }
 
-  await mkdir(path.join(repoRoot, '.vibe-science-environment'), { recursive: true });
+  await mkdir(path.join(executionContext.projectRoot, '.vibe-science-environment'), { recursive: true });
   // Default commands stay quiet on stderr; `vre init` is the dedicated
   // surface for kernel-state announcements. Set VRE_VERBOSE=1 to opt in to
   // per-command kernel state on stderr.
   const announceKernel = process.env.VRE_VERBOSE === '1';
-  const reader = await resolveDefaultReader(repoRoot, { announce: announceKernel });
+  const reader = await resolveDefaultReader(executionContext.runtimeRoot, {
+    announce: announceKernel,
+    kernelRootOverride: executionContext.kernelRoot ?? undefined
+  });
 
   try {
-    const result = await invokeEntry(repoRoot, subcommand, entry, reader);
+    const result = await invokeEntry(
+      executionContext.runtimeRoot,
+      executionContext.projectRoot,
+      subcommand,
+      entry,
+      reader
+    );
     const attempt = result?.attempt ?? { status: 'succeeded', attemptId: 'ATT-unknown' };
     if (attempt.status === 'blocked' && attempt.errorCode === 'BUDGET_HARD_STOP') {
       process.stderr.write(`vre: ${subcommand}: ${attempt.summary ?? 'middleware refused'}\n`);

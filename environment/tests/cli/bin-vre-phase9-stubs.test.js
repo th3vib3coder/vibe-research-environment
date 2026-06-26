@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -23,6 +23,64 @@ const FIXTURE_KERNEL_ENV = {
 const STUB_CASES = [
   { argv: ['capabilities', 'doctor'], command: 'capabilities doctor' }
 ];
+
+async function createExternalProject(runtimeRoot, {
+  vreHome = runtimeRoot,
+  kernelPath = path.join(runtimeRoot, 'environment', 'tests', 'fixtures', 'fake-kernel-sibling')
+} = {}) {
+  const externalRoot = `${runtimeRoot}-external`;
+  await mkdir(externalRoot, { recursive: true });
+  await writeFile(
+    path.join(externalRoot, 'package.json'),
+    `${JSON.stringify({
+      name: 'epigenetic-test-cli-fixture',
+      private: true,
+      type: 'module'
+    }, null, 2)}\n`,
+    'utf8'
+  );
+  await writeFile(
+    path.join(externalRoot, '.vre-project.json'),
+    `${JSON.stringify({
+      schemaVersion: 'vre.external-project.v1',
+      vreHome,
+      kernelPath,
+      objectiveId: 'OBJ-CLI-EXTERNAL'
+    }, null, 2)}\n`,
+    'utf8'
+  );
+  await mkdir(path.join(externalRoot, 'bin'), { recursive: true });
+  await writeFile(
+    path.join(externalRoot, 'bin', 'vre'),
+    'throw new Error("PROJECT_BIN_SHOULD_NOT_LOAD");\n',
+    'utf8'
+  );
+  return externalRoot;
+}
+
+async function createVreShapedFakeRuntime(root) {
+  await mkdir(path.join(root, 'environment', 'schemas'), { recursive: true });
+  await mkdir(path.join(root, 'bin'), { recursive: true });
+  await writeFile(
+    path.join(root, 'package.json'),
+    `${JSON.stringify({
+      name: 'vibe-research-environment',
+      private: true,
+      type: 'module'
+    }, null, 2)}\n`,
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'environment', 'schemas', 'phase9-capability-handshake.schema.json'),
+    '{}\n',
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'bin', 'vre'),
+    'throw new Error("FAKE_RUNTIME_SHOULD_NOT_LOAD");\n',
+    'utf8'
+  );
+}
 
 test('Phase 9 CLI stubs are invokable and emit structured JSON instead of unknown-command failures', async () => {
   const projectRoot = await createCliFixtureProject('vre-phase9-stubs-');
@@ -66,6 +124,94 @@ test('capabilities --json emits JSON only and atomically rewrites the handshake 
     assert.equal(artifactBytes, result.stdout);
   } finally {
     await cleanupCliFixtureProject(projectRoot);
+  }
+});
+
+test('capabilities --json runs from a marked external project and persists state there', async () => {
+  const runtimeRoot = await createCliFixtureProject('vre-phase9-external-runtime-');
+  const externalRoot = await createExternalProject(runtimeRoot);
+  const artifactPath = path.join(externalRoot, HANDSHAKE_ARTIFACT_PATH);
+  try {
+    const result = await runVre(runtimeRoot, ['capabilities', '--json'], {
+      cwd: externalRoot
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.equal(result.stderr, '');
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.vrePresent, true);
+    assert.equal(payload.vreMode, 'external-project');
+    assert.equal(payload.projectRoot, externalRoot);
+    assert.equal(payload.runtimeRoot, runtimeRoot);
+    assert.equal(payload.vrePath, runtimeRoot);
+    assert.equal(payload.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(
+      payload.degradedReasons.some((reason) => reason.includes('PROJECT_BIN_SHOULD_NOT_LOAD')),
+      false
+    );
+
+    const artifactBytes = await readFile(artifactPath, 'utf8');
+    assert.equal(artifactBytes, result.stdout);
+  } finally {
+    await cleanupCliFixtureProject(runtimeRoot);
+    await rm(externalRoot, { recursive: true, force: true });
+  }
+});
+
+test('capabilities --json reports an invalid external-project marker without opening runtime', async () => {
+  const runtimeRoot = await createCliFixtureProject('vre-phase9-external-invalid-runtime-');
+  const externalRoot = await createExternalProject(runtimeRoot, {
+    vreHome: './not-a-vre-runtime'
+  });
+  try {
+    const result = await runVre(runtimeRoot, ['capabilities', '--json'], {
+      cwd: externalRoot
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.vrePresent, false);
+    assert.equal(payload.vreMode, 'missing');
+    assert.equal(payload.runtimeRoot, null);
+    assert.equal(
+      payload.degradedReasons.some((reason) =>
+        reason.startsWith('VRE_EXTERNAL_PROJECT_INVALID: vreHome does not validate as a VRE repo')
+      ),
+      true
+    );
+  } finally {
+    await cleanupCliFixtureProject(runtimeRoot);
+    await rm(externalRoot, { recursive: true, force: true });
+  }
+});
+
+test('capabilities --json rejects an external-project marker that points at a fake VRE-shaped runtime', async () => {
+  const runtimeRoot = await createCliFixtureProject('vre-phase9-external-fake-runtime-');
+  const externalRoot = await createExternalProject(runtimeRoot, {
+    vreHome: './fake-vre-home'
+  });
+  try {
+    await createVreShapedFakeRuntime(path.join(externalRoot, 'fake-vre-home'));
+
+    const result = await runVre(runtimeRoot, ['capabilities', '--json'], {
+      cwd: externalRoot
+    });
+    assert.equal(result.code, 0, `stderr=${result.stderr}`);
+    assert.equal(result.stderr.includes('FAKE_RUNTIME_SHOULD_NOT_LOAD'), false);
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.vrePresent, false);
+    assert.equal(payload.vreMode, 'missing');
+    assert.equal(payload.runtimeRoot, null);
+    assert.equal(
+      payload.degradedReasons.some((reason) =>
+        reason.startsWith('VRE_EXTERNAL_PROJECT_INVALID: vreHome does not match the trusted VRE runtime root')
+      ),
+      true
+    );
+  } finally {
+    await cleanupCliFixtureProject(runtimeRoot);
+    await rm(externalRoot, { recursive: true, force: true });
   }
 });
 

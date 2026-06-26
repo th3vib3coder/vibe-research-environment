@@ -131,6 +131,102 @@ async function captureStderr(fn) {
   }
 }
 
+async function createExternalProjectFixture({
+  vreHome = PROJECT_ROOT,
+  kernelPath = FAKE_KERNEL_ROOT,
+  objectiveId = 'OBJ-2026-04-22-001',
+  packageName = 'epigenetic-test-fixture',
+  includeObjective = true,
+  includeFakeProjectBin = false
+} = {}) {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-external-project-'));
+  await writeFile(
+    path.join(fixtureRoot, 'package.json'),
+    `${JSON.stringify({
+      name: packageName,
+      private: true,
+      type: 'module'
+    }, null, 2)}\n`,
+    'utf8'
+  );
+  await writeFile(
+    path.join(fixtureRoot, '.vre-project.json'),
+    `${JSON.stringify({
+      schemaVersion: 'vre.external-project.v1',
+      vreHome,
+      kernelPath,
+      objectiveId
+    }, null, 2)}\n`,
+    'utf8'
+  );
+
+  if (includeObjective) {
+    await mkdir(
+      path.join(fixtureRoot, '.vibe-science-environment', 'objectives', objectiveId),
+      { recursive: true }
+    );
+    await cp(
+      path.join(
+        PROJECT_ROOT,
+        'environment',
+        'tests',
+        'fixtures',
+        'phase9',
+        'active-objective-pointer',
+        'valid-active.json'
+      ),
+      path.join(fixtureRoot, '.vibe-science-environment', 'objectives', 'active-objective.json')
+    );
+    await cp(
+      path.join(
+        PROJECT_ROOT,
+        'environment',
+        'tests',
+        'fixtures',
+        'phase9',
+        'objective',
+        'valid-active.json'
+      ),
+      path.join(fixtureRoot, '.vibe-science-environment', 'objectives', objectiveId, 'objective.json')
+    );
+  }
+
+  if (includeFakeProjectBin) {
+    await mkdir(path.join(fixtureRoot, 'bin'), { recursive: true });
+    await writeFile(
+      path.join(fixtureRoot, 'bin', 'vre'),
+      'throw new Error("PROJECT_BIN_SHOULD_NOT_LOAD");\n',
+      'utf8'
+    );
+  }
+
+  return fixtureRoot;
+}
+
+async function createVreShapedFakeRuntime(root) {
+  await mkdir(path.join(root, 'environment', 'schemas'), { recursive: true });
+  await mkdir(path.join(root, 'bin'), { recursive: true });
+  await writeFile(
+    path.join(root, 'package.json'),
+    `${JSON.stringify({
+      name: 'vibe-research-environment',
+      private: true,
+      type: 'module'
+    }, null, 2)}\n`,
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'environment', 'schemas', HANDSHAKE_SCHEMA_FILE),
+    '{}\n',
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'bin', 'vre'),
+    'throw new Error("FAKE_RUNTIME_SHOULD_NOT_LOAD");\n',
+    'utf8'
+  );
+}
+
 async function createKernelFixtureWithProjectionFailure({
   failProjection = 'listClaimHeads',
   mode = 'contract-mismatch',
@@ -532,6 +628,10 @@ test('capability-handshake preserves missing-contract warnings as degraded reaso
       recursive: true
     });
     await cp(
+      path.join(PROJECT_ROOT, 'environment', 'schemas', HANDSHAKE_SCHEMA_FILE),
+      path.join(fixtureRoot, 'environment', 'schemas', HANDSHAKE_SCHEMA_FILE)
+    );
+    await cp(
       path.join(PROJECT_ROOT, 'environment', 'control', 'approved-memory-apis.json'),
       path.join(fixtureRoot, 'environment', 'control', 'approved-memory-apis.json')
     );
@@ -655,6 +755,150 @@ test('capability-handshake generator stays schema-valid when the target path is 
     assert.equal(handshake.kernel.projections.probes.length, 9);
     assert.equal(handshake.kernel.projections.unavailable.length, 9);
     assert.deepEqual(handshake.vre.missingSurfaces, []);
+    assert.equal(
+      handshake.degradedReasons.some((reason) => reason.startsWith('VRE_MISSING:')),
+      true
+    );
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake generator resolves a marked external project through trusted VRE home', async () => {
+  const fixtureRoot = await createExternalProjectFixture({ includeFakeProjectBin: true });
+  try {
+    const handshake = await generateCapabilityHandshake(fixtureRoot, {
+      generatedAt: FIXED_GENERATED_AT
+    });
+    const validate = await loadValidator(PROJECT_ROOT, HANDSHAKE_SCHEMA_FILE);
+
+    assert.equal(validate(handshake), true, JSON.stringify(validate.errors ?? []));
+    assert.equal(handshake.vrePresent, true);
+    assert.equal(handshake.vreMode, 'external-project');
+    assert.equal(handshake.projectRoot, fixtureRoot);
+    assert.equal(handshake.runtimeRoot, PROJECT_ROOT);
+    assert.equal(handshake.vrePath, PROJECT_ROOT);
+    assert.equal(handshake.kernelPath, FAKE_KERNEL_ROOT);
+    assert.equal(handshake.objective.activeObjectiveId, 'OBJ-2026-04-22-001');
+    assert.equal(handshake.objective.status, 'active');
+    assert.equal(handshake.vre.executableCommands.includes('capabilities --json'), true);
+    assert.equal(
+      handshake.vre.schemas.some((entry) => entry.name === 'phase9.capability-handshake.v1'),
+      true
+    );
+    assert.equal(
+      handshake.degradedReasons.some((reason) => reason.includes('PROJECT_BIN_SHOULD_NOT_LOAD')),
+      false
+    );
+    assert.equal(
+      handshake.degradedReasons.some((reason) => reason.startsWith('VRE_MISSING:')),
+      false
+    );
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake external project missing-surface probes use configured kernel path', async () => {
+  const kernelRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-external-kernel-'));
+  const fixtureRoot = await createExternalProjectFixture({ kernelPath: kernelRoot });
+  try {
+    await mkdir(path.join(kernelRoot, 'plugin', 'scripts'), { recursive: true });
+    await writeFile(
+      path.join(kernelRoot, 'plugin', 'scripts', 'handshake-inject.js'),
+      'export {};\n',
+      'utf8'
+    );
+    await writeFile(
+      path.join(kernelRoot, 'plugin', 'scripts', 'r2-bridge-writer.js'),
+      'export {};\n',
+      'utf8'
+    );
+
+    const handshake = await generateCapabilityHandshake(fixtureRoot, {
+      generatedAt: FIXED_GENERATED_AT
+    });
+
+    assert.equal(handshake.vreMode, 'external-project');
+    assert.equal(handshake.kernelPath, kernelRoot);
+    assert.equal(handshake.vre.missingSurfaces.includes('plugin handshake injection'), false);
+    assert.equal(handshake.vre.missingSurfaces.includes('reviewer-2 bridge'), false);
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+    await rm(kernelRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake generator rejects an external-project marker with invalid vreHome', async () => {
+  const fixtureRoot = await createExternalProjectFixture({
+    vreHome: './not-a-vre-root',
+    includeObjective: false
+  });
+  try {
+    const handshake = await generateCapabilityHandshake(fixtureRoot, {
+      generatedAt: FIXED_GENERATED_AT
+    });
+
+    assert.equal(handshake.vrePresent, false);
+    assert.equal(handshake.vreMode, 'missing');
+    assert.equal(handshake.runtimeRoot, null);
+    assert.equal(
+      handshake.degradedReasons.some((reason) =>
+        reason.startsWith('VRE_EXTERNAL_PROJECT_INVALID: vreHome does not validate as a VRE repo')
+      ),
+      true
+    );
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake generator rejects an external-project marker that points at a fake VRE-shaped runtime', async () => {
+  const fixtureRoot = await createExternalProjectFixture({
+    vreHome: './fake-vre-home',
+    includeObjective: false
+  });
+  try {
+    await createVreShapedFakeRuntime(path.join(fixtureRoot, 'fake-vre-home'));
+
+    const { result: handshake, stderr } = await captureStderr(() =>
+      generateCapabilityHandshake(fixtureRoot, {
+        generatedAt: FIXED_GENERATED_AT
+      })
+    );
+
+    assert.equal(handshake.vrePresent, false);
+    assert.equal(handshake.vreMode, 'missing');
+    assert.equal(handshake.runtimeRoot, null);
+    assert.equal(stderr.includes('FAKE_RUNTIME_SHOULD_NOT_LOAD'), false);
+    assert.equal(
+      handshake.degradedReasons.some((reason) =>
+        reason.startsWith('VRE_EXTERNAL_PROJECT_INVALID: vreHome does not match the trusted VRE runtime root')
+      ),
+      true
+    );
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('capability-handshake generator rejects package-name spoofing without external-project marker', async () => {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'vre-package-spoof-'));
+  try {
+    await writeFile(
+      path.join(fixtureRoot, 'package.json'),
+      `${JSON.stringify({ name: 'vibe-research-environment', private: true }, null, 2)}\n`,
+      'utf8'
+    );
+    await mkdir(path.join(fixtureRoot, 'environment', 'schemas'), { recursive: true });
+
+    const handshake = await generateCapabilityHandshake(fixtureRoot, {
+      generatedAt: FIXED_GENERATED_AT
+    });
+
+    assert.equal(handshake.vrePresent, false);
+    assert.equal(handshake.vreMode, 'missing');
+    assert.equal(handshake.runtimeRoot, null);
     assert.equal(
       handshake.degradedReasons.some((reason) => reason.startsWith('VRE_MISSING:')),
       true

@@ -1,4 +1,4 @@
-import { access, readFile, readdir } from 'node:fs/promises';
+import { access, readFile, readdir, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -36,6 +36,8 @@ export const HANDSHAKE_SCHEMA_VERSION = 'phase9.capability-handshake.v1';
 export const HANDSHAKE_SCHEMA_FILE = 'phase9-capability-handshake.schema.json';
 export const HANDSHAKE_ARTIFACT_PATH = '.vibe-science-environment/control/capability-handshake.json';
 export const ACTIVE_OBJECTIVE_POINTER_PATH = '.vibe-science-environment/objectives/active-objective.json';
+export const EXTERNAL_PROJECT_CONFIG_FILE = '.vre-project.json';
+export const EXTERNAL_PROJECT_SCHEMA_VERSION = 'vre.external-project.v1';
 export const PROJECTION_PROBE_FIXTURE_PATH =
   'environment/tests/fixtures/phase9/capability-handshake/valid-projection-probe-shape.json';
 
@@ -60,48 +62,58 @@ const DISPATCH_COMMAND_METADATA = Object.freeze({
 const REVIEWED_MISSING_SURFACE_RULES = Object.freeze([
   {
     surface: 'capabilities --json',
-    present: async (projectRoot, cliMetadata = null) => {
-      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(projectRoot);
+    present: async (runtimeRoot, cliMetadata = null) => {
+      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(runtimeRoot);
       return resolvedCliMetadata.IMPLEMENTED_PHASE9_COMMANDS.includes('capabilities --json');
     }
   },
   {
     surface: 'run-analysis',
-    present: async (projectRoot, cliMetadata = null) => {
-      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(projectRoot);
+    present: async (runtimeRoot, cliMetadata = null) => {
+      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(runtimeRoot);
       return resolvedCliMetadata.IMPLEMENTED_PHASE9_COMMANDS.includes('run-analysis');
     }
   },
   {
     surface: 'research-loop',
-    present: async (projectRoot, cliMetadata = null) => {
-      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(projectRoot);
+    present: async (runtimeRoot, cliMetadata = null) => {
+      const resolvedCliMetadata = cliMetadata ?? await loadCliMetadata(runtimeRoot);
       return resolvedCliMetadata.IMPLEMENTED_PHASE9_COMMANDS.includes('research-loop');
     }
   },
   {
     surface: 'analysis-manifest schema',
-    present: async (projectRoot) =>
-      pathExists(path.join(projectRoot, 'environment', 'schemas', 'phase9-analysis-manifest.schema.json'))
+    present: async (runtimeRoot) =>
+      pathExists(path.join(runtimeRoot, 'environment', 'schemas', 'phase9-analysis-manifest.schema.json'))
   },
   {
     surface: 'plugin handshake injection',
-    present: async (projectRoot) =>
-      pathExists(path.join(path.dirname(projectRoot), 'vibe-science', 'plugin', 'scripts', 'handshake-inject.js'))
+    present: async (runtimeRoot, _cliMetadata = null, context = {}) =>
+      pathExists(path.join(
+        context.kernelPath ?? path.join(path.dirname(runtimeRoot), 'vibe-science'),
+        'plugin',
+        'scripts',
+        'handshake-inject.js'
+      ))
   },
   {
     surface: 'scheduler runtime',
-    present: async (projectRoot) =>
-      pathExists(path.join(projectRoot, 'environment', 'orchestrator', 'windows-task-scheduler.js'))
+    present: async (runtimeRoot) =>
+      pathExists(path.join(runtimeRoot, 'environment', 'orchestrator', 'windows-task-scheduler.js'))
   },
   {
     surface: 'reviewer-2 bridge',
-    present: async (projectRoot) =>
-      pathExists(path.join(path.dirname(projectRoot), 'vibe-science', 'plugin', 'scripts', 'r2-bridge-writer.js'))
+    present: async (runtimeRoot, _cliMetadata = null, context = {}) =>
+      pathExists(path.join(
+        context.kernelPath ?? path.join(path.dirname(runtimeRoot), 'vibe-science'),
+        'plugin',
+        'scripts',
+        'r2-bridge-writer.js'
+      ))
   }
 ]);
 
-async function resolveCliMetadata(projectRoot, cliMetadataOverride = null) {
+async function resolveCliMetadata(runtimeRoot, cliMetadataOverride = null) {
   if (cliMetadataOverride != null) {
     return {
       DISPATCH_TABLE: cliMetadataOverride.DISPATCH_TABLE ?? {},
@@ -117,21 +129,21 @@ async function resolveCliMetadata(projectRoot, cliMetadataOverride = null) {
     };
   }
 
-  return loadCliMetadata(projectRoot);
+  return loadCliMetadata(runtimeRoot);
 }
 
-async function buildMissingSurfaces(projectRoot, cliMetadata = null) {
+async function buildMissingSurfaces(runtimeRoot, cliMetadata = null, context = {}) {
   const missing = [];
   for (const rule of REVIEWED_MISSING_SURFACE_RULES) {
-    if (!(await rule.present(projectRoot, cliMetadata))) {
+    if (!(await rule.present(runtimeRoot, cliMetadata, context))) {
       missing.push(rule.surface);
     }
   }
   return uniqueSorted(missing);
 }
 
-async function loadCliMetadata(projectRoot) {
-  const moduleUrl = pathToFileURL(path.join(projectRoot, 'bin', 'vre')).href;
+async function loadCliMetadata(runtimeRoot) {
+  const moduleUrl = pathToFileURL(path.join(runtimeRoot, 'bin', 'vre')).href;
   const mod = await import(moduleUrl);
   return {
     DISPATCH_TABLE: mod.DISPATCH_TABLE ?? {},
@@ -237,14 +249,169 @@ async function readPackageName(projectRoot) {
   }
 }
 
-async function detectVrePresence(projectRoot) {
+async function validateVreRepoRoot(projectRoot) {
   const [packageName, hasSchemasDir, hasBinVre] = await Promise.all([
     readPackageName(projectRoot),
-    pathExists(path.join(projectRoot, 'environment', 'schemas')),
+    pathExists(path.join(projectRoot, 'environment', 'schemas', HANDSHAKE_SCHEMA_FILE)),
     pathExists(path.join(projectRoot, 'bin', 'vre'))
   ]);
 
-  return packageName === 'vibe-research-environment' && hasSchemasDir && hasBinVre;
+  const missing = [];
+  if (packageName !== 'vibe-research-environment') {
+    missing.push('package.json name is not vibe-research-environment');
+  }
+  if (!hasSchemasDir) {
+    missing.push(`${HANDSHAKE_SCHEMA_FILE} is missing`);
+  }
+  if (!hasBinVre) {
+    missing.push('bin/vre is missing');
+  }
+
+  return {
+    ok: missing.length === 0,
+    packageName,
+    missing
+  };
+}
+
+async function sameRealPath(left, right) {
+  try {
+    const [leftRealPath, rightRealPath] = await Promise.all([
+      realpath(left),
+      realpath(right)
+    ]);
+    const normalizeRealPath = (value) => {
+      const normalized = path.normalize(value);
+      return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+    };
+    return normalizeRealPath(leftRealPath) === normalizeRealPath(rightRealPath);
+  } catch {
+    return false;
+  }
+}
+
+function missingVreContext(projectRoot, degradedReasons) {
+  return {
+    mode: 'missing',
+    vrePresent: false,
+    projectRoot,
+    runtimeRoot: null,
+    schemaRoot: null,
+    vrePath: null,
+    kernelPath: null,
+    degradedReasons
+  };
+}
+
+function resolveConfigPath(projectRoot, rawValue) {
+  if (typeof rawValue !== 'string' || rawValue.trim() === '') {
+    return null;
+  }
+  return path.resolve(projectRoot, rawValue);
+}
+
+async function readExternalProjectConfig(projectRoot) {
+  const configPath = path.join(projectRoot, EXTERNAL_PROJECT_CONFIG_FILE);
+  try {
+    return {
+      exists: true,
+      configPath,
+      config: await readJson(configPath)
+    };
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return {
+        exists: false,
+        configPath,
+        config: null
+      };
+    }
+    return {
+      exists: true,
+      configPath,
+      config: null,
+      error
+    };
+  }
+}
+
+export async function resolveVreContext(projectPath) {
+  const projectRoot = resolveProjectRoot(projectPath);
+  const repoValidation = await validateVreRepoRoot(projectRoot);
+  if (repoValidation.ok) {
+    return {
+      mode: 'repo',
+      vrePresent: true,
+      projectRoot,
+      runtimeRoot: projectRoot,
+      schemaRoot: projectRoot,
+      vrePath: projectRoot,
+      kernelPath: null,
+      degradedReasons: []
+    };
+  }
+
+  const externalConfig = await readExternalProjectConfig(projectRoot);
+  if (!externalConfig.exists) {
+    return missingVreContext(projectRoot, [
+      'VRE_MISSING: target root is unavailable or does not look like vibe-research-environment'
+    ]);
+  }
+
+  if (externalConfig.error) {
+    return missingVreContext(projectRoot, [
+      `VRE_EXTERNAL_PROJECT_INVALID: ${EXTERNAL_PROJECT_CONFIG_FILE} is unreadable: ${externalConfig.error.message}`
+    ]);
+  }
+
+  const config = externalConfig.config;
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+    return missingVreContext(projectRoot, [
+      `VRE_EXTERNAL_PROJECT_INVALID: ${EXTERNAL_PROJECT_CONFIG_FILE} must be a JSON object`
+    ]);
+  }
+  if (config.schemaVersion !== EXTERNAL_PROJECT_SCHEMA_VERSION) {
+    return missingVreContext(projectRoot, [
+      `VRE_EXTERNAL_PROJECT_INVALID: schemaVersion must be ${EXTERNAL_PROJECT_SCHEMA_VERSION}`
+    ]);
+  }
+
+  const runtimeRoot = resolveConfigPath(projectRoot, config.vreHome);
+  if (runtimeRoot == null) {
+    return missingVreContext(projectRoot, [
+      'VRE_EXTERNAL_PROJECT_INVALID: vreHome must be a non-empty path'
+    ]);
+  }
+
+  const runtimeValidation = await validateVreRepoRoot(runtimeRoot);
+  if (!runtimeValidation.ok) {
+    return missingVreContext(projectRoot, [
+      `VRE_EXTERNAL_PROJECT_INVALID: vreHome does not validate as a VRE repo (${runtimeValidation.missing.join('; ')})`
+    ]);
+  }
+  if (!(await sameRealPath(runtimeRoot, MODULE_PROJECT_ROOT))) {
+    return missingVreContext(projectRoot, [
+      'VRE_EXTERNAL_PROJECT_INVALID: vreHome does not match the trusted VRE runtime root'
+    ]);
+  }
+
+  return {
+    mode: 'external-project',
+    vrePresent: true,
+    projectRoot,
+    runtimeRoot,
+    schemaRoot: runtimeRoot,
+    vrePath: runtimeRoot,
+    kernelPath: resolveConfigPath(projectRoot, config.kernelPath),
+    objectiveId: typeof config.objectiveId === 'string' && config.objectiveId.trim() !== ''
+      ? config.objectiveId
+      : null,
+    degradedReasons: []
+  };
+}
+
+async function detectVrePresence(projectRoot) {
+  return (await resolveVreContext(projectRoot)).vrePresent;
 }
 
 async function collectMarkdownContracts(projectRoot) {
@@ -664,7 +831,7 @@ async function collectMemoryApis(projectRoot) {
   };
 }
 
-async function readObjectiveState(projectRoot) {
+async function readObjectiveState(projectRoot, schemaHostRoot = projectRoot) {
   const pointerPath = path.join(projectRoot, ACTIVE_OBJECTIVE_POINTER_PATH);
   if (!(await pathExists(pointerPath))) {
     return {
@@ -681,12 +848,12 @@ async function readObjectiveState(projectRoot) {
   let pointer;
   try {
     pointer = await readJson(pointerPath);
-    const schemaHostRoot = await resolveSchemaHostRoot(
-      projectRoot,
+    const pointerSchemaHostRoot = await resolveSchemaHostRoot(
+      schemaHostRoot,
       'phase9-active-objective-pointer.schema.json'
     );
     const validatePointer = await loadValidator(
-      schemaHostRoot,
+      pointerSchemaHostRoot,
       'phase9-active-objective-pointer.schema.json'
     );
     assertValid(validatePointer, pointer, 'phase9 active objective pointer');
@@ -720,8 +887,11 @@ async function readObjectiveState(projectRoot) {
 
   try {
     const objectiveRecord = await readJson(objectiveAbsolutePath);
-    const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, 'phase9-objective.schema.json');
-    const validateObjective = await loadValidator(schemaHostRoot, 'phase9-objective.schema.json');
+    const objectiveSchemaHostRoot = await resolveSchemaHostRoot(
+      schemaHostRoot,
+      'phase9-objective.schema.json'
+    );
+    const validateObjective = await loadValidator(objectiveSchemaHostRoot, 'phase9-objective.schema.json');
     assertValid(validateObjective, objectiveRecord, 'phase9 objective record');
     return {
       objective: {
@@ -785,12 +955,12 @@ function determineKernelMode({ kernelRoot, readerDbAvailable, availableCount }) 
   return 'full';
 }
 
-async function buildKernelSection(projectRoot, options = {}) {
+async function buildKernelSection(runtimeRoot, options = {}) {
   const degradedReasons = [];
-  const cliMetadata = await resolveCliMetadata(projectRoot, options.cliMetadata ?? null);
+  const cliMetadata = await resolveCliMetadata(runtimeRoot, options.cliMetadata ?? null);
   const discovery = options.kernelRoot !== undefined
     ? { kernelRoot: options.kernelRoot, source: 'override' }
-    : cliMetadata.resolveKernelRoot(projectRoot);
+    : cliMetadata.resolveKernelRoot(runtimeRoot);
   const reader = await resolveKernelReader({
     kernelRoot: discovery.kernelRoot
   });
@@ -881,16 +1051,22 @@ async function buildKernelSection(projectRoot, options = {}) {
 
 export async function generateCapabilityHandshake(projectPath, options = {}) {
   const projectRoot = resolveProjectRoot(projectPath);
-  const schemaHostRoot = await resolveSchemaHostRoot(projectRoot, HANDSHAKE_SCHEMA_FILE);
-  const vrePresent = await detectVrePresence(projectRoot);
+  const vreContext = await resolveVreContext(projectRoot);
+  const schemaHostRoot = vreContext.schemaRoot ??
+    await resolveSchemaHostRoot(projectRoot, HANDSHAKE_SCHEMA_FILE);
+  const vrePresent = vreContext.vrePresent;
   const generatedAt = options.generatedAt ?? new Date().toISOString();
-  const degradedReasons = [];
+  const degradedReasons = [...vreContext.degradedReasons];
 
   const handshake = {
     schemaVersion: HANDSHAKE_SCHEMA_VERSION,
     generatedAt,
+    vreMode: vreContext.mode,
     vrePresent,
-    vrePath: vrePresent ? projectRoot : null,
+    vrePath: vreContext.vrePath,
+    projectRoot,
+    runtimeRoot: vreContext.runtimeRoot,
+    kernelPath: options.kernelRoot ?? vreContext.kernelPath ?? null,
     kernel: {
       mode: 'missing',
       dbAvailable: false,
@@ -937,15 +1113,14 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
     degradedReasons: []
   };
 
-  if (!vrePresent) {
-    degradedReasons.push('VRE_MISSING: target root is unavailable or does not look like vibe-research-environment');
-  } else {
-    const cliMetadata = await resolveCliMetadata(projectRoot, options.cliMetadata ?? null);
+  if (vrePresent) {
+    const runtimeRoot = vreContext.runtimeRoot;
+    const cliMetadata = await resolveCliMetadata(runtimeRoot, options.cliMetadata ?? null);
     const executableCommands = uniqueSorted([
       ...Object.keys(cliMetadata.DISPATCH_TABLE),
       ...cliMetadata.IMPLEMENTED_PHASE9_COMMANDS
     ]);
-    const markdownContracts = await collectMarkdownContracts(projectRoot);
+    const markdownContracts = await collectMarkdownContracts(runtimeRoot);
     const commandSurface = classifyCommandSurface(
       executableCommands,
       markdownContracts,
@@ -956,7 +1131,7 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
     handshake.vre.markdownOnlyContracts = commandSurface.markdownOnlyContracts;
     if (commandSurface.undocumentedExecutableWarnings.length === 0) {
       handshake.vre.commandClassification = await buildHandshakeCommandClassification(
-        projectRoot,
+        runtimeRoot,
         cliMetadata
       );
     }
@@ -966,7 +1141,9 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
       artifactPaths: [...OPERATOR_ARTIFACT_PATHS]
     };
     degradedReasons.push(...commandSurface.undocumentedExecutableWarnings);
-    handshake.vre.missingSurfaces = await buildMissingSurfaces(projectRoot, cliMetadata);
+    handshake.vre.missingSurfaces = await buildMissingSurfaces(runtimeRoot, cliMetadata, {
+      kernelPath: vreContext.kernelPath
+    });
 
     try {
       const registry = await getTaskRegistry();
@@ -975,28 +1152,28 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
       degradedReasons.push(`task registry unavailable: ${error.message}`);
     }
 
-    handshake.vre.schemas = await collectSchemas(projectRoot);
-    const connectorState = await collectConnectors(projectRoot);
+    handshake.vre.schemas = await collectSchemas(runtimeRoot);
+    const connectorState = await collectConnectors(runtimeRoot);
     handshake.vre.connectors = connectorState.connectors;
     degradedReasons.push(...connectorState.degradedReasons);
 
-    const automationState = await collectAutomations(projectRoot);
+    const automationState = await collectAutomations(runtimeRoot);
     handshake.vre.automations = automationState.automations;
     degradedReasons.push(...automationState.degradedReasons);
 
-    const domainPackState = await collectDomainPacks(projectRoot);
+    const domainPackState = await collectDomainPacks(runtimeRoot);
     handshake.vre.domainPacks = domainPackState.domainPacks;
     degradedReasons.push(...domainPackState.degradedReasons);
 
-    const { memoryApis, degradedReasons: memoryDegradedReasons } = await collectMemoryApis(projectRoot);
+    const { memoryApis, degradedReasons: memoryDegradedReasons } = await collectMemoryApis(runtimeRoot);
     handshake.vre.memoryApis = memoryApis;
     degradedReasons.push(...memoryDegradedReasons);
 
-    const objectiveState = await readObjectiveState(projectRoot);
+    const objectiveState = await readObjectiveState(projectRoot, schemaHostRoot);
     handshake.objective = objectiveState.objective;
     degradedReasons.push(...objectiveState.degradedReasons);
 
-    const memoryFreshness = await getMemoryFreshness(projectRoot);
+    const memoryFreshness = await getMemoryFreshness(projectRoot, { schemaHostRoot });
     handshake.memory = {
       fresh: Boolean(memoryFreshness.hasSyncState) &&
         memoryFreshness.status === 'ok' &&
@@ -1007,7 +1184,12 @@ export async function generateCapabilityHandshake(projectPath, options = {}) {
       degradedReasons.push(memoryFreshness.warning);
     }
 
-    const kernelSection = await buildKernelSection(projectRoot, options);
+    const kernelSection = await buildKernelSection(runtimeRoot, {
+      ...options,
+      kernelRoot: Object.hasOwn(options, 'kernelRoot')
+        ? options.kernelRoot
+        : vreContext.kernelPath ?? undefined
+    });
     handshake.kernel = kernelSection.kernel;
     degradedReasons.push(...kernelSection.degradedReasons);
   }
@@ -1033,5 +1215,6 @@ export const INTERNALS = {
   collectSchemas,
   latestIsoTimestamp,
   parseNamedExports,
-  readObjectiveState
+  readObjectiveState,
+  resolveVreContext
 };
