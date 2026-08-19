@@ -1,5 +1,23 @@
 # Vibe Research Environment (VRE)
 
+<div align="center">
+  <h2>🏆 Companion to the ACM Vibe Science publication 🏆</h2>
+  <p>
+    <a href="https://doi.org/10.1145/3816483.3816631"><img src="https://img.shields.io/badge/ACM-EASE_%2726-0085CA?style=for-the-badge&logo=acm&logoColor=white" alt="ACM EASE '26"></a>
+    <a href="https://doi.org/10.1145/3816483.3816631"><img src="https://img.shields.io/badge/DOI-10.1145%2F3816483.3816631-B31B1B?style=for-the-badge&logo=doi&logoColor=white" alt="ACM paper DOI 10.1145/3816483.3816631"></a>
+    <a href="https://conf.researchr.org/home/ease-2026/vibex-2026"><img src="https://img.shields.io/badge/VibeX_2026-Full_Paper-6f42c1?style=for-the-badge" alt="VibeX 2026 Full Paper"></a>
+  </p>
+  <p>
+    <strong>Vibe Science: How Adversarial Agent Loops Turn Vibe Researching into Verifiable Science</strong><br>
+    Elisa Bertelli · Carmine Russo<br>
+    Accepted at VibeX 2026, co-located with ACM EASE '26.
+  </p>
+  <p>
+    <a href="https://creativecommons.org/licenses/by/4.0/"><img src="https://licensebuttons.net/l/by/4.0/88x31.png" alt="Creative Commons Attribution 4.0 International"></a>
+  </p>
+  <p><sub>The paper presents the Vibe Science kernel and methodology. VRE is its companion operational environment. CC BY 4.0 applies to the ACM paper.</sub></p>
+</div>
+
 VRE is a file-backed research operating shell for scientists who work with AI
 agents.
 
